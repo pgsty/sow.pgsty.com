@@ -1,4 +1,4 @@
-# SILO docs chrome UI strings (sidebar / search dialog / TOC).
+# SOW docs chrome UI strings (sidebar / search dialog / TOC).
 # Keys not listed here fall back to the Docsy theme defaults.
 ui_search: Search
 silo_sidebar_nav: Documentation menu

@@ -1,14 +1,12 @@
 ---
 title: Release Notes
 linkTitle: Release
-description: Detailed notes for every published SILO release, ordered from newest to oldest.
+description: Notes for every published SOW release, newest first.
 weight: 20
 icon: fa-solid fa-tag
 sidebar_expanded: true
-module: [BLOG]
-default_featured_image: /images/blog/release.webp
-aliases:
-  - /releases/
+default_featured_image: /images/blog/sow-release.png
 ---
 
-Each published SILO version has its own page with the release date, major changes, security fixes, dependency updates, and related commits.
+Every published SOW version gets a page here: what changed, what it means for existing
+repositories, and where to read more.

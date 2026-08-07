@@ -642,8 +642,8 @@ a {
   color: var(--bs-tertiary-color);
 }
 
-// 页底补充信息区（最后修改 + 来源声明）：唯一分割线由 Docsy 给
-// lastmod 的 border-top 提供；四类行统一为「图标列 + 文本」flex 结构。
+// 页底补充信息区（最后修改）：分割线由 Docsy 给 lastmod 的
+// border-top 提供；行结构统一为「图标列 + 文本」flex 结构。
 .td-content .td-page-meta__lastmod {
   display: flex;
   align-items: baseline;
@@ -677,38 +677,6 @@ a {
     width: 1.05em;
     height: 1.05em;
     align-self: center;
-  }
-}
-
-// ---- 页面来源署名：MinIO 衍生页正文末尾的归属 / 许可 / 翻译声明 ----
-// 由 front matter 的 minio_origin / silo_modified 驱动，见 page-origin-notice.html
-.silo-page-origin {
-  // 分割线由上方 lastmod 行统一提供（整个补充信息区只此一条）。
-  margin-top: 0.3rem;
-  color: var(--bs-tertiary-color);
-  font-size: 0.8rem;
-  line-height: 1.65;
-
-  p {
-    display: flex;
-    align-items: baseline;
-    gap: 0.45em;
-    margin-bottom: 0.35rem;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  // 全局去下划线后，法律声明里的链接需要显式恢复可见性。
-  a {
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-
-    &:hover {
-      color: var(--bs-link-hover-color);
-    }
   }
 }
 

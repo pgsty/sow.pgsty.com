@@ -1,7 +1,15 @@
-# Remote counters; refresh with: bin/metrics.py update
-github_stars: 1938
-docker_pulls: 484163
+# Landing page counters. These are product facts, not adoption numbers — every
+# value must stay verifiable against the documentation page the stat links to.
 
-# Editorial counters; maintain these values here.
-security_fixes: 19
-releases: 7
+# RPM (YUM) and DEB (APT).
+package_formats: 2
+
+# linux/amd64, linux/arm64, darwin/amd64, darwin/arm64.
+platforms: 4
+
+# Client combinations exercised end to end: EL8 / EL9 / EL10 dnf, CentOS 7 yum,
+# Debian 12 apt, Debian 13 apt, dnf reposync. See /docs/reference/compatibility/.
+client_generations: 7
+
+# Static CGO_ENABLED=0 binary: nothing to install alongside it.
+external_deps: 0

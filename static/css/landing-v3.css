@@ -374,31 +374,31 @@ main { display: block; }
 }
 .nav-link:hover { color: var(--ink) !important; background: var(--bg-elev); }
 
+/* —— 右上角工具簇（搜索 / 亮暗 / 语言 / GitHub）：紧凑排布 —— */
+.nav-utils {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+}
+
 .nav-util {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  height: 34px;
-  padding: 0 8px;
-  margin-left: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   color: var(--ink-mute) !important;
-  font-size: 1rem;
   cursor: pointer;
   transition: background-color 100ms ease, color 100ms ease;
 }
 .nav-util:hover { color: var(--ink) !important; background: var(--bg-elev); }
 
-/* 与文档站同款 lucide/simple-icons 图标（18px）。 */
-.nav-util .silo-icon,
-.nav-github .silo-icon {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
+.nav-util .silo-icon { width: 17px; height: 17px; display: block; }
 /* 亮暗直切钮显示「目标模式」图标：亮色下出月亮，点击即切暗。 */
 [data-theme-toggle] .silo-icon--sun { display: none; }
 html[data-theme='dark'] [data-theme-toggle] .silo-icon--moon { display: none; }
@@ -407,22 +407,16 @@ html[data-theme='dark'] [data-theme-toggle] .silo-icon--sun { display: block; }
 .nav-github {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  margin-left: 0;
-  padding: 6px 8px;
-  border-radius: 8px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
   color: var(--ink-mute) !important;
-  font-size: 1rem;
   transition: background-color 100ms ease, color 100ms ease;
 }
 .nav-github:hover { color: var(--ink) !important; background: var(--bg-elev); }
-.nav-star {
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--ink-soft);
-}
-.nav-star i { color: var(--copper); font-size: 0.72rem; margin-right: 2px; }
+.nav-github .silo-icon { width: 18px; height: 18px; display: block; }
 
 /* —— 下拉菜单（文档 / 扩展）—— */
 .nav-item { position: relative; }

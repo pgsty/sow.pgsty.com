@@ -1,19 +1,15 @@
 #=======================================#
 # Basics
 #=======================================#
-baseURL: https://silo.pgsty.com/
-title: SILO - S3-Compatible Object Storage by Pigsty
+baseURL: https://sow.pgsty.com/
+title: SOW - Package Repository Manager by Pigsty
 defaultContentLanguage: en
 defaultContentLanguageInSubdir: false
 enableRobotsTXT: true
 enableGitInfo: true
 hasCJKLanguage: true
-# 标签等列表页标题保留作者原始大小写（不要把 silo-pkg 渲染成 Silo-Pkg）。
+# 标签等列表页标题保留作者原始大小写。
 capitalizeListTitles: false
-
-services:
-  googleAnalytics:
-    id: G-JVPFK6E3P5
 
 #=======================================#
 # Hugo Module
@@ -35,9 +31,9 @@ languages:
     label: English
     locale: en
     weight: 1
-    title: SILO
+    title: SOW
     params:
-      description: S3-compatible object storage maintained by Pigsty
+      description: Self-contained APT / YUM package repository manager by Pigsty
       time_format_blog: 'January 02, 2006'
     menu:
       main:
@@ -64,15 +60,15 @@ languages:
         - identifier: github
           name: GitHub
           weight: 40
-          url: https://github.com/pgsty/minio
+          url: https://github.com/pgsty/sow
           pre: <i class='fa-brands fa-github'></i>
   zh:
     label: 简体中文
     locale: zh-CN
     weight: 2
-    title: SILO
+    title: SOW
     params:
-      description: 由 Pigsty 持续维护的 S3 兼容对象存储
+      description: Pigsty 出品的自包含 APT / YUM 软件仓库管理器
       time_format_blog: '2006年01月02日'
     menu:
       main:
@@ -99,14 +95,13 @@ languages:
         - identifier: github
           name: GitHub
           weight: 40
-          url: https://github.com/pgsty/minio
+          url: https://github.com/pgsty/sow
           pre: <i class='fa-brands fa-github'></i>
 
 #=======================================#
 # Taxonomies and blog URLs
 #=======================================#
 taxonomies:
-  module: module
   categories: categories
   tags: tags
 
@@ -131,11 +126,6 @@ markup:
       table: true
       taskList: true
       typographer: true
-      # 数学公式。分隔符是按语料实际情况挑的，别改成常见的那几个：
-      #   $...$   正文里有货币金额（$126M、$1B），会被吞成公式
-      #   \[...\] 正文里有大量转义方括号（\[`PutObject`\]，RST 转换残留）
-      # 剩下 \(...\) 与 $$...$$ 在全部语料里零出现，是安全的。
-      # 渲染由页面 front matter 的 math: true 控制，见 layouts/_markup/render-passthrough.html
       passthrough:
         enable: true
         delimiters:
@@ -163,31 +153,27 @@ outputs:
 # Site parameters
 #=======================================#
 params:
-  description: S3-compatible object storage maintained by Pigsty, with security updates, a restored console, and supply-chain continuity.
+  description: Self-contained APT / YUM package repository manager by Pigsty. One binary that replaces createrepo_c and reprepro on Linux and macOS.
   images:
-    - images/silo-social-card.png
-  version: 0.1.0
+    - images/sow-social-card.png
+  version: 0.2.0
   copyright:
-    authors: PIGSTY & SILO Contributors
-    from_year: 2020
+    authors: PIGSTY & SOW Contributors
+    from_year: 2026
     url: https://pgsty.com
 
   # 正文列宽模式：normal（1050px，默认）| wide（1300px）| full（占满可用宽）。
-  # 页面 front matter 可单页覆盖（page_width: wide），栏目可经 cascade 继承。
   page_width: normal
-  # ICP 备案号（单行页脚居中显示，链接到 beian.miit.gov.cn；留空则不渲染）。
-  # 示例：footer_icp: 浙ICP备15016890号-2
+  # ICP 备案号（留空则不渲染）。
   footer_icp: ""
 
   archived_version: false
-  url_latest_version: https://silo.pgsty.com
-  github_repo: https://github.com/pgsty/silo.pgsty.com
-  github_project_repo: https://github.com/pgsty/minio
+  url_latest_version: https://sow.pgsty.com
+  github_repo: https://github.com/pgsty/sow.pgsty.com
+  github_project_repo: https://github.com/pgsty/sow
   github_branch: main
 
-  # 站内搜索由项目自有的 ⌘K 弹窗实现（lunr 自托管 + 按语言索引），
-  # 必须关闭 Docsy offlineSearch：否则其 offline-search.js 在页面上找不到
-  # .td-search input 时会 $.ajax(undefined) 抓当前页 HTML 并抛错。
+  # 站内搜索由项目自有的 ⌘K 弹窗实现（lunr 自托管 + 按语言索引）。
   offlineSearch: false
   prism_syntax_highlighting: false
 
@@ -203,22 +189,11 @@ params:
     sidebar_root_enabled: true
     ul_show: 2
     showLightDarkModeMenu: true
-    # TOC 高亮由 silo-docs.js 的 IntersectionObserver 实现；Docsy 的
-    # Bootstrap ScrollSpy 注入路径（td/scrollspy-attr.txt）存在属性转义
-    # bug，本就从未生效，禁用后顺带从 bundle 中去掉 scrollspy-patch.js。
     scrollSpy:
       disable: true
-    # ---- Fumadocs 式侧栏定制（silo chrome）----
-    # 搜索框下方的根节点下拉：列出 docs 根 + 所有 sidebar_root_for: self
-    # 的 section；若无 self 根 section 则自动隐藏。
     sidebar_root_menu: true
-    # 侧栏宽度（px）：默认宽随断点 268/286，可拖拽调整并持久化；
-    # min/max 为拖拽钳制范围，可在栏目 front matter 中经 cascade 覆盖
-    # （params.ui.sidebar_width_min / sidebar_width_max）。
     sidebar_width_min: 220
     sidebar_width_max: 480
-    # 侧栏条目文字溢出策略：ellipsis（省略号，默认）| wrap（换行）。
-    # 可在栏目 front matter 中经 cascade 覆盖（params.ui.sidebar_item_overflow）。
     sidebar_item_overflow: ellipsis
     feedback:
       enable: false
@@ -227,20 +202,20 @@ params:
 
   links:
     user:
-      - name: Silo source
-        url: https://github.com/pgsty/minio
+      - name: SOW source
+        url: https://github.com/pgsty/sow
         icon: fab fa-github
-        desc: Silo source repository
+        desc: SOW source repository
       - name: Pigsty
         url: https://pigsty.io
         icon: fa fa-database
         desc: Pigsty project
     developer:
       - name: Releases
-        url: https://github.com/pgsty/minio/releases
+        url: https://github.com/pgsty/sow/releases
         icon: fa fa-box-archive
-        desc: Silo release artifacts
+        desc: SOW release artifacts
       - name: Documentation source
-        url: https://github.com/pgsty/silo.pgsty.com
+        url: https://github.com/pgsty/sow.pgsty.com
         icon: fab fa-github
-        desc: Silo documentation repository
+        desc: SOW documentation repository

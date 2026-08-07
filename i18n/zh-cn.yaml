@@ -66,7 +66,7 @@ feedback_negative: 没帮助
 toc_on_this_page: 本页目录
 toc_top_of_page: 回到顶部
 
-# SILO docs chrome（侧边栏 / 搜索弹窗 / 目录）
+# SOW docs chrome（侧边栏 / 搜索弹窗 / 目录）
 silo_sidebar_nav: 文档导航
 silo_sidebar_collapse: 收起侧边栏
 silo_sidebar_expand: 展开侧边栏

@@ -2,10 +2,8 @@
 {{- $description := .Description | default .Site.Params.description -}}
 {{- $locale := default .Site.Language.Lang .Site.Language.Locale -}}
 {{- $metrics := hugo.Data.home.metrics -}}
-{{- $evidenceProjects := hugo.Data.home.projects -}}
-{{- $voices := hugo.Data.home.voices -}}
-{{- $socialImage := "images/silo-social-card.png" | absURL -}}
-{{- $socialAlt := cond $zh "SILO — Pigsty 持续维护的 S3 兼容对象存储" "SILO — S3-compatible object storage maintained by Pigsty" -}}
+{{- $socialImage := "images/sow-social-card.png" | absURL -}}
+{{- $socialAlt := cond $zh "SOW — Pigsty 出品的 APT / YUM 软件仓库管理器" "SOW — APT / YUM package repository manager by Pigsty" -}}
 <!DOCTYPE html>
 <html lang="{{ $locale }}" class="no-js">
 <head>
@@ -20,12 +18,12 @@
   {{ else -}}
   <meta name="robots" content="noindex, nofollow">
   {{ end -}}
-  <meta name="author" content="Pigsty and SILO contributors">
-  <meta name="application-name" content="SILO">
+  <meta name="author" content="Pigsty and SOW contributors">
+  <meta name="application-name" content="SOW">
   <meta name="theme-color" content="#0b1119">
   <meta name="color-scheme" content="dark light">
 
-  <link rel="icon" type="image/svg+xml" href="{{ "img/silo.svg" | relURL }}">
+  <link rel="icon" type="image/svg+xml" href="{{ "img/sow.svg" | relURL }}">
   <link rel="canonical" href="{{ .Permalink }}">
   {{ range .AllTranslations -}}
   <link rel="alternate" hreflang="{{ .Language.Locale | default .Language.Lang }}" href="{{ .Permalink }}">
@@ -41,7 +39,7 @@
   <meta property="og:description" content="{{ $description }}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ .Permalink }}">
-  <meta property="og:site_name" content="SILO">
+  <meta property="og:site_name" content="SOW">
   <meta property="og:locale" content="{{ replace $locale "-" "_" }}">
   {{ range .Translations -}}
   <meta property="og:locale:alternate" content="{{ replace (.Language.Locale | default .Language.Lang) "-" "_" }}">
@@ -61,15 +59,14 @@
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "SILO",
+    "name": "SOW",
     "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "Linux",
+    "operatingSystem": "Linux, macOS",
     "url": {{ .Site.BaseURL | jsonify | safeJS }},
     "image": {{ $socialImage | jsonify | safeJS }},
     "inLanguage": {{ $locale | jsonify | safeJS }},
-    "downloadUrl": "https://github.com/pgsty/minio/releases",
-    "codeRepository": "https://github.com/pgsty/minio",
-    "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+    "downloadUrl": "https://github.com/pgsty/sow/releases",
+    "codeRepository": "https://github.com/pgsty/sow",
     "isAccessibleForFree": true,
     "maintainer": {
       "@type": "Organization",
@@ -77,8 +74,7 @@
       "url": "https://pigsty.io/"
     },
     "sameAs": [
-      "https://github.com/pgsty/minio",
-      "https://hub.docker.com/r/pgsty/minio"
+      "https://github.com/pgsty/sow"
     ],
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "description": {{ $description | jsonify | safeJS }}
@@ -105,6 +101,8 @@
   {{- range slice "css/landing-v3.css" "css/silo-v3.css" "css/download.css" "css/silo-footer.css" }}
   <link rel="stylesheet" href="{{ . | relURL }}?v={{ substr (md5 (readFile (path.Join "static" .))) 0 8 }}">
   {{- end }}
+  {{- $searchCss := resources.Get "scss/landing-search.scss" | toCSS | minify | fingerprint }}
+  <link rel="stylesheet" href="{{ $searchCss.RelPermalink }}" integrity="{{ $searchCss.Data.Integrity }}">
   {{ if hugo.IsProduction }}{{ partial "google_analytics.html" . }}{{ end }}
 </head>
 <body class="landing-page">
@@ -113,26 +111,30 @@
   <header class="landing-header" data-header>
     <div class="landing-container">
       <nav class="landing-nav" aria-label="{{ if $zh }}主导航{{ else }}Main navigation{{ end }}">
-        <a href="{{ relLangURL "" }}" class="nav-brand" aria-label="{{ if $zh }}SILO 首页{{ else }}SILO home{{ end }}">
-          <img src="{{ "img/silo.svg" | relURL }}" alt="" class="nav-logo">
-          <span class="nav-title">SILO</span>
+        <a href="{{ relLangURL "" }}" class="nav-brand" aria-label="{{ if $zh }}SOW 首页{{ else }}SOW home{{ end }}">
+          <img src="{{ "img/sow.svg" | relURL }}" alt="" class="nav-logo">
+          <span class="nav-title">SOW</span>
         </a>
 
         <div class="nav-links">
           <a href="{{ relLangURL "docs/" }}" class="nav-link">{{ if $zh }}文档{{ else }}Docs{{ end }}</a>
           <a href="{{ relLangURL "blog/" }}" class="nav-link">{{ if $zh }}博客{{ else }}Blog{{ end }}</a>
           <a href="{{ relLangURL "download/" }}" class="nav-link">{{ if $zh }}下载{{ else }}Download{{ end }}</a>
-          <button type="button" class="nav-util" data-theme-toggle title="{{ if $zh }}切换深浅主题{{ else }}Switch light / dark mode{{ end }}" aria-label="{{ if $zh }}切换深浅主题{{ else }}Switch light / dark mode{{ end }}">
-            {{- partialCached "silo/icon.html" "sun" "sun" -}}
-            {{- partialCached "silo/icon.html" "moon" "moon" -}}
-          </button>
-          {{ range .Translations }}
-          <a href="{{ .RelPermalink }}" class="nav-util" title="{{ .Language.Label }}" aria-label="{{ .Language.Label }}">{{ partialCached "silo/icon.html" "languages" "languages" }}</a>
-          {{ end }}
-          <a href="https://github.com/pgsty/minio" class="nav-github" target="_blank" rel="noopener" title="GitHub">
-            {{ partialCached "silo/icon.html" "github" "github" }}
-            <span class="nav-count">{{ partial "compact-number.html" $metrics.github_stars }}</span>
-          </a>
+          <div class="nav-utils">
+            <button type="button" class="nav-util" data-silo-search-open title="{{ if $zh }}搜索（⌘K）{{ else }}Search (⌘K){{ end }}" aria-label="{{ if $zh }}搜索{{ else }}Search{{ end }}">
+              {{- partialCached "silo/icon.html" "search" "search" -}}
+            </button>
+            <button type="button" class="nav-util" data-theme-toggle title="{{ if $zh }}切换深浅主题{{ else }}Switch light / dark mode{{ end }}" aria-label="{{ if $zh }}切换深浅主题{{ else }}Switch light / dark mode{{ end }}">
+              {{- partialCached "silo/icon.html" "moon" "moon" -}}
+              {{- partialCached "silo/icon.html" "sun" "sun" -}}
+            </button>
+            {{ range .Translations }}
+            <a href="{{ .RelPermalink }}" class="nav-util" title="{{ .Language.Label }}" aria-label="{{ .Language.Label }}">{{ partialCached "silo/icon.html" "languages" "languages" }}</a>
+            {{ end }}
+            <a href="https://github.com/pgsty/sow" class="nav-github" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+              {{ partialCached "silo/icon.html" "github" "github" }}
+            </a>
+          </div>
         </div>
 
         <button class="mobile-menu-toggle" type="button" aria-label="{{ if $zh }}打开菜单{{ else }}Open menu{{ end }}" aria-expanded="false" data-menu-toggle>
@@ -146,9 +148,10 @@
     <a href="{{ relLangURL "docs/" }}" class="mobile-menu-link">{{ if $zh }}文档{{ else }}Docs{{ end }}</a>
     <a href="{{ relLangURL "blog/" }}" class="mobile-menu-link">{{ if $zh }}博客{{ else }}Blog{{ end }}</a>
     <a href="{{ relLangURL "download/" }}" class="mobile-menu-link"><i class="fas fa-download" aria-hidden="true"></i> {{ if $zh }}下载安装{{ else }}Download &amp; Install{{ end }}</a>
+    <button type="button" class="mobile-menu-link mobile-menu-link--btn" data-silo-search-open><i class="fas fa-search" aria-hidden="true"></i> {{ if $zh }}搜索{{ else }}Search{{ end }}</button>
     {{ range .Translations }}<a href="{{ .RelPermalink }}" class="mobile-menu-link"><i class="fas fa-language" aria-hidden="true"></i> {{ .Language.Label }}</a>{{ end }}
     <button type="button" class="mobile-menu-link mobile-menu-link--btn" data-theme-toggle><i class="fas fa-moon" aria-hidden="true"></i> {{ if $zh }}浅色 / 深色{{ else }}Light / Dark{{ end }}</button>
-    <a href="https://github.com/pgsty/minio" class="mobile-menu-link" target="_blank" rel="noopener"><i class="fab fa-github" aria-hidden="true"></i> GitHub · {{ partial "compact-number.html" $metrics.github_stars }}</a>
+    <a href="https://github.com/pgsty/sow" class="mobile-menu-link" target="_blank" rel="noopener"><i class="fab fa-github" aria-hidden="true"></i> GitHub</a>
   </div>
 
   <main id="main">
@@ -159,21 +162,21 @@
           <div class="hero-copy" id="about">
             <p class="hero-eyebrow anim" style="--d:0">
               <span class="eyebrow-mark" aria-hidden="true"></span>
-              <span class="eyebrow-en">{{ if $zh }}开源 S3 兼容对象存储{{ else }}OPEN-SOURCE S3-COMPATIBLE OBJECT STORAGE{{ end }}</span>
+              <span class="eyebrow-en">{{ if $zh }}开源 APT / YUM 软件仓库管理器{{ else }}OPEN-SOURCE APT / YUM REPOSITORY MANAGER{{ end }}</span>
             </p>
 
             <h1 class="hero-title silo-hero-title anim" style="--d:1">
-              <span class="hero-title-line"><b class="ini ini-t">S</b>3 <b class="ini ini-i">I</b>nterface</span>
-              <span class="hero-title-line"><b class="ini ini-y">L</b>ibre <b class="ini ini-g">O</b>bject</span>
+              <span class="hero-title-line"><b class="ini ini-y">S</b>oftware</span>
+              <span class="hero-title-line"><b class="ini ini-g">O</b>ver <b class="ini ini-i">W</b>arehouse</span>
             </h1>
 
             <p class="hero-sub anim" style="--d:2">
               {{ if $zh }}
-              <span>Silo 由 <a href="https://pigsty.cc" target="_blank" rel="noopener">Pigsty 社区</a>持续维护</span>
-              <span>关注供应链持续性并提供后续安全更新</span>
+              <span>一个二进制，创建并管理 APT 与 YUM 仓库</span>
+              <span>替代 createrepo_c 与 reprepro，由 <a href="https://pigsty.cc" target="_blank" rel="noopener">Pigsty 社区</a>维护</span>
               {{ else }}
-              <span>Silo is maintained by the <a href="https://pigsty.io" target="_blank" rel="noopener">Pigsty Community</a></span>
-              <span>With supply-chain continuity and security updates</span>
+              <span>One binary that builds and manages APT &amp; YUM repositories</span>
+              <span>createrepo_c and reprepro, replaced — by the <a href="https://pigsty.io" target="_blank" rel="noopener">Pigsty Community</a></span>
               {{ end }}
             </p>
 
@@ -185,28 +188,28 @@
           </div>
 
           <div class="hero-board anim" style="--d:2">
-            <figure class="board-stage silo-board-stage" data-board aria-label="{{ if $zh }}SILO 对象存储节点结构图{{ else }}SILO object storage node board{{ end }}">
+            <figure class="board-stage silo-board-stage" data-board aria-label="{{ if $zh }}SOW 仓库工作区结构图{{ else }}SOW repository workspace board{{ end }}">
               <div class="silo-board">
                 <div class="silo-board-top">
-                  <span><i aria-hidden="true"></i>SILO // STORAGE NODE</span>
-                  <b>PGSTY-01</b>
+                  <span><i aria-hidden="true"></i>SOW // REPOSITORY WORKSPACE</span>
+                  <b>sow.yml</b>
                 </div>
                 <div class="silo-board-canvas">
                   <div class="silo-board-core">
-                    <div class="silo-port silo-port--api"><small>S3 API</small><strong>:9000</strong><span>APPLICATION TRAFFIC</span></div>
+                    <div class="silo-port silo-port--api"><small>YUM</small><strong>repodata/</strong><span>DNF · YUM · REPOSYNC</span></div>
                     <div class="silo-chip">
-                      <small>OBJECT STORAGE CORE</small>
-                      <strong>SILO</strong>
-                      <span>S3-COMPATIBLE</span>
+                      <small>REPOSITORY ENGINE</small>
+                      <strong>SOW</strong>
+                      <span>PLAIN · MANAGED</span>
                     </div>
-                    <div class="silo-port silo-port--console"><small>CONSOLE</small><strong>:9001</strong><span>OPERATOR ACCESS</span></div>
+                    <div class="silo-port silo-port--console"><small>APT</small><strong>dists/</strong><span>INRELEASE · BY-HASH</span></div>
                   </div>
                   <div class="silo-disks">
-                    <p>ERASURE SET // DISTRIBUTED DISKS</p>
-                    <div><span><i></i><b>D01</b><small>ONLINE</small></span><span><i></i><b>D02</b><small>ONLINE</small></span><span><i></i><b>D03</b><small>ONLINE</small></span><span><i></i><b>D04</b><small>ONLINE</small></span></div>
+                    <p>POOL // IMMUTABLE PACKAGE STORE</p>
+                    <div><span><i></i><b>postgresql</b><small>POOLED</small></span><span><i></i><b>pgbouncer</b><small>POOLED</small></span><span><i></i><b>patroni</b><small>BUILT</small></span><span><i></i><b>etcd</b><small>SIGNED</small></span></div>
                   </div>
                 </div>
-                <div class="silo-board-foot"><span>COMMUNITY FORK</span><span><i aria-hidden="true"></i>MAINTAINED BY PIGSTY</span></div>
+                <div class="silo-board-foot"><span>SINGLE BINARY</span><span><i aria-hidden="true"></i>MAINTAINED BY PIGSTY</span></div>
               </div>
 
             </figure>
@@ -218,50 +221,27 @@
     <section class="landing-section key-metrics" id="metrics" aria-labelledby="metrics-title">
       <div class="landing-container">
         <div class="section-head section-head--compact" data-reveal>
-          <p class="section-eyebrow"><span class="silkscreen">KEY METRICS</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title section-title--sm" id="metrics-title">{{ if $zh }}持续维护，广泛采用{{ else }}Maintained in public, visible at a glance{{ end }}</h2>
+          <p class="section-eyebrow"><span class="silkscreen">PRODUCT FACTS</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
+          <h2 class="section-title section-title--sm" id="metrics-title">{{ if $zh }}一个二进制覆盖的范围{{ else }}What a single binary covers{{ end }}</h2>
         </div>
 
         <div class="stats-grid" data-reveal>
-          <a href="https://hub.docker.com/r/pgsty/minio" target="_blank" rel="noopener" class="stat-item">
-            <span class="stat-value" data-count="{{ $metrics.docker_pulls }}">{{ lang.FormatNumber 0 $metrics.docker_pulls }}</span>
-            <span class="stat-label">Docker Pulls</span>
+          <a href="{{ relLangURL "docs/feature/overview/" }}" class="stat-item">
+            <span class="stat-value" data-count="{{ $metrics.package_formats }}">{{ lang.FormatNumber 0 $metrics.package_formats }}</span>
+            <span class="stat-label">{{ if $zh }}软件包格式（RPM / DEB）{{ else }}Package Formats{{ end }}</span>
           </a>
-          <a href="https://github.com/pgsty/minio/stargazers" target="_blank" rel="noopener" class="stat-item">
-            <span class="stat-value" data-count="{{ $metrics.github_stars }}">{{ lang.FormatNumber 0 $metrics.github_stars }}</span>
-            <span class="stat-label">GitHub Stars</span>
+          <a href="{{ relLangURL "docs/reference/compatibility/" }}" class="stat-item">
+            <span class="stat-value" data-count="{{ $metrics.platforms }}">{{ lang.FormatNumber 0 $metrics.platforms }}</span>
+            <span class="stat-label">{{ if $zh }}构建平台（linux / darwin × amd64 / arm64）{{ else }}Platforms{{ end }}</span>
           </a>
-          <a href="{{ relLangURL "blog/security/" }}" class="stat-item">
-            <span class="stat-value" data-count="{{ $metrics.security_fixes }}">{{ lang.FormatNumber 0 $metrics.security_fixes }}</span>
-            <span class="stat-label">Security Fixes</span>
+          <a href="{{ relLangURL "docs/reference/compatibility/" }}" class="stat-item">
+            <span class="stat-value" data-count="{{ $metrics.client_generations }}">{{ lang.FormatNumber 0 $metrics.client_generations }}</span>
+            <span class="stat-label">{{ if $zh }}实测客户端组合{{ else }}Verified Clients{{ end }}</span>
           </a>
-          <a href="{{ relLangURL "blog/release/" }}" class="stat-item">
-            <span class="stat-value" data-count="{{ $metrics.releases }}">{{ lang.FormatNumber 0 $metrics.releases }}</span>
-            <span class="stat-label">Releases</span>
+          <a href="{{ relLangURL "docs/start/install/" }}" class="stat-item">
+            <span class="stat-value" data-count="{{ $metrics.external_deps }}">{{ lang.FormatNumber 0 $metrics.external_deps }}</span>
+            <span class="stat-label">{{ if $zh }}外部运行时依赖{{ else }}External Dependencies{{ end }}</span>
           </a>
-        </div>
-
-        <div class="logos-marquee adoption-logos" data-reveal aria-label="{{ if $zh }}采用 SILO 镜像并带有公开证据的开源项目{{ else }}Open-source projects with public SILO adoption evidence{{ end }}">
-          <div class="logos-marquee-row" data-direction="left">
-            <div class="logos-marquee-content">
-              <div class="evidence-logo-set">
-                {{ range $evidenceProjects }}
-                <a class="logo-item evidence-logo-item" href="{{ .href }}" target="_blank" rel="noopener" aria-label="{{ .name }} — {{ if $zh }}查看采用证据{{ else }}view adoption evidence{{ end }}">
-                  <img src="{{ .logo | relURL }}" alt="" loading="lazy">
-                  <span class="evidence-logo-copy"><strong>{{ .name }}</strong><small>{{ if $zh }}{{ .kindZh }}{{ else }}{{ .kind }}{{ end }}</small></span>
-                </a>
-                {{ end }}
-              </div>
-              <div class="evidence-logo-set" aria-hidden="true">
-                {{ range $evidenceProjects }}
-                <span class="logo-item evidence-logo-item">
-                  <img src="{{ .logo | relURL }}" alt="" loading="lazy">
-                  <span class="evidence-logo-copy"><strong>{{ .name }}</strong><small>{{ if $zh }}{{ .kindZh }}{{ else }}{{ .kind }}{{ end }}</small></span>
-                </span>
-                {{ end }}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -270,105 +250,113 @@
       <div class="landing-container">
         <div class="section-head" data-reveal>
           <p class="section-eyebrow"><span class="silkscreen">{{ if $zh }}价值主张{{ else }}VALUE PROPOSITION{{ end }}</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title">{{ if $zh }}保留成熟能力，维护关键价值{{ else }}Keep what works. Maintain what matters{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}面向需要延续性的运维者，提供聚焦的下游维护，而不是重新发明对象存储。{{ else }}A focused downstream for operators who need continuity—not a new storage experiment.{{ end }}</p>
+          <h2 class="section-title">{{ if $zh }}把发包这件事，收进一个二进制{{ else }}Everything a repository needs, in one executable{{ end }}</h2>
+          <p class="section-subtitle">{{ if $zh }}面向自己维护软件源的运维者：不装工具链，不起常驻服务，不猜测状态。{{ else }}For operators who host their own package feeds—no toolchain to install, no daemon to run, no guessing about state.{{ end }}</p>
         </div>
 
         <div class="module-row" data-reveal>
           <div class="module-content">
-            <p class="module-ref silkscreen">01 · {{ if $zh }}保守维护{{ else }}CONSERVATIVE MAINTENANCE{{ end }}</p>
-            <h3 class="module-title"><a href="{{ relLangURL "blog/release/" }}">{{ if $zh }}以保守为设计原则{{ else }}Conservative by Design{{ end }}</a></h3>
-            <p class="module-motto"><span aria-hidden="true">◇</span> {{ if $zh }}克制变更，延续运行{{ else }}Narrow changes. Durable operations{{ end }}</p>
+            <p class="module-ref silkscreen">01 · {{ if $zh }}双引擎{{ else }}TWO ENGINES{{ end }}</p>
+            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/plain/" }}">{{ if $zh }}平面仓库与托管工作区{{ else }}Flat Repositories and Managed Workspaces{{ end }}</a></h3>
+            <p class="module-motto"><span aria-hidden="true">◇</span> {{ if $zh }}一条命令起步，一套模型长跑{{ else }}One command to start. One model to grow into{{ end }}</p>
             <ul class="module-list">
-              <li>{{ if $zh }}聚焦构建、依赖与运行时维护{{ else }}Focused build, dependency, and runtime maintenance{{ end }}</li>
-              <li>{{ if $zh }}吸收适用于当前发行线的安全修复{{ else }}Applicable security fixes for the active release line{{ end }}</li>
-              <li>{{ if $zh }}只为可复现缺陷进行目标明确的修补{{ else }}Targeted repairs for reproducible defects{{ end }}</li>
+              <li>{{ if $zh }}<strong>Plain</strong>：<code>sow create</code> 就地索引一个放着 rpm / deb 的目录{{ else }}<strong>Plain</strong>: <code>sow create</code> indexes a directory of rpm / deb files in place{{ end }}</li>
+              <li>{{ if $zh }}<strong>Managed</strong>：工作区 → 仓库 → Dist 三层模型，包池与发布视图分离{{ else }}<strong>Managed</strong>: workspace → repository → dist, with the pool separated from published views{{ end }}</li>
+              <li>{{ if $zh }}两条路径互不干扰，输出确定、可复现{{ else }}The two paths never mix, and both emit deterministic, reproducible output{{ end }}</li>
             </ul>
-            <p class="module-value">{{ if $zh }}最小化下游差异，最大化运维连续性{{ else }}Minimize downstream delta. Maximize continuity{{ end }}</p>
+            <p class="module-value">{{ if $zh }}从临时目录到长期维护的软件源，不必换工具{{ else }}From a scratch directory to a long-lived feed, without changing tools{{ end }}</p>
           </div>
           <div class="module-visual">
-            <a href="{{ relLangURL "operations/concepts/erasure-coding/" }}" class="module-img silo-figure">
-              <img src="{{ "images/erasure-code.jpg" | relURL }}" alt="{{ if $zh }}纠删码数据块与校验块示意图{{ else }}Erasure-coded data and parity blocks{{ end }}" loading="lazy">
+            <a href="{{ relLangURL "docs/start/quickstart/" }}" class="code-plate">
+              <span class="code-plate-head"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-file">quickstart.sh</span></span>
+              <pre class="code-body"><span class="c"># Plain: index a directory as it is</span>
+<span class="k">sow</span> <span class="s">create</span> /srv/repo
+
+<span class="c"># Managed: a workspace you keep</span>
+<span class="k">sow</span> <span class="s">init</span> /srv/sow
+<span class="k">sow</span> <span class="s">repo</span> new pigsty
+<span class="k">sow</span> <span class="s">dist</span> new el9 --format rpm
+<span class="k">sow</span> <span class="s">add</span> <span class="v">*.rpm</span></pre>
             </a>
           </div>
         </div>
 
         <div class="module-row module-row--reverse" data-reveal>
           <div class="module-content">
-            <p class="module-ref silkscreen">02 · {{ if $zh }}兼容接口{{ else }}COMPATIBLE INTERFACE{{ end }}</p>
-            <h3 class="module-title"><a href="#interface">{{ if $zh }}熟悉的运维界面{{ else }}Familiar Operational Surface{{ end }}</a></h3>
-            <p class="module-motto"><span aria-hidden="true">↔</span> {{ if $zh }}评估升级，而不是重做迁移{{ else }}Evaluate an upgrade—not a migration{{ end }}</p>
+            <p class="module-ref silkscreen">02 · {{ if $zh }}包池与视图{{ else }}POOL AND VIEWS{{ end }}</p>
+            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/views/" }}">{{ if $zh }}一份包体，多个架构视图{{ else }}One Payload, Many Architecture Views{{ end }}</a></h3>
+            <p class="module-motto"><span aria-hidden="true">↔</span> {{ if $zh }}包池持有内容，视图只是投影{{ else }}The pool owns the bytes. Views are projections{{ end }}</p>
             <ul class="module-list">
-              <li>{{ if $zh }}保留 <strong>minio</strong> 可执行文件与 S3 API{{ else }}Preserves the <strong>minio</strong> executable and S3 APIs{{ end }}</li>
-              <li>{{ if $zh }}延续环境变量、CLI 约定与发行标签{{ else }}Keeps environment variables, CLI conventions, and release tags{{ end }}</li>
-              <li>{{ if $zh }}适配常见部署流程与现有自动化{{ else }}Fits common deployment workflows and existing automation{{ end }}</li>
+              <li>{{ if $zh }}Debian 风格 <code>pool/</code> 包池，内容不可变、按首字母分组{{ else }}A Debian-style <code>pool/</code> holds immutable payloads, grouped by initial{{ end }}</li>
+              <li>{{ if $zh }}架构视图用硬链接投影，不复制第二份包体{{ else }}Architecture views are hardlink projections, never a second copy{{ end }}</li>
+              <li>{{ if $zh }}<code>noarch</code> / <code>all</code> 作为中性包进入每个适用视图{{ else }}<code>noarch</code> / <code>all</code> packages land in every applicable view{{ end }}</li>
             </ul>
-            <p class="module-value">{{ if $zh }}接口优先，迁移成本可控{{ else }}Interface first. Migration cost contained{{ end }}</p>
+            <p class="module-value">{{ if $zh }}多架构仓库的磁盘占用，接近单架构{{ else }}A multi-architecture repository costs about as much disk as one{{ end }}</p>
           </div>
           <div class="module-visual">
-            <a href="#interface" class="code-plate compatibility-plate">
-              <span class="code-plate-head"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-file">compatibility.contract</span></span>
-              <pre class="code-body"><span class="c"># Expected continuity</span>
-<span class="k">executable</span>: <span class="s">minio</span>
-<span class="k">object_api</span>: <span class="s">S3 compatible</span>
-<span class="k">environment</span>: <span class="s">MINIO_*</span>
-<span class="k">release_tag</span>: <span class="s">RELEASE.*</span>
-<span class="k">client</span>: <span class="s">mc / mcli</span>
-<span class="k">policy</span>: <span class="v">test before rollout</span></pre>
+            <a href="{{ relLangURL "docs/reference/layout/" }}" class="code-plate compatibility-plate">
+              <span class="code-plate-head"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-file">repository.layout</span></span>
+              <pre class="code-body"><span class="c"># Owned once, projected many times</span>
+<span class="k">pool/p/postgresql</span>/ <span class="s">*.rpm *.deb</span>
+<span class="k">el9/x86_64</span>/ <span class="v">repodata/</span>
+<span class="k">el9/aarch64</span>/ <span class="v">repodata/</span>
+<span class="k">trixie/dists</span>/ <span class="v">InRelease</span>
+<span class="k">by-hash</span>: <span class="s">SHA256</span></pre>
             </a>
           </div>
         </div>
 
         <div class="module-row" id="releases" data-reveal>
           <div class="module-content">
-            <p class="module-ref silkscreen">03 · {{ if $zh }}完整交付{{ else }}COMPLETE DELIVERY{{ end }}</p>
-            <h3 class="module-title"><a href="{{ relLangURL "download/" }}">{{ if $zh }}完整的发行制品{{ else }}Release Artifacts Included{{ end }}</a></h3>
-            <p class="module-motto"><span aria-hidden="true">▦</span> {{ if $zh }}从源码到可运行制品{{ else }}From source to runnable artifacts{{ end }}</p>
+            <p class="module-ref silkscreen">03 · {{ if $zh }}签名与信任{{ else }}SIGNING AND TRUST{{ end }}</p>
+            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/signing/" }}">{{ if $zh }}两条独立的信任链{{ else }}Two Independent Trust Chains{{ end }}</a></h3>
+            <p class="module-motto"><span aria-hidden="true">▦</span> {{ if $zh }}元数据签名与包签名，各管各的{{ else }}Metadata signatures and package signatures, kept apart{{ end }}</p>
             <ul class="module-list">
-              <li>{{ if $zh }}版本化二进制、校验和与发布说明{{ else }}Versioned binaries, checksums, and release notes{{ end }}</li>
-              <li>{{ if $zh }}RPM、DEB、APK 与多架构容器镜像{{ else }}RPM, DEB, APK, and multi-architecture container images{{ end }}</li>
-              <li>{{ if $zh }}持续维护的控制台与兼容客户端{{ else }}A maintained Console and compatible client{{ end }}</li>
+              <li>{{ if $zh }}元数据签名在进程内完成：<code>repomd.xml.asc</code>、<code>InRelease</code>、<code>Release.gpg</code>{{ else }}Metadata is signed in-process: <code>repomd.xml.asc</code>, <code>InRelease</code>, <code>Release.gpg</code>{{ end }}</li>
+              <li>{{ if $zh }}RPM 包签名支持 <code>never</code> / <code>fill</code> / <code>always</code> 三档策略{{ else }}RPM package signing runs in <code>never</code> / <code>fill</code> / <code>always</code> mode{{ end }}</li>
+              <li>{{ if $zh }}密钥引用三形态：<code>file://</code>、<code>env://</code>、<code>agent://</code>{{ else }}Keys are referenced as <code>file://</code>, <code>env://</code>, or <code>agent://</code>{{ end }}</li>
             </ul>
-            <p class="module-value">{{ if $zh }}不只维护源码，也维护交付面{{ else }}Maintain the delivery surface—not just the source{{ end }}</p>
+            <p class="module-value">{{ if $zh }}换签名身份会让仓库变脏，重建后才可交付{{ else }}Changing a signing identity marks the repository dirty until it is rebuilt{{ end }}</p>
           </div>
           <div class="module-visual">
-            <a href="{{ relLangURL "download/" }}" class="artifact-plate" aria-label="{{ if $zh }}浏览发行制品{{ else }}Browse release artifacts{{ end }}">
-              <span class="artifact-plate-head"><b>SILO // RELEASE SURFACE</b><small>VERSIONED · CHECKSUMMED</small></span>
+            <a href="{{ relLangURL "docs/tutorial/signing/" }}" class="artifact-plate" aria-label="{{ if $zh }}查看签名教程{{ else }}Read the signing tutorial{{ end }}">
+              <span class="artifact-plate-head"><b>SOW // PUBLISHED SURFACE</b><small>SIGNED · VERIFIABLE</small></span>
               <span class="artifact-grid">
-                <i><b>OCI</b><small>amd64 · arm64</small></i>
-                <i><b>RPM</b><small>EL compatible</small></i>
-                <i><b>DEB</b><small>Debian · Ubuntu</small></i>
-                <i><b>APK</b><small>Alpine Linux</small></i>
-                <i><b>BIN</b><small>server · client</small></i>
-                <i><b>SUM</b><small>SHA256 checksums</small></i>
+                <i><b>RPM</b><small>primary · filelists</small></i>
+                <i><b>DEB</b><small>Packages · Release</small></i>
+                <i><b>ASC</b><small>repomd signature</small></i>
+                <i><b>GPG</b><small>InRelease · detached</small></i>
+                <i><b>POOL</b><small>immutable payloads</small></i>
+                <i><b>LOG</b><small>operation journal</small></i>
               </span>
-              <span class="artifact-plate-foot"><i></i> ACTIVE RELEASE LINE <b>→</b></span>
+              <span class="artifact-plate-foot"><i></i> {{ if $zh }}客户端可验签{{ else }}CLIENT-VERIFIABLE{{ end }} <b>→</b></span>
             </a>
           </div>
         </div>
 
         <div class="module-row module-row--reverse" data-reveal>
           <div class="module-content">
-            <p class="module-ref silkscreen">04 · {{ if $zh }}可查安全{{ else }}VISIBLE SECURITY{{ end }}</p>
-            <h3 class="module-title"><a href="{{ relLangURL "blog/security/" }}">{{ if $zh }}公开可查的安全记录{{ else }}Visible Security Record{{ end }}</a></h3>
-            <p class="module-motto"><span aria-hidden="true">＋</span> {{ if $zh }}政策、公告与代码放在一起{{ else }}Policy, advisories, and code in one place{{ end }}</p>
+            <p class="module-ref silkscreen">04 · {{ if $zh }}事务与审计{{ else }}TRANSACTIONS AND AUDIT{{ end }}</p>
+            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/transactions/" }}">{{ if $zh }}中断之后，仓库仍然是完整的{{ else }}Interrupt It. The Repository Stays Whole{{ end }}</a></h3>
+            <p class="module-motto"><span aria-hidden="true">＋</span> {{ if $zh }}先记意图，再动文件{{ else }}Record the intent, then touch the files{{ end }}</p>
             <ul class="module-list">
-              <li>{{ if $zh }}公开安全策略与私下漏洞报告流程{{ else }}Public security policy and private reporting path{{ end }}</li>
-              <li>{{ if $zh }}分支安全注记对应当前活跃发行线{{ else }}Fork security notes target the active release line{{ end }}</li>
-              <li>{{ if $zh }}发布前保留审阅、固定版本、测试与回滚路径{{ else }}Review, pin, test, and retain a rollback path before rollout{{ end }}</li>
+              <li>{{ if $zh }}写操作先落 journal，崩溃后由下一条写命令前滚或回滚{{ else }}Writes are journaled first; the next write command rolls them forward or back{{ end }}</li>
+              <li>{{ if $zh }}提交顺序固定：包体 → 元数据 → 指针 → 删除，客户端看不到撕裂状态{{ else }}Commit order is fixed—payload, metadata, pointer, delete—so clients never see a torn tree{{ end }}</li>
+              <li>{{ if $zh }}操作账本可查、可导出 JSONL：<code>sow log</code> / <code>sow log export</code>{{ else }}The operation journal is queryable and exportable: <code>sow log</code>, <code>sow log export</code>{{ end }}</li>
             </ul>
-            <p class="module-value">{{ if $zh }}把维护边界写清楚，也把风险写清楚{{ else }}Make maintenance—and its limits—auditable{{ end }}</p>
+            <p class="module-value">{{ if $zh }}证据不足就拒绝执行，而不是猜一个结果{{ else }}When the evidence is insufficient, it refuses—rather than guessing{{ end }}</p>
           </div>
           <div class="module-visual">
-            <a href="{{ relLangURL "blog/security/" }}" class="code-plate security-plate">
-              <span class="code-plate-head"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-file">SECURITY.md</span></span>
-              <pre class="code-body"><span class="c"># Active release line</span>
-<span class="k">report</span>: <span class="s">privately</span>
-<span class="k">triage</span>: <span class="s">reproducible issues</span>
-<span class="k">advisories</span>: <span class="s">published with code</span>
-<span class="k">compatibility</span>: <span class="v">goal, not guarantee</span>
+            <a href="{{ relLangURL "docs/feature/audit/" }}" class="code-plate security-plate">
+              <span class="code-plate-head"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-file">sow check</span></span>
+              <pre class="code-body"><span class="c"># Eight layers, fail-closed</span>
+<span class="k">config</span>: <span class="s">strict schema</span>
+<span class="k">pool</span>: <span class="s">payload digests</span>
+<span class="k">views</span>: <span class="s">hardlink integrity</span>
+<span class="k">metadata</span>: <span class="s">index vs tree</span>
+<span class="k">generation</span>: <span class="v">clean or dirty</span>
 
-<span class="c"># Pin · Review · Test · Roll back</span></pre>
+<span class="c"># dirty → exit 5, not a silent pass</span></pre>
             </a>
           </div>
         </div>
@@ -378,120 +366,57 @@
     <section class="landing-section ecosystem" id="interface">
       <div class="landing-container">
         <div class="section-head" data-reveal>
-          <p class="section-eyebrow"><span class="silkscreen">S3 INTERFACE</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title">{{ if $zh }}沿用你已经依赖的接口{{ else }}The interface your stack already speaks{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}SILO 延续 MinIO 已建立的应用与运维接口，让升级评估围绕兼容性测试展开，而不是重新设计存储接入。{{ else }}SILO follows MinIO's established application and operational surface, so evaluation centers on compatibility testing—not redesigning storage access.{{ end }}</p>
+          <p class="section-eyebrow"><span class="silkscreen">COMMAND SURFACE</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
+          <h2 class="section-title">{{ if $zh }}一套命令，覆盖仓库的一生{{ else }}One command set for the whole repository lifecycle{{ end }}</h2>
+          <p class="section-subtitle">{{ if $zh }}创建、加包、构建、校验、审计——每个动词都有确定的退出码和可选的 JSON 输出。{{ else }}Create, add, build, check, audit—every verb has a defined exit code and an optional JSON envelope.{{ end }}</p>
           <div class="section-links">
-            <a href="{{ relLangURL "developers/minio-drivers/" }}">{{ if $zh }}S3 客户端{{ else }}S3 Clients{{ end }} →</a>
-            <a href="{{ relLangURL "reference/minio-server/settings/" }}">{{ if $zh }}环境变量{{ else }}Environment Variables{{ end }} →</a>
-            <a href="{{ relLangURL "reference/minio-mc/" }}">{{ if $zh }}命令行客户端{{ else }}Command-Line Client{{ end }} →</a>
+            <a href="{{ relLangURL "docs/reference/cli/" }}">{{ if $zh }}命令行参考{{ else }}CLI Reference{{ end }} →</a>
+            <a href="{{ relLangURL "docs/reference/config/" }}">{{ if $zh }}配置文件{{ else }}Configuration{{ end }} →</a>
+            <a href="{{ relLangURL "docs/reference/exit-codes/" }}">{{ if $zh }}退出码{{ else }}Exit Codes{{ end }} →</a>
           </div>
         </div>
 
         <div class="kernel-grid interface-grid" data-reveal>
-          <a href="{{ relLangURL "developers/minio-drivers/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">S3</span><span class="kernel-name">S3 API</span><span class="kernel-desc">Application interface</span></a>
-          <a href="{{ relLangURL "reference/minio-server/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">$</span><span class="kernel-name">minio</span><span class="kernel-desc">Server executable</span></a>
-          <a href="{{ relLangURL "reference/minio-server/settings/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">ENV</span><span class="kernel-name">MINIO_*</span><span class="kernel-desc">Configuration surface</span></a>
-          <a href="{{ relLangURL "blog/release/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">REL</span><span class="kernel-name">RELEASE.*</span><span class="kernel-desc">Version tags</span></a>
-          <a href="{{ relLangURL "reference/minio-mc/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">MC</span><span class="kernel-name">mc / mcli</span><span class="kernel-desc">Operator workflow</span></a>
-          <a href="{{ relLangURL "administration/identity-access-management/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">IAM</span><span class="kernel-name">IAM + TLS</span><span class="kernel-desc">Security controls</span></a>
+          <a href="{{ relLangURL "docs/reference/cli/create/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">CR</span><span class="kernel-name">create</span><span class="kernel-desc">Flat repository</span></a>
+          <a href="{{ relLangURL "docs/reference/cli/init/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">IN</span><span class="kernel-name">init</span><span class="kernel-desc">Workspace setup</span></a>
+          <a href="{{ relLangURL "docs/reference/cli/add/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">ADD</span><span class="kernel-name">add / rm</span><span class="kernel-desc">Membership</span></a>
+          <a href="{{ relLangURL "docs/reference/cli/build/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">BLD</span><span class="kernel-name">build</span><span class="kernel-desc">Publish a generation</span></a>
+          <a href="{{ relLangURL "docs/reference/cli/build/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">CHK</span><span class="kernel-name">check</span><span class="kernel-desc">Deliverability gate</span></a>
+          <a href="{{ relLangURL "docs/reference/cli/log/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">LOG</span><span class="kernel-name">log</span><span class="kernel-desc">Operation journal</span></a>
         </div>
 
-        <div class="extbus-head" data-reveal><span class="silkscreen">OBJECT STORAGE CAPABILITIES</span></div>
-        <div class="extensions-marquee" data-reveal aria-label="Object storage capabilities">
+        <div class="extbus-head" data-reveal><span class="silkscreen">{{ if $zh }}仓库能力{{ else }}REPOSITORY CAPABILITIES{{ end }}</span></div>
+        <div class="extensions-marquee" data-reveal aria-label="{{ if $zh }}仓库能力{{ else }}Repository capabilities{{ end }}">
           <div class="marquee-row" data-direction="left"><div class="marquee-content">
-            <a href="{{ relLangURL "administration/object-management/" }}" class="ext-pill">Buckets</a><a href="{{ relLangURL "administration/object-management/object-versioning/" }}" class="ext-pill">Versioning</a><a href="{{ relLangURL "administration/object-management/object-retention/" }}" class="ext-pill">Object Lock</a><a href="{{ relLangURL "administration/server-side-encryption/" }}" class="ext-pill">Encryption</a><a href="{{ relLangURL "operations/monitoring/" }}" class="ext-pill">Metrics</a><a href="{{ relLangURL "administration/identity-access-management/" }}" class="ext-pill">Policies</a><a href="{{ relLangURL "administration/bucket-replication/" }}" class="ext-pill">Replication</a><a href="{{ relLangURL "administration/object-management/object-lifecycle-management/" }}" class="ext-pill">Lifecycle</a>
-            <a href="{{ relLangURL "administration/object-management/" }}" class="ext-pill">Buckets</a><a href="{{ relLangURL "administration/object-management/object-versioning/" }}" class="ext-pill">Versioning</a><a href="{{ relLangURL "administration/object-management/object-retention/" }}" class="ext-pill">Object Lock</a><a href="{{ relLangURL "administration/server-side-encryption/" }}" class="ext-pill">Encryption</a><a href="{{ relLangURL "operations/monitoring/" }}" class="ext-pill">Metrics</a><a href="{{ relLangURL "administration/identity-access-management/" }}" class="ext-pill">Policies</a><a href="{{ relLangURL "administration/bucket-replication/" }}" class="ext-pill">Replication</a><a href="{{ relLangURL "administration/object-management/object-lifecycle-management/" }}" class="ext-pill">Lifecycle</a>
+            <a href="{{ relLangURL "docs/tutorial/yum-repo/" }}" class="ext-pill">repodata</a><a href="{{ relLangURL "docs/tutorial/apt-repo/" }}" class="ext-pill">Packages.gz</a><a href="{{ relLangURL "docs/tutorial/apt-repo/" }}" class="ext-pill">InRelease</a><a href="{{ relLangURL "docs/feature/views/" }}" class="ext-pill">by-hash</a><a href="{{ relLangURL "docs/feature/views/" }}" class="ext-pill">Architecture Views</a><a href="{{ relLangURL "docs/feature/views/" }}" class="ext-pill">Package Pool</a><a href="{{ relLangURL "docs/feature/policy/" }}" class="ext-pill">Membership Policy</a><a href="{{ relLangURL "docs/feature/signing/" }}" class="ext-pill">GPG Signing</a>
+            <a href="{{ relLangURL "docs/tutorial/yum-repo/" }}" class="ext-pill">repodata</a><a href="{{ relLangURL "docs/tutorial/apt-repo/" }}" class="ext-pill">Packages.gz</a><a href="{{ relLangURL "docs/tutorial/apt-repo/" }}" class="ext-pill">InRelease</a><a href="{{ relLangURL "docs/feature/views/" }}" class="ext-pill">by-hash</a><a href="{{ relLangURL "docs/feature/views/" }}" class="ext-pill">Architecture Views</a><a href="{{ relLangURL "docs/feature/views/" }}" class="ext-pill">Package Pool</a><a href="{{ relLangURL "docs/feature/policy/" }}" class="ext-pill">Membership Policy</a><a href="{{ relLangURL "docs/feature/signing/" }}" class="ext-pill">GPG Signing</a>
           </div></div>
           <div class="marquee-row" data-direction="right"><div class="marquee-content">
-            <a href="{{ relLangURL "operations/deployments/baremetal-deploy-minio-server/" }}" class="ext-pill">Distributed</a><a href="{{ relLangURL "operations/concepts/erasure-coding/" }}" class="ext-pill">Erasure Code</a><a href="{{ relLangURL "operations/concepts/thresholds/" }}" class="ext-pill">Quorum</a><a href="{{ relLangURL "operations/replication/multi-site-replication/" }}" class="ext-pill">Site Replication</a><a href="{{ relLangURL "reference/minio-mc/mc-sql/" }}" class="ext-pill">S3 Select</a><a href="{{ relLangURL "administration/monitoring/" }}" class="ext-pill">Audit Logs</a><a href="{{ relLangURL "administration/object-management/object-lifecycle-management/" }}" class="ext-pill">Tiering</a><a href="{{ relLangURL "administration/minio-console/" }}" class="ext-pill">Console</a>
-            <a href="{{ relLangURL "operations/deployments/baremetal-deploy-minio-server/" }}" class="ext-pill">Distributed</a><a href="{{ relLangURL "operations/concepts/erasure-coding/" }}" class="ext-pill">Erasure Code</a><a href="{{ relLangURL "operations/concepts/thresholds/" }}" class="ext-pill">Quorum</a><a href="{{ relLangURL "operations/replication/multi-site-replication/" }}" class="ext-pill">Site Replication</a><a href="{{ relLangURL "reference/minio-mc/mc-sql/" }}" class="ext-pill">S3 Select</a><a href="{{ relLangURL "administration/monitoring/" }}" class="ext-pill">Audit Logs</a><a href="{{ relLangURL "administration/object-management/object-lifecycle-management/" }}" class="ext-pill">Tiering</a><a href="{{ relLangURL "administration/minio-console/" }}" class="ext-pill">Console</a>
+            <a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Crash Recovery</a><a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Lock Model</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Operation Journal</a><a href="{{ relLangURL "docs/reference/json/" }}" class="ext-pill">JSON Output</a><a href="{{ relLangURL "docs/reference/package-ref/" }}" class="ext-pill">Package References</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Generations</a><a href="{{ relLangURL "docs/tutorial/serving/" }}" class="ext-pill">Static Serving</a><a href="{{ relLangURL "docs/tutorial/migration/" }}" class="ext-pill">Migration</a>
+            <a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Crash Recovery</a><a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Lock Model</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Operation Journal</a><a href="{{ relLangURL "docs/reference/json/" }}" class="ext-pill">JSON Output</a><a href="{{ relLangURL "docs/reference/package-ref/" }}" class="ext-pill">Package References</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Generations</a><a href="{{ relLangURL "docs/tutorial/serving/" }}" class="ext-pill">Static Serving</a><a href="{{ relLangURL "docs/tutorial/migration/" }}" class="ext-pill">Migration</a>
           </div></div>
         </div>
         <div class="extbus-cta" data-reveal><a href="{{ relLangURL "docs/" }}" class="btn btn-line">{{ if $zh }}浏览完整文档{{ else }}Browse the Documentation{{ end }} →</a></div>
       </div>
     </section>
 
-    <section class="dashwall" aria-label="{{ if $zh }}控制台与监控画廊{{ else }}Console and monitoring gallery{{ end }}">
-      <div class="landing-container">
-        <div class="dashwall-head" data-reveal>
-          <p class="section-eyebrow"><span class="silkscreen">OPERATIONS</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title section-title--sm">{{ if $zh }}熟悉的控制台、监控与复制工作流{{ else }}Familiar Console, monitoring, and replication workflows{{ end }}</h2>
-          <a href="{{ relLangURL "administration/minio-console/" }}" class="dashwall-link">{{ if $zh }}打开控制台文档{{ else }}Open Console Docs{{ end }} ↗</a>
-        </div>
-      </div>
-      <div class="dashboard-gallery-marquee" data-reveal>
-        <div class="dashboard-gallery-track">
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "administration/minio-console/" }}" data-src="{{ "images/minio-console/console-object-browser.png" | relURL }}" data-alt="Object Browser"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "administration/minio-console/" }}" data-src="{{ "images/minio-console/console-bucket-manage.png" | relURL }}" data-alt="Bucket Management"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "administration/minio-console/" }}" data-src="{{ "images/minio-console/console-iam.png" | relURL }}" data-alt="Identity and Access Management"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "administration/minio-console/" }}" data-src="{{ "images/minio-console/console-settings-site-replication.png" | relURL }}" data-alt="Site Replication"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "operations/monitoring/" }}" data-src="{{ "images/grafana-minio.png" | relURL }}" data-alt="Grafana MinIO Dashboard"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "operations/monitoring/" }}" data-src="{{ "images/grafana-replication.png" | relURL }}" data-alt="Grafana Replication Dashboard"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "administration/minio-console/" }}" data-src="{{ "images/minio-console/console-object-browser.png" | relURL }}" data-alt="Object Browser"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "administration/minio-console/" }}" data-src="{{ "images/minio-console/console-bucket-manage.png" | relURL }}" data-alt="Bucket Management"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "administration/minio-console/" }}" data-src="{{ "images/minio-console/console-iam.png" | relURL }}" data-alt="Identity and Access Management"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "administration/minio-console/" }}" data-src="{{ "images/minio-console/console-settings-site-replication.png" | relURL }}" data-alt="Site Replication"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "operations/monitoring/" }}" data-src="{{ "images/grafana-minio.png" | relURL }}" data-alt="Grafana MinIO Dashboard"></a>
-          <a class="dashboard-gallery-slide" href="{{ relLangURL "operations/monitoring/" }}" data-src="{{ "images/grafana-replication.png" | relURL }}" data-alt="Grafana Replication Dashboard"></a>
-        </div>
-      </div>
-    </section>
-
-    <section class="landing-section operator-voices" id="voices">
+    <section class="landing-section promise" id="scope">
       <div class="landing-container">
         <div class="section-head" data-reveal>
-          <p class="section-eyebrow"><span class="silkscreen">{{ if $zh }}用户之声{{ else }}USER VOICES{{ end }}</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title">{{ if $zh }}真实迁移反馈，也保留现实提醒{{ else }}Real migration reports, with the caveat intact{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}以下均为 2026 年 2–7 月的第三方公开记录，只代表各自环境，不构成通用兼容性或生产保证。{{ else }}Public third-party records from February–July 2026. They describe individual environments, not universal compatibility or production guarantees.{{ end }}</p>
-        </div>
-
-        <div class="operator-voices-grid" data-reveal>
-          {{ range $voices.featured }}
-          {{ partial "operator-voice.html" (dict "voice" . "zh" $zh) }}
-          {{ end }}
-        </div>
-      </div>
-
-      <div class="landing-container">
-        <div class="voice-wall-head" data-reveal>
-          <span class="silkscreen">{{ if $zh }}更多社区反馈 · 悬停暂停 · 点击查看原文{{ else }}MORE FROM THE COMMUNITY · HOVER TO PAUSE · CLICK FOR THE SOURCE{{ end }}</span>
-        </div>
-      </div>
-
-      <div class="testimonials-marquee voice-wall" data-reveal aria-label="{{ if $zh }}第三方公开提及 SILO 的记录{{ else }}Public third-party mentions of SILO{{ end }}">
-        {{ range $i, $row := $voices.rows }}
-        <div class="testimonials-row" data-direction="{{ cond (eq $i 0) "left" "right" }}">
-          <div class="testimonials-content">
-            <div class="voice-set">
-              {{ range $row }}{{ partial "voice-card.html" (dict "voice" . "static" false) }}{{ end }}
-            </div>
-            <div class="voice-set" aria-hidden="true">
-              {{ range $row }}{{ partial "voice-card.html" (dict "voice" . "static" true) }}{{ end }}
-            </div>
-          </div>
-        </div>
-        {{ end }}
-      </div>
-    </section>
-
-    <section class="landing-section promise" id="maintenance">
-      <div class="landing-container">
-        <div class="section-head" data-reveal>
-          <p class="section-eyebrow"><span class="silkscreen">MAINTENANCE</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title">{{ if $zh }}一项刻意收窄的承诺{{ else }}A deliberately narrow promise{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}SILO 服务于现有 MinIO 兼容部署的连续性；它不是无限范围的产品路线图。{{ else }}SILO exists for continuity across existing MinIO-compatible deployments—not an unlimited product roadmap.{{ end }}</p>
+          <p class="section-eyebrow"><span class="silkscreen">SCOPE</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
+          <h2 class="section-title">{{ if $zh }}一份刻意收窄的范围{{ else }}A deliberately narrow scope{{ end }}</h2>
+          <p class="section-subtitle">{{ if $zh }}SOW 只做本地仓库的创建与维护。下面右侧不是待办清单，是明确的非目标。{{ else }}SOW builds and maintains local repositories. The column on the right is not a backlog—those are explicit non-goals.{{ end }}</p>
         </div>
         <div class="promise-grid" data-reveal>
           <article class="promise-card promise-card--yes">
-            <p class="silkscreen">{{ if $zh }}维护范围{{ else }}MAINTAINED SURFACE{{ end }}</p>
-            <h3>{{ if $zh }}我们持续维护{{ else }}What stays maintained{{ end }}</h3>
-            <ul><li>{{ if $zh }}活跃发行线的构建与依赖{{ else }}Builds and dependencies for the active release line{{ end }}</li><li>{{ if $zh }}适用的安全修复与公告{{ else }}Applicable security fixes and advisories{{ end }}</li><li>{{ if $zh }}可复现缺陷的聚焦修复{{ else }}Focused fixes for reproducible defects{{ end }}</li><li>{{ if $zh }}版本化交付制品与文档{{ else }}Versioned artifacts and documentation{{ end }}</li></ul>
+            <p class="silkscreen">{{ if $zh }}覆盖范围{{ else }}IN SCOPE{{ end }}</p>
+            <h3>{{ if $zh }}SOW 负责的部分{{ else }}What SOW does{{ end }}</h3>
+            <ul><li>{{ if $zh }}RPM 与 DEB 仓库索引的生成与维护{{ else }}Generating and maintaining RPM and DEB repository indexes{{ end }}</li><li>{{ if $zh }}包池、架构视图与成员策略{{ else }}Package pools, architecture views, and membership policy{{ end }}</li><li>{{ if $zh }}元数据签名与 RPM 包签名{{ else }}Metadata signing and RPM package signing{{ end }}</li><li>{{ if $zh }}事务、崩溃恢复与操作审计{{ else }}Transactions, crash recovery, and an operation audit trail{{ end }}</li></ul>
           </article>
           <article class="promise-card promise-card--no">
-            <p class="silkscreen">{{ if $zh }}明确边界{{ else }}EXPLICIT BOUNDARY{{ end }}</p>
-            <h3>{{ if $zh }}我们不做保证{{ else }}What is not promised{{ end }}</h3>
-            <ul><li>{{ if $zh }}完整复刻上游产品路线图{{ else }}A full continuation of the upstream roadmap{{ end }}</li><li>{{ if $zh }}历史版本或多条长期支持分支{{ else }}Historical releases or multiple support branches{{ end }}</li><li>{{ if $zh }}未经验证的逐项兼容保证{{ else }}Untested, item-by-item compatibility guarantees{{ end }}</li><li>{{ if $zh }}响应、修复或发行时限 SLA{{ else }}Response, remediation, or release-time SLAs{{ end }}</li></ul>
+            <p class="silkscreen">{{ if $zh }}明确非目标{{ else }}EXPLICIT NON-GOALS{{ end }}</p>
+            <h3>{{ if $zh }}SOW 不做的部分{{ else }}What SOW does not do{{ end }}</h3>
+            <ul><li>{{ if $zh }}造包：SOW 索引软件包，不构建软件包{{ else }}Building packages—SOW indexes them, it does not produce them{{ end }}</li><li>{{ if $zh }}远端发布、CDN 与对象存储上传{{ else }}Remote publishing, CDN integration, or object-storage upload{{ end }}</li><li>{{ if $zh }}多机多写：单写者模型，不做分布式协调{{ else }}Multi-writer setups—the model is single-writer by design{{ end }}</li><li>{{ if $zh }}modulemd、sqlite repodata、zchunk 与源码包索引{{ else }}modulemd, sqlite repodata, zchunk, and source package indexes{{ end }}</li></ul>
           </article>
         </div>
       </div>
@@ -501,35 +426,35 @@
       <div class="landing-container">
         <div class="section-head" data-reveal>
           <p class="section-eyebrow"><span class="silkscreen">DOWNLOAD</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title">{{ if $zh }}获取 SILO{{ else }}Get SILO{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}先选择服务端或管理客户端，再选择与你的操作系统、架构和部署方式匹配的安装路径。{{ else }}Choose the server or admin client first, then use the install path that matches your operating system, architecture, and deployment model.{{ end }}</p>
+          <h2 class="section-title">{{ if $zh }}获取 SOW{{ else }}Get SOW{{ end }}</h2>
+          <p class="section-subtitle">{{ if $zh }}取一个与你平台匹配的二进制，或者用 Go 工具链自己构建一个。两条路径都不需要额外运行时。{{ else }}Take a prebuilt binary for your platform, or build one with the Go toolchain. Neither path needs an extra runtime.{{ end }}</p>
         </div>
 
-        <div class="product-choice-grid" aria-label="{{ if $zh }}选择下载产品{{ else }}Choose a product{{ end }}">
-          <a class="product-choice-card product-choice-card--server" href="{{ relLangURL "download/" }}#server" data-reveal>
+        <div class="product-choice-grid" aria-label="{{ if $zh }}选择安装方式{{ else }}Choose an install path{{ end }}">
+          <a class="product-choice-card product-choice-card--server" href="{{ relLangURL "download/" }}" data-reveal>
             <div class="product-choice-top">
               <div>
-                <p class="silkscreen">{{ if $zh }}数据服务{{ else }}DATA SERVICE{{ end }}</p>
-                <h2>SILO Server</h2>
+                <p class="silkscreen">{{ if $zh }}预编译二进制{{ else }}PREBUILT BINARY{{ end }}</p>
+                <h2>{{ if $zh }}下载 sow{{ else }}Download sow{{ end }}</h2>
               </div>
-              <span class="product-choice-icon"><i class="fas fa-server" aria-hidden="true"></i></span>
+              <span class="product-choice-icon"><i class="fas fa-download" aria-hidden="true"></i></span>
             </div>
-            <p>{{ if $zh }}服务端二进制、容器镜像、Linux 软件包、源码，以及 Pigsty Ansible 自动化部署。{{ else }}Server binaries, container images, Linux packages, source, and Pigsty Ansible automation.{{ end }}</p>
-            <div class="product-platforms"><span>Linux</span><span>Docker</span><span>Kubernetes</span><span>Ansible</span><span>macOS</span><span>Windows</span></div>
-            <strong>{{ if $zh }}选择安装方式{{ else }}Choose install method{{ end }} <i aria-hidden="true">↗</i></strong>
+            <p>{{ if $zh }}从 GitHub Releases 取一个静态二进制，放进 PATH，立刻可用；无需 CGO、无需运行时依赖。{{ else }}Take a static binary from GitHub Releases, drop it on your PATH, and run it. No CGO, no runtime dependencies.{{ end }}</p>
+            <div class="product-platforms"><span>linux/amd64</span><span>linux/arm64</span><span>darwin/amd64</span><span>darwin/arm64</span></div>
+            <strong>{{ if $zh }}查看下载矩阵{{ else }}See the download matrix{{ end }} <i aria-hidden="true">↗</i></strong>
           </a>
 
-          <a class="product-choice-card product-choice-card--client" href="{{ relLangURL "download/" }}#client" data-reveal>
+          <a class="product-choice-card product-choice-card--client" href="{{ relLangURL "docs/start/install/" }}" data-reveal>
             <div class="product-choice-top">
               <div>
-                <p class="silkscreen">{{ if $zh }}管理客户端{{ else }}ADMIN CLI{{ end }}</p>
-                <h2>mcli Client</h2>
+                <p class="silkscreen">{{ if $zh }}源码构建{{ else }}BUILD FROM SOURCE{{ end }}</p>
+                <h2>{{ if $zh }}自己编译{{ else }}go build{{ end }}</h2>
               </div>
-              <span class="product-choice-icon"><i class="fas fa-terminal" aria-hidden="true"></i></span>
+              <span class="product-choice-icon"><i class="fas fa-code" aria-hidden="true"></i></span>
             </div>
-            <p>{{ if $zh }}用于存储桶、对象、身份、集群管理与日常运维的兼容命令行客户端。{{ else }}A compatible command-line client for buckets, objects, identity, cluster administration, and daily operations.{{ end }}</p>
-            <div class="product-platforms"><span>Linux</span><span>macOS</span><span>Windows</span><span>Docker</span><span>Source</span></div>
-            <strong>{{ if $zh }}选择安装方式{{ else }}Choose install method{{ end }} <i aria-hidden="true">↗</i></strong>
+            <p>{{ if $zh }}用 <code>CGO_ENABLED=0 go build -trimpath</code> 编出与发行版一致的静态二进制，方便审计与交叉编译。{{ else }}Build the same static binary with <code>CGO_ENABLED=0 go build -trimpath</code>—convenient for auditing and cross-compilation.{{ end }}</p>
+            <div class="product-platforms"><span>Go 1.26+</span><span>CGO_ENABLED=0</span><span>cross-compile</span></div>
+            <strong>{{ if $zh }}阅读安装文档{{ else }}Read the install guide{{ end }} <i aria-hidden="true">↗</i></strong>
           </a>
         </div>
       </div>
@@ -540,5 +465,9 @@
   {{ partial "footer.html" . }}
 
   <script src="{{ "js/landing-v3.js" | relURL }}?v={{ substr (md5 (readFile "static/js/landing-v3.js")) 0 8 }}"></script>
+  {{ partial "silo/search-dialog.html" . }}
+  {{- $searchJs := slice (resources.Get "js/vendor/lunr.min.js") (resources.Get "js/silo-search.js")
+        | resources.Concat "js/landing-search-bundle.js" | minify | fingerprint }}
+  <script src="{{ $searchJs.RelPermalink }}" integrity="{{ $searchJs.Data.Integrity }}" defer></script>
 </body>
 </html>

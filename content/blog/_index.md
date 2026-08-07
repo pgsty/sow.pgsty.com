@@ -1,7 +1,7 @@
 ---
-title: Silo Blog
+title: SOW Blog
 linkTitle: Blog
-description: News, Release & Security Notes
+description: Release notes and project news
 weight: 40
 type: blog
 sidebar_root_for: self
@@ -23,3 +23,6 @@ cascade:
       ul_show: 3
 icon: fa-solid fa-blog
 ---
+
+Release notes, design notes, and project news for SOW — the self-contained APT / YUM
+package repository manager by Pigsty.
