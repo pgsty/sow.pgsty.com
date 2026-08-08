@@ -25,8 +25,8 @@ sow create [DIR] [-j N] [--pigsty] [-S KEY [--overwrite]] [-T DUR | -N] [--json]
 生成 `Packages` 与 `Packages.gz`，混合目录两套一起生成。架构全部来自包头——Plain 模式没有架构参数，
 也没有架构许可表。
 
-平面元数据只引用同目录的包：RPM 的 `location` 是裸 basename，DEB 的 `Filename` 是 `./<basename>`，
-因此 `file://` 与 HTTP 根目录下行为一致。
+平面元数据只引用同目录的包：RPM 的 `location` 是裸 basename，DEB 的 `Filename` 是
+`./<basename>`。无论目录作为 `file://` 源还是 HTTP 根暴露，两者都保持相对引用。
 
 默认情况下 `create` 不删除、不移动、不重命名、不重签、不改写任何一个包字节。它只替换自己拥有的索引
 路径，未知文件原样保留。
@@ -114,8 +114,7 @@ rename 到同文件系统的 recovery trash，最后才写入新 marker。因此
 
 ## RPM 包签名
 
-`-S/--sign-with KEY` 是修改 RPM 字节的显式授权。`KEY` 为 16、40 或 64 位十六进制 GPG key ID 或
-fingerprint，可带 `0x` 前缀。SOW 将其规范化为大写，通过 `_gpg_name` macro 传给环境中的
+`-S/--sign-with KEY` 是修改 RPM 字节的显式授权。`KEY` 必须是恰好 16、40 或 64 位十六进制 GPG key ID/fingerprint，不接受 `0x` 前缀。SOW 将其规范化为大写，通过 `_gpg_name` macro 传给环境中的
 `rpm --addsign`。私钥、passphrase、GPG home、pinentry 以及额外 RPM macro 都由你的运行环境提供——
 SOW 不接收、不持久化、不回显任何秘密。
 
@@ -213,6 +212,5 @@ sow create /srv/empty --json
 
 - [Plain 平面仓库](/zh/docs/feature/plain/) —— `create` 背后的设计
 - [快速上手](/zh/docs/start/quickstart/) —— 五分钟平面仓库演练
-- [从 createrepo_c / reprepro 迁移](/zh/docs/tutorial/migration/) —— 接管既有仓库
 - [仓库布局](/zh/docs/reference/layout/) —— 平面目录树长什么样
 - [仓库签名](/zh/docs/tutorial/signing/) —— 生成与使用签名钥

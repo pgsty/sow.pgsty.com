@@ -330,14 +330,16 @@ case $? in
   *) echo "add failed" >&2; exit 1 ;;
 esac
 
-# Gate the copy on a complete, current tree.
+# Gate publication on a complete, current tree.
 if ! sow check -r pigsty; then
-  echo "repository not ready to copy" >&2
+  echo "repository not ready to publish" >&2
   exit 1
 fi
 
-rsync -a --delete /srv/repo/pigsty/ mirror:/var/www/pigsty/
+sow publish mirror
 ```
+
+Here `mirror` is a configured publication target for `pigsty`.
 
 Two habits worth keeping: treat `4` as retryable rather than fatal, and never treat `6` as
 a crash — it usually means your input, not SOW, needs to change.

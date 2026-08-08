@@ -112,8 +112,9 @@ infra	true	1	1	clean	0	0
 pgsql	false	2	2	clean	0	0
 ```
 
-Every Dist created this way is immediately consumable: an RPM Dist gets an empty `repodata/` per
-architecture view, a DEB Dist gets empty `Packages`/`Packages.gz` with `by-hash` plus a `Release`.
+Every Dist created this way has a protocol-complete empty surface: an RPM Dist gets an empty
+`repodata/` per architecture view, and a DEB Dist gets empty `Packages`/`Packages.gz` with
+`by-hash` plus a `Release`.
 
 Running it a second time changes nothing:
 

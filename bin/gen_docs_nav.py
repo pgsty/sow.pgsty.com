@@ -8,7 +8,7 @@ page is added, removed, or re-weighted:
 
     python3 bin/gen_docs_nav.py
 
-Layout contract (mirrors the original silo scaffold):
+Layout contract for the documentation scaffold:
   - sections:            ordered top-level nodes: the docs root itself
                          (flat entry) followed by each docs subsection
                          with its nested children.

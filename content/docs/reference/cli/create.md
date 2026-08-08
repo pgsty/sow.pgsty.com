@@ -28,8 +28,8 @@ when the directory is mixed. All architectures come from the package headers —
 architecture flag and no permit list.
 
 Flat metadata only ever references packages in the same directory. RPM `location` is the bare
-basename, DEB `Filename` is `./<basename>`, so the result works identically over `file://` and at an
-HTTP root.
+basename and DEB `Filename` is `./<basename>`, so both remain relative whether the directory is
+exposed as a `file://` source or an HTTP root.
 
 By default `create` does not delete, move, rename, re-sign or rewrite a single package byte. It only
 replaces index paths it owns; unknown files are left alone.
@@ -125,8 +125,8 @@ around.
 
 ## Signing RPMs
 
-`-S/--sign-with KEY` is the explicit authorization to modify RPM bytes. `KEY` is a 16, 40 or 64
-hexadecimal digit GPG key ID or fingerprint, with an optional `0x` prefix. SOW normalizes it to
+`-S/--sign-with KEY` is the explicit authorization to modify RPM bytes. `KEY` is exactly 16, 40 or 64
+hexadecimal characters; an `0x` prefix is not accepted. SOW normalizes it to
 uppercase and passes it to the environment's `rpm --addsign` through the `_gpg_name` macro. The
 private key, passphrase, GPG home, pinentry and any extra RPM macros come from your environment —
 SOW never receives, persists or echoes a secret.
@@ -230,6 +230,5 @@ sow create /srv/empty --json
 
 - [Plain Flat Repositories](/docs/feature/plain/) — the design behind `create`
 - [Quick Start](/docs/start/quickstart/) — five-minute flat repository walkthrough
-- [Migrate from createrepo_c / reprepro](/docs/tutorial/migration/) — taking over an existing repository
 - [Repository Layout](/docs/reference/layout/) — what the flat tree looks like
 - [Sign Your Repository](/docs/tutorial/signing/) — generating and using a signing key

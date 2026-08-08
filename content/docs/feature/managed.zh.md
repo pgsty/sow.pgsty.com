@@ -70,7 +70,8 @@ $ find .sow | sort
 .sow/workspace.lock
 ```
 
-`<repo>/` 下的一切是交付树 —— 你 rsync 或对外服务的就是它。`.sow/` 下的一切是私有状态,绝不能暴露;[对外服务](/zh/docs/tutorial/serving/)给出了在 nginx 里屏蔽它的写法。
+`<repo>/` 下是公共交付树：可以直接服务、由 SOW 发布，或整根复制到离线 staging 后原子切换。
+`.sow/` 下全部是私有状态，绝不能暴露；详见[对外服务](/zh/docs/tutorial/serving/)。
 
 名称必须匹配 `[a-z0-9][a-z0-9._-]*`,`.`、`..`、`.sow`、`pool`、`dists` 以及工作区保留名一律拒绝。
 
@@ -209,11 +210,14 @@ initialized /data/ws: config_created=false repositories_initialized=0 dists_init
 
 对象按稳定顺序处理。如果靠前的配置、Repository 或 Dist 已经耐久提交,而靠后的对象失败了,已提交的计数会被保留:人类输出先报告已提交的结果,`--json` 保留结构化 result,命令以 `3`(部分成功)退出。如果此时还没有任何东西提交过,则按原始错误类别退出。
 
-## 空 Dist 就是可消费的合法状态
+## 空 Dist 也有合法协议发布面
 
-`dist new` 建出来的 Dist,在你 add 第一个包之前就已经能被客户端消费。RPM Dist 每个架构族有一份合法的空 `repodata`;DEB Dist 有 `Packages`、`Packages.gz`、by-hash 条目和 `Release`。如果 Repository 配了元数据密钥,空 Dist 也一样签名。
+`dist new` 建出来的 Dist,在 add 第一个包之前就已具备完整协议入口。RPM Dist 每个架构族
+有一份合法的空 `repodata`;DEB Dist 有 `Packages`、`Packages.gz`、by-hash 条目和
+`Release`。如果 Repository 配了元数据密钥,空 Dist 也一样签名。
 
-这件事比听上去重要。它意味着"现在就把客户端指过去,内容以后再填"是可行的;也意味着从 Dist 里移除最后一个包之后,留下的是一份合法的已签名空索引,而不是一个坏掉的索引。
+因此从 Dist 里移除最后一个包之后,留下的是一份合法的空索引（配置签名时仍签名），
+而不是缺失或损坏的协议入口。真实包管理器验收仍是另一层兼容性门禁。
 
 ## Protected 仓库
 

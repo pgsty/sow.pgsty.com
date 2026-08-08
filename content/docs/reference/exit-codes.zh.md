@@ -317,14 +317,16 @@ case $? in
   *) echo "add 失败" >&2; exit 1 ;;
 esac
 
-# 用完整且最新的树作为复制闸门
+# 用完整且最新的树作为发布闸门
 if ! sow check -r pigsty; then
-  echo "仓库尚不可复制" >&2
+  echo "仓库尚不可发布" >&2
   exit 1
 fi
 
-rsync -a --delete /srv/repo/pigsty/ mirror:/var/www/pigsty/
+sow publish mirror
 ```
+
+这里的 `mirror` 是 `pigsty` 已配置的 Publication Target。
 
 两个值得养成的习惯:把 `4` 当作**可重试**而不是致命错误;
 永远不要把 `6` 当作崩溃 —— 它通常意味着需要改的是你的输入,而不是 SOW。

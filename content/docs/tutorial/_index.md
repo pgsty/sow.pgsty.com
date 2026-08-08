@@ -7,13 +7,11 @@ weight: 200
 icon: fa-solid fa-graduation-cap
 ---
 
-Each tutorial here is a complete journey: you start with nothing, run every command in order,
-and finish with something a real `dnf` or `apt` client can use. Commands are copy-pasteable and
-every output block is a real transcript.
+Each tutorial starts from a new v0.2.0 workspace. Commands are intended to be run in order;
+replace uppercase placeholders and package paths for your environment.
 
 If you have not installed SOW yet, start with [Installation](/docs/start/install/) and
-[Quick Start](/docs/start/quickstart/) — those get you to a working flat repository in five
-minutes. The tutorials below pick up from there and build the production shape.
+[Quick Start](/docs/start/quickstart/). The tutorials below cover the managed repository path.
 
 {{< doc-cards cols="2" >}}
 {{< doc-card title="Build a YUM Repository" link="/docs/tutorial/yum-repo/" >}}
@@ -21,20 +19,16 @@ A managed RPM repository with per-architecture views, `noarch` projection, debug
 version limits, and a working `dnf` client configuration.
 {{< /doc-card >}}
 {{< doc-card title="Build an APT Repository" link="/docs/tutorial/apt-repo/" >}}
-A managed DEB repository with a Debian-style pool, `by-hash` indexes, and both deb822 and
-legacy `sources.list` client configurations.
+A managed DEB repository with a Debian-style pool, `by-hash` indexes, and a deb822 client
+configuration.
 {{< /doc-card >}}
 {{< doc-card title="Sign Your Repository" link="/docs/tutorial/signing/" >}}
 Generate a dedicated GPG key, sign repository metadata and RPM packages, and configure
 clients to reject anything unsigned.
 {{< /doc-card >}}
 {{< doc-card title="Serve Repositories" link="/docs/tutorial/serving/" >}}
-Publish the tree over HTTP with Nginx, preview it locally, and copy the closed
-`pool/ + dists/` tree to an air-gapped host without relying on hardlink identity.
-{{< /doc-card >}}
-{{< doc-card title="Migrate from createrepo_c / reprepro" link="/docs/tutorial/migration/" >}}
-Take over an existing repository in place, move a reprepro archive into a workspace, and see
-exactly what changes and what does not.
+Serve a Repository with Nginx and publish a verified Generation to a configured filesystem
+target without exposing private workspace state.
 {{< /doc-card >}}
 {{< /doc-cards >}}
 
@@ -42,15 +36,13 @@ exactly what changes and what does not.
 
 | Your situation | Start here |
 |---|---|
-| You ship RPMs for EL8 / EL9 / EL10 | [Build a YUM Repository](/docs/tutorial/yum-repo/) |
+| You ship RPMs to dnf clients | [Build a YUM Repository](/docs/tutorial/yum-repo/) |
 | You ship DEBs for Debian or Ubuntu | [Build an APT Repository](/docs/tutorial/apt-repo/) |
-| You have a repository and clients complain it is unsigned | [Sign Your Repository](/docs/tutorial/signing/) |
+| You need signed metadata or signed RPM payloads | [Sign Your Repository](/docs/tutorial/signing/) |
 | The tree is built but nothing can reach it | [Serve Repositories](/docs/tutorial/serving/) |
-| You have a `createrepo_c` cron job or a reprepro database | [Migration](/docs/tutorial/migration/) |
 
-The YUM and APT tutorials share one workspace and are written to be followed in sequence — the
-APT tutorial adds a second Dist to the repository the YUM tutorial creates. You can also follow
-either one standalone; each states its own prerequisites.
+The YUM and APT tutorials are independent fresh-workspace paths. A real Workspace may hold
+both RPM and DEB Dists in one Repository when that ownership boundary suits your operation.
 
 ## Conventions used here
 
@@ -58,7 +50,6 @@ Shell blocks contain commands without a `$` prefix so you can copy a whole block
 Output appears in a separate block below the command, or as a comment when it is one line.
 Where a command needs a value you must substitute, it appears in `UPPERCASE`.
 
-Every tutorial ends with a verification step. If verification fails, do not continue — the next
-step assumes the tree is in the state the previous one produced. `sow check` is the gate that
-tells you the truth: exit code `0` means the tree is complete and ready to copy, exit code `5`
-means it is not.
+Every tutorial ends with a verification step. `sow check` returning `0` proves the selected
+Repository is complete and matches the recorded Generation. A nonzero result is not a release
+artifact.

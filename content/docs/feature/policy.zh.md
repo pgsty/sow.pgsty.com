@@ -137,7 +137,8 @@ item input="pkg/libpq5_18.4-1.bookworm_amd64.deb" status=accepted format=deb coo
 
 {{% alert title="真正下架一个包" color="warning" %}}
 `sow rm` 移除的是成员关系,不是 pool 字节。包会从所有索引中消失,客户端不再能通过仓库
-解析它。只有当包体不再被当前代、保留代、迁移与发布根引用时,才运行 `sow gc`。
+解析它。只有当包体不再被当前、保留、恢复、发布以及活动维护操作等任何安全根引用时，
+才运行 `sow gc`。
 已发布目标使用 `sow gc TARGET`;filesystem 删除是条件式的,R2 只生成报告。
 不要绕过 SOW 状态手工删除规范包池文件。
 {{% /alert %}}

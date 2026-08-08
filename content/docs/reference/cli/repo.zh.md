@@ -110,28 +110,18 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-把未发布 C2 原型创建的仓库从视图级 RPM alias 迁移到 v0.2.0 单包体布局。它会改写 RPM
-元数据使其访问根 `pool/`,记录耐久 transition,推进 Generation,并把 `schema: sow/v2`
-改为 `schema: sow/v3`。
-
-```bash
-sow repo migrate pigsty
-```
-
-操作可恢复。耐久 commit intent 之前,`--abort` 会放弃 staged transition,保持 live 仓库不变。
-commit intent 之后只能前滚;重复运行 `repo migrate`,直到宽限期与清理条件全部完成。
+这是专用维护命令，不属于全新 v0.2.0 工作流。由 `sow init` 与 `sow repo new` 创建的 Repository
+已经使用规范单包体布局，不应试探性执行迁移。只有 SOW 明确诊断需要该维护路径时才使用，并先做备份。
 
 | 参数 | 含义 | 默认值 |
 |---|---|---|
 | `-j, --jobs N` | 并行校验/渲染 worker | 逻辑 CPU 数 |
-| `--abort` | 放弃提交前迁移 | false |
+| `--abort` | 在提交决策前放弃维护尝试 | false |
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
 | `-r, --repo NAME` | 省略 `NAME` 时选择仓库 | 选择规则 |
 | `-T, --timeout DUR` | 最长锁等待;`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--json` | 输出版本化 JSON envelope | false |
-
-新建 v0.2.0 工作区已经使用单包体布局,不需要迁移。
 
 ## sow repo rm
 

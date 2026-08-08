@@ -75,8 +75,9 @@ or the first four characters for names beginning with `lib`:
 | `libfoo` | `pool/libf/libfoo/libfoo1_1.0-1_amd64.deb` |
 
 Pool objects are immutable. Removing distribution membership does not immediately remove
-their bytes; unreachable payloads are handled by `sow gc` after all local, retained,
-migration, and publication roots have been considered.
+their bytes; unreachable payloads are handled by `sow gc` only after every safety root —
+current, retained, recovery, publication, and any active maintenance operation — has been
+considered.
 
 ## RPM metadata-only views
 
@@ -102,9 +103,11 @@ points back to the canonical pool:
 <location href="../../../pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm"/>
 ```
 
-`dnf` and `yum` consume this layout normally. Default `dnf reposync` rejects the parent-
-traversing href because its download destination escapes the view root. When a downstream
-tool requires a self-contained leaf, create one explicitly with:
+The layout requires a client that honors relative rpm-md locations across the complete
+Repository root. The active matrix does not yet include a current Managed DNF/YUM
+acceptance gate. Default `dnf reposync` rejects the parent-traversing href because its
+download destination escapes the view root. When a downstream tool requires a
+self-contained leaf, create one explicitly with:
 
 ```bash
 sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
@@ -119,7 +122,7 @@ the canonical managed repository.
 dists/trixie/
 ├── Release
 ├── InRelease                         # when metadata signing is configured
-├── Release.gpg
+├── Release.gpg                       # when metadata signing is configured
 └── main/
     ├── binary-amd64/
     │   ├── Packages

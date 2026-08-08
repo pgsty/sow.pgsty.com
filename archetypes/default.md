@@ -4,5 +4,4 @@ description: ""
 weight: 100
 ---
 
-Write the Silo-specific documentation here.
-
+Write the SOW documentation here.

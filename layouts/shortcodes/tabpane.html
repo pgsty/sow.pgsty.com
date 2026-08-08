@@ -51,7 +51,7 @@
 {{/* Scratchpad gets populated through call to .Inner */ -}}
 {{ .Inner -}}
 
-{{/* Preserve the selected tab emitted by the frozen MinIO docs source. */ -}}
+{{/* Preserve the selected tab emitted by imported tabpane content. */ -}}
 {{ $hasSelected := false -}}
 {{ range $.Scratch.Get "tabs" -}}
   {{ if and (not .disabled) .selected -}}

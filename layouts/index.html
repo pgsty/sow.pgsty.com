@@ -239,15 +239,15 @@
           </a>
           <a href="{{ relLangURL "docs/reference/compatibility/" }}" class="stat-item">
             <span class="stat-value" data-count="{{ $metrics.platforms }}">{{ lang.FormatNumber 0 $metrics.platforms }}</span>
-            <span class="stat-label">{{ if $zh }}构建平台（linux / darwin × amd64 / arm64）{{ else }}Platforms{{ end }}</span>
+            <span class="stat-label">{{ if $zh }}Release 构建目标{{ else }}Release Build Targets{{ end }}</span>
           </a>
           <a href="{{ relLangURL "docs/reference/compatibility/" }}" class="stat-item">
-            <span class="stat-value" data-count="{{ $metrics.client_generations }}">{{ lang.FormatNumber 0 $metrics.client_generations }}</span>
-            <span class="stat-label">{{ if $zh }}实测客户端组合{{ else }}Verified Clients{{ end }}</span>
+            <span class="stat-value" data-count="{{ $metrics.publication_providers }}">{{ lang.FormatNumber 0 $metrics.publication_providers }}</span>
+            <span class="stat-label">{{ if $zh }}发布 Provider（filesystem / R2）{{ else }}Publication Providers{{ end }}</span>
           </a>
           <a href="{{ relLangURL "docs/start/install/" }}" class="stat-item">
             <span class="stat-value" data-count="{{ $metrics.external_deps }}">{{ lang.FormatNumber 0 $metrics.external_deps }}</span>
-            <span class="stat-label">{{ if $zh }}外部运行时依赖{{ else }}External Dependencies{{ end }}</span>
+            <span class="stat-label">{{ if $zh }}必须安装的语言运行时{{ else }}Required Language Runtimes{{ end }}</span>
           </a>
         </div>
       </div>
@@ -258,7 +258,7 @@
         <div class="section-head" data-reveal>
           <p class="section-eyebrow"><span class="silkscreen">{{ if $zh }}价值主张{{ else }}VALUE PROPOSITION{{ end }}</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
           <h2 class="section-title">{{ if $zh }}仓库所需，尽在其中{{ else }}Everything a Repository Needs{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}面向自建软件源：不要工具链，不起常驻服务，不猜状态。{{ else }}For operators running package feeds: no toolchain, no daemon, no guesswork.{{ end }}</p>
+          <p class="section-subtitle">{{ if $zh }}面向自建软件源：元数据无需外部工具链，不起常驻服务，不猜状态。{{ else }}For operators running package feeds: no external metadata toolchain, no daemon, no guesswork.{{ end }}</p>
         </div>
 
         <div class="module-row" data-reveal>
@@ -269,7 +269,7 @@
             <ul class="module-list">
               <li>{{ if $zh }}<strong>Plain</strong>：<code>sow create</code> 就地索引一个放着 rpm / deb 的目录{{ else }}<strong>Plain</strong>: <code>sow create</code> indexes a directory of rpm / deb files in place{{ end }}</li>
               <li>{{ if $zh }}<strong>Managed</strong>：工作区 → 仓库 → Dist 三层模型，包池与发布视图分离{{ else }}<strong>Managed</strong>: workspace → repository → dist, with the pool separated from published views{{ end }}</li>
-              <li>{{ if $zh }}两条路径互不干扰，输出确定、可复现{{ else }}The two paths never mix, and both emit deterministic, reproducible output{{ end }}</li>
+              <li>{{ if $zh }}两条路径互不干扰；Plain 输出确定，Managed 变更可审计、可校验{{ else }}The paths never mix: Plain is deterministic; Managed changes are audited and verified{{ end }}</li>
             </ul>
             <p class="module-value">{{ if $zh }}从临时目录到长期维护的软件源，不必换工具{{ else }}From a scratch directory to a long-lived feed, without changing tools{{ end }}</p>
           </div>
@@ -281,9 +281,10 @@
 
 <span class="c"># Managed: a workspace you keep</span>
 <span class="k">sow</span> <span class="s">init</span> /srv/sow
+<span class="k">cd</span> /srv/sow
 <span class="k">sow</span> <span class="s">repo</span> new pigsty
 <span class="k">sow</span> <span class="s">dist</span> new el9 --format rpm
-<span class="k">sow</span> <span class="s">add</span> <span class="v">*.rpm</span></pre>
+<span class="k">sow</span> <span class="s">add</span> <span class="v">/path/to/packages/*.rpm</span> -d el9</pre>
             </a>
           </div>
         </div>
@@ -298,16 +299,16 @@
               <li>{{ if $zh }}架构视图只含元数据，包体只存在规范包池{{ else }}Architecture views contain metadata only; payloads stay in the canonical pool{{ end }}</li>
               <li>{{ if $zh }}<code>noarch</code> / <code>all</code> 作为中性包进入每个适用视图{{ else }}<code>noarch</code> / <code>all</code> packages land in every applicable view{{ end }}</li>
             </ul>
-            <p class="module-value">{{ if $zh }}多架构仓库的磁盘占用，接近单架构{{ else }}A multi-architecture repository costs about as much disk as one{{ end }}</p>
+            <p class="module-value">{{ if $zh }}每个 Repository 只由规范包池持有一份包体，元数据视图不再复制{{ else }}Within each Repository, the canonical pool owns one payload copy; metadata views add none{{ end }}</p>
           </div>
           <div class="module-visual">
             <a href="{{ relLangURL "docs/reference/layout/" }}" class="code-plate compatibility-plate">
               <span class="code-plate-head"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-file">repository.layout</span></span>
               <pre class="code-body"><span class="c"># Owned once, projected many times</span>
 <span class="k">pool/p/postgresql</span>/ <span class="s">*.rpm *.deb</span>
-<span class="k">el9/x86_64</span>/ <span class="v">repodata/</span>
-<span class="k">el9/aarch64</span>/ <span class="v">repodata/</span>
-<span class="k">trixie/dists</span>/ <span class="v">InRelease</span>
+<span class="k">dists/el9/x86_64</span>/ <span class="v">repodata/</span>
+<span class="k">dists/el9/aarch64</span>/ <span class="v">repodata/</span>
+<span class="k">dists/trixie</span>/ <span class="v">Release [· InRelease]</span>
 <span class="k">by-hash</span>: <span class="s">SHA256</span></pre>
             </a>
           </div>
@@ -319,11 +320,11 @@
             <h3 class="module-title"><a href="{{ relLangURL "docs/feature/signing/" }}">{{ if $zh }}两条独立信任链{{ else }}Two Trust Chains{{ end }}</a></h3>
             <p class="module-motto"><span aria-hidden="true">▦</span> {{ if $zh }}元数据签名与包签名，各管各的{{ else }}Metadata signatures and package signatures, kept apart{{ end }}</p>
             <ul class="module-list">
-              <li>{{ if $zh }}元数据签名在进程内完成：<code>repomd.xml.asc</code>、<code>InRelease</code>、<code>Release.gpg</code>{{ else }}Metadata is signed in-process: <code>repomd.xml.asc</code>, <code>InRelease</code>, <code>Release.gpg</code>{{ end }}</li>
+              <li>{{ if $zh }}文件/环境变量密钥在进程内签元数据；<code>agent://</code> 委托给 GPG{{ else }}File/env metadata keys sign in-process; <code>agent://</code> delegates to GPG{{ end }}</li>
               <li>{{ if $zh }}RPM 包签名支持 <code>never</code> / <code>fill</code> / <code>always</code> 三档策略{{ else }}RPM package signing runs in <code>never</code> / <code>fill</code> / <code>always</code> mode{{ end }}</li>
-              <li>{{ if $zh }}密钥引用三形态：<code>file://</code>、<code>env://</code>、<code>agent://</code>{{ else }}Keys are referenced as <code>file://</code>, <code>env://</code>, or <code>agent://</code>{{ end }}</li>
+              <li>{{ if $zh }}密钥引用支持相对路径、<code>file://</code>、<code>env://</code> 与 <code>agent://</code>{{ else }}Key references support paths, <code>file://</code>, <code>env://</code>, and <code>agent://</code>{{ end }}</li>
             </ul>
-            <p class="module-value">{{ if $zh }}换签名身份会让仓库变脏，重建后才可交付{{ else }}Changing a signing identity marks the repository dirty until it is rebuilt{{ end }}</p>
+            <p class="module-value">{{ if $zh }}换签名身份会让仓库变脏；策略不满足时拒绝构建{{ else }}A signing-identity change marks the repository dirty and fails closed on policy mismatch{{ end }}</p>
           </div>
           <div class="module-visual">
             <a href="{{ relLangURL "docs/tutorial/signing/" }}" class="artifact-plate" aria-label="{{ if $zh }}查看签名教程{{ else }}Read the signing tutorial{{ end }}">
@@ -358,10 +359,10 @@
               <span class="code-plate-head"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-file">sow check</span></span>
               <pre class="code-body"><span class="c"># Ordered proof, fail-closed</span>
 <span class="k">config</span>: <span class="s">strict schema</span>
-<span class="k">pool</span>: <span class="s">payload digests</span>
-<span class="k">views</span>: <span class="s">canonical references</span>
-<span class="k">metadata</span>: <span class="s">index vs tree</span>
-<span class="k">generation</span>: <span class="v">clean or dirty</span>
+<span class="k">package-bytes</span>: <span class="s">payload digests</span>
+<span class="k">index</span>: <span class="s">membership closure</span>
+<span class="k">signature</span>: <span class="s">declared trust</span>
+<span class="k">generation-manifest</span>: <span class="v">public tree</span>
 
 <span class="c"># dirty → exit 5, not a silent pass</span></pre>
             </a>
@@ -387,7 +388,7 @@
           <a href="{{ relLangURL "docs/reference/cli/create/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">CR</span><span class="kernel-name">create</span><span class="kernel-desc">Flat repository</span></a>
           <a href="{{ relLangURL "docs/reference/cli/init/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">IN</span><span class="kernel-name">init</span><span class="kernel-desc">Workspace setup</span></a>
           <a href="{{ relLangURL "docs/reference/cli/add/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">ADD</span><span class="kernel-name">add / rm</span><span class="kernel-desc">Membership</span></a>
-          <a href="{{ relLangURL "docs/reference/cli/build/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">BLD</span><span class="kernel-name">build</span><span class="kernel-desc">Publish a generation</span></a>
+          <a href="{{ relLangURL "docs/reference/cli/build/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">BLD</span><span class="kernel-name">build</span><span class="kernel-desc">Materialize a generation</span></a>
           <a href="{{ relLangURL "docs/reference/cli/build/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">CHK</span><span class="kernel-name">check</span><span class="kernel-desc">Deliverability gate</span></a>
           <a href="{{ relLangURL "docs/reference/cli/log/" }}" class="kernel-card"><span class="kernel-icon interface-glyph">LOG</span><span class="kernel-name">log</span><span class="kernel-desc">Operation journal</span></a>
         </div>
@@ -399,8 +400,8 @@
             <a href="{{ relLangURL "docs/tutorial/yum-repo/" }}" class="ext-pill">repodata</a><a href="{{ relLangURL "docs/tutorial/apt-repo/" }}" class="ext-pill">Packages.gz</a><a href="{{ relLangURL "docs/tutorial/apt-repo/" }}" class="ext-pill">InRelease</a><a href="{{ relLangURL "docs/feature/views/" }}" class="ext-pill">by-hash</a><a href="{{ relLangURL "docs/feature/views/" }}" class="ext-pill">Architecture Views</a><a href="{{ relLangURL "docs/feature/views/" }}" class="ext-pill">Package Pool</a><a href="{{ relLangURL "docs/feature/policy/" }}" class="ext-pill">Membership Policy</a><a href="{{ relLangURL "docs/feature/signing/" }}" class="ext-pill">GPG Signing</a>
           </div></div>
           <div class="marquee-row" data-direction="right"><div class="marquee-content">
-            <a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Crash Recovery</a><a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Lock Model</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Operation Journal</a><a href="{{ relLangURL "docs/reference/json/" }}" class="ext-pill">JSON Output</a><a href="{{ relLangURL "docs/reference/package-ref/" }}" class="ext-pill">Package References</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Generations</a><a href="{{ relLangURL "docs/tutorial/serving/" }}" class="ext-pill">Static Serving</a><a href="{{ relLangURL "docs/tutorial/migration/" }}" class="ext-pill">Migration</a>
-            <a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Crash Recovery</a><a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Lock Model</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Operation Journal</a><a href="{{ relLangURL "docs/reference/json/" }}" class="ext-pill">JSON Output</a><a href="{{ relLangURL "docs/reference/package-ref/" }}" class="ext-pill">Package References</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Generations</a><a href="{{ relLangURL "docs/tutorial/serving/" }}" class="ext-pill">Static Serving</a><a href="{{ relLangURL "docs/tutorial/migration/" }}" class="ext-pill">Migration</a>
+            <a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Crash Recovery</a><a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Lock Model</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Operation Journal</a><a href="{{ relLangURL "docs/reference/json/" }}" class="ext-pill">JSON Output</a><a href="{{ relLangURL "docs/reference/package-ref/" }}" class="ext-pill">Package References</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Generations</a><a href="{{ relLangURL "docs/reference/cli/publication/" }}" class="ext-pill">Filesystem Publish</a><a href="{{ relLangURL "docs/reference/cli/publication/" }}" class="ext-pill">RPM Leaf Export</a>
+            <a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Crash Recovery</a><a href="{{ relLangURL "docs/feature/transactions/" }}" class="ext-pill">Lock Model</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Operation Journal</a><a href="{{ relLangURL "docs/reference/json/" }}" class="ext-pill">JSON Output</a><a href="{{ relLangURL "docs/reference/package-ref/" }}" class="ext-pill">Package References</a><a href="{{ relLangURL "docs/feature/audit/" }}" class="ext-pill">Generations</a><a href="{{ relLangURL "docs/reference/cli/publication/" }}" class="ext-pill">Filesystem Publish</a><a href="{{ relLangURL "docs/reference/cli/publication/" }}" class="ext-pill">RPM Leaf Export</a>
           </div></div>
         </div>
         <div class="extbus-cta" data-reveal><a href="{{ relLangURL "docs/" }}" class="btn btn-line">{{ if $zh }}浏览完整文档{{ else }}Browse the Documentation{{ end }} →</a></div>
@@ -412,13 +413,13 @@
         <div class="section-head" data-reveal>
           <p class="section-eyebrow"><span class="silkscreen">SCOPE</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
           <h2 class="section-title">{{ if $zh }}专注，源于取舍{{ else }}Focused by Design{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}SOW 专注本地仓库；右侧列的是明确非目标，不是待办清单。{{ else }}SOW builds local repositories. The right column lists intentional non-goals, not a backlog.{{ end }}</p>
+          <p class="section-subtitle">{{ if $zh }}SOW 构建并发布静态仓库树；右侧列的是明确非目标，不是待办清单。{{ else }}SOW builds and publishes static repository trees. The right column lists intentional non-goals, not a backlog.{{ end }}</p>
         </div>
         <div class="promise-grid" data-reveal>
           <article class="promise-card promise-card--yes">
             <p class="silkscreen">{{ if $zh }}覆盖范围{{ else }}IN SCOPE{{ end }}</p>
             <h3>{{ if $zh }}SOW 负责的部分{{ else }}What SOW does{{ end }}</h3>
-            <ul><li>{{ if $zh }}RPM 与 DEB 仓库索引的生成与维护{{ else }}Generating and maintaining RPM and DEB repository indexes{{ end }}</li><li>{{ if $zh }}包池、架构视图与成员策略{{ else }}Package pools, architecture views, and membership policy{{ end }}</li><li>{{ if $zh }}元数据签名与 RPM 包签名{{ else }}Metadata signing and RPM package signing{{ end }}</li><li>{{ if $zh }}事务、崩溃恢复与操作审计{{ else }}Transactions, crash recovery, and an operation audit trail{{ end }}</li></ul>
+            <ul><li>{{ if $zh }}RPM 与 DEB 仓库索引的生成与维护{{ else }}Generating and maintaining RPM and DEB repository indexes{{ end }}</li><li>{{ if $zh }}包池、架构视图与成员策略{{ else }}Package pools, architecture views, and membership policy{{ end }}</li><li>{{ if $zh }}元数据签名与 RPM 包签名{{ else }}Metadata signing and RPM package signing{{ end }}</li><li>{{ if $zh }}事务、审计，以及向 filesystem / R2 发布{{ else }}Transactions, audit, and publication to filesystem or R2 targets{{ end }}</li></ul>
           </article>
           <article class="promise-card promise-card--no">
             <p class="silkscreen">{{ if $zh }}明确非目标{{ else }}EXPLICIT NON-GOALS{{ end }}</p>
@@ -434,19 +435,19 @@
         <div class="section-head" data-reveal>
           <p class="section-eyebrow"><span class="silkscreen">DOWNLOAD</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
           <h2 class="section-title">{{ if $zh }}获取 SOW{{ else }}Get SOW{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}下载静态二进制，或用 Go 自行构建；两条路径都不需要额外运行时。{{ else }}Download a static binary or build with Go. Neither path needs an extra runtime.{{ end }}</p>
+          <p class="section-subtitle">{{ if $zh }}确认 Release 资产状态，或用 Go 自行构建；安装后无需另装语言运行时。{{ else }}Check the release-asset status or build with Go. The installed executable needs no separate language runtime.{{ end }}</p>
         </div>
 
         <div class="product-choice-grid" aria-label="{{ if $zh }}选择安装方式{{ else }}Choose an install path{{ end }}">
           <a class="product-choice-card product-choice-card--server" href="{{ relLangURL "download/" }}" data-reveal>
             <div class="product-choice-top">
               <div>
-                <p class="silkscreen">{{ if $zh }}预编译二进制{{ else }}PREBUILT BINARY{{ end }}</p>
-                <h2>{{ if $zh }}下载 sow{{ else }}Download sow{{ end }}</h2>
+                <p class="silkscreen">{{ if $zh }}发行资产{{ else }}RELEASE ASSETS{{ end }}</p>
+                <h2>{{ if $zh }}检查下载状态{{ else }}Check downloads{{ end }}</h2>
               </div>
               <span class="product-choice-icon"><i class="fas fa-download" aria-hidden="true"></i></span>
             </div>
-            <p>{{ if $zh }}从 GitHub Releases 取一个静态二进制，放进 PATH，立刻可用；无需 CGO、无需运行时依赖。{{ else }}Take a static binary from GitHub Releases, drop it on your PATH, and run it. No CGO, no runtime dependencies.{{ end }}</p>
+            <p>{{ if $zh }}下载页会明确说明 v0.2.0 资产是否已经公开；不要把 Draft 资产当成可用下载面。{{ else }}The download page states whether v0.2.0 assets are public; draft assets are not a usable download surface.{{ end }}</p>
             <div class="product-platforms"><span>linux/amd64</span><span>linux/arm64</span><span>darwin/amd64</span><span>darwin/arm64</span></div>
             <strong>{{ if $zh }}查看下载矩阵{{ else }}See the download matrix{{ end }} <i aria-hidden="true">↗</i></strong>
           </a>
@@ -459,8 +460,8 @@
               </div>
               <span class="product-choice-icon"><i class="fas fa-code" aria-hidden="true"></i></span>
             </div>
-            <p>{{ if $zh }}用 <code>CGO_ENABLED=0 go build -trimpath</code> 编出与发行版一致的静态二进制，方便审计与交叉编译。{{ else }}Build the same static binary with <code>CGO_ENABLED=0 go build -trimpath</code>—convenient for auditing and cross-compilation.{{ end }}</p>
-            <div class="product-platforms"><span>Go 1.26+</span><span>CGO_ENABLED=0</span><span>cross-compile</span></div>
+            <p>{{ if $zh }}用 <code>CGO_ENABLED=0 go build -trimpath</code> 构建单文件二进制，方便审计与交叉编译。{{ else }}Build a single-file binary with <code>CGO_ENABLED=0 go build -trimpath</code>—convenient for auditing and cross-compilation.{{ end }}</p>
+            <div class="product-platforms"><span>Go 1.26.5+</span><span>CGO_ENABLED=0</span><span>cross-compile</span></div>
             <strong>{{ if $zh }}阅读安装文档{{ else }}Read the install guide{{ end }} <i aria-hidden="true">↗</i></strong>
           </a>
         </div>

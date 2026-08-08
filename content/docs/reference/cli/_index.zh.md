@@ -22,7 +22,7 @@ icon: fa-solid fa-terminal
 | [`sow init [DIR]`](/zh/docs/reference/cli/init/) | Managed | 初始化工作区，并收敛配置中声明的 Repository/Dist |
 | [`sow config check`](/zh/docs/reference/cli/config/) | Managed | 只读校验 `sow.yml` |
 | [`sow config show`](/zh/docs/reference/cli/config/) | Managed | 打印有效配置 |
-| [`sow repo ls\|new\|show\|migrate\|rm`](/zh/docs/reference/cli/repo/) | Managed | 管理仓库并迁移预发布 C2 布局 |
+| [`sow repo ls\|new\|show\|migrate\|rm`](/zh/docs/reference/cli/repo/) | Managed | 管理 Repository；`migrate` 是专用维护命令 |
 | [`sow dist ls\|new\|show\|rm`](/zh/docs/reference/cli/dist/) | Managed | 管理 Dist |
 | [`sow add PATH...`](/zh/docs/reference/cli/add/) | Managed | 把包加入期望成员集 |
 | [`sow rm PACKAGE...`](/zh/docs/reference/cli/rm/) | Managed | 移除期望成员集 |
@@ -135,7 +135,8 @@ repository=pigsty status=clean ready_to_copy=false revision=6 generation=6 dirty
 ## 并发
 
 `-j/--jobs N` 只出现在真正解析包、计算哈希、渲染索引或校验的命令上：`create`、
-`repo migrate`、`add`、`rm`、`build`、`check`。默认取逻辑 CPU 数，最小值为 `1`。
+`add`、`rm`、`build`、`check`；专用维护命令 `repo migrate` 也接受该参数。默认取逻辑 CPU 数，
+最小值为 `1`。
 
 ```console
 sow check -j 0

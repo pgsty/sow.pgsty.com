@@ -1,7 +1,7 @@
 ---
 title: "Design"
 linkTitle: "Design"
-description: "The architectural decisions behind SOW: ownership, repository layout, publication, compatibility, and version evolution."
+description: "The architectural decisions behind SOW 0.2.0: ownership, layout, publication, recovery, and compatibility."
 url: "/docs/design/"
 weight: 350
 icon: fa-solid fa-compass-drafting
@@ -12,10 +12,8 @@ SOW draws ownership boundaries, which invariants make a repository safe to copy 
 publish, and why a compatibility choice was accepted or rejected.
 
 {{% alert title="Current release" color="primary" %}}
-All maintained user, reference, and design pages describe **SOW v0.2.0**. The
-single-payload layout, publication targets, retention, garbage collection, migration, and
-RPM compatibility export are part of that line. Wire identifiers such as `sow.cli/v1` and
-configuration schema `sow/v3` are versioned independently from the product release.
+All maintained pages describe **SOW v0.2.0**. The configuration schema is `sow/v3`;
+wire identifiers such as `sow.cli/v1` are protocol identifiers, not product versions.
 {{% /alert %}}
 
 {{< doc-cards cols="2" >}}
@@ -28,7 +26,7 @@ Workspace, Repository, Dist, Package Object, Membership, Generation, and publica
 target — and why each has a separate owner.
 {{< /doc-card >}}
 {{< doc-card title="Single-Payload Layout" link="/docs/design/single-payload/" >}}
-Why v0.2.0 keeps one canonical package path per Repository while rendering metadata-only
+Why one canonical package path per Repository feeds metadata-only
 APT and RPM views.
 {{< /doc-card >}}
 {{< doc-card title="Publication & Recovery" link="/docs/design/publication/" >}}
@@ -39,25 +37,16 @@ evidence-gated garbage collection.
 Separate protocol, client, mirror-tool, filesystem, HTTP, and object-storage compatibility
 instead of hiding them behind one green check mark.
 {{< /doc-card >}}
-{{< doc-card title="Design Evolution" link="/docs/design/evolution/" >}}
-How the v0.1.0 experiment, the unreleased C2 prototype, and the current v0.2.0
-single-payload layout relate.
-{{< /doc-card >}}
 {{< /doc-cards >}}
 
 ## Authority and evidence
 
-These pages are the maintained design authority. Historical PRDs, review transcripts,
-ADRs, and dated acceptance reports remain available through Git history and version tags.
-They remain evidence for the revision and environment they name, but they do not silently
-redefine the current product.
-
-A claim progresses through distinct layers:
+These pages describe the current contract. A claim should name the evidence layer it has
+actually reached:
 
 ```text
-design contract -> source implementation -> focused tests -> real client/provider evidence -> release
+design -> implementation -> focused tests -> real client/provider run -> release artifact
 ```
 
-Passing an earlier layer never implies that a later one passed. The
-[compatibility design](/docs/design/compatibility/) and each release note state the highest
-verified layer explicitly.
+Passing one layer does not imply the next. The [compatibility reference](/docs/reference/compatibility/)
+states the current evidence without upgrading adjacent tests into product claims.

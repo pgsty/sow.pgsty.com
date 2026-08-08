@@ -1,150 +1,102 @@
 ---
 title: "Capability Overview"
 linkTitle: "Capability Overview"
-description: "What SOW covers across both execution paths, both package formats, signing, and platforms — and how it compares to createrepo_c and reprepro."
+description: "The implemented v0.2.0 surface across repository generation, managed state, signing, publication, and compatibility."
 url: "/docs/feature/overview/"
 weight: 100
 icon: fa-solid fa-table-list
 ---
 
-SOW is a self-contained software repository manager: a single static Go binary (`CGO_ENABLED=0`) that creates and maintains APT (DEB) and YUM (RPM) repositories on Linux and macOS. It does not call `createrepo_c`, `dpkg-scanpackages`, `reprepro`, or `modifyrepo_c`, and it does not run a daemon. This page is the map of what it covers; the rest of this section explains how each piece works.
+SOW 0.2.0 is a local package repository manager delivered as one self-contained Go binary. It
+generates repository metadata in-process and has no serving daemon.
 
-The current release is `sow 0.2.0`.
+## Execution paths
 
-## Two execution paths
+| Capability | Plain | Managed |
+|---|---:|---:|
+| RPM and DEB metadata | yes | yes |
+| Mixed RPM + DEB operation | one directory | one Repository, separate Dists |
+| Persistent membership and generations | no | yes |
+| Architecture views | no | yes |
+| `exclude` and version `limit` policy | no | yes |
+| Metadata signing | no | RPM and DEB |
+| RPM package signing | `--sign-with` | `never`, `fill`, `always` |
+| Transaction journal and recovery | operation-local | Workspace, Repository, publication |
+| Audit log and JSONL export | no | yes |
+| Publication targets | no | filesystem and R2 |
 
-SOW gives you two ways to build a repository, and they are deliberately isolated from each other. Nothing is shared between them except the low-level package parsers, renderers, version comparators, locks, and safe file primitives.
+Plain and Managed do not share state. `sow create` never discovers a Workspace; Managed
+commands never adopt an arbitrary flat directory as state.
 
-| | Plain mode | Managed mode |
+## Repository metadata
+
+| Surface | RPM/YUM | DEB/APT |
 |---|---|---|
-| Entry command | `sow create` | `sow init` / `repo` / `dist` / `add` / `build` |
-| Input | one directory of `.rpm` / `.deb` files | packages added by path into a workspace |
-| Layout produced | flat — packages and index in the same directory | Debian-style `pool/` plus `dists/` publication views |
-| Persistent state | none (a transient journal during the operation only) | `sow.yml` plus one SQLite database per repository |
-| Configuration | none — no config file is read | `sow.yml`, strictly validated |
-| Multi-architecture | all architectures land in one flat index | one rendered view per architecture per Dist |
-| History | none | monotonic generations and an operation ledger |
-| Comparable to | `createrepo_c` + `dpkg-scanpackages` | `reprepro` |
+| Package facts | RPM header | DEB control archive |
+| Identity | NEVRA plus exact-byte SHA-256 | `name=version:arch` plus exact-byte SHA-256 |
+| Indexes | `primary`, `filelists`, `other`, `repomd.xml` | `Packages`, `Packages.gz`, `Release` |
+| Managed architecture names | `x86_64`, `aarch64` | `binary-amd64`, `binary-arm64` |
+| Neutral architecture | `noarch` | `all` |
+| Immutable index addressing | checksum-named rpm-md | `by-hash/SHA256` |
+| Managed metadata signatures | `repomd.xml.asc` | `InRelease`, `Release.gpg` |
 
-Plain mode is the right choice when you have a directory of packages and want an index over it. Managed mode is the right choice when the same repository is going to be updated repeatedly over months, by policy, with an audit trail.
+SOW intentionally does not generate SQLite rpm-md, zchunk, modulemd, or source-package
+indexes. DEB metadata uses SHA-256 and does not emit MD5/SHA1 manifests.
 
-Plain mode ends with a local directory. Managed mode can likewise be served or copied as
-files, and can additionally publish a committed generation to a configured `filesystem`
-or `r2` target. See [Serve Repositories](/docs/tutorial/serving/) and the
-[Publication Model](/docs/design/publication/).
+## Managed lifecycle
 
-## Format coverage
+Managed mode provides:
 
-| Capability | RPM / YUM | DEB / APT |
-|---|---|---|
-| Index files generated | `repodata/` with `primary`, `filelists`, `other` and `repomd.xml` | `Packages`, `Packages.gz`, `Release` |
-| Checksums | SHA-256, checksum-named metadata files | SHA-256 only (no MD5Sum/SHA1) |
-| Package facts read from | RPM header (never the filename) | `control` in the `.deb` archive |
-| Coordinate (identity) | NEVRA | `name=version:arch` |
-| Architecture views (Managed) | `x86_64`, `aarch64` | `binary-amd64`, `binary-arm64` |
-| Architecture-neutral packages | `noarch` | `all` |
-| by-hash index fetch | not applicable | yes, `Acquire-By-Hash: yes` |
-| Metadata signature | `repodata/repomd.xml.asc` | `InRelease` and `Release.gpg` |
-| Package signature | embedded OpenPGP signature, `fill` / `always` modes | not applicable |
+- strict `sow/v3` configuration and upward Workspace discovery;
+- Repository isolation, one canonical package pool, and metadata-only views;
+- Desired Membership, Built Generations, dirty-state detection, and physical changesets;
+- bounded locks, durable operation journals, crash recovery, and fail-closed path checks;
+- `status`, nine-layer `check`, package queries, and an exportable operation log;
+- explicit Generation retention, local GC, and target-scoped publication/GC state;
+- self-contained RPM leaf export for workflows that require local package hrefs.
 
-A single command handles both formats at once. In Plain mode, a directory containing both `.rpm` and `.deb` files produces `repodata/` and `Packages` in one operation. In Managed mode, one Repository can own an RPM Dist and a DEB Dist that share the same `pool/`.
+## Signing and external programs
 
-## Signing coverage
+Metadata signing with path, `file://`, or `env://` private-key references is in-process.
+An `agent://` metadata key uses `gpg`/`gpg-agent`. RPM package signing uses the environment's
+`rpm` command and GPG setup because it rewrites package payloads. Metadata generation,
+package parsing, SQLite state, and publication do not require external command-line tools.
 
-There are two independent trust chains, configured separately. See [Signing Model](/docs/feature/signing/) for the full picture.
+## Publication
 
-| Chain | Plain mode | Managed mode | Verified by the client with |
-|---|---|---|---|
-| Repository metadata | not available | `signing.rpm.metadata.key`, `signing.deb.metadata.key` | dnf `repo_gpgcheck=1`, apt `Signed-By` |
-| RPM package bodies | `create -S KEY [--overwrite]` | `signing.rpm.packages.mode: fill \| always` | dnf `gpgcheck=1` |
+Configured targets bind one Repository to one provider prefix:
 
-Metadata keys given as `file://` or `env://` are used by an in-process Go signer, so no external tool is needed. RPM package signing and `agent://` key references call the `rpm` and `gpg` binaries in your environment.
+| Provider | v0.2.0 behavior |
+|---|---|
+| `filesystem` | publish and verify a Generation; conditional lifecycle deletion after recorded safety gates |
+| `r2` | publish through the S3-compatible API; target GC is report-only and never deletes objects |
 
-## Platform coverage
+Publication is not an HTTP server. `public_endpoint` describes how SOW verifies the public
+surface; the operator supplies the actual server, bucket, CDN, credentials, and access policy.
 
-The binary builds for `darwin` and `linux` on `amd64` and `arm64`. There is no runtime dependency on a package manager, a database server, or a Python stack.
+## Platforms and evidence
 
-The only external programs SOW will ever invoke are `rpm` (for RPM package signing) and `gpg` (for `agent://` key references). A repository that uses no signing, or uses `file://`/`env://` metadata keys only, needs nothing installed beyond the `sow` binary itself.
+Release builds target Linux and macOS on `amd64` and `arm64`, with `CGO_ENABLED=0`.
+Managed workspaces require local POSIX locking, fsync, and atomic rename semantics; network
+filesystems are not claimed as supported build locations.
 
-Managed workspaces must be built on a local POSIX filesystem because locks, fsync, and
-atomic rename are part of the transaction contract. The current `pool/ + dists/` layout
-does not use view-local hardlinks: `pool/` owns payloads and RPM views contain metadata
-only. See [Pool & Metadata Views](/docs/feature/views/).
+Client and provider claims are deliberately narrower than the metadata format surface.
+See [Compatibility](/docs/reference/compatibility/) for the exact current CI and local
+evidence, including what has not been tested end to end.
 
-## Client compatibility
+## Non-goals
 
-Every combination below was exercised against a real client:
-
-| Client | Version | Result |
-|---|---|---|
-| AlmaLinux 8 / 9 / 10 `dnf` | dnf4 | `makecache` and `install` with `repo_gpgcheck=1` and `gpgcheck=1` |
-| CentOS 7 `yum` | 3.4.3 | `makecache` and correct multi-version NEVRA listing |
-| Debian 13 `apt` | 3.0.3 | `update` with InRelease verification and by-hash fetch, then `install` |
-| Debian 12 `apt` | 2.6.1 | same, plus flat repositories via `[trusted=yes]` |
-
-Default `dnf reposync` is intentionally not listed as a canonical-layout client: its
-safe-write check rejects the `../../../pool/...` package hrefs. Use
-`sow export rpm-leaf` when that downstream contract is required.
-
-The full matrix, including the by-hash requirement of APT ≥ 1.2, is in [Compatibility](/docs/reference/compatibility/).
-
-## Compared with createrepo_c and reprepro
-
-These are the tools SOW is measured against. The comparison below reflects side-by-side runs over the same package sets, not documentation claims.
-
-| Dimension | SOW | createrepo_c | reprepro |
-|---|---|---|---|
-| RPM metadata | `primary`/`filelists`/`other`, semantically equivalent | baseline | — |
-| sqlite repodata | not generated (explicit non-goal) | generated by default | — |
-| DEB `Packages` fields | equivalent, SHA-256 only | — | baseline, emits MD5Sum + SHA1 + SHA256 |
-| by-hash | supported (`Acquire-By-Hash: yes`) | — | **not supported** |
-| Pool layout | `pool/<prefix>/<source>/` (no component level) | — | `pool/main/<prefix>/<source>/` |
-| Per-architecture `Release` stubs | not generated (apt does not need them) | — | generated |
-| Platforms | Linux and macOS, single binary | Linux in practice | Linux only |
-| Transactions and crash recovery | journal with roll-forward/rollback | none | database is fragile |
-| Audit | operation ledger with JSONL export | none | limited logging |
-
-Two details are worth spelling out, because they surprise people migrating:
-
-Against `createrepo_c` on 9 test packages and 87 real production packages, every field in `primary`, `filelists`, and `other` matched semantically — name, arch, EVR, checksum, sizes, provides, requires flags, files, changelog, header range. The single divergence: when an RPM header lists `/bin/sh` twice in both a pre and a non-pre context, SOW keeps one entry and `createrepo_c` keeps both.
-
-Against `dpkg-scanpackages`, the `Packages` fields match, except that SOW emits only `SHA256` — modern APT clients need nothing else — and omits absent fields such as `Section` entirely rather than writing an empty value.
-
-If you are moving an existing repository over, read [Migrate from createrepo_c / reprepro](/docs/tutorial/migration/) first; taking over a directory in place leaves the old tool's files on disk for you to remove.
-
-## Performance anchors
-
-Measured on macOS arm64, cold:
-
-| Operation | Scale | Wall time |
-|---|---|---|
-| `sow create` | 9 RPMs | 0.31 s |
-| `sow create` | 87 RPMs, 2.9 GB (full SHA-256) | 10.7 s |
-| `sow add` + automatic build | 9 RPMs, 31 MB | ~1.3 s |
-| historical `sow check` before retained/publication layers | 16-package workspace | 0.12 s |
-
-Commands that parse, hash, render, or verify accept `-j/--jobs N`, defaulting to the logical CPU count. Parallelism never changes the output: final serialization runs in a fixed order, so the same input always produces the same bytes.
-
-## Deliberate non-goals
-
-These are not missing features waiting to be built. They are excluded by design, and no empty command or hidden flag pretends otherwise:
-
-- modulemd generation, injection, or passthrough
-- sqlite repodata and zchunk
-- SRPM / DSC source indexes
-- multi-writer and multi-host operation
-- cross-repository deduplication
-- remote multi-writer coordination and acting as a CDN
-- destructive GC for R2 targets (R2 maintenance is report-only)
-- a serving daemon or a web UI
-- building packages
-
-SOW manages the authoritative workspace, committed generations, explicit publication
-targets, retention roots, and conservative garbage collection. It does not replace the
-HTTP server or CDN that delivers the resulting public tree.
+- building packages;
+- serving HTTP or operating a CDN;
+- multi-writer or distributed coordination;
+- cross-Repository payload deduplication;
+- automatic R2 object deletion;
+- module streams, source-package indexes, SQLite rpm-md, or zchunk;
+- a web UI.
 
 ## Next
 
-- [Plain Flat Repositories](/docs/feature/plain/) — what `sow create` does, step by step
-- [Managed Workspaces](/docs/feature/managed/) — the three-tier model
-- [Core Concepts](/docs/start/concepts/) — the shorter mental model, if you have not read it yet
+- [Plain Flat Repositories](/docs/feature/plain/)
+- [Managed Workspaces](/docs/feature/managed/)
+- [Signing Model](/docs/feature/signing/)
+- [Publication & Recovery](/docs/design/publication/)

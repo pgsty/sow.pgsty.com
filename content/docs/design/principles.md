@@ -41,8 +41,8 @@ been computed across every live and retained owner.
 ## The public tree is the delivery unit
 
 A Repository root contains `pool/ + dists/`. That complete tree is the unit for static
-hosting, copying, authorization, and publication. A single RPM architecture leaf may be
-consumable by a client, but it is not an independently owned Repository.
+hosting, copying, authorization, and publication. A single RPM architecture leaf is a
+client view, but it is not an independently owned Repository.
 
 Private state such as `sow.yml`, `.sow/`, locks, journals, credentials, and recovery files
 must never be served as part of that tree.
@@ -75,9 +75,8 @@ Standards compliance, ordinary client behavior, mirror-tool behavior, object-sto
 layout, proxy normalization, and filesystem semantics are different questions. SOW records
 them separately and uses a real client or provider for the claim being made.
 
-This principle is why the pre-release C2 prototype could optimize for `reposync` with
-hardlink views, while v0.2.0 chooses one remote object per package and moves default
-`reposync` compatibility to an explicit external export.
+The canonical Repository and an exported RPM mirror leaf are therefore separate artifacts;
+evidence for one does not establish compatibility for the other.
 
 ## Evidence never upgrades itself
 

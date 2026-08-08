@@ -83,9 +83,10 @@ SOW 在 `dists/<dist>/main/binary-<arch>/` 下渲染 `Packages`、`Packages.gz` 
 
 ## 普通客户端与 `reposync` 是两份契约
 
-APT、DNF、YUM 消费完整正典 Repository。默认 EL `dnf reposync` 不同：它的 safe-write
-检查会拒绝规范化后落到 per-repository 下载目录上方的软件包路径。这是明确不支持的组合，
-不代表普通 DNF 消费失败。
+规范布局面向能消费完整 Repository 并正确处理协议相对路径的软件包客户端；当前尚无现行
+Managed DNF/YUM 客户端门禁。默认 EL `dnf reposync` 是另一份契约：它的 safe-write 检查会
+拒绝规范化后落到 per-repository 下载目录上方的软件包路径。这是明确不支持的组合，不能用来
+证明普通客户端成功或失败。
 
 需要自包含 RPM leaf 时，在 Repository 与所有已配置 filesystem 发布根之外创建导出：
 
@@ -99,9 +100,10 @@ publish input 或 GC root。
 
 ## 复制与发布
 
-正典正确性不依赖 inode 身份。使用普通 `rsync -a`、`cp -a`、tar 或 publication target
-搬迁完整、稳定的 `pool/ + dists/`，并在暴露前复验目标。只复制某个 RPM 架构 leaf 不受支持，
-因为其中元数据有意引用同级根 Pool。
+正典正确性不依赖 inode 身份。优先使用已配置的 Publication Target。必须使用其他传输方式时，
+用 `rsync`、`cp` 或 tar 把完整、稳定的 `pool/ + dists/` 复制到离线 staging，复验后再原子
+切换上线；不要逐文件更新在线树。只复制某个 RPM 架构 Leaf 不受支持，因为其中元数据有意
+引用同级根 Pool。
 
 `sow changes` 只在 `pool/` 下列一次包体，随后是元数据与指针：
 

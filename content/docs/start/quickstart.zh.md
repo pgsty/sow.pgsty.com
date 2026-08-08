@@ -1,187 +1,125 @@
 ---
 title: "快速上手"
 linkTitle: "快速上手"
-description: "把一个装包的目录变成可服务的仓库,再用 dnf 或 apt 从中安装。"
+description: "索引一个 RPM/DEB 软件包目录，对外服务，并配置客户端。"
 url: "/zh/docs/start/quickstart/"
 weight: 200
 icon: fa-solid fa-bolt
 ---
 
-这一页大约五分钟。你会把若干软件包放进一个目录,执行一条命令,用 HTTP 暴露出去,
-然后用 `dnf` 或 `apt` 从中安装。不需要配置文件、不需要工作区、不需要数据库 ——
-Plain 平面模式只是在软件包旁边写出索引,除此之外什么都不做。
+Plain 模式在一个目录内生成平面仓库。它不读取 `sow.yml`，不创建工作区，也不维护数据库。
 
-## 1. 准备软件包
+## 1. 准备目录
 
-任何装着 `.rpm` 或 `.deb` 的目录都可以。文件原地不动,SOW 不会移动或重命名它们。
+把 RPM 和/或 DEB 文件放在目录顶层。`sow create` 不递归扫描，也不移动或改名包文件。
 
 ```bash
 mkdir -p /srv/repo
-cp ~/downloads/*.rpm /srv/repo/
-ls /srv/repo
+cp /path/to/packages/*.rpm /path/to/packages/*.deb /srv/repo/
 ```
 
-```console
-blackbox_exporter-0.28.0-1.aarch64.rpm
-blackbox_exporter-0.28.0-1.x86_64.rpm
-pev2-1.23.0-1.noarch.rpm
-pgbouncer-1.25.2-43PGDG.rhel9.8.x86_64.rpm
-```
+如果某种格式不存在，请只复制你实际拥有的软件包。
 
-## 2. 生成索引
+## 2. 生成元数据
 
 ```bash
 sow create /srv/repo
 ```
 
-```console
-created /srv/repo: rpm=4 deb=0 signed=0 removed=0 marker=false noop=false recovered=false
-```
-
-建仓就这一步。4 个包耗时 0.35 秒;87 个 RPM(2.9 GB)约 11 秒,时间主要花在算哈希上。
-
-SOW 读取了每个 RPM 的头、为每个包体计算 SHA-256,并在软件包旁边写出 `repodata/` 目录:
+混合格式输出形态如下：
 
 ```console
-/srv/repo
-├── blackbox_exporter-0.28.0-1.aarch64.rpm
-├── blackbox_exporter-0.28.0-1.x86_64.rpm
-├── pev2-1.23.0-1.noarch.rpm
-├── pgbouncer-1.25.2-43PGDG.rhel9.8.x86_64.rpm
-└── repodata
-    ├── 2eda195ef4ce04cc2df3548bb056e3588b6c872c5333305ae108b26bcacdb558-other.xml.gz
-    ├── 78b24c2413c1f60dd7871bf7c05834d0c363d2b4742b13da115565f23e0d41bd-filelists.xml.gz
-    ├── 996f7947874e8c1ced323dcaae26e4ec20d4f7844701a8ef1cce0dc93631b6f7-primary.xml.gz
-    └── repomd.xml
+created /srv/repo: rpm=1 deb=1 signed=0 removed=0 marker=false noop=false recovered=false
 ```
 
-这与 `createrepo_c` 产出的 `primary` / `filelists` / `other` 布局一致:校验和命名的数据文件,
-加上所有 YUM 客户端最先读取的入口 `repomd.xml`。
+目录会变成：
+
+```text
+/srv/repo/
+├── package.rpm
+├── package.deb
+├── repodata/       # RPM: repomd.xml、primary、filelists、other
+├── Packages        # DEB 平面索引
+└── Packages.gz
+```
+
+Plain 模式不生成 DEB `Release`、`InRelease` 或 `Release.gpg`。RPM 与 DEB 元数据在一次
+操作中生成；任何解析或渲染错误都会阻止新索引提交。
 
 ## 3. 对外服务
 
-任何静态 Web 服务器都行。快速验证用 Python 自带的服务器就够了:
+本地检查可以使用任意静态文件服务器：
 
 ```bash
 cd /srv/repo
-python3 -m http.server 8080
+python3 -m http.server --bind 127.0.0.1 8080
 ```
 
-确认入口可达:
+在另一个终端检查两个协议入口：
 
 ```bash
-curl -s http://localhost:8080/repodata/repomd.xml | head -3
+curl --fail http://127.0.0.1:8080/repodata/repomd.xml >/dev/null
+curl --fail http://127.0.0.1:8080/Packages.gz >/dev/null
 ```
 
-```console
-<?xml version="1.0" encoding="UTF-8"?>
-<repomd xmlns="http://linux.duke.edu/metadata/repo" xmlns:rpm="http://linux.duke.edu/metadata/rpm">
-  <revision>0</revision>
-```
+Python 服务器只适合预览；长期服务请使用正常维护的 HTTP 服务器。
 
-长期服务请改用 Nginx 托管该目录,配置示例见[对外服务](/zh/docs/tutorial/serving/)。
+## 4. 配置客户端
 
-## 4. 从中安装
-
-把客户端指向该目录的 URL。这里的包没有签名,所以先关闭签名校验;
-如何开启见[仓库签名](/zh/docs/tutorial/signing/)。
+把 `REPO_HOST` 换成客户端能访问的地址。
 
 {{< tabpane persist="header" >}}
-{{< tab header="dnf / yum" lang="bash" >}}
-sudo tee /etc/yum.repos.d/quickstart.repo <<'EOF'
-[quickstart]
+{{< tab header="dnf" lang="ini" >}}
+# /etc/yum.repos.d/sow-quickstart.repo
+[sow-quickstart]
 name=SOW Quick Start
-baseurl=http://10.0.0.1:8080/
+baseurl=http://REPO_HOST:8080/
 enabled=1
 gpgcheck=0
-EOF
-
-sudo dnf makecache
-sudo dnf install pgbouncer
+repo_gpgcheck=0
 {{< /tab >}}
-{{< tab header="apt" lang="bash" >}}
-echo 'deb [trusted=yes] http://10.0.0.1:8080/ ./' | \
-  sudo tee /etc/apt/sources.list.d/quickstart.list
-
-sudo apt update
-sudo apt install pev2
+{{< tab header="apt" lang="text" >}}
+# /etc/apt/sources.list.d/sow-quickstart.list
+deb [trusted=yes] http://REPO_HOST:8080/ ./
 {{< /tab >}}
 {{< /tabpane >}}
 
-APT 那行结尾的 `./` 就是告诉 `apt` 这是一个平面仓库 —— 包与索引在同一目录,没有 `dists/` 层级。
-`[trusted=yes]` 是必须的,因为此时还没有 `Release` 签名。
-
-`file://` URL 同样可用,适合从挂载的磁盘离线安装:`dnf` 用 `baseurl=file:///srv/repo`,
-`apt` 用 `deb [trusted=yes] file:///srv/repo ./`。
-
-## 5. 追加软件包
-
-把新文件复制进去,再执行同一条命令:
+刷新索引并安装软件包：
 
 ```bash
-cp ~/downloads/more/*.rpm /srv/repo/
+# RPM 客户端
+sudo dnf makecache
+sudo dnf install PACKAGE_NAME
+
+# DEB 客户端
+sudo apt update
+sudo apt install PACKAGE_NAME
+```
+
+APT source 末尾的 `./` 表示平面仓库。`[trusted=yes]` 与关闭 DNF 签名检查只适用于这个
+未签名的快速示例；需要真实性保证时应使用已签名 Managed 仓库。
+
+## 5. 更新仓库
+
+增删包文件后重新执行同一条命令：
+
+```bash
 sow create /srv/repo
 ```
 
-SOW 重新扫描目录并重写索引。两次运行之间不保留任何记忆 —— **目录内容本身就是状态**。
+目录内容就是 Plain 模式的全部状态。包字节不变时，生成的元数据具有确定性，重复运行会报告
+`noop=true`。
 
-对未发生变化的目录重复执行是空操作,输出会明说:
-
-```console
-created /srv/repo: rpm=4 deb=0 signed=0 removed=0 marker=false noop=true recovered=false
-```
-
-输出是确定性的:相同的输入包,产出字节级一致的索引。`repomd.xml` 里写的是
-`<revision>0</revision>` 和零时间戳,正是为了让重建不会平白改变校验和、逼所有客户端重新拉取元数据。
-
-## 6. 一个目录,两种格式
-
-RPM 与 DEB 可以放在一起。一条 `sow create` 同时为两者建索引,并分列计数:
-
-```bash
-ls /srv/mixed
-```
-
-```console
-libpq5_18.3-1.pgdg12+1_amd64.deb
-pev2_1.23.0_all.deb
-pev2-1.23.0-1.noarch.rpm
-pgbouncer-1.25.2-43PGDG.rhel9.8.x86_64.rpm
-```
-
-```bash
-sow create /srv/mixed
-```
-
-```console
-created /srv/mixed: rpm=2 deb=2 signed=0 removed=0 marker=false noop=false recovered=false
-```
-
-你会在同一个目录里同时得到 RPM 侧的 `repodata/` 与 DEB 侧的 `Packages`、`Packages.gz`。
-任何一侧解析失败,整条命令都在发布之前中止 —— 两侧要么一起提交,要么都不提交。
-
-## 需要机器可读的输出?
-
-任何命令加上 `--json` 都会输出带版本的信封:
+自动化场景可使用带版本的 JSON 信封：
 
 ```bash
 sow create /srv/repo --json
 ```
 
-```json
-{"schema":"sow.cli/v1","command":"create","ok":true,"repository":null,"operation":null,"result":{"dir":"/srv/repo","rpm":4,"deb":0,"kept":["blackbox_exporter-0.28.0-1.aarch64.rpm","blackbox_exporter-0.28.0-1.x86_64.rpm","pev2-1.23.0-1.noarch.rpm","pgbouncer-1.25.2-43PGDG.rhel9.8.x86_64.rpm"],"removed":[],"marker":false,"noop":true,"recovered":false},"errors":[]}
-```
+## 何时使用 Managed 模式
 
-所有命令的信封结构一致,字段说明见 [JSON 输出](/zh/docs/reference/json/)。
+如果目录已经恰好包含要发布的全部内容，使用 Plain。需要具名 Dist、架构视图、成员策略、
+已签名元数据、Generation、审计或发布目标时，使用 [Managed 工作区](/zh/docs/start/workspace/)。
 
-## 下一步
-
-当目录里已经**恰好**是你想发布的内容时 —— 构建产物、从上游镜像拉下来的目录、离线包集 ——
-Plain 平面模式
-就是合适的工具。而当你需要决定**哪些**包该进仓库、在一棵树里维护多个发行版、按架构拆分,
-或者需要签名与变更审计时,就该换到 Managed 托管工作区了。
-
-- [第一个工作区](/zh/docs/start/workspace/) —— 完整走通 Managed 路径。
-- [核心概念](/zh/docs/start/concepts/) —— 两种模式的差别与选型。
-- [Plain 平面仓库](/zh/docs/feature/plain/) —— `sow create` 提供的保证。
-- [`sow create` 参考](/zh/docs/reference/cli/create/) —— 全部参数与退出码。
+另见 [`sow create`](/zh/docs/reference/cli/create/) 与
+[Plain 平面仓库](/zh/docs/feature/plain/)。

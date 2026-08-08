@@ -70,8 +70,8 @@ pool/<prefix>/<source>/<filename>
 | `blackbox_exporter` | `pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm` |
 | `libfoo` | `pool/libf/libfoo/libfoo1_1.0-1_amd64.deb` |
 
-池对象不可变。从 Dist 删除成员关系不会立即删除字节;`sow gc` 会在考虑本地、保留代、
-迁移与发布根之后处理不可达包体。
+Pool 对象不可变。从 Dist 删除成员关系不会立即删除字节；`sow gc` 只有在检查当前、保留、
+恢复、发布以及活动维护操作等全部安全根后，才会处理不可达包体。
 
 ## RPM 纯元数据视图
 
@@ -96,8 +96,9 @@ pool/<prefix>/<source>/<filename>
 <location href="../../../pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm"/>
 ```
 
-`dnf` 与 `yum` 可直接消费。默认 `dnf reposync` 会拒绝包含父目录跳转的 href,因为下载
-目标逃出了视图根。下游工具需要自包含 leaf 时,请显式导出:
+该布局要求客户端在完整 Repository Root 内正确处理 rpm-md 相对路径；当前自动化矩阵尚未包含
+现行 Managed DNF/YUM 验收门禁。默认 `dnf reposync` 会拒绝父级跳转 href，因为下载目标逃出
+View Root。下游工具需要自包含 Leaf 时，请显式导出：
 
 ```bash
 sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
@@ -111,7 +112,7 @@ sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
 dists/trixie/
 ├── Release
 ├── InRelease                         # 配置元数据签名时生成
-├── Release.gpg
+├── Release.gpg                       # 配置元数据签名时生成
 └── main/
     ├── binary-amd64/
     │   ├── Packages

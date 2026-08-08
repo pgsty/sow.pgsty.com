@@ -1,7 +1,7 @@
 ---
 title: "JSON Output"
 linkTitle: "JSON Output"
-description: "The sow.cli/v1 envelope, its fields, and the result shape of every command."
+description: "The sow.cli/v1 envelope, its fields, and result shapes for the primary command families."
 url: "/docs/reference/json/"
 weight: 600
 icon: fa-solid fa-code
@@ -18,7 +18,7 @@ sow status --json
 ```json
 {"schema":"sow.cli/v1","command":"status","ok":true,"repository":"pigsty","operation":null,
  "result":{"repository":"pigsty","status":"clean","ready_to_copy":true,"desired_revision":4,
- "built_generation":4,"dirty_dists":[],"dirty_reasons":[],"pending":{"count":0,"bytes":0},
+ "built_generation":"00000000000000000004","dirty_dists":[],"dirty_reasons":[],"pending":{"count":0,"bytes":0},
  "recent_operation":{"id":"8632724976452398569","kind":"add","state":"done",
  "created_at":"2026-08-04T04:07:17.665377Z","updated_at":"2026-08-04T04:07:18.293848Z"},
  "repository_locked":false},"errors":[]}
@@ -72,6 +72,17 @@ Operation IDs are 64-bit values serialized as decimal strings, because they rout
 exceed what an IEEE 754 double can represent exactly. In JavaScript, `JSON.parse` on a
 bare number would silently corrupt them. Keep them as strings; `jq` handles them
 correctly as-is.
+
+### Generation IDs are fixed-width strings
+
+```json
+"built_generation":"00000000000000000004"
+```
+
+Generation IDs cover the full unsigned 64-bit domain and are serialized as exactly 20
+zero-padded decimal digits. Treat `generation`, `built_generation`, `base_generation`,
+and Generation-valued `base` fields as strings. The fixed width preserves numeric order
+under ordinary bytewise comparison.
 
 ### stdout and stderr
 
@@ -152,7 +163,7 @@ shape.
 
 ```json
 "result":{"repositories":[{"name":"pigsty","path":"/srv/repo/pigsty","protected":false,
- "dists":2,"generation":4,"desired_revision":4,"status":"clean","packages":7,"memberships":7,
+ "dists":2,"generation":"00000000000000000004","desired_revision":4,"status":"clean","packages":7,"memberships":7,
  "recent_operation":{"id":"8632724976452398569","kind":"add","state":"done",
   "created_at":"2026-08-04T04:07:17.665377Z","updated_at":"2026-08-04T04:07:18.293848Z"},
  "config":{"protected":false,"signing":{...},"dists":{...}}}]}
@@ -174,7 +185,7 @@ respectively.
 "result":{"dists":[{"name":"el9","format":"rpm",
  "architectures":[{"family":"x86_64","ecosystem_arch":"x86_64"},
                   {"family":"aarch64","ecosystem_arch":"aarch64"}],
- "desired_members":4,"built_members":4,"generation":3,"dirty":false,"status":"clean",
+ "desired_members":4,"built_members":4,"generation":"00000000000000000003","dirty":false,"status":"clean",
  "effective_config_sha256":"39913af601d10d4d4033b0c29e8d66df385f8a6eb22f45219773a7fc170d4243",
  "config":{"format":"rpm","architectures":["x86_64","aarch64"],"limit":0,"exclude":null}}]}
 ```
@@ -193,7 +204,7 @@ when it changes, the distribution becomes dirty.
 
 ```json
 "result":{"operation":"320653458389425222","repository":"demo",
- "desired_revision":2,"built_generation":2,"dirty":false,
+ "desired_revision":2,"built_generation":"00000000000000000002","dirty":false,
  "accepted":1,"failed":0,"memberships_added":1,"memberships_removed":0,
  "items":[{"input":"/incoming/pev2-1.23.0-1.noarch.rpm","status":"accepted","format":"rpm",
  "coordinate":"pev2-0:1.23.0-1.noarch",
@@ -233,7 +244,7 @@ older versions in the same operation that admits a new one.
 
 ```json
 "result":{"operation":"3422380511083828695","repository":"pigsty",
- "desired_revision":5,"built_generation":5,"dirty":false,"check":false,
+ "desired_revision":5,"built_generation":"00000000000000000005","dirty":false,"check":false,
  "removed":[{"dist":"el9","sha256":"45171966...",
    "coordinate":"rpm:pgbouncer_fdw_18-0:1.4.0-1PGDG.rhel9.8.x86_64","name":"pgbouncer_fdw_18"}],
  "dists":["el9"],
@@ -252,7 +263,7 @@ pool bytes are never deleted by `rm`.
 
 ```json
 "result":{"operation":"3701044631565986409","repository":"pigsty",
- "dists":["el9","trixie"],"desired_revision":5,"built_generation":5,
+ "dists":["el9","trixie"],"desired_revision":5,"built_generation":"00000000000000000005",
  "noop":true,"dirty":false}
 ```
 
@@ -263,7 +274,7 @@ created. `dists` lists the distributions considered, not necessarily the ones re
 
 ```json
 "result":{"repository":"pigsty","status":"clean","ready_to_copy":true,
- "desired_revision":4,"built_generation":4,"dirty_dists":[],"dirty_reasons":[],
+ "desired_revision":4,"built_generation":"00000000000000000004","dirty_dists":[],"dirty_reasons":[],
  "pending":{"count":0,"bytes":0},
  "recent_operation":{"id":"8632724976452398569","kind":"add","state":"done",
   "created_at":"...","updated_at":"..."},
@@ -285,7 +296,7 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
 
 ```json
 "result":{"repository":"pigsty","status":"clean","ready_to_copy":true,
- "built_generation":4,"desired_revision":4,
+ "built_generation":"00000000000000000004","desired_revision":4,
  "layers":[{"name":"config","ok":true,"checked":5,"issues":[]},
   {"name":"retained","ok":true,"checked":0,"issues":[]},
   {"name":"state","ok":true,"checked":1,"issues":[]},
@@ -310,7 +321,7 @@ because the layers verify consistency while `ready_to_copy` reports currency:
 ### changes
 
 ```json
-"result":{"repository":"pigsty","base":4,"generation":5,"dirty":false,
+"result":{"repository":"pigsty","base":"00000000000000000004","generation":"00000000000000000005","dirty":false,
  "changes":[{"op":"add","path":"dists/el9/x86_64/repodata/1a57aa2f...-filelists.xml.gz",
    "phase":"metadata","size":382,"sha256":"1a57aa2f..."},
   {"op":"update","path":"dists/el9/x86_64/repodata/repomd.xml","phase":"pointer",
@@ -366,14 +377,13 @@ The fields worth knowing:
  "built_dists":["el9"],"sha256":"d06d7f23...","coordinate":"rpm:pev2-0:1.23.0-1.noarch"}]}
 ```
 
-### repo migrate, publish, retain, gc, export
+### publish, retain, gc, export
 
 v0.2.0 lifecycle commands use the same envelope and keep numeric Generation values as
 JSON strings:
 
 | Command | Important `result` fields |
 |---|---|
-| `repo migrate` | `repository`, `repository_id`, `from_layout`, `to_layout`, `phase`, `generation`, `grace_not_before`, `legacy_aliases`, `complete` |
 | `publish` | `repository`, `target`, `provider`, `generation`, `attempt`, `checkpoint`, `phase`, `objects`, `noop` |
 | `publish --abort` | `repository`, `target`, `provider`, `attempt`, `phase`, `objects` |
 | `retain add` / `retain rm` | `repository`, `record`, `record_identity`, `path` |

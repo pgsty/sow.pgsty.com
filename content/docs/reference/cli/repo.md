@@ -112,30 +112,20 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-Migrates a repository created by the unreleased C2 prototype from view-local RPM aliases
-to the v0.2.0 single-payload layout. It rewrites RPM metadata to reach the root `pool/`,
-records a durable transition, advances the Generation, and changes `schema: sow/v2` to
-`schema: sow/v3`.
-
-```bash
-sow repo migrate pigsty
-```
-
-The operation is resumable. Before durable commit intent, `--abort` abandons the staged
-transition and leaves the live repository unchanged. After commit intent the transition is
-forward-only; rerun `repo migrate` until its grace and cleanup conditions complete.
+This is a specialized maintenance command, not part of the fresh v0.2.0 workflow. A
+Repository created by `sow init` and `sow repo new` already uses the canonical
+single-payload layout and must not be migrated speculatively. Use this command only when
+SOW explicitly diagnoses that maintenance path, and take a backup first.
 
 | Flag | Description | Default |
 |---|---|---|
 | `-j, --jobs N` | Parallel verification/render workers | logical CPUs |
-| `--abort` | Abandon a pre-commit migration | false |
+| `--abort` | Abandon a maintenance attempt before its commit decision | false |
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select the repository when `NAME` is omitted | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--json` | Emit the versioned JSON envelope | false |
-
-New v0.2.0 workspaces already use the single-payload layout and do not need migration.
 
 ## sow repo rm
 

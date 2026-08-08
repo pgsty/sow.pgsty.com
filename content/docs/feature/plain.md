@@ -54,7 +54,8 @@ RPMs present produce `repodata/`:
     └── repomd.xml
 ```
 
-Flat metadata references packages in the same directory, which works identically over `file://` and over an HTTP document root:
+Flat metadata references packages in the same directory, so the paths remain relative whether
+the directory is exposed as a `file://` source or an HTTP document root:
 
 ```xml
 <location href="pev2-1.23.0-1.noarch.rpm"/>
@@ -102,17 +103,9 @@ $ sow create
 created /srv/repo: rpm=2 deb=1 signed=0 removed=0 marker=false noop=false recovered=false
 ```
 
-Both renderers stage and validate before either one commits. If the DEB side fails to parse, the RPM index is not swapped in either, and the command exits non-zero. You never get a half-migrated directory where `repodata/` is fresh and `Packages` is stale.
+Both renderers stage and validate before either one commits. If the DEB side fails to parse, the RPM index is not swapped in either, and the command exits non-zero. You do not get a mixed result where `repodata/` is fresh and `Packages` is stale.
 
 One caveat that is honest rather than reassuring: POSIX cannot rename two files at the same instant. A concurrent reader that fetches `repomd.xml` and `Packages` during the swap window may observe one new and one old. Each protocol view is internally consistent at all times; cross-protocol simultaneity is not promised in default mode. If you need a gate, use `--pigsty` and treat `repo_complete` as the readiness signal.
-
-## Taking over an existing repository
-
-Running `sow create` inside a directory that `createrepo_c` previously indexed works, and the new `repomd.xml` references only the three files SOW generated — no `sqlite`, no `modulemd`.
-
-{{% alert title="Old files stay on disk" color="warning" %}}
-SOW does not delete bytes it did not write. The old checksum-named metadata, `*.sqlite.bz2`, and `modules.yaml` remain in `repodata/` after the takeover. They are no longer referenced by `repomd.xml`, so clients ignore them, but they still occupy space. Remove them yourself once you are satisfied with the new index. See [Migration](/docs/tutorial/migration/).
-{{% /alert %}}
 
 ## The `--pigsty` operation
 
@@ -149,7 +142,7 @@ In default mode (no `--pigsty`), a pre-existing `repo_complete` is a hard error 
 sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
 ```
 
-`-S/--sign-with KEY` is the explicit authorization to modify package bodies. `KEY` is a GPG key ID or fingerprint: 16, 40, or 64 hex characters, with an optional `0x` prefix. SOW normalizes it to uppercase and passes it to `rpm --addsign` in your environment as the `_gpg_name` macro. The private key, passphrase, GPG home, and pinentry all belong to the environment; SOW never receives, stores, or echoes a secret.
+`-S/--sign-with KEY` is the explicit authorization to modify package bodies. `KEY` is a GPG key ID or fingerprint of exactly 16, 40, or 64 hexadecimal characters; an `0x` prefix is not accepted. SOW normalizes it to uppercase and passes it to `rpm --addsign` in your environment as the `_gpg_name` macro. The private key, passphrase, GPG home, and pinentry all belong to the environment; SOW never receives, stores, or echoes a secret.
 
 - Without `--overwrite`, only RPMs that have no parseable embedded OpenPGP signature are signed. Anything already signed keeps its bytes.
 - `--overwrite` requires `--sign-with` and switches to `rpm --resign` over every retained RPM.

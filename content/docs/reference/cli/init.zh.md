@@ -106,8 +106,8 @@ infra	true	1	1	clean	0	0
 pgsql	false	2	2	clean	0	0
 ```
 
-这样创建出来的 Dist 立刻可被客户端消费：RPM Dist 每个架构视图有一份空 `repodata/`，DEB Dist 有空的
-`Packages`/`Packages.gz`、`by-hash` 与 `Release`。
+这样创建出来的 Dist 立刻具备协议完整的空发布面：RPM Dist 每个架构视图有一份空
+`repodata/`，DEB Dist 有空的 `Packages`/`Packages.gz`、`by-hash` 与 `Release`。
 
 再跑一次什么都不会变：
 

@@ -7,18 +7,18 @@ weight: 100
 icon: fa-solid fa-download
 ---
 
-SOW 以单个静态可执行文件分发。所谓安装,就是把这一个文件放到 `PATH` 上的某个位置。
-没有软件包要装,没有服务要启用,在你执行第一条需要落盘的命令之前,它也不会创建任何
-状态目录。
+SOW 以单个自包含可执行文件分发。Archive 安装就是把它放到 `PATH`；Linux 也可使用 Release
+中的 RPM/DEB 包常规安装。没有服务要启用，在命令真正需要状态前也不会创建状态目录。
 
-## 支持的平台
+## Release 构建目标
 
-二进制以 `CGO_ENABLED=0` 构建,不依赖 libc,可在对应操作系统与 CPU 架构的任意现代内核上运行。
+Release Pipeline 以 `CGO_ENABLED=0` 构建，不需要另装 cgo 工具链或语言运行时；二进制仍会使用
+操作系统标准 ABI 与 Framework。Release 资产的构建目标如下：
 
 | 操作系统 | `amd64` | `arm64` |
 |---|---|---|
-| Linux | 支持 | 支持 |
-| macOS(Darwin) | 支持 | 支持 |
+| Linux | 构建 | 构建 |
+| macOS(Darwin) | 构建 | 构建 |
 
 不支持 Windows。SOW 依赖 POSIX 建议锁与原子 `rename`,且只在本地 POSIX 文件系统上
 验证过 —— NFS 之类的网络文件系统不提供它所需的锁与持久化语义。
@@ -31,10 +31,10 @@ fsync 与原子 rename 契约。已提交的公共 `pool/ + dists/` 树没有视
 
 ## 下载发行版本
 
-SOW v0.2.0 当前以 **Draft** 形式暂存在
-[GitHub Releases 页面](https://github.com/pgsty/sow/releases)。草稿内已有四个
-Linux/macOS 归档、`1PGSTY` Linux RPM/DEB 包与 `SHA256SUMS`,但 Draft 资产不是公共下载面。
-在操作者手工公开草稿之前,请按下文从源码构建。公开后,自动下载前仍要确认 Release 条目中
+SOW v0.2.0 的 GitHub Release 当前仍是 **Draft**。其中四个 Linux/macOS 归档、
+`1PGSTY` Linux RPM/DEB 包与 `SHA256SUMS` 尚不可公开下载。在操作者把它发布到
+[Releases 页面](https://github.com/pgsty/sow/releases)之前,请按下文从源码构建。
+公开后,自动下载前仍要确认 Release 条目中
 确实存在匹配的归档与校验和,再把解压出的二进制放到 `PATH` 上:
 
 v0.2.0 不发布 Docker 或其他容器镜像。
@@ -44,7 +44,8 @@ tar -xzf sow_*.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
-如果机器上没有 root,放到 `~/.local/bin` 同样可用 —— SOW 自身的运行从不需要提权。
+没有 root 时可以安装到 `~/.local/bin`。SOW 不需要特权守护进程。执行用户必须能读写
+Workspace 或 Plain 目标目录及发布目标，并能读取输入包、解析签名引用。
 
 ## 从源码构建
 

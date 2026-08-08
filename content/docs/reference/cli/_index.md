@@ -23,7 +23,7 @@ file, no database. Everything else is Managed mode and runs inside a Workspace.
 | [`sow init [DIR]`](/docs/reference/cli/init/) | Managed | Initialize a Workspace and converge declared Repositories/Dists |
 | [`sow config check`](/docs/reference/cli/config/) | Managed | Validate `sow.yml` read-only |
 | [`sow config show`](/docs/reference/cli/config/) | Managed | Print the effective configuration |
-| [`sow repo ls\|new\|show\|migrate\|rm`](/docs/reference/cli/repo/) | Managed | Manage Repositories and migrate the pre-release C2 layout |
+| [`sow repo ls\|new\|show\|migrate\|rm`](/docs/reference/cli/repo/) | Managed | Manage Repositories; `migrate` is specialized maintenance |
 | [`sow dist ls\|new\|show\|rm`](/docs/reference/cli/dist/) | Managed | Manage Dists |
 | [`sow add PATH...`](/docs/reference/cli/add/) | Managed | Add packages to Desired Membership |
 | [`sow rm PACKAGE...`](/docs/reference/cli/rm/) | Managed | Remove Desired Membership |
@@ -138,7 +138,8 @@ repository=pigsty status=clean ready_to_copy=false revision=6 generation=6 dirty
 ## Parallelism
 
 `-j/--jobs N` appears only on commands that actually parse packages, hash bytes, render indexes or
-verify: `create`, `repo migrate`, `add`, `rm`, `build`, `check`. It defaults to the logical CPU
+verify: `create`, `add`, `rm`, `build`, and `check`; the specialized `repo migrate`
+maintenance command also accepts it. It defaults to the logical CPU
 count and must be at least `1`.
 
 ```console

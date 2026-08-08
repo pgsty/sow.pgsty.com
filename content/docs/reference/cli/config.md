@@ -61,11 +61,11 @@ The schema version is pinned:
 
 ```console
 sow config check
-configuration error: load config "/srv/repo/sow.yml": config schema must be "sow/v3", got "sow/v2"
+configuration error: load config "/srv/repo/sow.yml": config schema must be "sow/v3", got "invalid"
 ```
 
-`sow/v2` belongs to the unreleased C2 layout. Use `sow repo migrate` for that transition;
-do not change the schema string by hand.
+For v0.2.0 the only valid value is `schema: sow/v3`. Do not change the schema string as a
+way to bypass a validation error.
 
 `check` also verifies that every declared signing key reference resolves and is usable for signing —
 without ever printing key material. If you remove an architecture from the permit list while a Dist

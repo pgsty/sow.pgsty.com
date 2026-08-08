@@ -1,23 +1,23 @@
 ---
 title: "Download & Install"
 linkTitle: "Download"
-description: "Get the SOW binary: prebuilt releases, source builds, and the supported platform matrix."
+description: "Get the SOW binary: release assets, source builds, and release build targets."
 url: "/download/"
 weight: 20
 icon: fa-solid fa-download
 ---
 
-SOW is one static executable. There is no installer, no package to add, no service to
-enable, and no state directory until you run a command that needs one. Installing it
-means putting a single file on your `PATH`.
+SOW is one self-contained executable. Archive installation means putting that file on
+your `PATH`; there is no service to enable and no state directory until a command needs
+one. RPM and DEB release packages provide a conventional Linux installation path.
 
 ## Prebuilt binaries
 
-SOW v0.2.0 is currently staged as a **draft** on the
-[GitHub releases page](https://github.com/pgsty/sow/releases). The draft contains four
-Linux/macOS archives, `1PGSTY` Linux RPM and DEB packages, and `SHA256SUMS`, but draft
-assets are not a public download surface. Until an operator publishes the draft, use the
-source-build path below. After publication, confirm that the release entry contains the
+The SOW v0.2.0 GitHub Release is currently a **draft**. Its four Linux/macOS
+archives, `1PGSTY` Linux RPM and DEB packages, and `SHA256SUMS` are not publicly
+downloadable. Until an operator publishes it on the
+[releases page](https://github.com/pgsty/sow/releases), use the source-build path below.
+After publication, confirm that the release entry contains the
 matching archive and checksum before automating a download, then extract the archive and
 move the binary into place:
 
@@ -28,18 +28,21 @@ tar -xzf sow_*.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
-Without root, `~/.local/bin` works just as well. SOW never needs elevated privileges for
-its own operation.
+Without root, install into `~/.local/bin`. SOW itself does not require a privileged
+daemon. The invoking user needs read/write access to the Workspace or Plain target and
+publication destination, plus read or resolution access to package inputs and signing
+references.
 
-## Platform matrix
+## Release build targets
 
-The binary is built with `CGO_ENABLED=0`, so it carries no libc dependency and runs on
-any reasonably modern kernel of the matching OS and CPU family.
+The release pipeline builds with `CGO_ENABLED=0`, avoiding a separately installed cgo
+toolchain or language runtime. Binaries still use the operating system's standard ABI and
+frameworks. The release artifact targets are:
 
 | OS | `amd64` | `arm64` | Notes |
 |---|---|---|---|
-| Linux | supported | supported | primary target |
-| macOS (Darwin) | supported | supported | Intel and Apple Silicon |
+| Linux | built | built | primary target |
+| macOS (Darwin) | built | built | Intel and Apple Silicon |
 | Windows | — | — | not supported |
 
 Windows is out of scope: SOW depends on POSIX advisory locks and atomic
@@ -92,4 +95,4 @@ binary. See [Installation](/docs/start/install/) for the details.
 
 - [Quick Start](/docs/start/quickstart/) — turn a directory of packages into a servable repository in five minutes.
 - [First Workspace](/docs/start/workspace/) — build a curated, multi-architecture repository.
-- [Compatibility](/docs/reference/compatibility/) — the tested client matrix.
+- [Compatibility](/docs/reference/compatibility/) — current automated evidence and its limits.

@@ -88,10 +88,11 @@ protocol pointers and signatures. There is no per-view package alias and no per-
 
 ## Ordinary clients and `reposync` are different contracts
 
-APT, DNF, and YUM consume the complete canonical Repository. Default EL `dnf reposync`
-does not: its safe-write check rejects a package location that normalizes above the
-per-repository download directory. This is an explicit unsupported combination, not a
-claim that ordinary DNF is broken.
+The canonical layout is designed for package clients that consume the complete Repository
+and honor relative protocol paths. A current Managed DNF/YUM client gate is still absent.
+Default EL `dnf reposync` has a different contract: its safe-write check rejects a package
+location that normalizes above the per-repository download directory. This is an explicit
+unsupported combination, not evidence about an ordinary client run.
 
 When a self-contained RPM leaf is required, create it outside the Repository and every
 configured filesystem publication root:
@@ -107,10 +108,12 @@ input, or a garbage-collection root.
 
 ## Copy and publication
 
-Canonical correctness does not depend on inode identity. Copy the complete settled
-`pool/ + dists/` tree with ordinary `rsync -a`, `cp -a`, tar, or a publication target,
-then verify the destination before exposing it. Copying only one RPM architecture leaf is
-not supported because its metadata intentionally references the sibling root Pool.
+Canonical correctness does not depend on inode identity. Prefer a configured publication
+target. If another transport is required, copy the complete settled `pool/ + dists/` tree
+with `rsync`, `cp`, or tar into an offline staging location, verify it, and switch it into
+service atomically. Never update the live tree file by file. Copying only one RPM
+architecture leaf is not supported because its metadata intentionally references the
+sibling root Pool.
 
 `sow changes` lists each payload once under `pool/`, followed by metadata and pointers:
 

@@ -7,14 +7,8 @@ weight: 300
 icon: fa-solid fa-box-archive
 ---
 
-The v0.2.0 layout has one precise objective: within one Repository and within each publish
+The layout has one precise objective: within one Repository and within each publish
 prefix, every live Package Object has exactly one payload path.
-
-{{% alert title="Current release layout" color="primary" %}}
-This is the canonical v0.2.0 layout. Workspaces created by the unreleased C2 prototype use
-`schema: sow/v2` and require explicit `sow repo migrate`; new workspaces use `sow/v3`.
-Read [Design Evolution](/docs/design/evolution/) before migrating a C2 workspace.
-{{% /alert %}}
 
 ## Canonical tree
 
@@ -70,17 +64,12 @@ The HTTP client may normalize dot segments before sending a request; the canonic
 key itself never contains `.` or `..`. Proxy and object-store behavior still requires its
 own compatibility gate.
 
-## Why package hardlinks disappeared
+## Why views contain metadata only
 
-The unreleased C2 prototype projected RPM packages into every architecture view with
-hardlinks. On one POSIX filesystem those paths shared an inode, so local disk cost stayed low and default EL
-`reposync` worked. Object storage has no inode identity: each alias path becomes another
-full object and another upload. Dist, architecture, generation, and snapshot count would
-therefore multiply remote payload storage.
-
-v0.2.0 makes filesystem implementation details irrelevant to canonical correctness. A normal
-copy, tar archive, or object-store upload must preserve behavior even when hardlinks do not
-exist.
+Package aliases in every architecture view would create extra object keys and uploads on
+storage systems without inode identity. SOW therefore keeps payload ownership in one Pool
+and lets indexes project membership. Canonical correctness does not depend on hardlink
+count: a complete copy, archive, or publication keeps the same path contract.
 
 ## Relocation contract
 
@@ -96,8 +85,8 @@ references the sibling root Pool.
 
 ## Compatibility export
 
-When an operator needs a self-contained RPM leaf for default `reposync` or another legacy
-tool, v0.2.0 creates an explicit external export:
+When an operator needs a self-contained RPM leaf for default `reposync` or another mirror
+tool, SOW creates an explicit external export:
 
 ```text
 sow export rpm-leaf DIST ARCH DIR

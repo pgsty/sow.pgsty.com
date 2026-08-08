@@ -57,8 +57,7 @@ targets:
 | `repos` | map | 否 | 空 | 仓库名到仓库配置的映射。 |
 | `targets` | map | 否 | 空 | 发布目标名到目标配置的映射。 |
 
-新工作区要求 `schema: sow/v3`。`sow/v2` 标识未发布 C2 布局,只通过显式
-`sow repo migrate` transition 接受;它不是第二种当前配置格式。
+v0.2.0 的配置值必须恰好是 `schema: sow/v3`。
 
 ### architectures
 
@@ -283,7 +282,7 @@ item input=".../blackbox_exporter-0.28.0-1.x86_64.rpm" status=excluded format=rp
 | 字段 | 类型 | 默认值 | 含义 |
 |---|---|---|---|
 | `mode` | string | 无 key 时 `never`,有 key 时 `fill` | `never`、`fill` 或 `always`。 |
-| `key` | key 引用 | 无 | 签名私钥。`mode` 不是 `never` 时必填。 |
+| `key` | key 引用 | 无 | 当前签名身份；公钥用于验证，匹配私钥必须存在于 `rpm` 使用的 GPG 环境。`mode` 不是 `never` 时必填。 |
 | `trusted_keys` | key 引用列表 | 空 | `fill` 额外认可的公钥。 |
 
 三种模式:
@@ -336,9 +335,9 @@ key 引用是下列四种写法之一:
 
 | 形态 | 例子 | 说明 |
 |---|---|---|
-| 路径 | `keys/repo-signing.asc` | ASCII armored 私钥文件。相对路径相对**工作区根目录**解析,不是当前目录。 |
+| 路径 | `keys/repo-signing.asc` | ASCII-armored key 文件。相对路径相对**工作区根目录**解析,不是当前目录。 |
 | `file://<path>` | `file:///secure/repo-signing.asc` | 与上一行等价,只是显式写出。绝对路径因此是三个斜杠。 |
-| `env://<VAR>` | `env://SOW_METADATA_KEY` | 环境变量里存的是 armored 私钥**内容本身**,不是路径。变量名须匹配 `[A-Za-z_][A-Za-z0-9_]*`。 |
+| `env://<VAR>` | `env://SOW_METADATA_KEY` | 环境变量里存的是 armored key **内容本身**,不是路径。变量名须匹配 `[A-Za-z_][A-Za-z0-9_]*`。 |
 | `agent://<fingerprint>` | `agent://7F721C4AD40F...CF3B` | 委托给环境里的 `gpg-agent`。fingerprint 为 16、40 或 64 位十六进制,不区分大小写。 |
 
 其他 scheme 一律拒绝:
@@ -438,8 +437,19 @@ targets:
 三个 authority 布尔值是显式安全确认,不是默认值。同一存储上的目标前缀不能重叠;
 filesystem 目标也不能解析到重叠的有效路径。这些规则防止并发写者破坏条件式发布与 GC。
 
-R2 凭据是私有引用。被引用材料在运行时提供 S3 兼容凭据;`config show`、JSON 输出与公共树
-都不会包含它。
+对 `provider: filesystem`，配置校验只检查 URL 形态与重叠关系。真正发布时，endpoint 目录
+必须已经存在、不能是 symlink，并且必须解析为唯一规范真实目录。SOW 会在 endpoint 下创建
+配置的 prefix，但不会创建 endpoint 本身。
+
+R2 凭据是私有引用。环境变量值或被引用文件必须包含一份严格 JSON 文档，不能写路径或 Shell
+赋值：
+
+```json
+{"access_key_id":"R2_ACCESS_KEY_ID","secret_access_key":"R2_SECRET_ACCESS_KEY"}
+```
+
+临时凭据可以增加可选的 `"session_token":"..."`。未知字段、尾随内容、缺少 Access/Secret，
+以及超过 64 KiB 的文档都会被拒绝。`config show`、JSON 输出与公共树不会包含凭据材料。
 
 ## 完整示例
 

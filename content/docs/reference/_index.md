@@ -1,7 +1,7 @@
 ---
 title: "Reference"
 linkTitle: "Reference"
-description: "Command syntax, configuration schema, on-disk layout, exit codes, JSON output, and the tested compatibility matrix."
+description: "Command syntax, configuration schema, on-disk layout, exit codes, JSON output, and compatibility evidence."
 url: "/docs/reference/"
 weight: 400
 icon: fa-solid fa-book-open
@@ -13,9 +13,9 @@ file lands where" — precisely, without a narrative around it. If you are tryin
 how SOW works, start with [Getting Started](/docs/start/) or [Features](/docs/feature/)
 instead; those pages explain the model, and link back here for the details.
 
-Everything on these pages is derived from the shipping binary. Command output is
-transcribed from real runs of `sow 0.2.0`, and configuration rules match the strict
-parser, not an aspirational schema.
+Syntax and configuration rules on these pages are checked against the v0.2.0 binary and
+its strict parser. Output examples illustrate shape; identifiers, paths, hashes, and
+counts vary with the workspace.
 
 {{< doc-cards cols="2" >}}
 {{< doc-card title="CLI Commands" link="/docs/reference/cli/" >}}
@@ -24,7 +24,7 @@ selection rules that decide which repository and distribution they act on.
 {{< /doc-card >}}
 {{< doc-card title="sow.yml Reference" link="/docs/reference/config/" >}}
 The complete configuration schema: workspace, repository, distribution, membership
-policy, and the signing tree — including key reference syntax and validation rules.
+policy, signing, and publication targets.
 {{< /doc-card >}}
 {{< doc-card title="Package References" link="/docs/reference/package-ref/" >}}
 The five ways to name a package on the command line, how ambiguity is resolved, and
@@ -35,24 +35,24 @@ Every path SOW creates in plain and managed mode, the pool grouping rule, name
 constraints, and which directories must never be exposed over HTTP.
 {{< /doc-card >}}
 {{< doc-card title="Exit Codes" link="/docs/reference/exit-codes/" >}}
-The seven exit codes, what each one means, and a reproducible command that triggers it.
+The seven exit codes and what each one means.
 {{< /doc-card >}}
 {{< doc-card title="JSON Output" link="/docs/reference/json/" >}}
-The `sow.cli/v1` envelope, the meaning of each top-level field, and the result shape of
-every command that produces data.
+The `sow.cli/v1` envelope, the meaning of each top-level field, and result shapes for the
+primary command families.
 {{< /doc-card >}}
 {{< doc-card title="Compatibility" link="/docs/reference/compatibility/" >}}
-Which package managers were tested against SOW-built repositories, which platforms the
-binary runs on, and the filesystem constraints you must respect.
+The exact current build, client, Provider, and filesystem evidence, including what is not
+yet established.
 {{< /doc-card >}}
 {{< /doc-cards >}}
 
 ## Conventions used on these pages
 
-Command examples are written without a `$` prompt so you can copy a whole block. When a
-transcript shows both input and output, the command line comes first and the output
-follows directly, exactly as the binary printed it. Where output was shortened to keep a
-page readable, it says so.
+Command examples are written without a `$` prompt so you can copy a whole block. Output
+blocks are representative of v0.2.0; identifiers, timestamps, hashes, counts, and paths
+vary, and long structures may be shortened where marked. The built-in `sow help` remains
+the exact syntax authority shipped with the binary.
 
 Placeholders in syntax blocks are uppercase (`NAME`, `DIR`, `PACKAGE`); literal text is
 lowercase. Square brackets mark optional arguments, `...` marks a repeatable one, and a

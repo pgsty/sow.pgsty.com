@@ -1,103 +1,79 @@
 ---
 title: "Compatibility Boundaries"
 linkTitle: "Compatibility Boundaries"
-description: "How SOW separates protocol correctness, client behavior, mirror tools, relocation, HTTP normalization, and storage-provider semantics."
+description: "Why SOW evaluates format, product CLI, clients, mirror tools, filesystems, HTTP, and Providers separately."
 url: "/docs/design/compatibility/"
 weight: 500
 icon: fa-solid fa-table-cells
 ---
 
-"Compatible" is too broad to be a useful engineering claim. A package may install while a
-mirror tool refuses the same metadata; a tree may work on POSIX disk while multiplying
-objects after upload. SOW therefore treats compatibility as a set of independent gates.
+“Compatible” is not one state. SOW separates the following contracts:
 
-## The layers
-
-| Layer | Question | Required evidence |
-|---|---|---|
-| Format | Is the metadata valid rpm-md / Debian archive syntax? | parser and structural validation |
-| Ordinary client | Can `apt`, `dnf`, or `yum` refresh, resolve, download, verify, and install? | real client run |
-| Mirror tool | Can the named mirror tool materialize the repository safely? | that exact tool and version |
-| Relocation | Does a whole-root copy remain byte-closed and consumable? | copy + manifest + client run |
-| HTTP/proxy | Are relative URLs normalized inside the same prefix without traversal or double encoding? | target HTTP matrix |
-| Storage | Do object identity, conditional operations, listing, caching, and deletion match the state machine? | real provider protocol test |
-
-No row inherits PASS from another row or from an earlier Repository layout.
-
-## The `reposync` lesson
-
-The pre-release C2 work tested an RPM view whose metadata used `../../../pool/...`. On AlmaLinux
-9.8, ordinary DNF operations passed: `makecache`, query, download, and install. Default
-`dnf reposync` failed because it normalized the destination outside its per-repository
-download root and rejected the write through its safe-path check.
-
-C2 treated default `reposync` as mandatory, so it selected view-local `pool/...`
-hardlinks and metadata hrefs with no parent traversal. The resulting native and neutral
-package matrix passed ordinary DNF and default `reposync`, even after a copy lost hardlink
-identity.
-
-That result remains valid evidence for the C2 prototype. It does not prove that the
-v0.2.0 canonical single-payload layout passes default `reposync`.
-
-## The v0.2.0 contract
-
-The current release makes these choices explicit:
-
-- APT and ordinary DNF against the complete Repository are required.
-- Whole-root relocation is required.
-- Default EL `reposync` against the canonical Repository is unsupported by design.
-- A completed external RPM leaf export is the intended `reposync` fallback and needs its
-  own positive real-client gate.
-- DNF4/DNF5 options such as `--safe-write-path` may be documented as best effort only; they
-  do not change the canonical layout.
-
-## Filesystem compatibility
-
-Canonical v0.2.0 correctness never depends on inode identity or hardlink count. A Repository
-must keep working after a normal copy, tar extraction, or object-store upload. Hardlinks
-are limited to private transaction state, small immutable APT by-hash aliases, and an
-explicit trusted compatibility export.
-
-Local builders still require POSIX locking and atomic rename semantics. NFS and other
-network filesystems are not implicitly supported just because the published tree is static.
-
-## HTTP and proxy boundary
-
-Parent-relative RPM hrefs are resolved before retrieval. Each supported target must prove:
-
-- `GET`, `HEAD`, Range, length, ETag, and cache behavior;
-- the normalized request lands on the canonical `pool/...` object inside the same prefix;
-- encoded dot segments, backslashes, double encoding, redirects, and prefix escape are
-  rejected;
-- public/private access control covers the complete Repository prefix, including `pool/`.
-
-An edge rewrite or absolute deployment URL cannot be required for canonical correctness.
-
-## Provider capability boundary
-
-Publication support does not imply safe deletion support. A provider may pass streaming
-upload, conditional put, listing, and public verification yet lack atomic conditional
-delete. SOW records capabilities per provider and disables the state-machine branch that
-cannot be proven.
-
-The v0.2.0 R2 path is implemented and exercised against a pinned S3-compatible MinIO
-fixture in GitHub Integration. A fresh authorized nonproduction Cloudflare R2 run remains
-a separate provider-evidence gate. Physical R2 deletion is disabled by design; target GC
-records retained candidates instead.
-
-## Reading status words
-
-| Status | Meaning |
+| Contract | Required evidence |
 |---|---|
-| `DESIGNED` | written contract only |
-| `IMPLEMENTED` | source path exists |
-| `LOCALLY VERIFIED` | focused local/fault/mock checks passed |
-| `LIVE VERIFIED` | named real client or provider passed on the named revision |
-| `RELEASED` | packaged release includes the behavior and its required gates |
-| `UNSUPPORTED` | intentionally outside the contract |
-| `UNVERIFIED` | no current evidence; never a synonym for failure or PASS |
+| Metadata format | parser, renderer, and closure validation |
+| Product CLI | production binary on a fresh Workspace |
+| Package client | the named client refreshes, resolves, verifies as configured, downloads, and installs |
+| Mirror tool | the named tool materializes a complete repository within its path rules |
+| Workspace filesystem | locks, fsync, safe paths, and atomic rename on the named filesystem |
+| Publication Provider | current CLI path against that Provider, including recovery and public verification |
+| HTTP/CDN | actual URL normalization, access policy, cache behavior, and protocol entry points |
 
-For the current client and tool matrix, use the operational
-[Compatibility reference](/docs/reference/compatibility/). It distinguishes ordinary
-Repository consumption from the explicit RPM leaf export and does not upgrade a C2 result
-into a current canonical-layout claim.
+Evidence for one contract never promotes another.
+
+## Canonical Repository versus mirror leaf
+
+One Repository owns one canonical package pool. RPM views keep only metadata and use
+parent-relative hrefs back to that pool. The layout is closed only when `pool/ + dists/`
+are delivered together; it violates the default `dnf reposync` leaf-root safety rule.
+
+SOW therefore declares two different artifacts:
+
+- the canonical Repository, served and published as `pool/ + dists/`;
+- an explicit `sow export rpm-leaf` artifact with a local `pool/` for downstream mirror
+  workflows.
+
+Success of either artifact does not prove the other. The export also remains outside
+membership, Generation, retention, and publication state.
+
+## Filesystem boundary
+
+Workspace correctness depends on local POSIX semantics. The public tree does not depend on
+package hardlinks between pool and views and can be copied as a complete root. Private
+workspace state cannot be copied into the served prefix.
+
+A safe deployment either uses `sow publish` or stages a complete verified tree and switches
+an operator-owned parent reference atomically. An unordered, in-place sync of a live tree
+does not inherit SOW's pointer ordering or recovery guarantees.
+
+## Provider boundary
+
+The parser accepts `filesystem` and `r2`, but configuration acceptance is only the first
+gate. A Provider claim also needs upload, replay, recovery, public verification, and—if
+deletion is allowed—conditional deletion evidence.
+
+- Filesystem publication is implemented and locally exercised through the current CLI.
+- R2 publication is implemented, but the active MinIO Integration job exercises a separate
+  provider package. The current R2 CLI/Provider end-to-end gate is therefore still open.
+- R2 target GC is report-only by design; it never sends object deletion.
+
+## HTTP boundary
+
+SOW publishes files and verifies the configured `public_endpoint`; it does not own the web
+server, reverse proxy, CDN, DNS, authentication, or cache configuration. A deployment must
+verify its own RPM/DEB entry points, package paths, signatures, range/length behavior, and
+access policy over the complete prefix.
+
+## Status language
+
+| Term | Meaning |
+|---|---|
+| implemented | source path exists |
+| focused-test verified | repository tests cover the named behavior |
+| client verified | a named real client completed the named operation |
+| Provider verified | the current CLI completed the named flow against that Provider |
+| unsupported | deliberately outside the contract |
+| unverified | no current evidence; neither PASS nor known failure |
+
+The current status for each surface is in the
+[Compatibility reference](/docs/reference/compatibility/).

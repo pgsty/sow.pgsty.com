@@ -70,7 +70,10 @@ $ find .sow | sort
 .sow/workspace.lock
 ```
 
-Everything under `<repo>/` is the delivery tree — that is what you rsync or serve. Everything under `.sow/` is private and must not be exposed; the [serving guide](/docs/tutorial/serving/) shows how to deny it in nginx.
+Everything under `<repo>/` is the public delivery tree. Serve it directly, publish it with
+SOW, or copy the whole tree through offline staging and an atomic switch. Everything under
+`.sow/` is private and must not be exposed; see the
+[serving guide](/docs/tutorial/serving/).
 
 Names must match `[a-z0-9][a-z0-9._-]*`, and `.`, `..`, `.sow`, `pool`, `dists` and workspace-reserved names are rejected outright.
 
@@ -209,11 +212,16 @@ The point of the third and fourth rules is that `init` must be safe to run on a 
 
 Objects are processed in stable order. If an early config, Repository, or Dist commits durably and a later object then fails, the committed count is preserved, the human output reports what did commit, `--json` keeps the structured result, and the command exits `3` (partial success). If nothing had committed yet, it exits with the original error class instead.
 
-## Empty is a valid, consumable state
+## Empty has a valid protocol surface
 
-A Dist created by `dist new` is immediately usable by a client before you add a single package. An RPM Dist gets valid empty `repodata` per architecture family; a DEB Dist gets `Packages`, `Packages.gz`, by-hash entries, and a `Release`. If the Repository has a metadata key configured, the empty Dist is signed too.
+A Dist created by `dist new` has complete protocol entry points before you add a single
+package. An RPM Dist gets valid empty `repodata` per architecture family; a DEB Dist gets
+`Packages`, `Packages.gz`, by-hash entries, and a `Release`. If the Repository has a
+metadata key configured, the empty Dist is signed too.
 
-This matters more than it sounds. It means "point the client at it now, fill it later" works, and it means removing the last package from a Dist leaves a valid signed empty index rather than a broken one.
+Removing the last package therefore leaves a valid signed-if-configured empty index rather
+than a missing or broken protocol entry point. Actual package-manager acceptance remains a
+separate compatibility gate.
 
 ## Protected repositories
 

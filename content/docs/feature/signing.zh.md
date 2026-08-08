@@ -1,7 +1,7 @@
 ---
 title: "签名模型"
 linkTitle: "签名模型"
-description: "两条彼此独立的信任链、三种密钥引用形态、进程内签名与外部 rpm 签名的分工,以及轮换密钥时仓库会发生什么。"
+description: "两条独立信任链、四种密钥引用形态、进程内与外部签名的分工，以及安全换钥方式。"
 url: "/zh/docs/feature/signing/"
 weight: 600
 icon: fa-solid fa-key
@@ -49,19 +49,20 @@ RPM 与 DEB 的元数据密钥分开声明,所以你可以像上面这样两边�
 
 `InRelease` 的 clearsign 正文与 `Release` 完全一致。没有配元数据密钥时,这两个签名文件根本不会生成 —— 你只会得到 `repomd.xml` 和 `Release`。
 
-## 三种密钥引用形态
+## 四种密钥引用形态
 
 密钥引用是一个 URI,scheme 决定由谁来签:
 
 | 引用 | 含义 | 签名者 |
 |---|---|---|
+| `keys/repo-signing.asc` | 相对 Workspace Root 的 ASCII-armored 密钥路径 | 进程内 Go signer |
 | `file:///绝对路径.asc` | 磁盘上的 ASCII-armored 私钥 | 进程内 Go signer |
 | `env://VAR_NAME` | 环境变量里的 armored 密钥材料 | 进程内 Go signer |
 | `agent://<fingerprint>` | 由环境中 GPG agent 持有的密钥 | 外部 `gpg` |
 
 `file://` 与 `env://` 不需要装任何东西 —— SOW 自己签元数据,这也是为什么用 `file://` 元数据密钥的仓库在 macOS 和最小化容器里能构建出一致的结果。`agent://` 把签名委托给你的 GPG agent,适合私钥在智能卡上、或绝不能落盘的场景。`agent://` 不能与 `passphrase` 引用同时使用,因为那次交互归 agent 管。
 
-`passphrase` 引用使用同样的 `file://` 与 `env://` 形态。
+`passphrase` 引用接受相对 Workspace Root 的路径、`file://` 或 `env://`，不接受 `agent://`。
 
 **任何秘密都不会被持久化。** 配置、SQLite、日志、JSON 输出和错误文本里,只有引用字符串、fingerprint 和公钥验证证书。`config show --all` 打印引用与 fingerprint,绝不打印密钥材料。如果某个密钥引用无法解析或不可用于签名,`config check` 会在你执行 build 之前就告诉你。
 
@@ -72,7 +73,7 @@ signing:
   rpm:
     packages:
       mode: fill
-      key: env://SOW_RPM_PACKAGE_KEY
+      key: agent://7F721C4AD40F4A9D8CA578BFAC7E4690B50CCF3B
       trusted_keys: [keys/pgdg.asc]
 ```
 
@@ -86,13 +87,16 @@ signing:
 
 `trusted_keys` 自动包含配置 `key` 的公钥部分。没有 key 时只能用 `never`;有 key 时默认 `fill`。
 
-包体签名总是调用环境中的 `rpm --addsign` 或 `rpm --resign`,并且只作用于私有 staged 副本。任何模式下,你的输入文件都不会被就地修改。签完之后结果会被重新解析:嵌入签名必须存在,signature-neutral digest 与 NEVRA 必须未变,精确的公钥身份必须记录在案,之后这个对象才被允许进入 journal 与 pool。`fill` 与 `always` 的前提是环境里有 `rpm` 可执行文件和可用的 GPG 环境;SOW 自身从不持有 RPM 签名私钥。
+包体签名总是对私有 staged 副本调用环境中的 `rpm --addsign` 或 `rpm --resign`，不会就地
+修改输入文件。签完后 SOW 会重新解析结果，要求嵌入签名存在、signature-neutral digest 与
+NEVRA 不变，并且签名身份与配置完全一致。`fill` 与 `always` 必须有 `rpm`、`gpg`，且匹配私钥
+必须存在于 `rpm` 使用的 GPG 环境中。key 引用用于标识并验证签名者，不会把私钥自动导入该环境。
 
 由于签名里嵌入了时间戳,签名过程不可复现 —— 同一个未签名 RPM 签两次会得到不同字节。于是重复 add 一个已经加过的包看起来就像内容冲突。SOW 用 **signature-neutral payload digest** 解决这个问题:对不可变的 header 与 payload(排除 RPM signature header)计算 SHA-256。如果逻辑坐标已存在、neutral digest 相同,且既有对象满足当前策略,SOW 就复用既有的最终字节而不再签名。重复 add 同一个包是稳定的空操作。
 
 这种复用的口子刻意开得很窄。`never` 模式要求完整字节一致,因为该模式承诺保留输入字节。如果 payload digest 不同,或既有对象不满足当前签名策略,那就是硬冲突 —— `add` 不会悄悄地在既有坐标上就地重签一个包。这里没有 `--replace`;如果重签导致字节变化,请提高 release,或专门规划一次密钥轮换流程。
 
-## 轮换密钥会让 Dist 变 dirty
+## 更换密钥会让 Dist 变 dirty
 
 一个 Dist 的 Built 配置摘要覆盖它的 format、canonical 架构、`limit`、`exclude`,以及**已冻结的签名身份**。改动密钥引用或 fingerprint 会改变这个摘要,于是所有受影响的 Dist 变 dirty:
 
@@ -101,7 +105,13 @@ $ sow status
 repository=pigsty status=dirty ready_to_copy=false revision=5 generation=4 dirty_dists=el9,trixie pending=0/0 locked=false
 ```
 
-随后 `sow build` 重新签名并产生新的一代。这正是你想要的行为:换钥匙是客户端验证内容的真实变化,所以它必须走正常的"收敛 + 校验"路径,而不是在下一次无关的构建里静默生效。
+更换**元数据** key 后，`sow build` 会用新身份签署索引并产生新 Generation。
+
+RPM 包体是不可变 Package Object；`build` 不会在同一坐标下静默重签既有对象。如果当前 Desired
+RPM 不满足新的包签名策略，`build` 会拒绝。分阶段轮换通常使用 `fill`：将新 key 设为当前 key，
+同时把旧公钥保留在 `trusted_keys`；旧 key 软件包保持字节不变，新加入的软件包使用新 key。
+只有当旧坐标已下架或被新 Release 替代后，才移除旧信任。直接切到新 key 的 `always`，要求
+每个 Desired RPM 已经由新 key 签名。
 
 当前 Built 元数据的精确公钥证书身份按 Dist 记录,同一 primary fingerprint 的多个证书版本可以共存 —— 所以延长有效期或增加子钥,不会让已经发布出去的东西失效。
 
@@ -112,7 +122,7 @@ sow create /srv/repo --sign-with 6D5C5A26C36B1F73
 sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
 ```
 
-Plain 模式只签 RPM 包体,没有元数据签名。`KEY` 是 16、40 或 64 位十六进制的 GPG key ID 或 fingerprint,可带 `0x` 前缀,规范化为大写后作为 `_gpg_name` macro 传给 `rpm`。不带 `--overwrite` 时只签没有可解析嵌入签名的 RPM;带上则对全部保留的 RPM 重签。
+Plain 模式只签 RPM 包体,没有元数据签名。`KEY` 必须是恰好 16、40 或 64 位十六进制 GPG key ID/fingerprint，不接受 `0x` 前缀；规范化为大写后作为 `_gpg_name` macro 传给 `rpm`。不带 `--overwrite` 时只签没有可解析嵌入签名的 RPM;带上则对全部保留的 RPM 重签。
 
 `--sign-with` 要求目录里至少有一个顶层 RPM。纯 DEB 目录、缺少 `rpm` 可执行文件、密钥不可用,都在任何公开变更之前失败。签名运行的崩溃恢复要求给出完全相同的授权参数,见 [Plain 平面仓库](/zh/docs/feature/plain/)。
 
@@ -135,7 +145,10 @@ Components: main
 Signed-By: /etc/apt/keyrings/repo-signing.asc
 ```
 
-`repo_gpgcheck=1` 让 dnf 验证 `repomd.xml.asc`;`gpgcheck=1` 让它验证每个包的嵌入签名。APT 侧的 `Signed-By` 让 apt 验证 `InRelease`。这两条链都做过端到端验收 —— dnf 覆盖 EL8、EL9、EL10,apt 覆盖 Debian 12 与 13 —— 生成的每一份签名 `gpg --verify` 都报 Good。
+`repo_gpgcheck=1` 让 dnf 验证 `repomd.xml.asc`；`gpgcheck=1` 让它验证每个包的嵌入签名。
+APT 侧的 `Signed-By` 让 apt 验证 `InRelease`。当前测试套件会直接校验生成的签名，但尚未
+提供完整的签名 Managed dnf/APT 验收门禁。请在目标环境执行真实客户端测试；确切证据见
+[兼容性](/zh/docs/reference/compatibility/)。
 
 `sow check` 在常规运行中就会校验全部已声明的签名与文件哈希,所以签名配置出错会在发货之前暴露,而不是在客户机器上暴露。
 

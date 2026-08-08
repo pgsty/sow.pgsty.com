@@ -7,14 +7,8 @@ weight: 300
 icon: fa-solid fa-box-archive
 ---
 
-v0.2.0 布局的目标很精确：在一个 Repository 及其每个发布前缀内，每个 live Package Object
+布局目标很精确：在一个 Repository 及其每个发布前缀内，每个 live Package Object
 恰好只有一条包体路径。
-
-{{% alert title="当前版本布局" color="primary" %}}
-这是 v0.2.0 的正典布局。未发布的 C2 原型工作区使用 `schema: sow/v2`，必须显式执行
-`sow repo migrate`；新工作区使用 `sow/v3`。迁移 C2 工作区前请先读
-[设计演进](/zh/docs/design/evolution/)。
-{{% /alert %}}
 
 ## 正典目录树
 
@@ -64,15 +58,11 @@ redirect object 与 edge rewrite 都不能成为正确性的前提。
 HTTP 客户端可以在发请求前消解 dot segment；正典 object key 本身绝不含 `.` / `..`。
 代理与对象存储的具体行为仍需要独立兼容门禁。
 
-## 为什么取消包体硬链接
+## 为什么 view 只含元数据
 
-未正式发布的 C2 原型用硬链接把 RPM 包投影进每个架构视图。在单个 POSIX 文件系统上，
-这些路径共享 inode，
-本地磁盘成本很低，默认 EL `reposync` 也能工作。但对象存储没有 inode 身份：每条 alias 路径
-都会成为一个完整对象和一次完整上传；Dist、架构、Generation 与快照越多，远端包体越膨胀。
-
-v0.2.0 不再让文件系统实现细节定义正典正确性。普通 copy、tar 或对象存储上传即使丢失硬链接，
-功能也必须保持不变。
+如果每个架构 view 都建立包体 alias，在没有 inode 身份的存储系统上就会变成额外 object key
+与上传。SOW 因此把包体所有权集中在一个 Pool，让索引负责投影成员关系。正典正确性不依赖
+hardlink count；完整 copy、archive 或 publication 都保持同一套路径契约。
 
 ## 搬迁契约
 
@@ -87,7 +77,7 @@ v0.2.0 不再让文件系统实现细节定义正典正确性。普通 copy、ta
 
 ## 兼容导出
 
-如果操作者需要让默认 `reposync` 或旧工具消费自包含 RPM leaf，v0.2.0 显式生成外部导出：
+如果操作者需要让默认 `reposync` 或其他镜像工具消费自包含 RPM leaf，SOW 显式生成外部导出：
 
 ```text
 sow export rpm-leaf DIST ARCH DIR

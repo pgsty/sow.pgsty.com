@@ -7,9 +7,10 @@ weight: 900
 icon: fa-solid fa-hammer
 ---
 
-One concept, one command. `status` is the cheap read, `check` is the full verification, `build` is
-the only thing that changes the public tree, and `changes` is the physical file diff between
-Generations. This page covers all four, because you almost always use them together.
+`status` is the cheap read, `check` is the full verification, `build` is the explicit
+Desired-to-Built convergence command, and `changes` is the physical file diff between
+Generations. Other write commands may also materialize a Generation; these four remain the
+main inspection and convergence loop.
 
 ## Synopsis
 
@@ -50,8 +51,8 @@ sow status -r pgsql
 repository=pgsql status=dirty ready_to_copy=false revision=4 generation=3 dirty_dists=trixie pending=4/2326 locked=false
 ```
 
-`ready_to_copy` is the single field a sync script should read: it tells you whether `pool/ + dists/`
-can be rsynced as-is right now.
+`ready_to_copy` is a cheap state indicator: false means the Repository must not be
+published. True is not a deep integrity proof; require `sow check` before delivery.
 
 **`status` returns `0` in every readable state** — clean, dirty, recovering and error alike — so
 scripts can consume structured state instead of parsing an error. Only an unreadable or unparsable
@@ -59,7 +60,7 @@ state database produces a non-zero (integrity) exit. Use `sow check` when you wa
 
 ```console
 sow status -r demo --json
-{"schema":"sow.cli/v1","command":"status","ok":true,"repository":"demo","operation":null,"result":{"repository":"demo","status":"dirty","ready_to_copy":false,"desired_revision":5,"built_generation":4,"dirty_dists":["el9"],"dirty_reasons":["dist el9 Desired and Built membership sets differ","one or more dists differ from their built projections"],"pending":{"count":1,"bytes":19776},"recent_operation":{"id":"3329269325810066022","kind":"add","state":"done_dirty","created_at":"2026-08-04T04:10:22.481991Z","updated_at":"2026-08-04T04:10:22.553516Z"},"repository_locked":false},"errors":[]}
+{"schema":"sow.cli/v1","command":"status","ok":true,"repository":"demo","operation":null,"result":{"repository":"demo","status":"dirty","ready_to_copy":false,"desired_revision":5,"built_generation":"00000000000000000004","dirty_dists":["el9"],"dirty_reasons":["dist el9 Desired and Built membership sets differ","one or more dists differ from their built projections"],"pending":{"count":1,"bytes":19776},"recent_operation":{"id":"3329269325810066022","kind":"add","state":"done_dirty","created_at":"2026-08-04T04:10:22.481991Z","updated_at":"2026-08-04T04:10:22.553516Z"},"repository_locked":false},"errors":[]}
 ```
 
 `status` never recovers anything, and it never reports a stale-but-self-consistent Generation as
@@ -72,7 +73,7 @@ Desired state into a new Built Generation.
 
 ```console
 sow build -r pgsql -d el9
-{"operation":"4262183287563704350","repository":"pgsql","dists":["el9"],"desired_revision":6,"built_generation":6,"noop":false,"dirty":false}
+{"operation":"4262183287563704350","repository":"pgsql","dists":["el9"],"desired_revision":6,"built_generation":"00000000000000000006","noop":false,"dirty":false}
 ```
 
 | Flag | Description | Default |
@@ -97,7 +98,7 @@ Generation:
 
 ```console
 sow build
-{"operation":"6295064788473690577","repository":"pigsty","dists":["el9","trixie"],"desired_revision":5,"built_generation":5,"noop":true,"dirty":false}
+{"operation":"6295064788473690577","repository":"pigsty","dists":["el9","trixie"],"desired_revision":5,"built_generation":"00000000000000000005","noop":true,"dirty":false}
 ```
 
 ### Policy convergence is one-way
@@ -114,7 +115,8 @@ metadata plus APT by-hash guarantee that old and new clients never fetch a dangl
 
 One build Operation may cover several Dists. SOW does not promise that concurrent readers see all
 Dists flip at the same instant; it promises that each protocol view is always self-consistent, and
-that when the command returns every target belongs to the same Built Generation.
+that when the command returns every Dist included in that Operation belongs to the same
+Built Generation.
 
 ### Recovery
 
@@ -135,9 +137,8 @@ Generation.
 
 ## sow check
 
-Full, read-only verification of the selected Repository and Dists. A terminal v0.2.0
-Repository reports nine ordered layers; an active layout transition reports its dedicated
-transition layer and remains not ready.
+Full, read-only verification of the selected Repository and Dists. A v0.2.0 Repository
+reports nine ordered layers.
 
 ```console
 sow check
@@ -150,7 +151,7 @@ package-bytes	ok=true	checked=8
 desired-membership	ok=true	checked=8
 index	ok=true	checked=2
 signature	ok=true	checked=9
-generation-manifest	ok=true	checked=5
+generation-manifest	ok=true	checked=1
 ```
 
 | Layer | What it verifies | `checked` counts |
@@ -163,7 +164,7 @@ generation-manifest	ok=true	checked=5
 | `desired-membership` | Membership rows resolve to real objects under current policy | memberships |
 | `index` | Rendered indexes match the membership they claim | Dists |
 | `signature` | Every declared signature verifies | signatures |
-| `generation-manifest` | The Built Generation manifest matches the files on disk | the Generation number |
+| `generation-manifest` | The Built Generation manifest matches the files on disk | one manifest |
 
 | Flag | Description | Default |
 |---|---|---|
@@ -184,13 +185,14 @@ and then rules the tree not ready to copy, exiting `5`:
 sow check
 repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5
 config	ok=true	checked=5
+retained	ok=true	checked=0
 state	ok=true	checked=1
 public-modes	ok=true	checked=67
 package-bytes	ok=true	checked=8
 desired-membership	ok=true	checked=7
 index	ok=true	checked=2
 signature	ok=true	checked=9
-generation-manifest	ok=true	checked=5
+generation-manifest	ok=true	checked=1
 integrity or recovery error: managed: repository is not ready to copy: repository status is dirty
 ```
 
@@ -210,9 +212,11 @@ update	pointer	dists/el9/x86_64/repodata/repomd.xml	1514	05d3d5bf0f9236626b22a8a
 delete	delete	dists/el9/x86_64/repodata/0df96f0b046b6c098398194f908cc99d90bf3af8c5f66d262b2e6d43a658a58f-primary.xml.gz	0
 ```
 
-Columns are `op`, `phase`, repository-relative path, size and SHA-256. `op` is `add`/`update`/`delete`;
-`phase` is `payload`/`metadata`/`pointer`/`delete`. **Apply them in phase order** — payload first,
-pointer last, deletions after everything else — and no client ever sees a dangling reference.
+Columns are `op`, `phase`, Repository-relative path, size, and SHA-256. `op` is
+`add`/`update`/`delete`; `phase` is `payload`/`metadata`/`pointer`/`delete`. Those phases
+describe how SOW constructed the local Generation; the output is not a remote transaction
+protocol. Do not replay rows directly into a live tree. Use `sow publish`, or stage and
+atomically switch a complete copy.
 
 | Flag | Description | Default |
 |---|---|---|
@@ -289,10 +293,14 @@ Gate a release on a fully verified tree:
 
 ```bash
 sow check -r pgsql || { echo "not deliverable"; exit 1; }
-rsync -a --delete /srv/repo/pgsql/ mirror:/srv/www/pgsql/
+sow publish mirror
 ```
 
-Hand an incremental plan to an external sync tool:
+`mirror` must be a configured filesystem or R2 target for this Repository. With another
+transport, copy to offline staging and switch atomically instead of modifying the live
+tree in place.
+
+Export a generation delta for audit or delivery planning:
 
 ```bash
 sow changes 41 -r pgsql --json > changes-41-current.json

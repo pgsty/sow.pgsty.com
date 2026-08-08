@@ -59,10 +59,10 @@ schema 版本被钉死：
 
 ```console
 sow config check
-configuration error: load config "/srv/repo/sow.yml": config schema must be "sow/v3", got "sow/v2"
+configuration error: load config "/srv/repo/sow.yml": config schema must be "sow/v3", got "invalid"
 ```
 
-`sow/v2` 属于未发布 C2 布局。请用 `sow repo migrate` 完成 transition,不要手工只改 schema 字符串。
+v0.2.0 唯一有效的值是 `schema: sow/v3`。不要靠修改 Schema 字符串绕过校验错误。
 
 `check` 还会验证声明的每个签名 key 引用可解析且适用于签名——过程中绝不打印密钥材料。如果你从许可表
 里删掉一个架构，而仍有 Dist 配置、Membership 或已构建代在用它，`config check` 会拒绝该配置。

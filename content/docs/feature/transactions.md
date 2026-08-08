@@ -15,7 +15,11 @@ Repository tools fail in one of two embarrassing ways: they leave an index that 
 
 Everything below exists to hold that line: metadata is fully staged and verified before anything public moves, the pointer swap is the commit decision, and every operation records enough durable evidence that the next command can finish it or undo it without guessing.
 
-Note what this does *not* claim. `dirty` does not mean a half-written index — it means the Desired state is ahead of the Built generation while the old built view continues to serve correctly. And SOW does not promise that two different Dists flip generation at the same instant; it promises that each protocol view is self-consistent at every instant, and that when the command returns, all targets are on the same Built generation.
+Note what this does *not* claim. `dirty` does not mean a half-written index — it means the
+Desired state is ahead of the Built Generation while the old Built view remains complete.
+SOW also does not promise that two Dists flip at the same instant; it promises that each
+protocol view is self-consistent and that, when a write returns, every Dist included in
+that Operation is on its recorded Built Generation.
 
 ## Three journals
 
@@ -110,7 +114,7 @@ Every generation is written in the same four phases, and the order is what makes
 payload  →  metadata  →  pointer  →  delete
 ```
 
-1. **payload** — package bytes into `pool/` and the view aliases. Nothing references them yet.
+1. **payload** — canonical package bytes into `pool/`. Nothing references them yet.
 2. **metadata** — checksum-named RPM metadata, `Packages`, `Packages.gz`, and by-hash index copies. Still nothing points at them.
 3. **pointer** — the client entry points: `repomd.xml` (plus `.asc` if configured) for RPM; for Managed APT, `Release` (plus `InRelease` and `Release.gpg`) after every per-architecture direct and by-hash index is in place. **This is the commit.**
 4. **delete** — expired metadata from generations that have aged out.
@@ -119,7 +123,10 @@ Read it forward: a package always exists before an index names it, and an index 
 
 All of this happens through a staging area on the same filesystem as the target, verified at initialization by comparing `st_dev`. A different mount or device is an explicit failure, never a degraded copy. Files are written, fsynced, validated by SOW's own parser and closure validator, and only then moved in with atomic renames. Public files do not inherit your umask: `repodata/` is `0755`, index files and pointers are `0644`.
 
-`sow changes` shows the same phases, which is why an external sync script can consume its output in order and never publish a broken intermediate state. See [Observability & Audit](/docs/feature/audit/).
+`sow changes` describes the generation delta for audit and delivery planning. It is not a
+safe substitute for the publication protocol: use `sow publish`, or copy the complete tree
+into offline staging and switch it into service atomically. See
+[Observability & Audit](/docs/feature/audit/).
 
 ## Crash recovery
 

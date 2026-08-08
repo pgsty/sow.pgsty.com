@@ -68,7 +68,7 @@ languages:
     weight: 2
     title: SOW
     params:
-      description: "SOW（Software Object Warehouse）：Pigsty 出品的自包含 APT / YUM 软件仓库管理器。"
+      description: "SOW：Pigsty 出品的自包含 APT / YUM 软件仓库管理器。"
       time_format_blog: '2006年01月02日'
     menu:
       main:
@@ -148,6 +148,15 @@ outputs:
   home: [HTML, RSS, JSON]
   page: [HTML]
   section: [HTML, RSS]
+
+#=======================================#
+# Services
+#=======================================#
+services:
+  # Google Analytics 4：仅生产构建注入（docsy head.html / layouts/index.html
+  # 都用 hugo.IsProduction 包裹），本地 hugo server 不会加载埋点。
+  googleAnalytics:
+    id: G-K5J5RV8H58
 
 #=======================================#
 # Site parameters

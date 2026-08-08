@@ -7,19 +7,20 @@ weight: 100
 icon: fa-solid fa-download
 ---
 
-SOW ships as a single static executable. Installing it means putting one file somewhere
-on your `PATH`. There is no package to install, no service to enable, and no state
-directory created until you run a command that needs one.
+SOW ships as one self-contained executable. Archive installation means putting that file
+on your `PATH`; RPM and DEB release packages provide a conventional Linux path. There is
+no service to enable and no state directory until a command needs one.
 
-## Supported platforms
+## Release build targets
 
-The binary is built with `CGO_ENABLED=0`, so it has no libc dependency and runs on any
-reasonably modern kernel of the matching OS and CPU family.
+The release pipeline builds with `CGO_ENABLED=0`, avoiding a separately installed cgo
+toolchain or language runtime. Binaries still use the operating system's standard ABI and
+frameworks. The release artifact targets are:
 
 | OS | `amd64` | `arm64` |
 |---|---|---|
-| Linux | supported | supported |
-| macOS (Darwin) | supported | supported |
+| Linux | built | built |
+| macOS (Darwin) | built | built |
 
 Windows is not supported. SOW relies on POSIX advisory locks and atomic
 `rename`, and it is only tested on local POSIX filesystems — network filesystems such as
@@ -33,11 +34,11 @@ uses no view-local hardlink aliases and can be copied or published normally.
 
 ## Download a release
 
-SOW v0.2.0 is currently staged as a **draft** on the
-[GitHub releases page](https://github.com/pgsty/sow/releases). The draft contains four
-Linux/macOS archives, `1PGSTY` Linux RPM and DEB packages, and `SHA256SUMS`, but draft
-assets are not a public download surface. Until an operator publishes the draft, build
-from source below. After publication, confirm that the release entry contains the
+The SOW v0.2.0 GitHub Release is currently a **draft**. Its four Linux/macOS archives,
+`1PGSTY` Linux RPM and DEB packages, and `SHA256SUMS` are not publicly downloadable.
+Until an operator publishes it on the
+[releases page](https://github.com/pgsty/sow/releases), build from source below. After
+publication, confirm that the release entry contains the
 matching archive and checksum before automating a download, then move the extracted
 binary onto your `PATH`:
 
@@ -48,8 +49,10 @@ tar -xzf sow_*.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
-If you do not have root on the machine, `~/.local/bin` works just as well — SOW never
-needs elevated privileges for its own operation.
+If you do not have root, install into `~/.local/bin`. SOW does not require a privileged
+daemon. The invoking user needs read/write access to the Workspace or Plain target and
+publication destination, plus read or resolution access to package inputs and signing
+references.
 
 ## Build from source
 

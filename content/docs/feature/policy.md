@@ -138,7 +138,8 @@ Convergence is one-directional and it is stated as an invariant: **tightening po
 {{% alert title="Withdrawing a package for real" color="warning" %}}
 `sow rm` removes membership, not pool bytes. The package disappears from every index, so
 clients can no longer resolve it through the repository. Run `sow gc` only after the
-payload becomes unreachable from current, retained, migration, and publication roots.
+payload becomes unreachable from every safety root, including current and retained
+Generations, recovery state, publication attempts, and active maintenance operations.
 For published targets, use `sow gc TARGET`; filesystem deletion is conditional and R2 is
 report-only. Do not manually delete canonical pool files behind SOW's state.
 {{% /alert %}}

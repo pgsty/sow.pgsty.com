@@ -15,7 +15,10 @@ icon: fa-solid fa-shield-halved
 
 下面所有内容都是为了守住这条线:元数据在任何公开变更之前完整 stage 并校验,指针切换就是提交决策,每个操作都留下足够的持久证据,让下一条命令能把它做完或撤销,而不需要猜。
 
-也要注意它**没有**声称什么。`dirty` 不是指索引写了一半 —— 它表示期望状态领先于已构建代,而旧的 Built 视图仍在正确服务。另外 SOW 不承诺两个不同 Dist 在同一瞬间翻代;它承诺的是每个协议视图在任何瞬间都自洽,以及命令返回时全部目标处于同一 Built Generation。
+也要注意它**没有**声称什么。`dirty` 不是指索引写了一半；它表示 Desired 状态领先于
+Built Generation，而旧的 Built View 仍然完整。SOW 也不承诺两个不同 Dist 在同一瞬间翻代；
+它承诺每个协议视图始终自洽，且写命令返回时，本次 Operation 包含的每个 Dist 都处于记录的
+Built Generation。
 
 ## 三类操作日志
 
@@ -110,7 +113,7 @@ lock unavailable
 payload  →  metadata  →  pointer  →  delete
 ```
 
-1. **payload** —— 包字节写进 `pool/` 和视图别名。此时还没有任何东西引用它们。
+1. **payload** —— 规范包字节写入 `pool/`。此时还没有任何东西引用它们。
 2. **metadata** —— checksum 命名的 RPM 元数据、`Packages`、`Packages.gz`,以及 by-hash 索引副本。此时仍没有指针指向它们。
 3. **pointer** —— 客户端入口:RPM 的 `repomd.xml`(配置了签名则连同 `.asc`);Managed APT 则在每个架构的 direct 与 by-hash 索引都就位之后,才发布 `Release`(连同 `InRelease` 与 `Release.gpg`)。**这一步就是提交。**
 4. **delete** —— 清理已过保留窗口的旧代元数据。
@@ -119,7 +122,9 @@ payload  →  metadata  →  pointer  →  delete
 
 这一切都通过与目标同文件系统的 staging 区完成,初始化时通过比较 `st_dev` 校验。挂载点或设备不同是明确失败,绝不降级为复制。文件先写入、fsync、由 SOW 自己的解析器与闭包校验器验证,之后才用原子 rename 换入。公开文件不继承你的 umask:`repodata/` 是 `0755`,索引文件与指针是 `0644`。
 
-`sow changes` 输出的正是这四个阶段 —— 所以外部同步脚本可以按顺序消费它的输出,永远不会发布出一个破碎的中间状态。见[可观测与审计](/zh/docs/feature/audit/)。
+`sow changes` 用于审计与交付规划，描述 Generation Delta；它不能替代发布协议。请使用
+`sow publish`，或把完整树复制到离线 staging 后再原子切换上线。见
+[可观测与审计](/zh/docs/feature/audit/)。
 
 ## 崩溃恢复
 

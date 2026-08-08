@@ -9,17 +9,16 @@ icon: fa-solid fa-book
 sidebar_expanded: true
 ---
 
-SOW is a self-contained package repository manager built by [Pigsty](https://pigsty.io).
-It ships as one static Go binary that creates and maintains **APT (DEB)** and **YUM (RPM)**
-repositories on Linux and macOS — no `createrepo_c`, no `dpkg-scanpackages`, no `reprepro`,
-no daemon.
+SOW 0.2.0 is a self-contained package repository manager built by
+[Pigsty](https://pigsty.io). One Go executable creates RPM/YUM and DEB/APT repository
+metadata; no repository daemon or metadata toolchain is required.
 
 It operates in two isolated modes:
 
-- **Plain mode** — `sow create` turns any directory of `.rpm` / `.deb` files into a flat,
-  servable repository, deterministically and in place.
+- **Plain mode** — `sow create` indexes the top-level RPM and DEB files in one directory,
+  in place.
 - **Managed mode** — a workspace with Debian-style package pools, per-architecture views,
-  GPG signing, membership policies, transactional builds, and a full audit trail.
+  signing, membership policy, transactional generations, auditing, and publication targets.
 
 {{< doc-cards cols="2" >}}
 {{< doc-card title="Getting Started" link="/docs/start/" >}}
@@ -27,7 +26,7 @@ Install SOW, build your first flat repository in five minutes, and learn the cor
 {{< /doc-card >}}
 {{< doc-card title="Tutorials" link="/docs/tutorial/" >}}
 End-to-end walkthroughs: YUM and APT repositories, GPG signing, serving with Nginx, and
-migrating from createrepo_c or reprepro.
+publishing a verified public tree.
 {{< /doc-card >}}
 {{< doc-card title="Features" link="/docs/feature/" >}}
 How SOW works: the Plain and Managed engines, package pools and architecture views,
@@ -35,11 +34,11 @@ membership policy, signing, transactions, and auditing.
 {{< /doc-card >}}
 {{< doc-card title="Design" link="/docs/design/" >}}
 Architecture and decision records: ownership, the v0.2.0 single-payload model,
-publication, compatibility boundaries, and the evolution from v0.1.0.
+publication, recovery, and compatibility boundaries.
 {{< /doc-card >}}
 {{< doc-card title="Reference" link="/docs/reference/" >}}
 Complete CLI reference, `sow.yml` configuration, package reference grammar, exit codes,
-repository layouts, and the compatibility matrix.
+repository layouts, and compatibility evidence.
 {{< /doc-card >}}
 {{< /doc-cards >}}
 
@@ -49,7 +48,6 @@ repository layouts, and the compatibility matrix.
 |---|---|
 | Get a repository online right now | [Quick Start](/docs/start/quickstart/) |
 | Understand the mental model first | [Core Concepts](/docs/start/concepts/) |
-| Build a production YUM / APT repository | [Tutorials](/docs/tutorial/) |
-| Understand architectural decisions and version boundaries | [Design](/docs/design/) |
-| Replace an existing createrepo_c / reprepro pipeline | [Migration guide](/docs/tutorial/migration/) |
+| Build a Managed YUM / APT repository | [Tutorials](/docs/tutorial/) |
+| Understand the ownership and publication model | [Design](/docs/design/) |
 | Look up a command or config field | [Reference](/docs/reference/) |

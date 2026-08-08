@@ -63,9 +63,7 @@ targets:
 | `repos` | map | no | empty | Repository name to repository configuration. |
 | `targets` | map | no | empty | Publication target name to target configuration. |
 
-New workspaces require `schema: sow/v3`. `sow/v2` identifies the unreleased C2 layout and
-is accepted only through the explicit `sow repo migrate` transition; it is not a second
-current configuration format.
+The v0.2.0 configuration value is exactly `schema: sow/v3`.
 
 ### architectures
 
@@ -82,7 +80,11 @@ ecosystem names are accepted as input aliases and normalized at the parse bounda
 
 So `architectures: [amd64, arm64]` and `architectures: [x86_64, aarch64]` are the same
 configuration. Writing both aliases of one family — `[amd64, x86_64]` — is a duplicate and
-fails.
+fails:
+
+```console
+configuration error: load config "/srv/repo/sow.yml": workspace architectures: duplicate architecture "x86_64" after normalization
+```
 
 `noarch` (RPM) and `all` (DEB) are **not** architectures here. They are neutral packages,
 projected into every applicable view at build time, and the parser rejects them in this
@@ -137,7 +139,13 @@ configuration error: load config "/srv/repo/sow.yml": repository name "Infra": n
 
 These names are reserved and rejected: `.`, `..`, `.sow`, `pool`, `dists`, `sow.yml`,
 `workspace.lock`, `workspace-ops`, `repo-locks`. Two repository names that would collide
-in the state directory — say `db` and `db.db` — are also rejected. See
+in the state directory — say `db` and `db.db` — are also rejected:
+
+```console
+configuration error: load config "/srv/repo/sow.yml": repository names "db" and "db.db" collide at reserved state path "db.db"
+```
+
+See
 [Repository Layout](/docs/reference/layout/) for why.
 
 ## Dist
@@ -318,7 +326,11 @@ configuration error: load config "/srv/repo/sow.yml": repository "a" signing: rp
 
 `trusted_keys` is a list of public keys whose signatures `fill` accepts as already-good.
 The public half of `key` is always trusted and does not need to be listed. Repeating the
-same reference twice is an error.
+same reference twice is an error:
+
+```console
+configuration error: load config "/srv/repo/sow.yml": repository "a" signing: duplicate rpm trusted key reference "keys/x.asc"
+```
 
 RPM package signing is the one operation that shells out: SOW calls the environment's
 `rpm --addsign` / `rpm --resign` against a private staged copy, never against your input
@@ -458,8 +470,21 @@ on the same storage may not have overlapping prefixes; filesystem targets may no
 to overlapping effective paths. These rules protect conditional publication and GC from
 competing writers.
 
-R2 credentials are private references. The referenced material supplies the S3-compatible
-credentials at runtime; `config show`, JSON output, and the public tree never contain it.
+For `provider: filesystem`, configuration validation checks URL shape and overlap. At
+publication time the endpoint directory itself must already exist, must not be a symlink,
+and must resolve to one canonical real directory. SOW creates the configured prefix below
+that endpoint, not the endpoint itself.
+
+R2 credentials are private references. The environment variable value or referenced file
+must contain one strict JSON document, not a path or shell assignment:
+
+```json
+{"access_key_id":"R2_ACCESS_KEY_ID","secret_access_key":"R2_SECRET_ACCESS_KEY"}
+```
+
+An optional temporary credential may add `"session_token":"..."`. Unknown fields,
+trailing data, missing access/secret values, and documents larger than 64 KiB are rejected.
+`config show`, JSON output, and the public tree never contain the credential material.
 
 ## Complete example
 

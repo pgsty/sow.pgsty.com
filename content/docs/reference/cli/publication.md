@@ -54,9 +54,10 @@ sow gc          [-C DIR] [-r NAME] [-T DUR | -N] [--json]
 sow gc TARGET   [-C DIR]           [-T DUR | -N] [--json]
 ```
 
-Without a target, GC deletes only local pool objects unreachable from the current
-Generation and all retained, migration, recovery, and publication roots. It journals the
-operation and advances the repository Generation when bytes are removed.
+Without a target, GC deletes only local pool objects unreachable from every safety root:
+the current Generation, retained Generations, recovery state, publication attempts, and
+any active maintenance operation. It journals the operation and advances the Repository
+Generation when bytes are removed.
 
 With `TARGET`, GC maintains publication state:
 

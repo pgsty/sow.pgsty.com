@@ -7,8 +7,9 @@ weight: 900
 icon: fa-solid fa-hammer
 ---
 
-一个概念一条命令。`status` 是便宜的读，`check` 是完整校验，`build` 是唯一会改变公开树的命令，
-`changes` 给出两代之间的物理文件差分。四条放在一页，因为你几乎总是一起用它们。
+`status` 是低成本读取，`check` 是完整校验，`build` 是显式的 Desired-to-Built 收敛命令，
+`changes` 给出 Generation 之间的物理文件差分。其他写命令也可能直接落成新 Generation；
+这四条仍构成主要的观察与收敛闭环。
 
 ## 语法
 
@@ -48,7 +49,8 @@ sow status -r pgsql
 repository=pgsql status=dirty ready_to_copy=false revision=4 generation=3 dirty_dists=trixie pending=4/2326 locked=false
 ```
 
-`ready_to_copy` 是同步脚本唯一需要读的字段：它告诉你此刻 `pool/ + dists/` 能不能原样 rsync 出去。
+`ready_to_copy` 是低成本状态指标：为 false 时绝不能发布；为 true 也不等于深度完整性证明，
+交付前仍须通过 `sow check`。
 
 **只要状态可读，`status` 在任何状态下都返回 `0`**——clean、dirty、recovering、error 一视同仁——好让
 脚本消费结构化状态而不是解析错误。只有状态数据库无法读取或解析时才返回非零（完整性错误）。需要
@@ -56,7 +58,7 @@ repository=pgsql status=dirty ready_to_copy=false revision=4 generation=3 dirty_
 
 ```console
 sow status -r demo --json
-{"schema":"sow.cli/v1","command":"status","ok":true,"repository":"demo","operation":null,"result":{"repository":"demo","status":"dirty","ready_to_copy":false,"desired_revision":5,"built_generation":4,"dirty_dists":["el9"],"dirty_reasons":["dist el9 Desired and Built membership sets differ","one or more dists differ from their built projections"],"pending":{"count":1,"bytes":19776},"recent_operation":{"id":"3329269325810066022","kind":"add","state":"done_dirty","created_at":"2026-08-04T04:10:22.481991Z","updated_at":"2026-08-04T04:10:22.553516Z"},"repository_locked":false},"errors":[]}
+{"schema":"sow.cli/v1","command":"status","ok":true,"repository":"demo","operation":null,"result":{"repository":"demo","status":"dirty","ready_to_copy":false,"desired_revision":5,"built_generation":"00000000000000000004","dirty_dists":["el9"],"dirty_reasons":["dist el9 Desired and Built membership sets differ","one or more dists differ from their built projections"],"pending":{"count":1,"bytes":19776},"recent_operation":{"id":"3329269325810066022","kind":"add","state":"done_dirty","created_at":"2026-08-04T04:10:22.481991Z","updated_at":"2026-08-04T04:10:22.553516Z"},"repository_locked":false},"errors":[]}
 ```
 
 `status` 从不执行恢复，也绝不把"存在一个旧但自洽的 Generation"误报为索引损坏。
@@ -67,7 +69,7 @@ sow status -r demo --json
 
 ```console
 sow build -r pgsql -d el9
-{"operation":"4262183287563704350","repository":"pgsql","dists":["el9"],"desired_revision":6,"built_generation":6,"noop":false,"dirty":false}
+{"operation":"4262183287563704350","repository":"pgsql","dists":["el9"],"desired_revision":6,"built_generation":"00000000000000000006","noop":false,"dirty":false}
 ```
 
 | 参数 | 说明 | 默认 |
@@ -90,7 +92,7 @@ sow build -r pgsql -d el9
 
 ```console
 sow build
-{"operation":"6295064788473690577","repository":"pigsty","dists":["el9","trixie"],"desired_revision":5,"built_generation":5,"noop":true,"dirty":false}
+{"operation":"6295064788473690577","repository":"pigsty","dists":["el9","trixie"],"desired_revision":5,"built_generation":"00000000000000000005","noop":true,"dirty":false}
 ```
 
 ### 策略收敛是单向的
@@ -106,7 +108,8 @@ sow build
 悬空引用。
 
 一个 build Operation 可以覆盖多个 Dist。SOW 不承诺并发读者在同一瞬间看到所有 Dist 一起翻代；它承诺
-的是每个协议视图始终自洽，且命令返回后全部目标属于同一个 Built Generation。
+的是每个协议视图始终自洽，且命令返回后本次 Operation 包含的全部 Dist 属于同一个
+Built Generation。
 
 ### 恢复
 
@@ -124,8 +127,7 @@ Dist 变 dirty，下一次 `build` 重新签名并产生新的 Generation。
 
 ## sow check
 
-对选定仓库与 Dist 做完整只读校验。终态 v0.2.0 Repository 报告九个有序层;
-活动布局 transition 会报告专用 transition 层,并保持不可交付。
+对选定 Repository 与 Dist 做完整只读校验。v0.2.0 Repository 报告九个有序层。
 
 ```console
 sow check
@@ -138,7 +140,7 @@ package-bytes	ok=true	checked=8
 desired-membership	ok=true	checked=8
 index	ok=true	checked=2
 signature	ok=true	checked=9
-generation-manifest	ok=true	checked=5
+generation-manifest	ok=true	checked=1
 ```
 
 | 层 | 校验内容 | `checked` 计的是 |
@@ -151,7 +153,7 @@ generation-manifest	ok=true	checked=5
 | `desired-membership` | Membership 行在当前策略下能解析到真实对象 | 成员数 |
 | `index` | 渲染出的索引与其声称的成员集一致 | Dist 数 |
 | `signature` | 所有声明的签名都能验证通过 | 签名数 |
-| `generation-manifest` | 已构建代的 manifest 与磁盘文件一致 | Generation 号 |
+| `generation-manifest` | Built Generation Manifest 与磁盘文件一致 | 1 份 Manifest |
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
@@ -171,13 +173,14 @@ generation-manifest	ok=true	checked=5
 sow check
 repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5
 config	ok=true	checked=5
+retained	ok=true	checked=0
 state	ok=true	checked=1
 public-modes	ok=true	checked=67
 package-bytes	ok=true	checked=8
 desired-membership	ok=true	checked=7
 index	ok=true	checked=2
 signature	ok=true	checked=9
-generation-manifest	ok=true	checked=5
+generation-manifest	ok=true	checked=1
 integrity or recovery error: managed: repository is not ready to copy: repository status is dirty
 ```
 
@@ -197,9 +200,10 @@ update	pointer	dists/el9/x86_64/repodata/repomd.xml	1514	05d3d5bf0f9236626b22a8a
 delete	delete	dists/el9/x86_64/repodata/0df96f0b046b6c098398194f908cc99d90bf3af8c5f66d262b2e6d43a658a58f-primary.xml.gz	0
 ```
 
-各列依次是 `op`、`phase`、相对仓库根的路径、大小与 SHA-256。`op` 取 `add`/`update`/`delete`；
-`phase` 取 `payload`/`metadata`/`pointer`/`delete`。**按 phase 顺序应用**——payload 最先，pointer
-最后，删除放在最末——任何客户端都不会看到悬空引用。
+各列依次是 `op`、`phase`、相对 Repository 根的路径、大小与 SHA-256。`op` 取
+`add`/`update`/`delete`；`phase` 取 `payload`/`metadata`/`pointer`/`delete`。这些 Phase 描述
+SOW 如何在本地构建 Generation，不是远端事务协议。不要把行逐条重放到在线树；应使用
+`sow publish`，或先完整复制到 staging，再原子切换。
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
@@ -274,10 +278,13 @@ sow check -r pgsql
 
 ```bash
 sow check -r pgsql || { echo "不可交付"; exit 1; }
-rsync -a --delete /srv/repo/pgsql/ mirror:/srv/www/pgsql/
+sow publish mirror
 ```
 
-把增量计划交给外部同步工具：
+`mirror` 必须是该 Repository 已配置的 filesystem 或 R2 Target。使用其他传输方式时，应复制到
+离线 staging 后原子切换，不能原地修改在线树。
+
+导出 Generation Delta，用于审计或交付规划：
 
 ```bash
 sow changes 41 -r pgsql --json > changes-41-current.json

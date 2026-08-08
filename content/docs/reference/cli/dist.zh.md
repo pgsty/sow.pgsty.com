@@ -108,8 +108,9 @@ operation rejected: managed: operation rejected: dist "el9" already exists with 
 `dist new` 要在三个地方同时提交：`sow.yml` 条目、仓库数据库、磁盘目录树。它走 SQLite Operation
 Journal（此时仓库数据库已存在，与 `repo new` 不同），并产生一个带空索引的新 Built Generation。
 
-因此新建的 Dist 立刻可被消费。RPM Dist 在每个架构视图下有一份空 `repodata/`；DEB Dist 有空的
-`Packages`、`Packages.gz`、`by-hash/SHA256/` 条目，以及一份 `Release`（配置了 key 时带签名）。
+因此新建的 Dist 立刻具备协议完整的空发布面。RPM Dist 在每个架构视图下有一份空
+`repodata/`；DEB Dist 有空的 `Packages`、`Packages.gz`、`by-hash/SHA256/` 条目，
+以及 `Release`；配置签名时再生成 `InRelease` 与 `Release.gpg`。
 
 ## sow dist show
 
@@ -139,7 +140,7 @@ JSON 形态额外给出 `effective_config_sha256`，即解析后 Dist 配置的�
 
 ```console
 sow dist show el9 -r pgsql --json
-{"schema":"sow.cli/v1","command":"dist show","ok":true,"repository":"pgsql","operation":null,"result":{"name":"el9","format":"rpm","architectures":[{"family":"x86_64","ecosystem_arch":"x86_64"},{"family":"aarch64","ecosystem_arch":"aarch64"}],"desired_members":0,"built_members":0,"generation":1,"dirty":false,"status":"clean","effective_config_sha256":"a0b3ae2f943bc4fce951aaadda0fc8fb146ccf7944b0193a0dcc2b86ddc7ce7e","config":{"format":"rpm","architectures":["x86_64","aarch64"],"limit":1,"exclude":[{"kind":["debuginfo","debugsource"]}]}},"errors":[]}
+{"schema":"sow.cli/v1","command":"dist show","ok":true,"repository":"pgsql","operation":null,"result":{"name":"el9","format":"rpm","architectures":[{"family":"x86_64","ecosystem_arch":"x86_64"},{"family":"aarch64","ecosystem_arch":"aarch64"}],"desired_members":0,"built_members":0,"generation":"00000000000000000001","dirty":false,"status":"clean","effective_config_sha256":"a0b3ae2f943bc4fce951aaadda0fc8fb146ccf7944b0193a0dcc2b86ddc7ce7e","config":{"format":"rpm","architectures":["x86_64","aarch64"],"limit":1,"exclude":[{"kind":["debuginfo","debugsource"]}]}},"errors":[]}
 ```
 
 ```console
@@ -182,8 +183,8 @@ find pgsql -type f
 pgsql/pool/e/epel-release/epel-release-7-5.noarch.rpm
 ```
 
-失去引用的 pool 对象会继续保留,直到 `sow gc` 证明它不再被当前代、保留代、迁移、恢复与
-发布根引用。
+失去引用的 Pool 对象会继续保留，直到 `sow gc` 证明它不再被当前、保留、恢复、发布以及
+活动维护操作等任何安全根引用。
 
 仓库的 `protected: true` 只封死仓库删除；受保护仓库上的常规 Dist 维护照常进行。
 

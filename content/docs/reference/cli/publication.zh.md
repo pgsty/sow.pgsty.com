@@ -47,8 +47,9 @@ sow gc          [-C DIR] [-r NAME] [-T DUR | -N] [--json]
 sow gc TARGET   [-C DIR]           [-T DUR | -N] [--json]
 ```
 
-不带目标时,GC 只删除当前 Generation 以及所有保留、迁移、恢复、发布根都不可达的本地 pool
-对象。删除操作写 journal;真正移除字节时会推进 Repository Generation。
+不带目标时，GC 只删除当前 Generation、保留 Generation、恢复状态、发布尝试以及活动维护操作
+等全部安全根都不可达的本地 Pool 对象。删除操作会写 Journal；真正移除字节时会推进
+Repository Generation。
 
 带 `TARGET` 时维护发布状态:
 

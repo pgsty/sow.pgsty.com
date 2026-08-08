@@ -17,7 +17,7 @@ content/
     start/             # getting started
     tutorial/          # task-oriented walkthroughs
     feature/           # explanation: how SOW works
-    design/            # maintained architecture, decisions, and version evolution
+    design/            # maintained architecture, invariants, and compatibility boundaries
     reference/         # CLI, sow.yml, layouts, exit codes, compatibility
   blog/                # release notes and announcements
 data/docs_nav.json     # generated sidebar tree — do not edit by hand
@@ -61,6 +61,5 @@ without vendoring its source.
 - Front matter must set an explicit `url:` (Chinese pages carry the `/zh/` prefix).
 - Command transcripts are real executions against the current `sow` binary; do not
   invent output.
-- This repository is the authority for maintained user and design documentation.
-  Historical source-repository documents remain available through Git history and version
-  tags; they are inputs to curation, not a second maintained documentation tree.
+- This repository is the authority for maintained user and design documentation for the
+  current SOW release.

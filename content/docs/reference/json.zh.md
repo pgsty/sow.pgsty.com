@@ -1,7 +1,7 @@
 ---
 title: "JSON 输出"
 linkTitle: "JSON 输出"
-description: "sow.cli/v1 信封结构、各字段含义,以及每条命令的 result 形态。"
+description: "sow.cli/v1 Envelope、字段含义与主要命令族的 Result 形态。"
 url: "/zh/docs/reference/json/"
 weight: 600
 icon: fa-solid fa-code
@@ -17,7 +17,7 @@ sow status --json
 ```json
 {"schema":"sow.cli/v1","command":"status","ok":true,"repository":"pigsty","operation":null,
  "result":{"repository":"pigsty","status":"clean","ready_to_copy":true,"desired_revision":4,
- "built_generation":4,"dirty_dists":[],"dirty_reasons":[],"pending":{"count":0,"bytes":0},
+ "built_generation":"00000000000000000004","dirty_dists":[],"dirty_reasons":[],"pending":{"count":0,"bytes":0},
  "recent_operation":{"id":"8632724976452398569","kind":"add","state":"done",
  "created_at":"2026-08-04T04:07:17.665377Z","updated_at":"2026-08-04T04:07:18.293848Z"},
  "repository_locked":false},"errors":[]}
@@ -68,6 +68,16 @@ sow status --json
 Operation ID 是 64 位值,序列化为十进制**字符串**,因为它经常超出 IEEE 754 双精度
 能精确表示的范围。在 JavaScript 里,`JSON.parse` 处理裸数字会静默损坏它们。
 请保持字符串形态;`jq` 原样处理即可。
+
+### Generation ID 是固定宽度字符串
+
+```json
+"built_generation":"00000000000000000004"
+```
+
+Generation ID 覆盖完整的无符号 64 位范围，并固定序列化为 20 位、左侧补零的十进制字符串。
+`generation`、`built_generation`、`base_generation` 以及表示 Generation 的 `base` 字段都应
+按字符串处理；固定宽度也能保持普通字节序比较与数值顺序一致。
 
 ### stdout 与 stderr
 
@@ -145,7 +155,7 @@ sow create /srv/offline --json
 
 ```json
 "result":{"repositories":[{"name":"pigsty","path":"/srv/repo/pigsty","protected":false,
- "dists":2,"generation":4,"desired_revision":4,"status":"clean","packages":7,"memberships":7,
+ "dists":2,"generation":"00000000000000000004","desired_revision":4,"status":"clean","packages":7,"memberships":7,
  "recent_operation":{"id":"8632724976452398569","kind":"add","state":"done",
   "created_at":"2026-08-04T04:07:17.665377Z","updated_at":"2026-08-04T04:07:18.293848Z"},
  "config":{"protected":false,"signing":{...},"dists":{...}}}]}
@@ -166,7 +176,7 @@ sow create /srv/offline --json
 "result":{"dists":[{"name":"el9","format":"rpm",
  "architectures":[{"family":"x86_64","ecosystem_arch":"x86_64"},
                   {"family":"aarch64","ecosystem_arch":"aarch64"}],
- "desired_members":4,"built_members":4,"generation":3,"dirty":false,"status":"clean",
+ "desired_members":4,"built_members":4,"generation":"00000000000000000003","dirty":false,"status":"clean",
  "effective_config_sha256":"39913af601d10d4d4033b0c29e8d66df385f8a6eb22f45219773a7fc170d4243",
  "config":{"format":"rpm","architectures":["x86_64","aarch64"],"limit":0,"exclude":null}}]}
 ```
@@ -183,7 +193,7 @@ sow create /srv/offline --json
 
 ```json
 "result":{"operation":"320653458389425222","repository":"demo",
- "desired_revision":2,"built_generation":2,"dirty":false,
+ "desired_revision":2,"built_generation":"00000000000000000002","dirty":false,
  "accepted":1,"failed":0,"memberships_added":1,"memberships_removed":0,
  "items":[{"input":"/incoming/pev2-1.23.0-1.noarch.rpm","status":"accepted","format":"rpm",
  "coordinate":"pev2-0:1.23.0-1.noarch",
@@ -223,7 +233,7 @@ sow create /srv/offline --json
 
 ```json
 "result":{"operation":"3422380511083828695","repository":"pigsty",
- "desired_revision":5,"built_generation":5,"dirty":false,"check":false,
+ "desired_revision":5,"built_generation":"00000000000000000005","dirty":false,"check":false,
  "removed":[{"dist":"el9","sha256":"45171966...",
    "coordinate":"rpm:pgbouncer_fdw_18-0:1.4.0-1PGDG.rhel9.8.x86_64","name":"pgbouncer_fdw_18"}],
  "dists":["el9"],
@@ -241,7 +251,7 @@ sow create /srv/offline --json
 
 ```json
 "result":{"operation":"3701044631565986409","repository":"pigsty",
- "dists":["el9","trixie"],"desired_revision":5,"built_generation":5,
+ "dists":["el9","trixie"],"desired_revision":5,"built_generation":"00000000000000000005",
  "noop":true,"dirty":false}
 ```
 
@@ -252,7 +262,7 @@ sow create /srv/offline --json
 
 ```json
 "result":{"repository":"pigsty","status":"clean","ready_to_copy":true,
- "desired_revision":4,"built_generation":4,"dirty_dists":[],"dirty_reasons":[],
+ "desired_revision":4,"built_generation":"00000000000000000004","dirty_dists":[],"dirty_reasons":[],
  "pending":{"count":0,"bytes":0},
  "recent_operation":{"id":"8632724976452398569","kind":"add","state":"done",
   "created_at":"...","updated_at":"..."},
@@ -273,7 +283,7 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
 
 ```json
 "result":{"repository":"pigsty","status":"clean","ready_to_copy":true,
- "built_generation":4,"desired_revision":4,
+ "built_generation":"00000000000000000004","desired_revision":4,
  "layers":[{"name":"config","ok":true,"checked":5,"issues":[]},
   {"name":"retained","ok":true,"checked":0,"issues":[]},
   {"name":"state","ok":true,"checked":1,"issues":[]},
@@ -298,7 +308,7 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
 ### changes
 
 ```json
-"result":{"repository":"pigsty","base":4,"generation":5,"dirty":false,
+"result":{"repository":"pigsty","base":"00000000000000000004","generation":"00000000000000000005","dirty":false,
  "changes":[{"op":"add","path":"dists/el9/x86_64/repodata/1a57aa2f...-filelists.xml.gz",
    "phase":"metadata","size":382,"sha256":"1a57aa2f..."},
   {"op":"update","path":"dists/el9/x86_64/repodata/repomd.xml","phase":"pointer",
@@ -352,13 +362,12 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
  "built_dists":["el9"],"sha256":"d06d7f23...","coordinate":"rpm:pev2-0:1.23.0-1.noarch"}]}
 ```
 
-### repo migrate、publish、retain、gc、export
+### publish、retain、gc、export
 
 v0.2.0 生命周期命令使用同一 envelope,数字 Generation 仍序列化为 JSON 字符串:
 
 | 命令 | 重要 `result` 字段 |
 |---|---|
-| `repo migrate` | `repository`、`repository_id`、`from_layout`、`to_layout`、`phase`、`generation`、`grace_not_before`、`legacy_aliases`、`complete` |
 | `publish` | `repository`、`target`、`provider`、`generation`、`attempt`、`checkpoint`、`phase`、`objects`、`noop` |
 | `publish --abort` | `repository`、`target`、`provider`、`attempt`、`phase`、`objects` |
 | `retain add` / `retain rm` | `repository`、`record`、`record_identity`、`path` |

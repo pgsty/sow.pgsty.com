@@ -1,7 +1,7 @@
 {
  "meta": {
   "generated_by": "bin/gen_docs_nav.py",
-  "page_count": 47
+  "page_count": 45
  },
  "page_by_url": {
   "/docs/": "docs",
@@ -15,7 +15,6 @@
   "/docs/tutorial/apt-repo/": "docs/tutorial/apt-repo",
   "/docs/tutorial/signing/": "docs/tutorial/signing",
   "/docs/tutorial/serving/": "docs/tutorial/serving",
-  "/docs/tutorial/migration/": "docs/tutorial/migration",
   "/docs/feature/": "docs/feature",
   "/docs/feature/overview/": "docs/feature/overview",
   "/docs/feature/plain/": "docs/feature/plain",
@@ -31,7 +30,6 @@
   "/docs/design/single-payload/": "docs/design/single-payload",
   "/docs/design/publication/": "docs/design/publication",
   "/docs/design/compatibility/": "docs/design/compatibility",
-  "/docs/design/evolution/": "docs/design/evolution",
   "/docs/reference/": "docs/reference",
   "/docs/reference/cli/": "docs/reference/cli",
   "/docs/reference/cli/create/": "docs/reference/cli/create",
@@ -70,8 +68,7 @@
    "docs/tutorial/yum-repo",
    "docs/tutorial/apt-repo",
    "docs/tutorial/signing",
-   "docs/tutorial/serving",
-   "docs/tutorial/migration"
+   "docs/tutorial/serving"
   ],
   "/docs/feature/": [
    "docs/feature/overview",
@@ -88,8 +85,7 @@
    "docs/design/model",
    "docs/design/single-payload",
    "docs/design/publication",
-   "docs/design/compatibility",
-   "docs/design/evolution"
+   "docs/design/compatibility"
   ],
   "/docs/reference/": [
    "docs/reference/cli",
@@ -166,11 +162,6 @@
    "/docs/tutorial/",
    "/docs/tutorial/serving/"
   ],
-  "/docs/tutorial/migration/": [
-   "/docs/",
-   "/docs/tutorial/",
-   "/docs/tutorial/migration/"
-  ],
   "/docs/feature/": [
    "/docs/",
    "/docs/feature/"
@@ -243,11 +234,6 @@
    "/docs/",
    "/docs/design/",
    "/docs/design/compatibility/"
-  ],
-  "/docs/design/evolution/": [
-   "/docs/",
-   "/docs/design/",
-   "/docs/design/evolution/"
   ],
   "/docs/reference/": [
    "/docs/",
@@ -432,13 +418,6 @@
      "title_en": "Serve Repositories",
      "title_zh": "对外服务",
      "children": []
-    },
-    {
-     "page": "docs/tutorial/migration",
-     "url": "/docs/tutorial/migration/",
-     "title_en": "Migrate from createrepo_c / reprepro",
-     "title_zh": "从 createrepo_c / reprepro 迁移",
-     "children": []
     }
    ]
   },
@@ -545,13 +524,6 @@
      "url": "/docs/design/compatibility/",
      "title_en": "Compatibility Boundaries",
      "title_zh": "兼容性边界",
-     "children": []
-    },
-    {
-     "page": "docs/design/evolution",
-     "url": "/docs/design/evolution/",
-     "title_en": "Design Evolution",
-     "title_zh": "设计演进",
      "children": []
     }
    ]

@@ -1,22 +1,21 @@
 ---
 title: "下载与安装"
 linkTitle: "下载"
-description: "获取 SOW 二进制:预编译发行版、源码构建,以及支持的平台矩阵。"
+description: "获取 SOW 二进制：Release 资产、源码构建与 Release 构建目标。"
 url: "/zh/download/"
 weight: 20
 icon: fa-solid fa-download
 ---
 
-SOW 是一个静态可执行文件。没有安装器,没有要装的软件包,没有要启用的服务,
-在你第一次运行需要状态的命令之前,它甚至不会创建任何目录。安装它 = 把一个文件
-放进 `PATH`。
+SOW 是一个自包含可执行文件。使用 Archive 安装就是把该文件放进 `PATH`；没有服务要启用，
+在命令真正需要状态前也不会创建状态目录。Linux 还可以使用 Release 中的 RPM/DEB 包常规安装。
 
 ## 预编译二进制
 
-SOW v0.2.0 当前以 **Draft** 形式暂存在
-[GitHub Releases](https://github.com/pgsty/sow/releases)。草稿内已有四个 Linux/macOS
-归档、`1PGSTY` Linux RPM/DEB 包与 `SHA256SUMS`,但 Draft 资产不是公共下载面。
-在操作者手工公开草稿之前,请按下文从源码构建。公开后,自动下载前仍要确认 Release 条目中
+SOW v0.2.0 的 GitHub Release 当前仍是 **Draft**。其中四个 Linux/macOS 归档、
+`1PGSTY` Linux RPM/DEB 包与 `SHA256SUMS` 尚不可公开下载。在操作者把它发布到
+[Releases 页面](https://github.com/pgsty/sow/releases)之前,请按下文从源码构建。
+公开后,自动下载前仍要确认 Release 条目中
 确实存在匹配的归档与校验和,再下载对应归档并解压到位:
 
 v0.2.0 不发布 Docker 或其他容器镜像。
@@ -26,17 +25,18 @@ tar -xzf sow_*.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
-没有 root 也没关系,`~/.local/bin` 一样能用 —— SOW 自身的运行从不需要提权。
+没有 root 时可以安装到 `~/.local/bin`。SOW 不需要特权守护进程。执行用户必须能读写
+Workspace 或 Plain 目标目录及发布目标，并能读取输入包、解析签名引用。
 
-## 平台矩阵
+## Release 构建目标
 
-二进制以 `CGO_ENABLED=0` 构建,不依赖 libc,在对应操作系统与 CPU 家族的现代内核上
-都能直接运行。
+Release Pipeline 以 `CGO_ENABLED=0` 构建，不需要另装 cgo 工具链或语言运行时；二进制仍会使用
+操作系统标准 ABI 与 Framework。Release 资产的构建目标如下：
 
 | 操作系统 | `amd64` | `arm64` | 说明 |
 |---|---|---|---|
-| Linux | 支持 | 支持 | 主要目标平台 |
-| macOS(Darwin) | 支持 | 支持 | Intel 与 Apple Silicon |
+| Linux | 构建 | 构建 | 主要目标平台 |
+| macOS(Darwin) | 构建 | 构建 | Intel 与 Apple Silicon |
 | Windows | — | — | 不支持 |
 
 不支持 Windows 是有意为之:SOW 依赖 POSIX 建议锁与原子 `rename`。
@@ -86,4 +86,4 @@ sow 0.2.0 darwin/arm64 go1.26.5
 
 - [快速上手](/zh/docs/start/quickstart/) —— 五分钟把一个装包的目录变成可服务的仓库。
 - [第一个工作区](/zh/docs/start/workspace/) —— 搭一个可筛选、多架构的托管仓库。
-- [兼容性](/zh/docs/reference/compatibility/) —— 实测客户端矩阵。
+- [兼容性](/zh/docs/reference/compatibility/) —— 当前自动化证据及其边界。

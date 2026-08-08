@@ -147,7 +147,7 @@ What this means depends on the command:
   ```
 
   ```console
-  {"repository":"pigsty","desired_revision":10,"built_generation":10,"dirty":false,"check":true,
+  {"repository":"pigsty","desired_revision":10,"built_generation":"00000000000000000010","dirty":false,"check":true,
    "removed":[{"dist":"trixie","sha256":"310611d0...","coordinate":"deb:libpq5=18.2-1.pgdg12+1:amd64","name":"libpq5"},
               {"dist":"trixie","sha256":"4b526223...","coordinate":"deb:libpq5=18.3-1.pgdg12+1:amd64","name":"libpq5"},
               {"dist":"trixie","sha256":"cadeb929...","coordinate":"deb:libpq5=18.3-1.pgdg12+1:arm64","name":"libpq5"}], ...}

@@ -7,10 +7,9 @@ package_formats: 2
 # linux/amd64, linux/arm64, darwin/amd64, darwin/arm64.
 platforms: 4
 
-# Canonical-repository client combinations exercised end to end: EL8 / EL9 / EL10
-# dnf, CentOS 7 yum, Debian 12 apt, Debian 13 apt. reposync uses an explicit
-# exported compatibility leaf and is not counted here.
-client_generations: 6
+# Provider implementations accepted by the v0.2.0 configuration parser:
+# a pre-existing local filesystem directory and Cloudflare R2.
+publication_providers: 2
 
-# Static CGO_ENABLED=0 binary: nothing to install alongside it.
+# CGO_ENABLED=0 executable: no separately installed language runtime.
 external_deps: 0

@@ -114,9 +114,10 @@ operation rejected: managed: operation rejected: dist "el9" already exists with 
 and the on-disk tree. It goes through the SQLite Operation Journal (the Repository database already
 exists at this point, unlike `repo new`) and produces a new Built Generation with empty indexes.
 
-That means a fresh Dist is immediately consumable. An RPM Dist gets an empty `repodata/` under every
-architecture view; a DEB Dist gets empty `Packages`, `Packages.gz`, the `by-hash/SHA256/` entries and
-a signed-if-configured `Release`.
+That means a fresh Dist has a protocol-complete empty surface. An RPM Dist gets an empty
+`repodata/` under every architecture view; a DEB Dist gets empty `Packages`, `Packages.gz`,
+the `by-hash/SHA256/` entries and `Release`, plus `InRelease`/`Release.gpg` when signing is
+configured.
 
 ## sow dist show
 
@@ -147,7 +148,7 @@ key — the config identity changed, so the Built Generation no longer matches D
 
 ```console
 sow dist show el9 -r pgsql --json
-{"schema":"sow.cli/v1","command":"dist show","ok":true,"repository":"pgsql","operation":null,"result":{"name":"el9","format":"rpm","architectures":[{"family":"x86_64","ecosystem_arch":"x86_64"},{"family":"aarch64","ecosystem_arch":"aarch64"}],"desired_members":0,"built_members":0,"generation":1,"dirty":false,"status":"clean","effective_config_sha256":"a0b3ae2f943bc4fce951aaadda0fc8fb146ccf7944b0193a0dcc2b86ddc7ce7e","config":{"format":"rpm","architectures":["x86_64","aarch64"],"limit":1,"exclude":[{"kind":["debuginfo","debugsource"]}]}},"errors":[]}
+{"schema":"sow.cli/v1","command":"dist show","ok":true,"repository":"pgsql","operation":null,"result":{"name":"el9","format":"rpm","architectures":[{"family":"x86_64","ecosystem_arch":"x86_64"},{"family":"aarch64","ecosystem_arch":"aarch64"}],"desired_members":0,"built_members":0,"generation":"00000000000000000001","dirty":false,"status":"clean","effective_config_sha256":"a0b3ae2f943bc4fce951aaadda0fc8fb146ccf7944b0193a0dcc2b86ddc7ce7e","config":{"format":"rpm","architectures":["x86_64","aarch64"],"limit":1,"exclude":[{"kind":["debuginfo","debugsource"]}]}},"errors":[]}
 ```
 
 ```console
@@ -191,8 +192,8 @@ find pgsql -type f
 pgsql/pool/e/epel-release/epel-release-7-5.noarch.rpm
 ```
 
-Orphaned pool objects remain until `sow gc` proves they are unreachable from current,
-retained, migration, recovery, and publication roots.
+Orphaned pool objects remain until `sow gc` proves they are unreachable from every safety
+root: current, retained, recovery, publication, and any active maintenance operation.
 
 A Repository's `protected: true` blocks Repository deletion only; normal Dist maintenance on a
 protected Repository continues to work.

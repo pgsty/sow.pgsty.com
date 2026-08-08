@@ -18,7 +18,7 @@ icon: fa-solid fa-cubes
 | SOW 能做什么?与 `createrepo_c`、`reprepro` 相比如何? | [能力总览](/zh/docs/feature/overview/) |
 | `sow create` 究竟写了什么?又拒绝碰什么? | [Plain 平面仓库](/zh/docs/feature/plain/) |
 | 工作区、仓库、Dist 是什么关系?SOW 如何找到它们? | [Managed 工作区](/zh/docs/feature/managed/) |
-| 同一份包字节为什么会同时出现在三个路径上? | [包池与架构视图](/zh/docs/feature/views/) |
+| 一个包池如何为多个纯元数据架构视图供包? | [包池与架构视图](/zh/docs/feature/views/) |
 | 我的包为什么返回 `excluded` 或 `limited`? | [成员策略](/zh/docs/feature/policy/) |
 | 哪把钥匙签什么?换钥匙会发生什么? | [签名模型](/zh/docs/feature/signing/) |
 | `add` 执行到一半机器掉电会怎样? | [事务与恢复](/zh/docs/feature/transactions/) |

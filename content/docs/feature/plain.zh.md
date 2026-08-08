@@ -54,7 +54,8 @@ created /srv/repo: rpm=2 deb=1 signed=0 removed=0 marker=false noop=false recove
     └── repomd.xml
 ```
 
-平面元数据只引用同目录里的包,这在 `file://` 与 HTTP 文档根下的行为完全一致:
+平面元数据只引用同目录里的包，因此无论把目录暴露为 `file://` 源还是 HTTP 文档根，
+包路径都保持相对引用：
 
 ```xml
 <location href="pev2-1.23.0-1.noarch.rpm"/>
@@ -102,17 +103,9 @@ $ sow create
 created /srv/repo: rpm=2 deb=1 signed=0 removed=0 marker=false noop=false recovered=false
 ```
 
-两个渲染器都先 stage 并校验,任何一个才允许提交。如果 DEB 侧解析失败,RPM 索引也不会换入,命令非零退出。你不会得到 `repodata/` 是新的、`Packages` 是旧的这种半迁移目录。
+两个渲染器都先 stage 并校验,任何一个才允许提交。如果 DEB 侧解析失败,RPM 索引也不会换入,命令非零退出。你不会得到 `repodata/` 是新的、`Packages` 是旧的这种混合结果。
 
 有一处需要如实说明而不是嘴上安慰:POSIX 无法让两个文件在同一瞬间 rename。并发读者若恰好在切换窗口里同时取 `repomd.xml` 和 `Packages`,可能看到一新一旧。任何时刻每个协议视图内部都是自洽的,但默认模式不承诺跨协议的瞬时同步。如果你需要一个门禁,请用 `--pigsty`,并把 `repo_complete` 当作就绪信号。
-
-## 就地接管既有仓库
-
-在 `createrepo_c` 建过索引的目录里跑 `sow create` 是可行的,新的 `repomd.xml` 只引用 SOW 生成的那三件套 —— 没有 `sqlite`,没有 `modulemd`。
-
-{{% alert title="旧文件会留在磁盘上" color="warning" %}}
-SOW 不删除不是自己写的字节。接管之后,旧的 checksum 命名元数据、`*.sqlite.bz2` 和 `modules.yaml` 仍然留在 `repodata/` 里。它们已不再被 `repomd.xml` 引用,客户端会忽略,但仍然占空间。确认新索引没问题后请自行清理,参见[迁移](/zh/docs/tutorial/migration/)。
-{{% /alert %}}
 
 ## `--pigsty` 操作
 
@@ -149,7 +142,7 @@ SOW 不删除不是自己写的字节。接管之后,旧的 checksum 命名元�
 sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
 ```
 
-`-S/--sign-with KEY` 是修改包体的显式授权。`KEY` 是 GPG key ID 或 fingerprint:16、40 或 64 位十六进制,可带 `0x` 前缀。SOW 规范化为大写,并作为 `_gpg_name` macro 传给环境中的 `rpm --addsign`。私钥、passphrase、GPG home 和 pinentry 全部由运行环境提供;SOW 不接收、不持久化、不回显任何秘密。
+`-S/--sign-with KEY` 是修改包体的显式授权。`KEY` 必须是恰好 16、40 或 64 位十六进制 GPG key ID/fingerprint；不接受 `0x` 前缀。SOW 规范化为大写,并作为 `_gpg_name` macro 传给环境中的 `rpm --addsign`。私钥、passphrase、GPG home 和 pinentry 全部由运行环境提供;SOW 不接收、不持久化、不回显任何秘密。
 
 - 不带 `--overwrite` 时,只给没有可解析嵌入式 OpenPGP 签名的 RPM 补签,已签名的保持原字节。
 - `--overwrite` 必须与 `--sign-with` 同时出现,改用 `rpm --resign` 对全部保留的 RPM 强制重签。

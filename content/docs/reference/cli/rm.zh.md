@@ -70,7 +70,7 @@ operation rejected: managed: operation rejected: package reference not found: pa
 
 ```console
 sow rm centos-release -r pigsty -d el9 -c
-{"repository":"pigsty","desired_revision":6,"built_generation":6,"dirty":false,"check":true,"removed":[{"dist":"el9","sha256":"ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16","coordinate":"rpm:centos-release-0:6-0.el6.centos.5.x86_64","name":"centos-release"},{"dist":"el9","sha256":"b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead","coordinate":"rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64","name":"centos-release"}],"dists":["el9"],"changes":[{"op":"add","path":"dists/el9/x86_64/repodata/29eb03d70470cb4ed836017414d6039482e6ee8e4cdfbafe9cc78ba052c8d2dc-filelists.xml.gz","phase":"metadata","size":374,"sha256":"29eb03d70470cb4ed836017414d6039482e6ee8e4cdfbafe9cc78ba052c8d2dc"},{"op":"update","path":"dists/el9/x86_64/repodata/repomd.xml","phase":"pointer","size":1511,"sha256":"ef071821e06c9e86ab4f6d2a56906d82bb66df251e79d1086cfd44dc8395513e"},{"op":"delete","path":"dists/el9/x86_64/repodata/85de802ed1249f8693c973ae44d704e3cc5047da571b52c1ddebc8de35a46b60-primary.xml.gz","phase":"delete"}]}
+{"repository":"pigsty","desired_revision":6,"built_generation":"00000000000000000006","dirty":false,"check":true,"removed":[{"dist":"el9","sha256":"ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16","coordinate":"rpm:centos-release-0:6-0.el6.centos.5.x86_64","name":"centos-release"},{"dist":"el9","sha256":"b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead","coordinate":"rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64","name":"centos-release"}],"dists":["el9"],"changes":[{"op":"add","path":"dists/el9/x86_64/repodata/29eb03d70470cb4ed836017414d6039482e6ee8e4cdfbafe9cc78ba052c8d2dc-filelists.xml.gz","phase":"metadata","size":374,"sha256":"29eb03d70470cb4ed836017414d6039482e6ee8e4cdfbafe9cc78ba052c8d2dc"},{"op":"update","path":"dists/el9/x86_64/repodata/repomd.xml","phase":"pointer","size":1511,"sha256":"ef071821e06c9e86ab4f6d2a56906d82bb66df251e79d1086cfd44dc8395513e"},{"op":"delete","path":"dists/el9/x86_64/repodata/85de802ed1249f8693c973ae44d704e3cc5047da571b52c1ddebc8de35a46b60-primary.xml.gz","phase":"delete"}]}
 ```
 
 注意两个 `centos-release` 版本都被裸名命中了。`changes` 数组是一份真实的交付计划，按
@@ -90,7 +90,7 @@ usage error: rm --check does not accept --timeout or --no-wait
 
 ```console
 sow rm 'rpm:centos-release-0:6-0.el6.centos.5.x86_64' -r pigsty -d el9
-{"operation":"1811402670494469758","repository":"pigsty","desired_revision":6,"built_generation":6,"dirty":false,"check":false,"removed":[{"dist":"el9","sha256":"ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16","coordinate":"rpm:centos-release-0:6-0.el6.centos.5.x86_64","name":"centos-release"}],"dists":["el9"],"changes":[...]}
+{"operation":"1811402670494469758","repository":"pigsty","desired_revision":6,"built_generation":"00000000000000000006","dirty":false,"check":false,"removed":[{"dist":"el9","sha256":"ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16","coordinate":"rpm:centos-release-0:6-0.el6.centos.5.x86_64","name":"centos-release"}],"dists":["el9"],"changes":[...]}
 ```
 
 和 `sow build`、`sow show` 一样，`rm` 即使不加 `--json` 也在 stdout 打印结构化 JSON；加上 `--json`
@@ -106,7 +106,7 @@ sow rm 'rpm:centos-release-0:6-0.el6.centos.5.x86_64' -r pigsty -d el9
 
 ```console
 sow rm 'rpm:centos-release-0:6-0.el6.centos.5.x86_64' -r pigsty -d el9 --skip
-{"operation":"1811402670494469758","repository":"pigsty","desired_revision":6,"built_generation":5,"dirty":true,"check":false,"removed":[...],"dists":["el9"],"changes":[]}
+{"operation":"1811402670494469758","repository":"pigsty","desired_revision":6,"built_generation":"00000000000000000005","dirty":true,"check":false,"removed":[...],"dists":["el9"],"changes":[]}
 ```
 
 ```console

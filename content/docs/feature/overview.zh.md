@@ -1,146 +1,99 @@
 ---
 title: "能力总览"
 linkTitle: "能力总览"
-description: "SOW 在两条运行路径、两种包格式、签名与平台上的完整覆盖面,以及与 createrepo_c、reprepro 的对标结论。"
+description: "v0.2.0 在仓库生成、Managed 状态、签名、发布与兼容性方面的实际能力。"
 url: "/zh/docs/feature/overview/"
 weight: 100
 icon: fa-solid fa-table-list
 ---
 
-SOW 是一个自包含的软件仓库管理器:一个纯静态 Go 二进制(`CGO_ENABLED=0`),在 Linux 与 macOS 上创建并维护 APT(DEB)与 YUM(RPM)软件仓库。它不调用 `createrepo_c`、`dpkg-scanpackages`、`reprepro` 或 `modifyrepo_c`,也不需要常驻进程。本页是覆盖面的地图,后续各页解释每一块是怎么实现的。
-
-当前版本为 `sow 0.2.0`。
+SOW 0.2.0 是以单个自包含 Go 二进制交付的本地软件仓库管理器。仓库元数据在进程内生成，
+SOW 本身不提供服务守护进程。
 
 ## 两条运行路径
 
-SOW 提供两种建仓方式,二者刻意相互隔离。除底层的包解析器、渲染器、版本比较、锁和安全文件原语外,它们不共享任何东西。
+| 能力 | Plain | Managed |
+|---|---:|---:|
+| RPM 与 DEB 元数据 | 是 | 是 |
+| RPM + DEB 混合操作 | 同一目录 | 同一 Repository、不同 Dist |
+| 持久成员关系与 Generation | 否 | 是 |
+| 架构视图 | 否 | 是 |
+| `exclude` 与版本 `limit` 策略 | 否 | 是 |
+| 元数据签名 | 否 | RPM 与 DEB |
+| RPM 包签名 | `--sign-with` | `never`、`fill`、`always` |
+| 事务日志与恢复 | 单次操作 | Workspace、Repository、发布 |
+| 审计日志与 JSONL 导出 | 否 | 是 |
+| 发布目标 | 否 | filesystem 与 R2 |
 
-| | Plain 平面模式 | Managed 托管模式 |
+Plain 与 Managed 不共享状态。`sow create` 不发现 Workspace；Managed 命令也不会把任意平面
+目录当作状态接管。
+
+## 仓库元数据
+
+| 表面 | RPM/YUM | DEB/APT |
 |---|---|---|
-| 入口命令 | `sow create` | `sow init` / `repo` / `dist` / `add` / `build` |
-| 输入 | 一个装着 `.rpm` / `.deb` 的目录 | 按路径 add 进工作区的包 |
-| 产出布局 | 平面 —— 包与索引同目录 | Debian 风格 `pool/` + `dists/` 发布视图 |
-| 持久状态 | 无(仅操作期间的临时 journal) | `sow.yml` + 每个仓库一个 SQLite |
-| 配置 | 无 —— 不读任何配置文件 | `sow.yml`,严格校验 |
-| 多架构 | 全部架构落进同一份平面索引 | 每个 Dist 每个架构一份渲染视图 |
-| 历史 | 无 | 单调 Generation 与操作账本 |
-| 对标 | `createrepo_c` + `dpkg-scanpackages` | `reprepro` |
+| 包事实来源 | RPM header | DEB control archive |
+| 身份 | NEVRA + 确切字节 SHA-256 | `name=version:arch` + 确切字节 SHA-256 |
+| 索引 | `primary`、`filelists`、`other`、`repomd.xml` | `Packages`、`Packages.gz`、`Release` |
+| Managed 架构名 | `x86_64`、`aarch64` | `binary-amd64`、`binary-arm64` |
+| 中性架构 | `noarch` | `all` |
+| 不可变索引寻址 | 校验和命名 rpm-md | `by-hash/SHA256` |
+| Managed 元数据签名 | `repomd.xml.asc` | `InRelease`、`Release.gpg` |
 
-手里已有一目录包、只想给它建个索引 —— 用 Plain。同一个仓库要按策略持续维护数月、并且需要审计线索 —— 用 Managed。
+SOW 有意不生成 SQLite rpm-md、zchunk、modulemd 与源码包索引。DEB 元数据只使用 SHA-256，
+不生成 MD5/SHA1 manifest。
 
-Plain 模式止于本地目录。Managed 模式既可以把结果作为普通文件服务或复制,也可以把已提交的
-Generation 发布到配置好的 `filesystem` 或 `r2` 目标。参见[对外服务](/zh/docs/tutorial/serving/)
-与[发布模型](/zh/docs/design/publication/)。
+## Managed 生命周期
 
-## 格式覆盖
+Managed 模式提供：
 
-| 能力 | RPM / YUM | DEB / APT |
-|---|---|---|
-| 生成的索引文件 | `repodata/`,含 `primary`、`filelists`、`other` 与 `repomd.xml` | `Packages`、`Packages.gz`、`Release` |
-| 校验和 | SHA-256,metadata 文件按 checksum 命名 | 仅 SHA-256(不输出 MD5Sum/SHA1) |
-| 包事实来源 | RPM 包头(绝不看文件名) | `.deb` 内的 `control` |
-| 坐标(身份) | NEVRA | `name=version:arch` |
-| 架构视图(Managed) | `x86_64`、`aarch64` | `binary-amd64`、`binary-arm64` |
-| 免架构包 | `noarch` | `all` |
-| by-hash 索引拉取 | 不适用 | 支持,`Acquire-By-Hash: yes` |
-| 元数据签名 | `repodata/repomd.xml.asc` | `InRelease` 与 `Release.gpg` |
-| 包体签名 | 嵌入式 OpenPGP 签名,`fill` / `always` 模式 | 不适用 |
+- 严格 `sow/v3` 配置与向上 Workspace 发现；
+- Repository 隔离、一条规范包池与纯元数据视图；
+- Desired Membership、Built Generation、dirty 检测与物理 changeset；
+- 有界锁、持久操作日志、崩溃恢复与 fail-closed 路径检查；
+- `status`、九层 `check`、包查询与可导出操作日志；
+- 显式 Generation 保留、本地 GC、target 级发布与 GC 状态；
+- 为必须使用本地包 href 的流程生成自包含 RPM leaf。
 
-一条命令同时处理两种格式。Plain 模式下,同时含 `.rpm` 与 `.deb` 的目录在一次操作里生成 `repodata/` 与 `Packages`。Managed 模式下,一个 Repository 可以同时拥有 RPM Dist 和 DEB Dist,共用同一个 `pool/`。
+## 签名与外部程序
 
-## 签名覆盖
+使用路径、`file://` 或 `env://` 私钥引用的元数据签名在进程内完成。`agent://` 元数据 key
+使用 `gpg`/`gpg-agent`。RPM 包签名会改写包体，因此使用环境中的 `rpm` 命令与 GPG 配置。
+元数据生成、包解析、SQLite 状态与发布不需要外部命令行工具。
 
-存在两条彼此独立、分别配置的信任链,完整说明见[签名模型](/zh/docs/feature/signing/)。
+## 发布
 
-| 信任链 | Plain 模式 | Managed 模式 | 客户端用什么验证 |
-|---|---|---|---|
-| 仓库元数据 | 不提供 | `signing.rpm.metadata.key`、`signing.deb.metadata.key` | dnf `repo_gpgcheck=1`、apt `Signed-By` |
-| RPM 包体 | `create -S KEY [--overwrite]` | `signing.rpm.packages.mode: fill \| always` | dnf `gpgcheck=1` |
+每个 target 把一个 Repository 绑定到一个 Provider prefix：
 
-以 `file://` 或 `env://` 给出的元数据密钥由进程内 Go signer 使用,不需要外部工具。RPM 包体签名和 `agent://` 密钥引用会调用环境中的 `rpm` 与 `gpg`。
+| Provider | v0.2.0 行为 |
+|---|---|
+| `filesystem` | 发布并校验 Generation；通过已记录安全门禁后条件式执行生命周期删除 |
+| `r2` | 通过 S3 兼容 API 发布；target GC 只报告候选，绝不删除对象 |
 
-## 平台覆盖
+发布不等于 HTTP 服务。`public_endpoint` 用于描述 SOW 验证的公共表面；实际服务器、bucket、
+CDN、凭据与访问策略由操作者提供。
 
-二进制可构建 `darwin` 与 `linux` 的 `amd64` / `arm64` 版本。运行时不依赖包管理器、数据库服务或 Python 环境。
+## 平台与证据
 
-SOW 唯一会调用的外部程序是 `rpm`(RPM 包体签名)与 `gpg`(`agent://` 密钥引用)。如果仓库不签名,或只用 `file://`/`env://` 元数据密钥,那么除了 `sow` 二进制本身之外什么都不用装。
+Release 构建目标是 Linux/macOS 的 `amd64` 与 `arm64`，并使用 `CGO_ENABLED=0`。Managed
+工作区依赖本地 POSIX 锁、fsync 与原子 rename；不声明网络文件系统为受支持构建位置。
 
-Managed 工作区必须在本地 POSIX 文件系统上构建,因为锁、fsync 与原子 rename 都属于事务
-契约。当前 `pool/ + dists/` 布局不使用视图级硬链接:`pool/` 拥有包体,RPM 视图只含元数据。
-参见[包池与元数据视图](/zh/docs/feature/views/)。
+客户端与 Provider 结论刻意窄于元数据格式能力。当前 CI 与本地证据、以及尚未完成的端到端
+验证，见[兼容性](/zh/docs/reference/compatibility/)。
 
-## 客户端兼容
+## 明确非目标
 
-下表每一行都在真实客户端上跑过:
-
-| 客户端 | 版本 | 结果 |
-|---|---|---|
-| AlmaLinux 8 / 9 / 10 `dnf` | dnf4 | `repo_gpgcheck=1` + `gpgcheck=1` 下 `makecache` 与 `install` 通过 |
-| CentOS 7 `yum` | 3.4.3 | `makecache` 通过,多版本 NEVRA 解析正确 |
-| Debian 13 `apt` | 3.0.3 | `update`(InRelease 验签 + by-hash 拉取)与 `install` 通过 |
-| Debian 12 `apt` | 2.6.1 | 同上;平面仓库经 `[trusted=yes]` 亦可用 |
-
-默认 `dnf reposync` 有意不列为规范布局客户端:它的 safe-write 检查会拒绝
-`../../../pool/...` 包 href。下游必须满足该契约时,请使用 `sow export rpm-leaf`。
-
-完整矩阵(含 APT ≥ 1.2 的 by-hash 要求)见[兼容性](/zh/docs/reference/compatibility/)。
-
-## 与 createrepo_c、reprepro 对标
-
-这两个工具是 SOW 的对标基准。下表来自同一批包的并排实测,不是文档宣称。
-
-| 维度 | SOW | createrepo_c | reprepro |
-|---|---|---|---|
-| RPM 元数据 | `primary`/`filelists`/`other`,语义等价 | 基准 | — |
-| sqlite repodata | 不生成(明确非目标) | 默认生成 | — |
-| DEB `Packages` 字段 | 等价,仅 SHA-256 | — | 基准,输出 MD5Sum + SHA1 + SHA256 |
-| by-hash | 支持(`Acquire-By-Hash: yes`) | — | **不支持** |
-| 包池布局 | `pool/<首字母>/<source>/`(无 component 层) | — | `pool/main/<首字母>/<source>/` |
-| 每架构 `Release` 存根 | 不生成(apt 不需要) | — | 生成 |
-| 平台 | Linux 与 macOS,单二进制 | 实际只在 Linux 上用 | 仅 Linux |
-| 事务与崩溃恢复 | journal 前滚/回滚 | 无 | 数据库易损 |
-| 审计 | 操作账本 + JSONL 导出 | 无 | 日志有限 |
-
-有两个细节值得单独说明,因为迁移的人常会问:
-
-与 `createrepo_c` 0.20.1 在 9 个测试包 + 87 个真实生产包上并排比对,`primary`、`filelists`、`other` 的全部字段语义一致 —— name、arch、EVR、checksum、各类 size、provides、requires flags、files、changelog、header range 都对得上。唯一差异:当某个 RPM 包头里 `/bin/sh` 同时以 pre 和非 pre 两个上下文出现时,SOW 去重保留一条,`createrepo_c` 保留两条。
-
-与 `dpkg-scanpackages` 比对,`Packages` 字段一致,差别在于 SOW 只输出 `SHA256`(现代 APT 客户端不需要别的),并且对缺失字段(如 `Section`)直接省略而不是写空值。
-
-如果你要迁移既有仓库,先读[从 createrepo_c / reprepro 迁移](/zh/docs/tutorial/migration/):就地接管一个目录会把旧工具的文件留在磁盘上,需要你自己清理。
-
-## 性能锚点
-
-macOS arm64 冷启动实测:
-
-| 操作 | 规模 | 墙上时间 |
-|---|---|---|
-| `sow create` | 9 个 RPM | 0.31 s |
-| `sow create` | 87 个 RPM,2.9 GB(全量 SHA-256) | 10.7 s |
-| `sow add` + 自动 build | 9 个 RPM,31 MB | 约 1.3 s |
-| 加入 retained/publication 层之前的历史 `sow check` | 16 包工作区 | 0.12 s |
-
-需要解析、哈希、渲染或校验的命令都接受 `-j/--jobs N`,默认取逻辑 CPU 数。并行不改变输出:最终序列化按固定顺序完成,相同输入永远产生相同字节。
-
-## 明确的非目标
-
-以下不是"还没做完的功能",而是设计上排除的东西 —— 不会有空命令或隐藏 flag 假装它们存在:
-
-- modulemd 的生成、注入与透传
-- sqlite repodata 与 zchunk
-- SRPM / DSC 源码索引
-- 多写者与多机部署
-- 跨仓库去重
-- 远端多写者协调,以及充当 CDN
-- 对 R2 目标执行破坏性 GC(R2 维护仅生成报告)
-- 常驻服务或 Web UI
-- 造包
-
-SOW 管理权威工作区、已提交 Generation、显式发布目标、保留根与保守 GC。
-它不会取代实际交付公共目录的 HTTP 服务或 CDN。
+- 构建软件包；
+- 提供 HTTP 服务或运营 CDN；
+- 多 writer 或分布式协调；
+- 跨 Repository 包体去重；
+- 自动删除 R2 对象；
+- module stream、源码包索引、SQLite rpm-md 或 zchunk；
+- Web UI。
 
 ## 继续阅读
 
-- [Plain 平面仓库](/zh/docs/feature/plain/) —— `sow create` 逐步做了什么
-- [Managed 工作区](/zh/docs/feature/managed/) —— 三层模型
-- [核心概念](/zh/docs/start/concepts/) —— 如果你还没读过这份更短的心智模型
+- [Plain 平面仓库](/zh/docs/feature/plain/)
+- [Managed 工作区](/zh/docs/feature/managed/)
+- [签名模型](/zh/docs/feature/signing/)
+- [发布与恢复](/zh/docs/design/publication/)
