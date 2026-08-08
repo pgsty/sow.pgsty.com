@@ -33,12 +33,12 @@
 }
 
 .silo-hero-title {
-  font-size: clamp(3rem, 5.15vw, 4.55rem);
-  line-height: 0.98;
+  font-size: clamp(2.65rem, 4.2vw, 3.75rem);
+  line-height: 0.92;
   letter-spacing: -0.025em;
 }
 
-.silo-hero-title .hero-title-line + .hero-title-line { margin-top: 0.12em; }
+.silo-hero-title .hero-title-line + .hero-title-line { margin-top: 0.06em; }
 .silo-hero-title .ini { display: inline-block; font-size: 1.07em; line-height: 0.9; vertical-align: -0.02em; }
 
 .hero-sub a {
@@ -566,7 +566,7 @@ html[data-theme="dark"] .adoption-logos a.evidence-logo-item:hover img {
 }
 
 @media (max-width: 980px) {
-  .silo-hero-title { font-size: clamp(3.2rem, 9vw, 5rem); }
+  .silo-hero-title { font-size: clamp(2.75rem, 8vw, 4rem); }
   .silo-board { min-height: 324px; }
   .silo-chip { width: 164px; }
   .interface-grid { grid-template-columns: repeat(3, 1fr); }
@@ -575,7 +575,8 @@ html[data-theme="dark"] .adoption-logos a.evidence-logo-item:hover img {
 }
 
 @media (max-width: 768px) {
-  .silo-hero-title { font-size: clamp(2.3rem, 11.5vw, 3.5rem); }
+  .silo-hero-title { font-size: clamp(2.25rem, 10vw, 3.25rem); }
+  .hero-sub span { display: block; }
   .silo-board-stage { padding: 0; }
   .silo-board { grid-template-rows: auto minmax(232px, 1fr) auto; min-height: 318px; }
   .silo-port { min-width: 100px; padding: 8px 9px; }
@@ -600,7 +601,7 @@ html[data-theme="dark"] .adoption-logos a.evidence-logo-item:hover img {
 }
 
 @media (max-width: 480px) {
-  .silo-hero-title { font-size: clamp(2.1rem, 11vw, 2.9rem); }
+  .silo-hero-title { font-size: clamp(2rem, 10.5vw, 2.75rem); }
   .eyebrow-zh { display: none; }
   .silo-board { grid-template-rows: auto minmax(212px, 1fr) auto; min-height: 296px; }
   .silo-board-top,

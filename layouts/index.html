@@ -3,7 +3,7 @@
 {{- $locale := default .Site.Language.Lang .Site.Language.Locale -}}
 {{- $metrics := hugo.Data.home.metrics -}}
 {{- $socialImage := "images/sow-social-card.png" | absURL -}}
-{{- $socialAlt := cond $zh "SOW — Pigsty 出品的 APT / YUM 软件仓库管理器" "SOW — APT / YUM package repository manager by Pigsty" -}}
+{{- $socialAlt := cond $zh "SOW — Software Object Warehouse，Pigsty 出品的软件仓库管理器" "SOW — Software Object Warehouse by Pigsty" -}}
 <!DOCTYPE html>
 <html lang="{{ $locale }}" class="no-js">
 <head>
@@ -59,7 +59,8 @@
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "SOW",
+    "name": "SOW — Software Object Warehouse",
+    "alternateName": "SOW",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Linux, macOS",
     "url": {{ .Site.BaseURL | jsonify | safeJS }},
@@ -167,20 +168,26 @@
 
             <h1 class="hero-title silo-hero-title anim" style="--d:1">
               <span class="hero-title-line"><b class="ini ini-y">S</b>oftware</span>
-              <span class="hero-title-line"><b class="ini ini-g">O</b>ver <b class="ini ini-i">W</b>arehouse</span>
+              <span class="hero-title-line"><b class="ini ini-g">O</b>bject</span>
+              <span class="hero-title-line"><b class="ini ini-i">W</b>arehouse</span>
             </h1>
 
-            <p class="hero-sub anim" style="--d:2">
+            <p class="hero-tagline anim" style="--d:2">
+              <strong>{{ if $zh }}一份入仓，处处交付。{{ else }}Store once. Serve everywhere.{{ end }}</strong>
+              <span>{{ if $zh }}播下软件包，长成可靠仓库。{{ else }}Sow packages. Grow repositories.{{ end }}</span>
+            </p>
+
+            <p class="hero-sub anim" style="--d:3">
               {{ if $zh }}
-              <span>一个二进制，创建并管理 APT 与 YUM 仓库</span>
-              <span>替代 createrepo_c 与 reprepro，由 <a href="https://pigsty.cc" target="_blank" rel="noopener">Pigsty 社区</a>维护</span>
+              <span>一个二进制，管理 APT 与 YUM 仓库。</span>
+              <span>无需 createrepo_c 与 reprepro，由 <a href="https://pigsty.cc" target="_blank" rel="noopener">Pigsty</a> 维护</span>
               {{ else }}
-              <span>One binary that builds and manages APT &amp; YUM repositories</span>
-              <span>createrepo_c and reprepro, replaced — by the <a href="https://pigsty.io" target="_blank" rel="noopener">Pigsty Community</a></span>
+              <span>One binary for APT &amp; YUM repositories.</span>
+              <span>No createrepo_c. No reprepro. Built by <a href="https://pigsty.io" target="_blank" rel="noopener">Pigsty</a>.</span>
               {{ end }}
             </p>
 
-            <div class="hero-ctas anim" style="--d:3">
+            <div class="hero-ctas anim" style="--d:4">
               <a href="{{ relLangURL "docs/" }}" class="btn btn-primary"><i class="fas fa-book-open" aria-hidden="true"></i> {{ if $zh }}浏览文档{{ else }}Documentation{{ end }}</a>
               <a href="{{ relLangURL "download/" }}" class="btn btn-ghost"><i class="fas fa-download" aria-hidden="true"></i> {{ if $zh }}下载安装{{ else }}Download &amp; Install{{ end }}</a>
             </div>
@@ -222,7 +229,7 @@
       <div class="landing-container">
         <div class="section-head section-head--compact" data-reveal>
           <p class="section-eyebrow"><span class="silkscreen">PRODUCT FACTS</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title section-title--sm" id="metrics-title">{{ if $zh }}一个二进制覆盖的范围{{ else }}What a single binary covers{{ end }}</h2>
+          <h2 class="section-title section-title--sm" id="metrics-title">{{ if $zh }}一个二进制，四项事实{{ else }}One Binary. Four Facts.{{ end }}</h2>
         </div>
 
         <div class="stats-grid" data-reveal>
@@ -250,14 +257,14 @@
       <div class="landing-container">
         <div class="section-head" data-reveal>
           <p class="section-eyebrow"><span class="silkscreen">{{ if $zh }}价值主张{{ else }}VALUE PROPOSITION{{ end }}</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title">{{ if $zh }}把发包这件事，收进一个二进制{{ else }}Everything a repository needs, in one executable{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}面向自己维护软件源的运维者：不装工具链，不起常驻服务，不猜测状态。{{ else }}For operators who host their own package feeds—no toolchain to install, no daemon to run, no guessing about state.{{ end }}</p>
+          <h2 class="section-title">{{ if $zh }}仓库所需，尽在其中{{ else }}Everything a Repository Needs{{ end }}</h2>
+          <p class="section-subtitle">{{ if $zh }}面向自建软件源：不要工具链，不起常驻服务，不猜状态。{{ else }}For operators running package feeds: no toolchain, no daemon, no guesswork.{{ end }}</p>
         </div>
 
         <div class="module-row" data-reveal>
           <div class="module-content">
             <p class="module-ref silkscreen">01 · {{ if $zh }}双引擎{{ else }}TWO ENGINES{{ end }}</p>
-            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/plain/" }}">{{ if $zh }}平面仓库与托管工作区{{ else }}Flat Repositories and Managed Workspaces{{ end }}</a></h3>
+            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/plain/" }}">{{ if $zh }}平面与托管，两种模式{{ else }}Plain or Managed{{ end }}</a></h3>
             <p class="module-motto"><span aria-hidden="true">◇</span> {{ if $zh }}一条命令起步，一套模型长跑{{ else }}One command to start. One model to grow into{{ end }}</p>
             <ul class="module-list">
               <li>{{ if $zh }}<strong>Plain</strong>：<code>sow create</code> 就地索引一个放着 rpm / deb 的目录{{ else }}<strong>Plain</strong>: <code>sow create</code> indexes a directory of rpm / deb files in place{{ end }}</li>
@@ -284,7 +291,7 @@
         <div class="module-row module-row--reverse" data-reveal>
           <div class="module-content">
             <p class="module-ref silkscreen">02 · {{ if $zh }}包池与视图{{ else }}POOL AND VIEWS{{ end }}</p>
-            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/views/" }}">{{ if $zh }}一份包体，多个架构视图{{ else }}One Payload, Many Architecture Views{{ end }}</a></h3>
+            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/views/" }}">{{ if $zh }}一份包体，多个视图{{ else }}One Payload, Many Views{{ end }}</a></h3>
             <p class="module-motto"><span aria-hidden="true">↔</span> {{ if $zh }}包池持有内容，视图只是投影{{ else }}The pool owns the bytes. Views are projections{{ end }}</p>
             <ul class="module-list">
               <li>{{ if $zh }}Debian 风格 <code>pool/</code> 包池，内容不可变、按首字母分组{{ else }}A Debian-style <code>pool/</code> holds immutable payloads, grouped by initial{{ end }}</li>
@@ -309,7 +316,7 @@
         <div class="module-row" id="releases" data-reveal>
           <div class="module-content">
             <p class="module-ref silkscreen">03 · {{ if $zh }}签名与信任{{ else }}SIGNING AND TRUST{{ end }}</p>
-            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/signing/" }}">{{ if $zh }}两条独立的信任链{{ else }}Two Independent Trust Chains{{ end }}</a></h3>
+            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/signing/" }}">{{ if $zh }}两条独立信任链{{ else }}Two Trust Chains{{ end }}</a></h3>
             <p class="module-motto"><span aria-hidden="true">▦</span> {{ if $zh }}元数据签名与包签名，各管各的{{ else }}Metadata signatures and package signatures, kept apart{{ end }}</p>
             <ul class="module-list">
               <li>{{ if $zh }}元数据签名在进程内完成：<code>repomd.xml.asc</code>、<code>InRelease</code>、<code>Release.gpg</code>{{ else }}Metadata is signed in-process: <code>repomd.xml.asc</code>, <code>InRelease</code>, <code>Release.gpg</code>{{ end }}</li>
@@ -337,7 +344,7 @@
         <div class="module-row module-row--reverse" data-reveal>
           <div class="module-content">
             <p class="module-ref silkscreen">04 · {{ if $zh }}事务与审计{{ else }}TRANSACTIONS AND AUDIT{{ end }}</p>
-            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/transactions/" }}">{{ if $zh }}中断之后，仓库仍然是完整的{{ else }}Interrupt It. The Repository Stays Whole{{ end }}</a></h3>
+            <h3 class="module-title"><a href="{{ relLangURL "docs/feature/transactions/" }}">{{ if $zh }}中断不破坏仓库{{ else }}Crash-Safe by Design{{ end }}</a></h3>
             <p class="module-motto"><span aria-hidden="true">＋</span> {{ if $zh }}先记意图，再动文件{{ else }}Record the intent, then touch the files{{ end }}</p>
             <ul class="module-list">
               <li>{{ if $zh }}写操作先落 journal，崩溃后由下一条写命令前滚或回滚{{ else }}Writes are journaled first; the next write command rolls them forward or back{{ end }}</li>
@@ -367,8 +374,8 @@
       <div class="landing-container">
         <div class="section-head" data-reveal>
           <p class="section-eyebrow"><span class="silkscreen">COMMAND SURFACE</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title">{{ if $zh }}一套命令，覆盖仓库的一生{{ else }}One command set for the whole repository lifecycle{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}创建、加包、构建、校验、审计——每个动词都有确定的退出码和可选的 JSON 输出。{{ else }}Create, add, build, check, audit—every verb has a defined exit code and an optional JSON envelope.{{ end }}</p>
+          <h2 class="section-title">{{ if $zh }}一套 CLI，覆盖完整生命周期{{ else }}One CLI for the Whole Lifecycle{{ end }}</h2>
+          <p class="section-subtitle">{{ if $zh }}创建、加包、构建、校验、审计——全程都有确定的退出码与可选 JSON。{{ else }}Create, add, build, check, audit—defined exit codes and optional JSON throughout.{{ end }}</p>
           <div class="section-links">
             <a href="{{ relLangURL "docs/reference/cli/" }}">{{ if $zh }}命令行参考{{ else }}CLI Reference{{ end }} →</a>
             <a href="{{ relLangURL "docs/reference/config/" }}">{{ if $zh }}配置文件{{ else }}Configuration{{ end }} →</a>
@@ -404,8 +411,8 @@
       <div class="landing-container">
         <div class="section-head" data-reveal>
           <p class="section-eyebrow"><span class="silkscreen">SCOPE</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
-          <h2 class="section-title">{{ if $zh }}一份刻意收窄的范围{{ else }}A deliberately narrow scope{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}SOW 只做本地仓库的创建与维护。下面右侧不是待办清单，是明确的非目标。{{ else }}SOW builds and maintains local repositories. The column on the right is not a backlog—those are explicit non-goals.{{ end }}</p>
+          <h2 class="section-title">{{ if $zh }}专注，源于取舍{{ else }}Focused by Design{{ end }}</h2>
+          <p class="section-subtitle">{{ if $zh }}SOW 专注本地仓库；右侧列的是明确非目标，不是待办清单。{{ else }}SOW builds local repositories. The right column lists intentional non-goals, not a backlog.{{ end }}</p>
         </div>
         <div class="promise-grid" data-reveal>
           <article class="promise-card promise-card--yes">
@@ -427,7 +434,7 @@
         <div class="section-head" data-reveal>
           <p class="section-eyebrow"><span class="silkscreen">DOWNLOAD</span><span class="eyebrow-trace" aria-hidden="true"></span></p>
           <h2 class="section-title">{{ if $zh }}获取 SOW{{ else }}Get SOW{{ end }}</h2>
-          <p class="section-subtitle">{{ if $zh }}取一个与你平台匹配的二进制，或者用 Go 工具链自己构建一个。两条路径都不需要额外运行时。{{ else }}Take a prebuilt binary for your platform, or build one with the Go toolchain. Neither path needs an extra runtime.{{ end }}</p>
+          <p class="section-subtitle">{{ if $zh }}下载静态二进制，或用 Go 自行构建；两条路径都不需要额外运行时。{{ else }}Download a static binary or build with Go. Neither path needs an extra runtime.{{ end }}</p>
         </div>
 
         <div class="product-choice-grid" aria-label="{{ if $zh }}选择安装方式{{ else }}Choose an install path{{ end }}">

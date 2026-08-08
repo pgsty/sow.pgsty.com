@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
-  <title id="title">SOW — self-contained APT / YUM repository manager</title>
-  <desc id="desc">SOW by Pigsty: one static binary that builds and manages APT and YUM package repositories.</desc>
+  <title id="title">SOW — Software Object Warehouse</title>
+  <desc id="desc">Software Object Warehouse by Pigsty. Store once. Serve everywhere.</desc>
 
   <defs>
     <linearGradient id="card-leaf" x1="820" y1="470" x2="1090" y2="180" gradientUnits="userSpaceOnUse">
@@ -42,8 +42,8 @@
 
   <text x="82" y="310" fill="#2ed3bd" font-family="Arial" font-size="166" font-weight="800">SOW</text>
   <rect x="86" y="341" width="600" height="3" fill="#0d7f77"/>
-  <text x="86" y="397" fill="#f2f8fb" font-family="Arial" font-size="30" font-weight="700" letter-spacing="0.8">APT / YUM REPOSITORY MANAGER</text>
-  <text x="86" y="450" fill="#a9bac5" font-family="Arial" font-size="24">One binary  ·  Two formats  ·  No createrepo_c, no reprepro</text>
+  <text x="86" y="397" fill="#f2f8fb" font-family="Arial" font-size="30" font-weight="700" letter-spacing="0.8">SOFTWARE OBJECT WAREHOUSE</text>
+  <text x="86" y="450" fill="#a9bac5" font-family="Arial" font-size="24">Store once. Serve everywhere.  ·  APT / YUM</text>
 
   <g transform="translate(86 520)">
     <rect width="322" height="52" rx="8" fill="#07121c" stroke="#14b8a6" stroke-opacity="0.45"/>

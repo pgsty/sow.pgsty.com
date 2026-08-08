@@ -239,7 +239,7 @@ main { display: block; }
 
 .section-subtitle {
   margin: 14px 0 0;
-  max-width: 720px;
+  max-width: none;
   color: var(--ink-soft);
   font-size: clamp(1rem, 1.25vw, 1.15rem);
 }
@@ -657,6 +657,25 @@ html[data-theme="dark"] .ini-s { color: #8b93a0; }
   font-size: clamp(1.02rem, 1.5vw, 1.22rem);
   color: var(--ink-soft);
 }
+.hero-tagline {
+  display: grid;
+  gap: 5px;
+  margin: -2px 0 20px;
+}
+.hero-tagline strong {
+  font-family: var(--font-head);
+  font-size: clamp(1.08rem, 1.8vw, 1.42rem);
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+.hero-tagline span {
+  font-family: var(--font-mono);
+  font-size: clamp(0.76rem, 1vw, 0.9rem);
+  line-height: 1.45;
+  letter-spacing: 0.045em;
+  color: var(--copper);
+}
 .hero-sub span { display: block; }
 .hero-sub strong { color: var(--ink); }
 .landing-page .hero-sub-link {
@@ -712,6 +731,10 @@ html[data-theme="dark"] .ini-s { color: #8b93a0; }
     margin-left: -12px;
     margin-right: -28px;
   }
+  .hero-tagline strong,
+  .hero-tagline span,
+  .hero-sub span,
+  .modules .module-title { white-space: nowrap; }
 }
 
 .board-stage {
@@ -944,7 +967,7 @@ html.js .anim {
   opacity: 0.85;
 }
 
-.module-title { margin: 0 0 6px; font-size: clamp(1.65rem, 2.6vw, 2.2rem); font-weight: 900; font-family: var(--font-head); line-height: 1.25; }
+.module-title { margin: 0 0 6px; font-size: clamp(1.45rem, 2.15vw, 1.9rem); font-weight: 900; font-family: var(--font-head); line-height: 1.2; }
 .module-title a { color: var(--ink); }
 .module-title a:hover { color: var(--pg-strong); }
 

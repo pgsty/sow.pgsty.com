@@ -2,7 +2,7 @@
 # Basics
 #=======================================#
 baseURL: https://sow.pgsty.com/
-title: SOW - Package Repository Manager by Pigsty
+title: SOW - Software Object Warehouse
 defaultContentLanguage: en
 defaultContentLanguageInSubdir: false
 enableRobotsTXT: true
@@ -33,7 +33,7 @@ languages:
     weight: 1
     title: SOW
     params:
-      description: Self-contained APT / YUM package repository manager by Pigsty
+      description: "Software Object Warehouse by Pigsty: a self-contained APT / YUM package repository manager."
       time_format_blog: 'January 02, 2006'
     menu:
       main:
@@ -68,7 +68,7 @@ languages:
     weight: 2
     title: SOW
     params:
-      description: Pigsty 出品的自包含 APT / YUM 软件仓库管理器
+      description: "SOW（Software Object Warehouse）：Pigsty 出品的自包含 APT / YUM 软件仓库管理器。"
       time_format_blog: '2006年01月02日'
     menu:
       main:
@@ -153,7 +153,7 @@ outputs:
 # Site parameters
 #=======================================#
 params:
-  description: Self-contained APT / YUM package repository manager by Pigsty. One binary that replaces createrepo_c and reprepro on Linux and macOS.
+  description: "SOW is the Software Object Warehouse by Pigsty: one self-contained binary that builds and manages APT / YUM package repositories on Linux and macOS."
   images:
     - images/sow-social-card.png
   version: 0.2.0
