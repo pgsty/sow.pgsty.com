@@ -10,7 +10,7 @@ weight: 10
 url: "/blog/release/sow-docs-launch/"
 ---
 
-**Published:** 2026-08-08 · **Version:** `sow 0.2.0`
+**Documentation published:** 2026-08-08 · **Version:** `sow 0.2.0` · **Release:** GitHub draft
 
 SOW is a self-contained package repository manager from [Pigsty](https://pigsty.io). One
 static Go binary creates and maintains APT (DEB) and YUM (RPM) repositories on Linux and
@@ -51,8 +51,9 @@ Integration workflow also exercises real APT/DNF clients and S3-compatible publi
 against pinned MinIO. A provider integration test is not proof that a particular public
 R2 account or CDN is configured; hosted deployment remains a separate check.
 
-The public v0.2.0 release contains Linux and macOS archives for amd64 and arm64, Linux RPM
-and DEB packages, and `SHA256SUMS`. SOW does not build repository payload packages,
+The current v0.2.0 draft contains Linux and macOS archives for amd64 and arm64, `1PGSTY`
+Linux RPM and DEB packages, and `SHA256SUMS`. Public availability begins only after an
+operator publishes that draft. SOW does not build repository payload packages,
 publish a container image, coordinate multiple writers, act as a CDN, or generate
 modulemd, SQLite repodata, zchunk, or source-package indexes.
 

@@ -13,11 +13,11 @@ SOW 是一个静态可执行文件。没有安装器,没有要装的软件包,�
 
 ## 预编译二进制
 
-SOW v0.2.0 已发布到
-[GitHub Releases](https://github.com/pgsty/sow/releases/tag/v0.2.0),包含四个 Linux/macOS
-归档、Linux RPM/DEB 包与 `SHA256SUMS`。自动下载前,仍应确认 Release 条目中确实存在
-匹配的归档与校验和;源码 revision 或 tag 本身不能证明资产已经上传。下载与你的操作系统
-和 CPU 匹配的归档,解压后放到位:
+SOW v0.2.0 当前以 **Draft** 形式暂存在
+[GitHub Releases](https://github.com/pgsty/sow/releases)。草稿内已有四个 Linux/macOS
+归档、`1PGSTY` Linux RPM/DEB 包与 `SHA256SUMS`,但 Draft 资产不是公共下载面。
+在操作者手工公开草稿之前,请按下文从源码构建。公开后,自动下载前仍要确认 Release 条目中
+确实存在匹配的归档与校验和,再下载对应归档并解压到位:
 
 v0.2.0 不发布 Docker 或其他容器镜像。
 

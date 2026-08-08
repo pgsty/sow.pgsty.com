@@ -31,11 +31,11 @@ fsync 与原子 rename 契约。已提交的公共 `pool/ + dists/` 树没有视
 
 ## 下载发行版本
 
-SOW v0.2.0 已发布到
-[GitHub Releases 页面](https://github.com/pgsty/sow/releases/tag/v0.2.0),包含四个
-Linux/macOS 归档、Linux RPM/DEB 包与 `SHA256SUMS`。自动下载前,仍应确认 Release 条目中
-确实存在匹配的归档与校验和;源码 revision 或 tag 本身不能证明资产已经上传。下载与你的
-操作系统和架构匹配的压缩包,解压后放到 `PATH` 上:
+SOW v0.2.0 当前以 **Draft** 形式暂存在
+[GitHub Releases 页面](https://github.com/pgsty/sow/releases)。草稿内已有四个
+Linux/macOS 归档、`1PGSTY` Linux RPM/DEB 包与 `SHA256SUMS`,但 Draft 资产不是公共下载面。
+在操作者手工公开草稿之前,请按下文从源码构建。公开后,自动下载前仍要确认 Release 条目中
+确实存在匹配的归档与校验和,再把解压出的二进制放到 `PATH` 上:
 
 v0.2.0 不发布 Docker 或其他容器镜像。
 

@@ -33,12 +33,13 @@ uses no view-local hardlink aliases and can be copied or published normally.
 
 ## Download a release
 
-SOW v0.2.0 is published on the
-[GitHub releases page](https://github.com/pgsty/sow/releases/tag/v0.2.0) with four
-Linux/macOS archives, Linux RPM and DEB packages, and `SHA256SUMS`. Before automating a
-download, confirm that the release entry contains the matching archive and checksum; a
-source revision or tag alone does not prove that assets were uploaded. Extract the
-matching archive and move the binary onto your `PATH`:
+SOW v0.2.0 is currently staged as a **draft** on the
+[GitHub releases page](https://github.com/pgsty/sow/releases). The draft contains four
+Linux/macOS archives, `1PGSTY` Linux RPM and DEB packages, and `SHA256SUMS`, but draft
+assets are not a public download surface. Until an operator publishes the draft, build
+from source below. After publication, confirm that the release entry contains the
+matching archive and checksum before automating a download, then move the extracted
+binary onto your `PATH`:
 
 No Docker or other container image is published for v0.2.0.
 

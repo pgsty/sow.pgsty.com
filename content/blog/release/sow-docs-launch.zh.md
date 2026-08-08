@@ -10,7 +10,7 @@ weight: 10
 url: "/zh/blog/release/sow-docs-launch/"
 ---
 
-**发布日期:** 2026-08-08 · **版本:** `sow 0.2.0`
+**文档发布日期:** 2026-08-08 · **版本:** `sow 0.2.0` · **Release:** GitHub Draft
 
 SOW 是 [Pigsty](https://pigsty.cc) 出品的自包含软件仓库管理器。一个静态 Go 二进制
 即可在 Linux 与 macOS 上创建维护 APT(DEB)与 YUM(RPM)仓库,无需调用
@@ -47,8 +47,9 @@ Managed 工作区可以定义 `filesystem` 与 S3 兼容 `r2` 目标,再用 `sow
 Integration workflow 还用真实 APT/DNF 客户端与固定版本 MinIO 验证 S3 兼容发布。
 Provider 集成测试不等于某个公共 R2 账户或 CDN 已配置完成;托管部署仍需单独检查。
 
-公开的 v0.2.0 Release 包含 Linux/macOS 的 amd64/arm64 archive、Linux RPM/DEB 包与
-`SHA256SUMS`。SOW 不构建仓库包体、不发布容器镜像、不协调多写者、不充当 CDN,
+当前 v0.2.0 Draft 包含 Linux/macOS 的 amd64/arm64 archive、`1PGSTY` Linux RPM/DEB 包
+与 `SHA256SUMS`;只有操作者手工公开草稿后才成为公共下载面。SOW 不构建仓库包体、
+不发布容器镜像、不协调多写者、不充当 CDN,
 也不生成 modulemd、SQLite repodata、zchunk 或源码包索引。
 
 从[快速上手](/zh/docs/start/quickstart/)开始,查看[设计演进](/zh/docs/design/evolution/),
