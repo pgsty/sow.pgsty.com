@@ -1,4 +1,4 @@
-module github.com/pgsty/silo.pgsty.com
+module github.com/pgsty/sow.pgsty.com
 
 go 1.21
 

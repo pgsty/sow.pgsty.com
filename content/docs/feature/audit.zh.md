@@ -50,12 +50,14 @@ revision 前进到 5,generation 停在 4,`el9` 变 dirty,一个 18.7 MB 的 pend
 
 ## `check` —— 完整证明
 
-`check` 对选中的 Repository 或 Dist 按顺序做八层校验,不写任何东西:
+`check` 对选中的 Repository 或 Dist 做有序证明,不写任何东西。终态 v0.2.0 Repository
+报告九层:
 
 ```console
 $ sow check
 repository=pigsty status=clean ready_to_copy=true revision=4 generation=4
 config	ok=true	checked=5
+retained	ok=true	checked=0
 state	ok=true	checked=1
 public-modes	ok=true	checked=66
 package-bytes	ok=true	checked=5
@@ -68,6 +70,7 @@ generation-manifest	ok=true	checked=4
 | 层 | 它证明什么 |
 |---|---|
 | `config` | `sow.yml` 可解析,且与实际的 Dist、架构、签名可用性一致 |
+| `retained` | 每条显式保留 Generation 记录与冻结 manifest 都能验证 |
 | `state` | SQLite schema、迁移账本与关系完整性 |
 | `public-modes` | 每个公开文件与目录的权限位符合预期 |
 | `package-bytes` | 每个 pool 与 pending 对象的哈希与记录的 SHA-256 一致 |
@@ -88,16 +91,16 @@ integrity or recovery error: managed: repository is not ready to copy: repositor
 rc=5
 ```
 
-八层全过,退出码仍是 `5`。这个读法是对的:没有任何东西坏掉,但磁盘上的东西不是你要的东西,所以它还不能复制出去。这条命令就是该放进发布流水线的那条 —— `status` 告诉你现状,`check` 决定你发不发。
+终态各层全过,退出码仍是 `5`。这个读法是对的:没有任何东西坏掉,但磁盘上的东西不是你要的东西,所以它还不能复制出去。这条命令就是该放进发布流水线的那条 —— `status` 告诉你现状,`check` 决定你发不发。
 
-16 包工作区上八层全跑完约 0.12 s。`-j/--jobs N` 可并行哈希。
+16 包工作区约 0.12 s 是加入 retained/publication 检查之前的历史量级锚点,不能当作 v0.2.0
+基准。`-j/--jobs N` 可并行哈希。
 
 ## `changes` —— 交付计划
 
 ```console
 $ sow changes
 base=4 generation=5 dirty=false
-add	payload	dists/el9/x86_64/pool/v/vray/vray-5.44.1-1.x86_64.rpm	18787411	4bb5c796…
 add	payload	pool/v/vray/vray-5.44.1-1.x86_64.rpm	18787411	4bb5c796…
 add	metadata	dists/el9/x86_64/repodata/75fdd4f3…-primary.xml.gz	1089	75fdd4f3…
 add	metadata	dists/el9/x86_64/repodata/a8de7a88…-filelists.xml.gz	512	a8de7a88…

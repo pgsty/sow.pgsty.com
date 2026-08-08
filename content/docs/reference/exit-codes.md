@@ -336,7 +336,7 @@ if ! sow check -r pigsty; then
   exit 1
 fi
 
-rsync -a --hard-links --delete /srv/repo/pigsty/ mirror:/var/www/pigsty/
+rsync -a --delete /srv/repo/pigsty/ mirror:/var/www/pigsty/
 ```
 
 Two habits worth keeping: treat `4` as retryable rather than fatal, and never treat `6` as
@@ -345,5 +345,5 @@ a crash — it usually means your input, not SOW, needs to change.
 ## See also
 
 - [JSON Output](/docs/reference/json/) — the `errors` array and its `class` field
-- [`sow check`](/docs/reference/cli/build/) — the eight verification layers behind code `5`
+- [`sow check`](/docs/reference/cli/build/) — the ordered verification layers behind code `5`
 - [Transactions & Recovery](/docs/feature/transactions/) — what `recovering` and `error` mean

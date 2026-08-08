@@ -34,8 +34,8 @@ How SOW works: the Plain and Managed engines, package pools and architecture vie
 membership policy, signing, transactions, and auditing.
 {{< /doc-card >}}
 {{< doc-card title="Design" link="/docs/design/" >}}
-Architecture and decision records: ownership, the 0.3 single-payload model, publication,
-compatibility boundaries, and the evolution from v0.2.
+Architecture and decision records: ownership, the v0.2.0 single-payload model,
+publication, compatibility boundaries, and the evolution from v0.1.0.
 {{< /doc-card >}}
 {{< doc-card title="Reference" link="/docs/reference/" >}}
 Complete CLI reference, `sow.yml` configuration, package reference grammar, exit codes,

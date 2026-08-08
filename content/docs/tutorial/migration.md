@@ -397,8 +397,9 @@ Same size, same SHA-256, different `Filename`, no weak digests.
 | `--export=never` then `reprepro export` | `--skip` then `sow build` |
 | `reprepro _listchecksums` | `sow changes BASE` |
 
-reprepro's database has no counterpart you need to manage: SOW's SQLite state is derived from the
-packages and the configuration, and `sow check` proves it still matches the tree.
+SOW owns one authoritative SQLite state database per Repository. Do not copy or edit it as
+public content; `sow check` proves that the recorded Generation, configuration, metadata,
+and package tree still agree.
 
 ## Full comparison
 
@@ -429,14 +430,15 @@ These are non-goals, not roadmap items:
 - `modulemd` / AppStream module metadata, and `repo2module` / `modifyrepo_c` workflows
 - SQLite repodata and `zchunk`
 - SRPM and DSC source indexes
-- remote publishing, CDN or object-storage endpoints
 - multi-host or multi-writer operation
-- snapshots, freezes, and channels
+- implicit channel promotion semantics (a Dist name is an opaque label)
+- acting as an HTTP server or CDN
 - a web UI or any long-running service
 - building packages
 
-SOW builds and manages repositories on a local POSIX filesystem, with one writer at a time. If a
-requirement above is load-bearing for you, keep the tool that provides it.
+SOW builds the authoritative workspace on a local POSIX filesystem with one writer at a
+time, and can publish verified generations to configured filesystem or R2 targets. If a
+remaining non-goal above is load-bearing for you, keep the tool that provides it.
 
 ## Where to go next
 

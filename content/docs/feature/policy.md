@@ -136,7 +136,11 @@ item input="pkg/libpq5_18.4-1.bookworm_amd64.deb" status=accepted format=deb coo
 Convergence is one-directional and it is stated as an invariant: **tightening policy can remove members; loosening policy never restores them.** That asymmetry is what makes `build` safe to run at any time. If it were symmetric, editing `sow.yml` could silently republish a package you deliberately withdrew — which is exactly the failure you do not want in a security update.
 
 {{% alert title="Withdrawing a package for real" color="warning" %}}
-`sow rm` removes the membership, not the pool bytes. The package disappears from every index and every architecture view, so clients can no longer resolve or download it through this repository. The file itself stays in `pool/` — there is no garbage collection in this release. If you must guarantee the bytes are gone from a mirror, delete them from the served copy yourself after the build.
+`sow rm` removes membership, not pool bytes. The package disappears from every index, so
+clients can no longer resolve it through the repository. Run `sow gc` only after the
+payload becomes unreachable from current, retained, migration, and publication roots.
+For published targets, use `sow gc TARGET`; filesystem deletion is conditional and R2 is
+report-only. Do not manually delete canonical pool files behind SOW's state.
 {{% /alert %}}
 
 ## Previewing a decision
@@ -154,3 +158,4 @@ sow rm patroni -r pgsql -d el9 -c
 - [`sow.yml` reference](/docs/reference/config/) — the complete policy schema
 - [`sow add` reference](/docs/reference/cli/add/) — per-item statuses and the partial-success exit code
 - [Pool & Architecture Views](/docs/feature/views/) — where the surviving members get rendered
+- [CLI: Publish, Retain, GC, and Export](/docs/reference/cli/publication/) — payload lifecycle controls

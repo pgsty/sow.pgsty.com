@@ -1,48 +1,48 @@
 ---
 title: "Design Evolution"
 linkTitle: "Design Evolution"
-description: "The path from the V1 repository experiment through v0.2 C2 views to the 0.3 single-payload architecture."
+description: "The path from the v0.1.0 repository experiment, through the unreleased C2 prototype, to the current v0.2.0 single-payload architecture."
 url: "/docs/design/evolution/"
 weight: 600
 icon: fa-solid fa-timeline
 ---
 
-SOW's old documents came from three materially different systems. Preserving them without
-a version boundary made contradictory statements look simultaneous. This page keeps the
-useful decisions while making their scope explicit.
+SOW's historical documents describe several materially different systems. Git history was
+cleaned up so the public version sequence is now simple: **v0.1.0** is the research
+baseline and **v0.2.0** is the current product. C2 existed between them as a development
+layout, but it was never a separately released product version.
 
 ## Timeline
 
 | Line | Primary problem | Physical model | Disposition |
 |---|---|---|---|
-| V1 experiment (July 2026) | absorb Pigsty's existing APT/YUM trees and remote publishing workflow | Git/CAS, route-aware projections, edge/provider contracts | archived research and implementation evidence |
-| v0.2.0 | ship a compact local Plain + Managed repository manager | root Pool plus C2 view-local RPM hardlinks | released; operational docs remain live |
-| 0.3 development | publish one canonical payload per Repository/target prefix | root Pool plus metadata-only views and target-scoped publication | implemented in source; release evidence pending |
+| v0.1.0 (2026-07-31) | absorb Pigsty's existing APT/YUM trees and explore remote publication | Git/CAS, route-aware projections, edge/provider contracts | historical research baseline |
+| Unreleased C2 prototype | deliver a compact Plain + Managed local repository manager and make default EL `reposync` work | root Pool plus view-local RPM hardlinks | migration input only; not the current layout |
+| v0.2.0 (2026-08-08) | keep one canonical payload per Repository/prefix and add target-scoped publication | root Pool plus metadata-only views, explicit export, filesystem/R2 targets | current release line |
 
-## What survived V1
+There is no v1 product release and no v0.3 product line. Lower-level identifiers such as
+`sow.cli/v1`, `single-payload-v1`, and `sow-rpm-leaf-v1` are wire or layout schema names,
+not Git tags.
 
-The broad V1 program explored repository adoption, remote publication, provider fencing,
-edge authorization, migration, recovery, and large-repository evidence. Much of its exact
+## What survived v0.1.0
+
+The v0.1.0 program explored repository adoption, remote publication, provider fencing,
+edge authorization, migration, recovery, and large-repository evidence. Its exact
 Git/CAS/route model was replaced, but several principles survived:
 
-- identity must be bound to final bytes;
-- configuration, local state, public state, and provider state need separate owners;
+- identity is bound to final bytes;
+- configuration, local state, public state, and provider state have separate owners;
 - publication is an ordered recoverable transaction, not an `rclone` side effect;
-- destructive remote work requires exact inventory and provider evidence;
-- a claim must name its source revision, environment, and verification layer.
+- destructive work requires exact inventory and provider evidence;
+- every claim names its source revision, environment, and verification layer.
 
-The old PRDs, 45 ADRs, implementation prompts, migration runbooks, and dated evidence are
-sealed in the source archive. They are not current command or layout documentation.
+The original PRDs, ADRs, reviews, and dated evidence remain available from the v0.1.0 tag
+and Git history. They are forensic inputs, not current command or layout documentation.
 
-## Why v0.2 chose C2
+## The C2 prototype and `reposync`
 
-v0.2 narrowed the product to a local single-binary manager with two isolated paths:
-`sow create` for flat repositories and a Managed Workspace for Package Objects, Dists,
-membership, signing, transactional builds, checks, and logs.
-
-For RPM views, tests showed that parent-relative hrefs worked for normal DNF but failed
-default EL `reposync`. Because mirroring was then a release gate, v0.2 chose view-local
-hardlink aliases:
+The pre-release C2 layout tested a Repository with a canonical root Pool and view-local
+RPM hardlink aliases:
 
 ```text
 pool/...                              canonical package
@@ -50,57 +50,53 @@ dists/el9/x86_64/pool/...             hardlink alias
 dists/el9/x86_64/repodata/...         href="pool/..."
 ```
 
-This was a sound decision for the stated v0.2 contract. It passed the relevant real-client
-matrix and kept local disk deduplicated on a same-filesystem POSIX tree.
+This made each RPM architecture leaf self-contained and allowed default EL `reposync` to
+mirror it. It also depended on same-filesystem hardlinks for local deduplication. Once the
+same tree was copied to object storage, every alias became another complete object, so the
+layout violated the stronger one-payload publication boundary.
 
-## Why 0.3 reverses that decision
+The C2 result remains useful compatibility evidence for that prototype. It is not evidence
+that the current canonical Repository supports default `reposync`.
 
-The layout becomes expensive when the same tree is published to object storage. Hardlink
-identity disappears, so every Dist/architecture alias uploads as another full object.
-Retention and snapshots would amplify the same package again.
+## Why v0.2.0 uses one payload
 
-0.3 changes the priority: one canonical payload per Repository/prefix is now invariant;
-default `reposync` against the canonical tree is no longer promised. A self-contained RPM
-leaf becomes an explicit external export with a visible duplication cost.
+v0.2.0 makes one canonical payload per Repository/publish prefix an invariant. RPM views
+contain metadata only and compute the relative path back to the root Pool:
 
 ```text
 pool/...                              only package payload
-dists/el9/x86_64/repodata/...         computed href="../../../pool/..."
+dists/el9/x86_64/repodata/...         href="../../../pool/..."
 ```
 
-This is not a correction to v0.2 history. It is a new contract optimized for a different
-delivery boundary.
+APT already uses archive-root-relative `Filename` values, so it naturally shares the same
+Pool. A complete `pool/ + dists/` Repository can be copied, archived, or uploaded without
+depending on inode identity. When a self-contained RPM leaf is required, `sow export
+rpm-leaf` creates an explicit external copy (or an opt-in trusted hardlink export) with a
+visible duplication cost.
 
 ## Migration boundary
 
-0.3 reads frozen v0.2 configuration/state for discovery and status, but ordinary writers
-do not upgrade it implicitly. Only explicit `sow repo migrate` enters the journaled
-C2-to-single transition:
+Some development workspaces were created with `schema: sow/v2` and the C2 physical
+layout. v0.2.0 creates `schema: sow/v3`. Read-only discovery can recognize the predecessor,
+but ordinary writers never upgrade it implicitly. Only `sow repo migrate` enters the
+journaled transition:
 
 ```text
 planned -> staged -> commit_intent -> pointer_rollforward
         -> grace -> alias_delete -> final_manifest -> done
 ```
 
-Before commit intent, `repo migrate --abort` may restore C2. After commit intent, recovery
-is forward-only. Legacy aliases remain through grace for clients holding old metadata, then
-are deleted from an exact recorded inventory without touching the root Pool.
+Before commit intent, `sow repo migrate --abort` may restore C2. After commit intent,
+recovery is forward-only. Legacy aliases remain through the grace window for clients
+holding old metadata, then are deleted from an exact recorded inventory without touching
+the root Pool.
 
-On a remote provider without safe conditional delete, migration uses a fresh empty prefix
-and an external route/cutover decision. The old prefix is retired as a whole; SOW does not
-pretend it was physically deduplicated.
+On a provider without safe conditional delete, move to a fresh non-overlapping prefix and
+retire the old prefix as a whole. SOW never invents evidence that an old remote tree was
+physically deduplicated.
 
-## Archive policy
+## History policy
 
-Historical files are preserved because they explain decisions and provide dated evidence,
-not because every file deserves a navigation entry. The source archive is immutable in
-spirit:
-
-- do not edit an old PASS to match a new implementation;
-- add a new versioned result instead;
-- preserve negative PoCs, since rejected alternatives explain the chosen design;
-- use this site for maintained design and user documentation;
-- use Git history and the sealed archive for forensic detail.
-
-This separation leaves one place to learn the product without discarding the reasoning
-that produced it.
+Historical files explain decisions; maintained pages explain the product. Do not rewrite
+an old test result to match a new implementation. Record new behavior in the current docs
+and CHANGELOG, while using version tags and Git history for the original evidence.

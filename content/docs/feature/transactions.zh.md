@@ -137,7 +137,7 @@ payload  →  metadata  →  pointer  →  delete
 | `built` | 指针与目录已耐久,前滚提交数据库行 |
 | `done` | 数据库、config 与树同代;清理 stage,重复恢复是空操作 |
 
-这套规则的验收方式是在多个不同时机向 `sow add` 发送 `SIGKILL`。每一次,`status` 都报告 `recovering`,下一条写命令都先恢复该 Operation 再执行自身,最终 `check` 八层全过,公开树从未撕裂。
+这套规则的验收方式是在多个不同时机向 `sow add` 发送 `SIGKILL`。每一次,`status` 都报告 `recovering`,下一条写命令都先恢复该 Operation 再执行自身,最终 `check` 全部层通过,公开树从未撕裂。
 
 ```console
 $ sow status

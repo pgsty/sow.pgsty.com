@@ -35,7 +35,7 @@ cat sow.yml
 ```
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -80,7 +80,7 @@ created trixie: format=deb architectures=x86_64,aarch64 members=0/0 generation=2
 Both Dists inherit the workspace architecture list, and `sow.yml` now records them:
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -194,13 +194,8 @@ bytes stay in the pool, so re-adding it later costs nothing.
 pigsty/dists/
 ├── el9/
 │   ├── x86_64/
-│   │   ├── pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm
-│   │   ├── pool/p/pev2/pev2-1.23.0-1.noarch.rpm
-│   │   ├── pool/p/pgbouncer/pgbouncer-1.25.2-43PGDG.rhel9.8.x86_64.rpm
 │   │   └── repodata/{repomd.xml, …}
 │   └── aarch64/
-│       ├── pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.aarch64.rpm
-│       ├── pool/p/pev2/pev2-1.23.0-1.noarch.rpm
 │       └── repodata/{repomd.xml, …}
 └── trixie/
     ├── Release
@@ -209,22 +204,21 @@ pigsty/dists/
         └── binary-arm64/{Packages, Packages.gz, by-hash/SHA256/…}
 ```
 
-Each RPM architecture view contains its native packages plus the `noarch` ones — `pev2`
-appears in both. Those view files are hardlinks to the root pool, not copies, so the
-`noarch` package has a link count of three (root pool plus two views) and occupies disk
-space once:
+RPM architecture directories contain metadata only. Their `primary.xml.gz` records native
+packages plus `noarch` packages, but every payload remains solely in the root pool. Inspect
+one location with:
 
 ```bash
-stat -c '%h %n' pigsty/pool/p/pev2/pev2-1.23.0-1.noarch.rpm
+gzip -cd pigsty/dists/el9/x86_64/repodata/*-primary.xml.gz | grep '<location '
 ```
 
 ```console
-3 pigsty/pool/p/pev2/pev2-1.23.0-1.noarch.rpm
+<location href="../../../pool/p/pev2/pev2-1.23.0-1.noarch.rpm"/>
 ```
 
-This is why `pool/` and `dists/` must share a filesystem. It also means package locations
-in `repodata` are plain relative paths like `pool/p/pev2/…` with no `..` escaping the view
-root, which is what lets `dnf reposync` mirror the repository correctly.
+Ordinary DNF/YUM resolves this path from the architecture view. Default `dnf reposync`
+rejects the parent traversal; use `sow export rpm-leaf` when a self-contained mirror leaf
+is required.
 
 The DEB side does not need view directories: `Packages` carries a `Filename:` field
 pointing at the repository pool directly.
@@ -271,9 +265,9 @@ repository=pigsty status=clean ready_to_copy=true revision=4 generation=4 dirty_
 `ready_to_copy=true` is the signal you want before an `rsync`: the published tree is
 complete and internally consistent, so copying it now yields a working repository.
 
-`sow check` is the expensive read — a full eight-layer proof that walks configuration,
-database schema, package bytes, memberships, indexes, signatures, and the generation
-manifest:
+`sow check` is the expensive read — an ordered proof that walks configuration, retained
+roots, database state, public modes, package bytes, memberships, indexes, signatures, and
+the generation manifest:
 
 ```bash
 sow check
@@ -282,6 +276,7 @@ sow check
 ```console
 repository=pigsty status=clean ready_to_copy=true revision=4 generation=4
 config	ok=true	checked=5
+retained	ok=true	checked=0
 state	ok=true	checked=1
 public-modes	ok=true	checked=72
 package-bytes	ok=true	checked=7

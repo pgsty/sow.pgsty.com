@@ -32,7 +32,7 @@ initialized /srv/repo: config_created=true repositories_initialized=0 dists_init
 
 ```console
 cat sow.yml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -58,7 +58,7 @@ never be served over HTTP.
 
 `init` is designed to be safe to run repeatedly, in a provisioning script or by hand:
 
-1. **It writes `schema: sow/v2` and the default `architectures: [x86_64, aarch64]`** when creating a
+1. **It writes `schema: sow/v3` and the default `architectures: [x86_64, aarch64]`** when creating a
    new config.
 2. **It never creates a Repository on its own.** Use [`sow repo new`](/docs/reference/cli/repo/), or
    declare one in `sow.yml` first.
@@ -80,7 +80,7 @@ SQLite databases and empty indexes for them. Already-initialized objects are ski
 tell you exactly what this run did.
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures: [x86_64, aarch64]
 
 repos:

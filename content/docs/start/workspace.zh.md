@@ -33,7 +33,7 @@ cat sow.yml
 ```
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -75,7 +75,7 @@ created trixie: format=deb architectures=x86_64,aarch64 members=0/0 generation=2
 两个 Dist 都继承了工作区的架构列表,`sow.yml` 也随之更新:
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -184,13 +184,8 @@ RPM 则按包名分组。
 pigsty/dists/
 ├── el9/
 │   ├── x86_64/
-│   │   ├── pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm
-│   │   ├── pool/p/pev2/pev2-1.23.0-1.noarch.rpm
-│   │   ├── pool/p/pgbouncer/pgbouncer-1.25.2-43PGDG.rhel9.8.x86_64.rpm
 │   │   └── repodata/{repomd.xml, …}
 │   └── aarch64/
-│       ├── pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.aarch64.rpm
-│       ├── pool/p/pev2/pev2-1.23.0-1.noarch.rpm
 │       └── repodata/{repomd.xml, …}
 └── trixie/
     ├── Release
@@ -199,21 +194,19 @@ pigsty/dists/
         └── binary-arm64/{Packages, Packages.gz, by-hash/SHA256/…}
 ```
 
-每个 RPM 架构视图包含本架构的包**加上** `noarch` 包 —— `pev2` 在两个视图里都出现。
-视图里的这些文件是指向根包池的硬链接,不是副本,所以那个 `noarch` 包的链接数是 3
-(根包池 + 两个视图),磁盘上只占一份空间:
+RPM 架构目录只含元数据。`primary.xml.gz` 会列出本架构原生包与 `noarch` 包,但所有包体
+只存在根包池中。可以这样查看位置:
 
 ```bash
-stat -c '%h %n' pigsty/pool/p/pev2/pev2-1.23.0-1.noarch.rpm
+gzip -cd pigsty/dists/el9/x86_64/repodata/*-primary.xml.gz | grep '<location '
 ```
 
 ```console
-3 pigsty/pool/p/pev2/pev2-1.23.0-1.noarch.rpm
+<location href="../../../pool/p/pev2/pev2-1.23.0-1.noarch.rpm"/>
 ```
 
-这就是 `pool/` 与 `dists/` 必须同文件系统的原因。它同时带来一个好处:`repodata` 里的包位置是
-`pool/p/pev2/…` 这样的普通相对路径,不含逃出视图根的 `..`,而这正是 `dnf reposync`
-能正确镜像该仓库的前提。
+普通 DNF/YUM 会从架构视图解析这个路径。默认 `dnf reposync` 会拒绝父目录跳转;
+需要自包含镜像 leaf 时使用 `sow export rpm-leaf`。
 
 DEB 侧不需要视图目录:`Packages` 里的 `Filename:` 字段直接指向仓库包池。
 
@@ -257,8 +250,8 @@ repository=pigsty status=clean ready_to_copy=true revision=4 generation=4 dirty_
 `ready_to_copy=true` 就是你 `rsync` 之前要确认的信号:公开树完整且自洽,此刻复制走能得到
 一个可用的仓库。
 
-`sow check` 是昂贵读取面 —— 完整的八层证明,逐层核对配置、数据库 schema、包体字节、
-成员关系、索引、签名与代际清单:
+`sow check` 是昂贵读取面 —— 一组有序证明,逐层核对配置、保留根、数据库状态、公共权限、
+包体字节、成员关系、索引、签名与代际清单:
 
 ```bash
 sow check
@@ -267,6 +260,7 @@ sow check
 ```console
 repository=pigsty status=clean ready_to_copy=true revision=4 generation=4
 config	ok=true	checked=5
+retained	ok=true	checked=0
 state	ok=true	checked=1
 public-modes	ok=true	checked=72
 package-bytes	ok=true	checked=7

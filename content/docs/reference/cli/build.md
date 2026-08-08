@@ -135,12 +135,15 @@ Generation.
 
 ## sow check
 
-Full, read-only verification of the selected Repository and Dists, reported in eight layers.
+Full, read-only verification of the selected Repository and Dists. A terminal v0.2.0
+Repository reports nine ordered layers; an active layout transition reports its dedicated
+transition layer and remains not ready.
 
 ```console
 sow check
 repository=pigsty status=clean ready_to_copy=true revision=5 generation=5
 config	ok=true	checked=5
+retained	ok=true	checked=0
 state	ok=true	checked=1
 public-modes	ok=true	checked=67
 package-bytes	ok=true	checked=8
@@ -153,6 +156,7 @@ generation-manifest	ok=true	checked=5
 | Layer | What it verifies | `checked` counts |
 |---|---|---|
 | `config` | `sow.yml` parses and validates for this Repository | configuration objects |
+| `retained` | Explicit retained Generation records and frozen manifests verify | retained records |
 | `state` | SQLite `quick_check`, foreign keys, and journal/recovery evidence | always 1 |
 | `public-modes` | File and directory permissions across the served tree | inspected paths |
 | `package-bytes` | SHA-256 of every pool and pending payload | package objects |
@@ -200,7 +204,6 @@ Prints the physical file changes between two Built Generations, as a delivery pl
 ```console
 sow changes
 base=4 generation=5 dirty=false
-add	payload	dists/el9/x86_64/pool/c/centos-release/centos-release-6-0.el6.centos.5.x86_64.rpm	19776	ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
 add	payload	pool/c/centos-release/centos-release-6-0.el6.centos.5.x86_64.rpm	19776	ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
 add	metadata	dists/el9/x86_64/repodata/5bc463cb00bec4d6185ea593a6fa8f180f24d3251b498f5bbeb14875581c33cc-primary.xml.gz	1460	5bc463cb00bec4d6185ea593a6fa8f180f24d3251b498f5bbeb14875581c33cc
 update	pointer	dists/el9/x86_64/repodata/repomd.xml	1514	05d3d5bf0f9236626b22a8ae9c92853277fff506f5773fbc33316ea12683cf0b
@@ -227,8 +230,6 @@ under `pool/` and `dists/`, excluding `sow.yml` and `.sow/`:
 ```console
 sow changes 0
 base=0 generation=2 dirty=false
-add	payload	dists/el9/aarch64/pool/e/epel-release/epel-release-7-5.noarch.rpm	14524	d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab
-add	payload	dists/el9/x86_64/pool/e/epel-release/epel-release-7-5.noarch.rpm	14524	d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab
 add	payload	pool/e/epel-release/epel-release-7-5.noarch.rpm	14524	d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab
 add	metadata	dists/el9/aarch64/repodata/fb3777fe0da404b2ac78b26566e1eec95a4fc90f04b322e52925fc9baebb2764-primary.xml.gz	797	fb3777fe0da404b2ac78b26566e1eec95a4fc90f04b322e52925fc9baebb2764
 add	pointer	dists/el9/x86_64/repodata/repomd.xml	1511	16d334bc2b1c20c27aac9f3a353b97018a994e55ef45acc90fa50dcf5b8268a4

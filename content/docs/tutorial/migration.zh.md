@@ -379,8 +379,8 @@ SHA256: 923e440808f148f7e44a29fe4c036f836911afdfeffa9dd8cb2009918b614a21
 | `--export=never` 再 `reprepro export` | `--skip` 再 `sow build` |
 | `reprepro _listchecksums` | `sow changes BASE` |
 
-reprepro 那个需要你维护的数据库在这边没有对应物:SOW 的 SQLite 状态由包与配置推导而来,
-而 `sow check` 会证明它仍与树一致。
+SOW 每个 Repository 拥有一份权威 SQLite 状态数据库。不要把它作为公共内容复制或编辑;
+`sow check` 会证明记录的 Generation、配置、元数据与包体树仍然一致。
 
 ## 完整对比
 
@@ -410,14 +410,14 @@ provides、requires flags、files、changelog、header range 全部一致。只�
 - `modulemd` / AppStream 模块元数据,以及 `repo2module` / `modifyrepo_c` 流程
 - SQLite repodata 与 `zchunk`
 - SRPM 与 DSC 源码索引
-- 远端发布、CDN 或对象存储 endpoint
 - 多机或多写者运行
-- snapshot、freeze 与 channel
+- 隐式 channel 晋级语义(Dist 名只是普通标签)
+- 充当 HTTP 服务或 CDN
 - Web UI 或任何常驻服务
 - 造包
 
-SOW 在本地 POSIX 文件系统上建仓与管仓,同一时刻只有一个写者。如果上面某条对你是刚需,
-就继续用提供它的那个工具。
+SOW 在本地 POSIX 文件系统上维护权威工作区,同一时刻只有一个写者,并可把已验证 Generation
+发布到配置好的 filesystem 或 R2 目标。如果剩余某条非目标对你是刚需,就继续使用提供它的工具。
 
 ## 下一步去哪
 

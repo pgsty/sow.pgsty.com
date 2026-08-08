@@ -9,7 +9,7 @@ icon: fa-solid fa-table-list
 
 SOW is a self-contained software repository manager: a single static Go binary (`CGO_ENABLED=0`) that creates and maintains APT (DEB) and YUM (RPM) repositories on Linux and macOS. It does not call `createrepo_c`, `dpkg-scanpackages`, `reprepro`, or `modifyrepo_c`, and it does not run a daemon. This page is the map of what it covers; the rest of this section explains how each piece works.
 
-The current release is `sow 0.2.0-dev`.
+The current release is `sow 0.2.0`.
 
 ## Two execution paths
 
@@ -28,7 +28,10 @@ SOW gives you two ways to build a repository, and they are deliberately isolated
 
 Plain mode is the right choice when you have a directory of packages and want an index over it. Managed mode is the right choice when the same repository is going to be updated repeatedly over months, by policy, with an audit trail.
 
-Neither path knows anything about remote endpoints. A finished repository directory is just files — you serve it with any web server or copy it with `rsync`. See [Serve Repositories](/docs/tutorial/serving/).
+Plain mode ends with a local directory. Managed mode can likewise be served or copied as
+files, and can additionally publish a committed generation to a configured `filesystem`
+or `r2` target. See [Serve Repositories](/docs/tutorial/serving/) and the
+[Publication Model](/docs/design/publication/).
 
 ## Format coverage
 
@@ -63,7 +66,10 @@ The binary builds for `darwin` and `linux` on `amd64` and `arm64`. There is no r
 
 The only external programs SOW will ever invoke are `rpm` (for RPM package signing) and `gpg` (for `agent://` key references). A repository that uses no signing, or uses `file://`/`env://` metadata keys only, needs nothing installed beyond the `sow` binary itself.
 
-One hard requirement applies to Managed mode: a repository's `pool/` and its `dists/` views must live on the same POSIX filesystem, because views are hardlink projections. Crossing a device boundary is a hard failure, never a silent copy. See [Pool & Architecture Views](/docs/feature/views/).
+Managed workspaces must be built on a local POSIX filesystem because locks, fsync, and
+atomic rename are part of the transaction contract. The current `pool/ + dists/` layout
+does not use view-local hardlinks: `pool/` owns payloads and RPM views contain metadata
+only. See [Pool & Metadata Views](/docs/feature/views/).
 
 ## Client compatibility
 
@@ -75,7 +81,10 @@ Every combination below was exercised against a real client:
 | CentOS 7 `yum` | 3.4.3 | `makecache` and correct multi-version NEVRA listing |
 | Debian 13 `apt` | 3.0.3 | `update` with InRelease verification and by-hash fetch, then `install` |
 | Debian 12 `apt` | 2.6.1 | same, plus flat repositories via `[trusted=yes]` |
-| `dnf reposync` | EL9 | complete mirror following the `pool/` layout |
+
+Default `dnf reposync` is intentionally not listed as a canonical-layout client: its
+safe-write check rejects the `../../../pool/...` package hrefs. Use
+`sow export rpm-leaf` when that downstream contract is required.
 
 The full matrix, including the by-hash requirement of APT ≥ 1.2, is in [Compatibility](/docs/reference/compatibility/).
 
@@ -112,7 +121,7 @@ Measured on macOS arm64, cold:
 | `sow create` | 9 RPMs | 0.31 s |
 | `sow create` | 87 RPMs, 2.9 GB (full SHA-256) | 10.7 s |
 | `sow add` + automatic build | 9 RPMs, 31 MB | ~1.3 s |
-| `sow check` (all eight layers) | 16-package workspace | 0.12 s |
+| historical `sow check` before retained/publication layers | 16-package workspace | 0.12 s |
 
 Commands that parse, hash, render, or verify accept `-j/--jobs N`, defaulting to the logical CPU count. Parallelism never changes the output: final serialization runs in a fixed order, so the same input always produces the same bytes.
 
@@ -123,13 +132,16 @@ These are not missing features waiting to be built. They are excluded by design,
 - modulemd generation, injection, or passthrough
 - sqlite repodata and zchunk
 - SRPM / DSC source indexes
-- remote publishing, CDN, object storage, or endpoint configuration of any kind
 - multi-writer and multi-host operation
-- garbage collection, cross-repository deduplication
+- cross-repository deduplication
+- remote multi-writer coordination and acting as a CDN
+- destructive GC for R2 targets (R2 maintenance is report-only)
 - a serving daemon or a web UI
 - building packages
 
-SOW manages repositories on local disk and hands you a directory. What transports that directory is your choice.
+SOW manages the authoritative workspace, committed generations, explicit publication
+targets, retention roots, and conservative garbage collection. It does not replace the
+HTTP server or CDN that delivers the resulting public tree.
 
 ## Next
 

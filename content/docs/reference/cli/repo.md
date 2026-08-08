@@ -18,6 +18,7 @@ boundary.
 sow repo ls [-C DIR] [--json]
 sow repo new NAME [-C DIR] [-T DUR | -N] [--json]
 sow repo show [NAME] [-C DIR] [-r NAME] [--json]
+sow repo migrate [NAME] [--abort] [-j N] [-C DIR] [-r NAME] [-T DUR | -N] [--json]
 sow repo rm NAME [-f|--force] [-C DIR] [-T DUR | -N] [--json]
 ```
 
@@ -108,6 +109,33 @@ If you give both `NAME` and `-r`, they must agree; disagreement fails before any
 sow repo show demo -r empty
 operation rejected: repo show NAME "demo" and --repo "empty" select different repositories
 ```
+
+## sow repo migrate
+
+Migrates a repository created by the unreleased C2 prototype from view-local RPM aliases
+to the v0.2.0 single-payload layout. It rewrites RPM metadata to reach the root `pool/`,
+records a durable transition, advances the Generation, and changes `schema: sow/v2` to
+`schema: sow/v3`.
+
+```bash
+sow repo migrate pigsty
+```
+
+The operation is resumable. Before durable commit intent, `--abort` abandons the staged
+transition and leaves the live repository unchanged. After commit intent the transition is
+forward-only; rerun `repo migrate` until its grace and cleanup conditions complete.
+
+| Flag | Description | Default |
+|---|---|---|
+| `-j, --jobs N` | Parallel verification/render workers | logical CPUs |
+| `--abort` | Abandon a pre-commit migration | false |
+| `-C, --workdir DIR` | Workspace discovery start directory | current directory |
+| `-r, --repo NAME` | Select the repository when `NAME` is omitted | selection rules |
+| `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
+| `-N, --no-wait` | Fail immediately when the lock is held | false |
+| `--json` | Emit the versioned JSON envelope | false |
+
+New v0.2.0 workspaces already use the single-payload layout and do not need migration.
 
 ## sow repo rm
 

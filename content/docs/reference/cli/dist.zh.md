@@ -170,7 +170,7 @@ removed dist el9 from pgsql
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--json` | 输出版本化 JSON envelope | false |
 
-### pool 字节永远保留
+### 删除 Dist 不会删除 pool 字节
 
 删除 Dist 绝不会从 `pool/` 删包。整个 Dist 目录被移入恢复区后原子移除，包池完全不受影响：
 
@@ -182,7 +182,8 @@ find pgsql -type f
 pgsql/pool/e/epel-release/epel-release-7-5.noarch.rpm
 ```
 
-没有垃圾回收。失去引用的 pool 对象会一直留着，直到你删除整个仓库。
+失去引用的 pool 对象会继续保留,直到 `sow gc` 证明它不再被当前代、保留代、迁移、恢复与
+发布根引用。
 
 仓库的 `protected: true` 只封死仓库删除；受保护仓库上的常规 Dist 维护照常进行。
 

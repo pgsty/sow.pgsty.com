@@ -91,18 +91,13 @@ view — which is why `pev2` shows up under both `x86_64/` and `aarch64/`.
 ## One copy of the bytes
 
 Package payloads live once, in the repository's `pool/`, grouped Debian-style by first
-letter and source package. Architecture views reference those bytes with hardlinks rather
-than copies, so a `noarch` package present in two views has a link count of three and still
-occupies disk space once.
+letter and source package. Architecture views do not contain package aliases: RPM views
+contain only `repodata/`, and APT views contain `Packages`, `Release`, and by-hash metadata.
 
-This is why a repository's `pool/` and `dists/` must sit on the same filesystem. If
-hardlinks are unavailable or the target is on another device, SOW fails rather than
-silently copying. A plain `cp -r` or `rsync` that does not preserve hardlinks still yields
-a working repository — you just lose the deduplication.
-
-Because views hold real files, package locations inside `repodata` are relative paths like
-`pool/p/pev2/…` with no `..` escaping the view root. That detail is what lets
-`dnf reposync` mirror a SOW repository correctly.
+RPM metadata reaches the canonical bytes with a computed path such as
+`../../../pool/p/pev2/...`. Ordinary DNF and YUM clients support it. Default
+`dnf reposync` applies a stricter download-root rule and rejects it, so SOW exposes
+`sow export rpm-leaf` when a self-contained downstream leaf is required.
 
 Objects are identified by the SHA-256 of their exact bytes. Their logical **coordinate** —
 NEVRA for RPM, `name=version:arch` for DEB — comes from the RPM header or the Debian
@@ -204,7 +199,6 @@ sow changes 4
 
 ```console
 base=4 generation=5 dirty=false
-add	payload	dists/el9/x86_64/pool/a/asciinema/asciinema-3.2.1-1.x86_64.rpm	4429718	11f56fbd54f23ce1b8d8866c67a91e0819bac3fa22d2ace681b411ac0fe26703
 add	payload	pool/a/asciinema/asciinema-3.2.1-1.x86_64.rpm	4429718	11f56fbd54f23ce1b8d8866c67a91e0819bac3fa22d2ace681b411ac0fe26703
 add	metadata	dists/el9/x86_64/repodata/26435ad6857a58369efe0b5ddfb955c1023c0af7d2a2cde9501b877c41728d58-filelists.xml.gz	795	26435ad6857a58369efe0b5ddfb955c1023c0af7d2a2cde9501b877c41728d58
 update	pointer	dists/el9/x86_64/repodata/repomd.xml	1514	ce90e820933f3daab456904a4531b54466ef28c50fbc87b1a6863d8bb42c3ff6
@@ -252,7 +246,8 @@ Full details in [Exit Codes](/docs/reference/exit-codes/).
 
 - [Plain Flat Repositories](/docs/feature/plain/) — what `sow create` guarantees, and how determinism is achieved.
 - [Managed Workspaces](/docs/feature/managed/) — the three-layer model, fixed layout, and discovery rules.
-- [Pool & Architecture Views](/docs/feature/views/) — hardlink projection and reposync compatibility.
+- [Pool & Metadata Views](/docs/feature/views/) — canonical payload addressing and explicit reposync export.
+- [Publication Model](/docs/design/publication/) — target configuration, checkpoints, and GC boundaries.
 - [Membership Policy](/docs/feature/policy/) — `exclude` and `limit` semantics in detail.
 - [Signing Model](/docs/feature/signing/) — the two independent trust chains.
 - [Transactions & Recovery](/docs/feature/transactions/) — journals, locks, and crash behavior.

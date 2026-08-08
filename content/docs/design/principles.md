@@ -75,9 +75,9 @@ Standards compliance, ordinary client behavior, mirror-tool behavior, object-sto
 layout, proxy normalization, and filesystem semantics are different questions. SOW records
 them separately and uses a real client or provider for the claim being made.
 
-This principle is why v0.2 could accept a hardlink layout for `reposync`, while 0.3 can
-choose one remote object per package and explicitly move default `reposync` to an external
-compatibility export.
+This principle is why the pre-release C2 prototype could optimize for `reposync` with
+hardlink views, while v0.2.0 chooses one remote object per package and moves default
+`reposync` compatibility to an explicit external export.
 
 ## Evidence never upgrades itself
 
@@ -88,7 +88,7 @@ the relevant gate.
 
 ## Non-goals keep the model honest
 
-The 0.3 design does not promise cross-Repository deduplication, overlapping writers,
+v0.2.0 does not promise cross-Repository deduplication, overlapping writers,
 bucket-global coordination, arbitrary third-party mirror compatibility, or safe remote
 deletion on providers without an atomic conditional delete primitive. Excluding these is
 part of the safety contract, not an unfinished implementation detail.

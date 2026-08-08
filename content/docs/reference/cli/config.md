@@ -61,8 +61,11 @@ The schema version is pinned:
 
 ```console
 sow config check
-configuration error: load config "/srv/repo/sow.yml": config schema must be "sow/v2", got "sow/v1"
+configuration error: load config "/srv/repo/sow.yml": config schema must be "sow/v3", got "sow/v2"
 ```
+
+`sow/v2` belongs to the unreleased C2 layout. Use `sow repo migrate` for that transition;
+do not change the schema string by hand.
 
 `check` also verifies that every declared signing key reference resolves and is usable for signing —
 without ever printing key material. If you remove an architecture from the permit list while a Dist
@@ -74,7 +77,7 @@ Prints the effective configuration as YAML for the currently selected scope.
 
 ```console
 sow config show
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -106,7 +109,7 @@ Compare that with the file on disk, which carries only what you wrote:
 
 ```console
 cat sow.yml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -145,7 +148,7 @@ is actually in effect for this one Dist":
 
 ```console
 sow config show -r pigsty -d el9
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64

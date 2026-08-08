@@ -20,20 +20,24 @@ SOW 以单个静态可执行文件分发。所谓安装,就是把这一个文件
 | Linux | 支持 | 支持 |
 | macOS(Darwin) | 支持 | 支持 |
 
-不支持 Windows。SOW 依赖 POSIX 建议锁、硬链接与原子 `rename`,且只在本地 POSIX 文件系统上
+不支持 Windows。SOW 依赖 POSIX 建议锁与原子 `rename`,且只在本地 POSIX 文件系统上
 验证过 —— NFS 之类的网络文件系统不提供它所需的锁与持久化语义。
 
 {{% alert title="文件系统要求" color="info" %}}
-在 [Managed 托管模式](/zh/docs/start/workspace/)下,架构视图由包池以硬链接投影而来,
-因此同一仓库的 `pool/` 与 `dists/` 必须位于同一个文件系统。跨设备时 SOW 直接报错,
-不会静默退化成复制。Plain 平面模式没有这个约束。
+请在本地 POSIX 文件系统上构建 [Managed 工作区](/zh/docs/start/workspace/),以保证锁、
+fsync 与原子 rename 契约。已提交的公共 `pool/ + dists/` 树没有视图级硬链接 alias,
+可以普通复制或发布。
 {{% /alert %}}
 
 ## 下载发行版本
 
-各平台的预编译二进制发布在
-[GitHub Releases 页面](https://github.com/pgsty/sow/releases)。下载与你的操作系统和架构
-匹配的压缩包,解压后放到 `PATH` 上:
+SOW v0.2.0 已发布到
+[GitHub Releases 页面](https://github.com/pgsty/sow/releases/tag/v0.2.0),包含四个
+Linux/macOS 归档、Linux RPM/DEB 包与 `SHA256SUMS`。自动下载前,仍应确认 Release 条目中
+确实存在匹配的归档与校验和;源码 revision 或 tag 本身不能证明资产已经上传。下载与你的
+操作系统和架构匹配的压缩包,解压后放到 `PATH` 上:
+
+v0.2.0 不发布 Docker 或其他容器镜像。
 
 ```bash
 tar -xzf sow_*.tar.gz
@@ -44,7 +48,7 @@ sudo install -m 0755 sow /usr/local/bin/sow
 
 ## 从源码构建
 
-构建只需要 Go 工具链。克隆仓库并构建 `cmd/sow` 入口:
+构建需要 Go 1.26.5 或更高版本。克隆仓库并构建 `cmd/sow` 入口:
 
 ```bash
 git clone https://github.com/pgsty/sow.git
@@ -65,7 +69,7 @@ sow version
 ```
 
 ```console
-sow 0.2.0-dev darwin/arm64 go1.26.5
+sow 0.2.0 darwin/arm64 go1.26.5
 ```
 
 这一行给出 SOW 版本、二进制针对的平台,以及构建它的 Go 工具链版本。`sow --version` 输出相同内容。

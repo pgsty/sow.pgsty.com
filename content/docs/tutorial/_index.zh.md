@@ -25,7 +25,8 @@ dnf 客户端配置。
 生成专用 GPG 签名钥,为仓库元数据与 RPM 包签名,并配置客户端拒绝一切未签名内容。
 {{< /doc-card >}}
 {{< doc-card title="对外服务" link="/zh/docs/tutorial/serving/" >}}
-用 Nginx 通过 HTTP 发布整棵树、本地临时预览,以及在不丢硬链接去重的前提下拷到隔离主机。
+用 Nginx 通过 HTTP 发布整棵树、本地临时预览,并在不依赖硬链接身份的前提下把完整
+`pool/ + dists/` 树拷到隔离主机。
 {{< /doc-card >}}
 {{< doc-card title="从 createrepo_c / reprepro 迁移" link="/zh/docs/tutorial/migration/" >}}
 就地接管已有仓库、把 reprepro 归档搬进工作区,并看清到底什么变了、什么没变。

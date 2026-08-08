@@ -24,7 +24,7 @@ sow version
 ```
 
 ```console
-sow 0.2.0-dev darwin/arm64 go1.26.5
+sow 0.2.0 darwin/arm64 go1.26.5
 ```
 
 报错的话看[安装](/zh/docs/start/install/)。
@@ -57,7 +57,7 @@ initialized /home/you/repo: config_created=true repositories_initialized=0 dists
 `sow init` 写了一份最小 `sow.yml`:
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -186,75 +186,48 @@ sha256:5d0e1b7a72c72b37fab5047a85e4dddecd17d41e376b96300706b68f1b3d3607	rpm:pgbo
 `etcd-debuginfo` 和 `etcd-debugsource` 与 `etcd` 一起躺在 `pool/e/etcd/`。包池相对 Dist 是扁平的:
 一个对象、一个位置,无论多少 Dist 引用它。
 
-### 架构视图
+### 纯元数据架构视图
 
-`dnf` 读的不是包池。每个 Dist 会按架构渲染出视图:
+每个 Dist 按架构渲染一份元数据视图。`x86_64` 元数据包含原生 `x86_64` 与 `noarch`;
+`aarch64` 包含原生 `aarch64` 与 `noarch`。`dists/` 下没有 RPM 包体:
 
 ```bash
-find pigsty/dists/el9 -name "*.rpm" | sort
+find pigsty/dists/el9 -type f | sort
 ```
 
 ```console
-pigsty/dists/el9/aarch64/pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.aarch64.rpm
-pigsty/dists/el9/aarch64/pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm
-pigsty/dists/el9/aarch64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-pigsty/dists/el9/aarch64/pool/p/pgbouncer/pgbouncer-1.25.2-42PGDG.rhel9.6.aarch64.rpm
-pigsty/dists/el9/x86_64/pool/a/armadillo/armadillo-10.8.2-3.el9.x86_64.rpm
-pigsty/dists/el9/x86_64/pool/e/etcd/etcd-3.5.12-1.el8.x86_64.rpm
-pigsty/dists/el9/x86_64/pool/e/etcd/etcd-3.5.30-1.el9.x86_64.rpm
-pigsty/dists/el9/x86_64/pool/e/etcd/etcd-debuginfo-3.3.11-4.el8.x86_64.rpm
-pigsty/dists/el9/x86_64/pool/e/etcd/etcd-debugsource-3.3.11-4.el8.x86_64.rpm
-pigsty/dists/el9/x86_64/pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm
-pigsty/dists/el9/x86_64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
+pigsty/dists/el9/aarch64/repodata/<sha256>-filelists.xml.gz
+pigsty/dists/el9/aarch64/repodata/<sha256>-other.xml.gz
+pigsty/dists/el9/aarch64/repodata/<sha256>-primary.xml.gz
+pigsty/dists/el9/aarch64/repodata/repomd.xml
+pigsty/dists/el9/x86_64/repodata/<sha256>-filelists.xml.gz
+pigsty/dists/el9/x86_64/repodata/<sha256>-other.xml.gz
+pigsty/dists/el9/x86_64/repodata/<sha256>-primary.xml.gz
+pigsty/dists/el9/x86_64/repodata/repomd.xml
 ```
 
-`x86_64` 视图装 `x86_64` 加 `noarch`;`aarch64` 视图装 `aarch64` 加 `noarch`。`noarch` 不是第三种
-架构,而是一个中性(neutral)投影,会落进每个适用的视图。
-
-视图里的文件是指向根包池的硬链接,不是副本:
-
-```bash
-stat -c "%h %n" pigsty/pool/p/pev2/pev2-1.22.0-1.noarch.rpm \
-                pigsty/dists/el9/x86_64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm \
-                pigsty/dists/el9/aarch64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-```
-
-```console
-3 pigsty/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-3 pigsty/dists/el9/x86_64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-3 pigsty/dists/el9/aarch64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-```
-
-一个 inode,三个名字。一个 `noarch` 包出现在两个视图里,磁盘上只占一份空间。
-
-{{% alert title="硬链接是硬性要求" color="warning" %}}
-包池与视图必须位于同一个 POSIX 文件系统。硬链接不可用或路径跨越挂载点时,SOW 明确失败,
-不会悄悄退化成复制。把 `pool/` 放一个卷、`dists/` 放另一个卷是不行的。
-{{% /alert %}}
-
-### 为什么要有视图
-
-显而易见的替代方案是:只留一份物理包池,让包的 location 指向 `../../../pool/...`。这个方案对真实
-客户端做过实测,并被否决:`dnf makecache`、`repoquery`、`download` 和 `install` 全都能过,但
-`dnf reposync` 拒绝了——规范化后的本地目标逃出了它的 per-repository 下载根目录。
-
-最终采用的布局写的是不含 `..` 的安全相对路径:
+当前布局让所有包都回指唯一规范包池:
 
 ```bash
 gzip -dc pigsty/dists/el9/x86_64/repodata/*-primary.xml.gz | grep -o '<location href="[^"]*"'
 ```
 
 ```console
-<location href="pool/a/armadillo/armadillo-10.8.2-3.el9.x86_64.rpm"
-<location href="pool/e/etcd/etcd-3.5.12-1.el8.x86_64.rpm"
-<location href="pool/e/etcd/etcd-3.5.30-1.el9.x86_64.rpm"
-<location href="pool/e/etcd/etcd-debuginfo-3.3.11-4.el8.x86_64.rpm"
-<location href="pool/e/etcd/etcd-debugsource-3.3.11-4.el8.x86_64.rpm"
-<location href="pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm"
-<location href="pool/p/pev2/pev2-1.22.0-1.noarch.rpm"
+<location href="../../../pool/a/armadillo/armadillo-10.8.2-3.el9.x86_64.rpm"
+<location href="../../../pool/e/etcd/etcd-3.5.30-1.el9.x86_64.rpm"
+<location href="../../../pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm"
 ```
 
-所有路径都在视图目录内解析,所以 `reposync` 能正确镜像整个仓库。
+普通 `dnf makecache`、`repoquery`、`download` 与 `install` 能解析这些路径。
+默认 `dnf reposync` 不行:它的 safe-write 检查会拒绝落到 leaf 下载根上方的目标。
+需要自包含兼容产物时这样生成:
+
+```bash
+sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
+```
+
+导出目录会得到本地 `pool/`、改写后的元数据、manifest 与 `.sow-export.json` 完成标记,
+但不会改变规范仓库。
 
 ## 第 6 步:过滤噪声
 
@@ -264,7 +237,7 @@ gzip -dc pigsty/dists/el9/x86_64/repodata/*-primary.xml.gz | grep -o '<location 
 编辑 `~/repo/sow.yml`:
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -476,15 +449,16 @@ dnf install -y pev2
 这套配置已在 AlmaLinux 8/9/10 的 dnf4 与 CentOS 7 的 yum 3.4.3 上实测通过,后者对多版本 NEVRA
 列表的解析也正确。完整矩阵见[兼容性](/zh/docs/reference/compatibility/)。
 
-### 用 reposync 做镜像
+### 构建 reposync 兼容 leaf
 
-因为视图使用的是安全相对路径,`dnf reposync` 能完整镜像整个仓库:
+不要让默认 `dnf reposync` 直接读取规范纯元数据视图。先导出 leaf,再单独服务、复制与验证:
 
 ```bash
-reposync --repo=pigsty-el9 --download-metadata --downloadcomps -p /srv/mirror
+sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
+find /srv/export/el9-x86_64 -maxdepth 2 -type d | sort
 ```
 
-镜像会在视图下复现 `pool/` 布局。这正是被否决的那个布局过不去、而当前布局能过的那项检查。
+导出的 `repodata/` 使用本地 `pool/...` href,专门面向要求自包含仓库根的工具。
 
 ## 下一步去哪
 

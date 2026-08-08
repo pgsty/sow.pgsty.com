@@ -80,15 +80,12 @@ SOW 在解析边界把它规范化成 `x86_64` / `aarch64`,此后一律输出规
 
 ## 字节只存一份
 
-包体只在仓库的 `pool/` 下存一份,按 Debian 惯例以首字母 + 源码包名分组。架构视图用**硬链接**
-而不是副本引用这些字节,所以一个出现在两个视图里的 `noarch` 包链接数为 3,磁盘上仍只占一份空间。
+包体只在仓库的 `pool/` 下存一份,按 Debian 惯例以首字母 + 源码包名分组。架构视图不包含
+包体别名:RPM 视图只有 `repodata/`,APT 视图只有 `Packages`、`Release` 与 by-hash 元数据。
 
-这就是同一仓库的 `pool/` 与 `dists/` 必须位于同一文件系统的原因。硬链接不可用、或目标在另一个
-设备上时,SOW 直接失败,不会静默退化成复制。用不保留硬链接的普通 `cp -r` 或 `rsync` 复制走,
-仓库功能依然完好 —— 只是丢掉了去重带来的容量优势。
-
-因为视图里放的是真实文件,`repodata` 里的包位置就是 `pool/p/pev2/…` 这样的相对路径,
-不含逃出视图根的 `..`。正是这个细节让 `dnf reposync` 能正确镜像 SOW 仓库。
+RPM 元数据通过 `../../../pool/p/pev2/...` 这样的计算路径访问规范字节。普通 DNF/YUM
+客户端支持这种布局。默认 `dnf reposync` 使用更严格的下载根规则并会拒绝它,因此需要
+自包含下游 leaf 时使用 `sow export rpm-leaf`。
 
 对象以其**确切字节**的 SHA-256 标识。它的逻辑坐标 —— RPM 是 NEVRA,DEB 是 `name=version:arch` ——
 来自 RPM 头或 Debian control 文件,绝不来自文件名。一个被改名的包仍按它实际的身份建索引。
@@ -181,7 +178,6 @@ sow changes 4
 
 ```console
 base=4 generation=5 dirty=false
-add	payload	dists/el9/x86_64/pool/a/asciinema/asciinema-3.2.1-1.x86_64.rpm	4429718	11f56fbd54f23ce1b8d8866c67a91e0819bac3fa22d2ace681b411ac0fe26703
 add	payload	pool/a/asciinema/asciinema-3.2.1-1.x86_64.rpm	4429718	11f56fbd54f23ce1b8d8866c67a91e0819bac3fa22d2ace681b411ac0fe26703
 add	metadata	dists/el9/x86_64/repodata/26435ad6857a58369efe0b5ddfb955c1023c0af7d2a2cde9501b877c41728d58-filelists.xml.gz	795	26435ad6857a58369efe0b5ddfb955c1023c0af7d2a2cde9501b877c41728d58
 update	pointer	dists/el9/x86_64/repodata/repomd.xml	1514	ce90e820933f3daab456904a4531b54466ef28c50fbc87b1a6863d8bb42c3ff6
@@ -225,7 +221,8 @@ SOW 宁可拒绝也不猜。分辨不出你指的是哪个仓库,它就明说,�
 
 - [Plain 平面仓库](/zh/docs/feature/plain/) —— `sow create` 的保证,以及确定性输出如何实现。
 - [Managed 工作区](/zh/docs/feature/managed/) —— 三层模型、固定布局与发现规则。
-- [包池与架构视图](/zh/docs/feature/views/) —— 硬链接投影与 reposync 兼容性。
+- [包池与元数据视图](/zh/docs/feature/views/) —— 规范包体寻址与显式 reposync 导出。
+- [发布模型](/zh/docs/design/publication/) —— 目标配置、checkpoint 与 GC 边界。
 - [成员策略](/zh/docs/feature/policy/) —— `exclude` 与 `limit` 的精确语义。
 - [签名模型](/zh/docs/feature/signing/) —— 两条互相独立的信任链。
 - [事务与恢复](/zh/docs/feature/transactions/) —— 日志、锁与崩溃行为。

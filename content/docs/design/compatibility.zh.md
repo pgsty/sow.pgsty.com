@@ -25,19 +25,19 @@ icon: fa-solid fa-table-cells
 
 ## `reposync` 的教训
 
-v0.2 设计曾测试让 RPM view 的元数据引用 `../../../pool/...`。在 AlmaLinux 9.8 上，普通
+发布前的 C2 工作曾测试让 RPM view 的元数据引用 `../../../pool/...`。在 AlmaLinux 9.8 上，普通
 DNF 的 `makecache`、query、download 与 install 全部通过；默认 `dnf reposync` 却失败，
 因为它把目标规范化到每仓库下载根之外，并通过 safe-path 检查拒绝写入。
 
-v0.2 把默认 `reposync` 视为必选兼容面，因此选择 C2：在 view 内建立 `pool/...` 硬链接，
+C2 把默认 `reposync` 视为必选兼容面，因此在 view 内建立 `pool/...` 硬链接，
 元数据 href 不再包含父级跳转。native + neutral 包矩阵最终通过普通 DNF 与默认 `reposync`；
 即使复制后丢失硬链接身份，功能也保持正常。
 
-这个结果仍是 v0.2 的有效证据，但不能证明 0.3 正典单包体布局通过默认 `reposync`。
+这个结果仍是 C2 原型的有效证据，但不能证明 v0.2.0 正典单包体布局通过默认 `reposync`。
 
-## 0.3 契约
+## v0.2.0 契约
 
-0.3 开发线明确作出以下选择：
+当前版本明确作出以下选择：
 
 - 必须支持 APT 与普通 DNF 消费完整 Repository；
 - 必须支持 whole-root 搬迁；
@@ -47,7 +47,7 @@ v0.2 把默认 `reposync` 视为必选兼容面，因此选择 C2：在 view 内
 
 ## 文件系统兼容
 
-0.3 的正典正确性不依赖 inode 或 hardlink count。普通 copy、tar 解包或对象存储上传之后，
+v0.2.0 的正典正确性不依赖 inode 或 hardlink count。普通 copy、tar 解包或对象存储上传之后，
 Repository 仍必须正常工作。硬链接只允许用于私有事务状态、小型不可变 APT by-hash alias，
 以及显式选择且可信的兼容导出。
 
@@ -70,8 +70,9 @@ edge rewrite 或部署绝对 URL 不能成为正典正确性的必要条件。
 支持发布不代表支持安全删除。供应商可能通过流式上传、条件 put、list 与公开读取验证，
 却没有原子条件删除。SOW 按供应商记录能力，并禁用无法证明安全的状态机分支。
 
-具体到 0.3：R2 发布路径已经实现并通过 mock 验证；新的授权非生产 R2 实跑仍是独立发布证据门，
-远端物理删除则按设计禁用。
+v0.2.0 的 R2 路径已经实现，并在 GitHub Integration 中针对固定版本的 S3-compatible MinIO
+fixture 运行。新的授权非生产 Cloudflare R2 实跑仍是独立供应商证据门；R2 物理删除按设计
+禁用，target GC 只记录 retained candidate。
 
 ## 状态词如何阅读
 
@@ -85,5 +86,5 @@ edge rewrite 或部署绝对 URL 不能成为正典正确性的必要条件。
 | `UNSUPPORTED` | 有意排除在契约之外 |
 | `UNVERIFIED` | 没有当前证据；既不等于失败，也绝不等于 PASS |
 
-已发布 v0.2 的客户端矩阵见操作层[兼容性参考](/zh/docs/reference/compatibility/)。0.3 发布后应以
-对应 release note 为准；本设计页刻意不把本地实现证据升级成发布结论。
+当前客户端与工具矩阵见操作层[兼容性参考](/zh/docs/reference/compatibility/)。那里会区分普通
+Repository 消费与显式 RPM leaf 导出，不会把 C2 结果升级成当前正典布局的结论。

@@ -14,7 +14,7 @@ how SOW works, start with [Getting Started](/docs/start/) or [Features](/docs/fe
 instead; those pages explain the model, and link back here for the details.
 
 Everything on these pages is derived from the shipping binary. Command output is
-transcribed from real runs of `sow 0.2.0-dev`, and configuration rules match the strict
+transcribed from real runs of `sow 0.2.0`, and configuration rules match the strict
 parser, not an aspirational schema.
 
 {{< doc-cards cols="2" >}}

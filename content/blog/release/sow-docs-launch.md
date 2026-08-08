@@ -1,68 +1,60 @@
 ---
-title: "SOW 0.2: Documentation Preview"
-linkTitle: "SOW 0.2 Documentation Preview"
-date: 2026-08-04
+title: "SOW v0.2.0: Single-Payload Repositories"
+linkTitle: "SOW v0.2.0"
+date: 2026-08-08
 author: "Ruohang Feng"
-description: "The SOW documentation site goes live: two repository engines, a tested client compatibility matrix, and four sections of docs."
+description: "SOW v0.2.0 establishes the single-payload layout, explicit publication targets, retention, GC, and RPM compatibility exports."
 categories: [release]
 tags: [Release, sow]
 weight: 10
 url: "/blog/release/sow-docs-launch/"
 ---
 
-**Published:** 2026-08-04 · **Version:** `sow 0.2.0-dev`
+**Published:** 2026-08-08 · **Version:** `sow 0.2.0`
 
-SOW is a self-contained package repository manager from [Pigsty](https://pigsty.io). It
-is one static Go binary that creates and maintains APT (DEB) and YUM (RPM) repositories
-on Linux and macOS, and it does the whole job itself: `createrepo_c`,
-`dpkg-scanpackages`, `reprepro`, and `modifyrepo_c` are never invoked. There is no daemon,
-no database server, and nothing to install alongside it. The name is the verb — you sow
-packages into a repository, and the repository grows.
+SOW is a self-contained package repository manager from [Pigsty](https://pigsty.io). One
+static Go binary creates and maintains APT (DEB) and YUM (RPM) repositories on Linux and
+macOS without invoking `createrepo_c`, `dpkg-scanpackages`, or `reprepro`.
 
-## Two engines, one binary
+## The v0.2.0 layout
 
-`sow create` is the flat path. Point it at a directory that already holds `.rpm` or
-`.deb` files and it writes the indexes in place — `repodata/` for RPM, `Packages` and
-`Packages.gz` for DEB, both in the same directory if the directory holds both. No
-workspace, no config file, no state. The same input bytes produce the same output bytes,
-and running it twice is a no-op.
+Managed repositories now have one canonical payload owner. Every package body appears
+once beneath `pool/`; `dists/` contains metadata-only APT and RPM views. rpm-md reaches the
+root pool through a computed relative href, while APT uses archive-root `Filename` values.
 
-The managed path is for repositories you keep. A workspace holds repositories; a
-repository holds dists; a dist is a named set of members in a single format. Payloads
-live once in a Debian-style `pool/`, and each architecture view is a hardlink projection
-of that pool rather than a second copy. Membership is a desired set that you edit with
-`add` and `rm`; `build` turns it into a published generation. Between them sits an
-explicit dirty state, so you always know whether what is on disk matches what you asked
-for. Writes go through a journal, so a machine that dies mid-`add` recovers on the next
-write command instead of leaving a half-written tree.
+This replaces the view-local hardlink C2 prototype. That prototype was never a public
+product release. The public version history is v0.1.0 followed by v0.2.0; names such as
+`sow.cli/v1` and `sow/v3` are wire/schema identifiers, not product versions.
 
-## Verified against real clients
+Default `dnf reposync` rejects the canonical parent-relative href. v0.2.0 keeps the
+single-payload repository as the source of truth and adds an explicit compatibility path:
 
-The compatibility matrix in the docs is measured, not asserted. Repositories produced by
-SOW have been consumed end to end by AlmaLinux 8, 9, and 10 with `dnf` (with both
-`gpgcheck=1` and `repo_gpgcheck=1`), by CentOS 7 with `yum` 3.4.3 including correct
-multi-version NEVRA resolution, and by Debian 12 (`apt` 2.6.1) and Debian 13 (`apt`
-3.0.3) with `InRelease` signature verification and `by-hash` fetching. `dnf reposync` on
-EL9 mirrors the pool layout cleanly. Flat repositories are consumable over both `file://`
-and `http://`. Notably, SOW emits `Acquire-By-Hash: yes` — something reprepro does not
-support at all.
+```bash
+sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
+```
 
-## What the documentation covers
+## Publication and lifecycle
 
-The site is organized into four sections. [Getting Started](/docs/start/) installs the
-binary, publishes a repository in five minutes, and lays out the mental model.
-[Tutorials](/docs/tutorial/) walk end to end through YUM and APT repositories, GPG
-signing, serving over Nginx, and migrating off createrepo_c or reprepro.
-[Features](/docs/feature/) explains how it works — pools and architecture views,
-membership policy, the two signing trust chains, transactions and recovery, and the audit
-trail. [Reference](/docs/reference/) is the lookup layer: every command, the full
-`sow.yml` schema, package reference grammar, exit codes, repository layouts, JSON output,
-and the compatibility matrix.
+Managed workspaces can define `filesystem` and S3-compatible `r2` targets, then publish a
+verified Generation with `sow publish TARGET`. Attempts are resumable; pre-commit attempts
+can be explicitly abandoned, while post-commit recovery is forward-only.
 
-Scope is deliberately narrow, and the non-goals are stated rather than deferred: SOW does
-not build packages, does not publish to remote object storage or a CDN, does not support
-multiple concurrent writers, and does not generate modulemd, sqlite repodata, zchunk, or
-source package indexes.
+`sow retain` creates and removes explicit retained-Generation roots. Local `sow gc`
+collects only payloads unreachable from all safety roots. Target GC is provider-specific:
+filesystem deletion is conditional after grace and absence checks; R2 is deliberately
+report-only and never deletes objects.
 
-Start at the [Quick Start](/docs/start/quickstart/), or grab a binary from the
-[download page](/download/).
+## Verification boundary
+
+The client matrix covers AlmaLinux 8/9/10 DNF, CentOS 7 YUM, and Debian 12/13 APT. The
+Integration workflow also exercises real APT/DNF clients and S3-compatible publication
+against pinned MinIO. A provider integration test is not proof that a particular public
+R2 account or CDN is configured; hosted deployment remains a separate check.
+
+The public v0.2.0 release contains Linux and macOS archives for amd64 and arm64, Linux RPM
+and DEB packages, and `SHA256SUMS`. SOW does not build repository payload packages,
+publish a container image, coordinate multiple writers, act as a CDN, or generate
+modulemd, SQLite repodata, zchunk, or source-package indexes.
+
+Start at the [Quick Start](/docs/start/quickstart/), review the
+[design history](/docs/design/evolution/), or use the [CLI reference](/docs/reference/cli/).

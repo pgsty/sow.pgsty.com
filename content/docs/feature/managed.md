@@ -22,7 +22,7 @@ Each tier has one job, and the boundaries are strict:
 
 **Workspace** owns exactly two things: the root `sow.yml` and the `.sow/` state directory. Nothing else at the workspace root belongs to SOW. It is the unit of discovery — commands find a workspace by walking up from a starting directory — and it is where the architecture permit list lives.
 
-**Repository** is fixed at `<workspace>/<name>`. You cannot point it somewhere else; there is no `path` option. A Repository owns its `pool/`, its `dists/`, its own SQLite database, its own lock, and its own recovery state. It is the boundary for transactions, generations, and changesets. Two Repositories never deduplicate against each other — the same package added to both is stored twice, on purpose, so that removing one Repository can never damage the other.
+**Repository** is fixed at `<workspace>/<name>`. You cannot point it somewhere else; there is no `path` option. A Repository owns its `pool/`, `dists/`, SQLite database, lock, recovery state, generations, retained-generation roots, publication checkpoints, and GC evidence. Two Repositories never deduplicate against each other — the same package added to both is stored twice, on purpose, so that removing one Repository can never damage the other.
 
 **Dist** is an ordinary named set of memberships in exactly one format, `rpm` or `deb`. The name is an opaque string to SOW. `el9`, `trixie`, `el9-beta`, `customer-acme` — none of these create a state machine, a promotion workflow, or a snapshot. If you want a beta channel, make a Dist called `el9-beta`; the meaning lives in your head and your `.repo` files, not in SOW.
 
@@ -79,7 +79,7 @@ Names must match `[a-z0-9][a-z0-9._-]*`, and `.`, `..`, `.sow`, `pool`, `dists` 
 There is one configuration file, parsed with a strict decoder. Unknown fields do not get ignored — they fail. So do duplicate normalized architectures, illegal names or formats, a Dist architecture that is not a subset of the workspace permit list, an invalid glob or category, and an incomplete signing block.
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -94,13 +94,24 @@ repos:
         format: rpm
       trixie:
         format: deb
+targets:
+  local:
+    repository: pigsty
+    provider: filesystem
+    endpoint: file:///srv/mirror
+    prefix: pigsty
+    public_endpoint: file:///srv/mirror/pigsty/
+    max_cache_ttl: 0s
+    authoritative_workspace: true
+    single_writer: true
+    exclusive_write_authority: true
 ```
 
 `config show --all` expands every default and normalized alias so you can see what SOW actually decided:
 
 ```console
 $ sow config show --all
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -137,7 +148,8 @@ $ sow config check
 configuration valid: /data/ws repositories=1 dists=2
 ```
 
-The full schema is in the [`sow.yml` reference](/docs/reference/config/).
+The full schema, including `filesystem` and `r2` publication targets, is in the
+[`sow.yml` reference](/docs/reference/config/).
 
 ## Discovery: which workspace?
 
@@ -183,7 +195,7 @@ That is exit `2`. Every inference happens only after path type and symlink valid
 
 `sow init` is idempotent by design, and its rules are an architectural invariant rather than a convenience:
 
-- **No `sow.yml`:** create one with `schema: sow/v2` and `architectures: [x86_64, aarch64]`, plus `.sow/`. No Repository is created automatically.
+- **No `sow.yml`:** create one with `schema: sow/v3` and `architectures: [x86_64, aarch64]`, plus `.sow/`. No Repository is created automatically.
 - **Valid config already present:** in stable name order, fill in whatever is not initialized yet — a missing Repository shell, a missing SQLite, an entire missing Dist. A newly created Dist immediately gets all empty views for its effective architectures.
 - **Valid database state or a valid protocol pointer already present:** verify only. Never overwrite, never zero a generation, never rewrite bytes.
 - **An architecture was added to the config after a Dist was already initialized:** `init` does not render the new view and does not advance the generation. The Dist stays dirty and waits for an explicit `build`. Removing a family that memberships or built state still use is a failure.
@@ -215,7 +227,8 @@ repos:
 
 ## Next
 
-- [Pool & Architecture Views](/docs/feature/views/) — what `build` actually writes
+- [Pool & Metadata Views](/docs/feature/views/) — what `build` actually writes
+- [Publication Model](/docs/design/publication/) — how a generation reaches a target
 - [Membership Policy](/docs/feature/policy/) — how `exclude` and `limit` decide what stays
 - [First Workspace](/docs/start/workspace/) — a ten-minute hands-on version of this page
 - [`sow.yml` reference](/docs/reference/config/) — the complete schema

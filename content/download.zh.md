@@ -13,8 +13,13 @@ SOW 是一个静态可执行文件。没有安装器,没有要装的软件包,�
 
 ## 预编译二进制
 
-各平台的发行归档发布在 [GitHub Releases](https://github.com/pgsty/sow/releases)。
-下载与你的操作系统和 CPU 匹配的归档,解压后放到位:
+SOW v0.2.0 已发布到
+[GitHub Releases](https://github.com/pgsty/sow/releases/tag/v0.2.0),包含四个 Linux/macOS
+归档、Linux RPM/DEB 包与 `SHA256SUMS`。自动下载前,仍应确认 Release 条目中确实存在
+匹配的归档与校验和;源码 revision 或 tag 本身不能证明资产已经上传。下载与你的操作系统
+和 CPU 匹配的归档,解压后放到位:
+
+v0.2.0 不发布 Docker 或其他容器镜像。
 
 ```bash
 tar -xzf sow_*.tar.gz
@@ -34,13 +39,13 @@ sudo install -m 0755 sow /usr/local/bin/sow
 | macOS(Darwin) | 支持 | 支持 | Intel 与 Apple Silicon |
 | Windows | — | — | 不支持 |
 
-不支持 Windows 是有意为之:SOW 依赖 POSIX 建议锁、硬链接与原子 `rename`。
+不支持 Windows 是有意为之:SOW 依赖 POSIX 建议锁与原子 `rename`。
 同样的原因,请把仓库放在本地 POSIX 文件系统上 —— NFS 等网络文件系统无法提供它
 所依赖的锁与持久化语义。
 
 ## 源码构建
 
-唯一的构建依赖是 Go 工具链,项目要求 **Go 1.26** 或更高版本。
+唯一的构建依赖是 Go 工具链,项目要求 **Go 1.26.5** 或更高版本。
 
 ```bash
 git clone https://github.com/pgsty/sow.git
@@ -61,7 +66,7 @@ sow version
 ```
 
 ```console
-sow 0.2.0-dev darwin/arm64 go1.26.5
+sow 0.2.0 darwin/arm64 go1.26.5
 ```
 
 这行输出依次是 SOW 版本、二进制的目标平台,以及构建它的 Go 工具链版本。

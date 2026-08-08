@@ -29,8 +29,8 @@ Generate a dedicated GPG key, sign repository metadata and RPM packages, and con
 clients to reject anything unsigned.
 {{< /doc-card >}}
 {{< doc-card title="Serve Repositories" link="/docs/tutorial/serving/" >}}
-Publish the tree over HTTP with Nginx, preview it locally, and copy it to an air-gapped host
-without losing hardlink deduplication.
+Publish the tree over HTTP with Nginx, preview it locally, and copy the closed
+`pool/ + dists/` tree to an air-gapped host without relying on hardlink identity.
 {{< /doc-card >}}
 {{< doc-card title="Migrate from createrepo_c / reprepro" link="/docs/tutorial/migration/" >}}
 Take over an existing repository in place, move a reprepro archive into a workspace, and see

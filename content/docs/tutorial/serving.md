@@ -1,7 +1,7 @@
 ---
 title: "Serve Repositories"
 linkTitle: "Serve Repositories"
-description: "Publish a repository over HTTP with Nginx, preview it locally, and copy it to an air-gapped host without losing deduplication."
+description: "Serve a complete SOW repository with Nginx, copy it safely, or publish a generation to a configured target."
 url: "/docs/tutorial/serving/"
 weight: 400
 icon: fa-solid fa-server
@@ -240,47 +240,20 @@ sow status --json
 
 Gate on `.result.ready_to_copy`.
 
-### rsync, with hardlinks preserved
+### Copy the closed public tree
 
 ```bash
-rsync -aH --delete ~/repo/pigsty/ user@mirror:/srv/www/pigsty/
+rsync -a --delete ~/repo/pigsty/ user@mirror:/srv/www/pigsty/
 ```
 
-`-H` is the flag that matters. Architecture views are hardlinks into the pool, so a `noarch` or
-`all` package occupies one inode no matter how many views list it. Without `-H`, rsync writes
-each name as an independent file:
-
-```bash
-du -sh pigsty
-rsync -aH --delete pigsty/ /srv/mirror-hardlink/ && du -sh /srv/mirror-hardlink
-rsync -a  --delete pigsty/ /srv/mirror-plain/    && du -sh /srv/mirror-plain
-```
-
-```console
-187M	pigsty
-187M	/srv/mirror-hardlink
-223M	/srv/mirror-plain
-```
-
-```bash
-stat -c "%h %n" /srv/mirror-hardlink/pool/p/pev2/pev2-1.22.0-1.noarch.rpm \
-                /srv/mirror-plain/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-```
-
-```console
-3 /srv/mirror-hardlink/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-1 /srv/mirror-plain/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-```
-
-19% more disk on this small repository, and the gap widens with the proportion of `noarch` and
-`all` packages. Both copies work identically for clients — losing hardlinks costs space, not
-correctness — so if your transport cannot preserve them, that is a budget question rather than a
-blocker.
+The canonical v0.2.0 tree needs no hardlink-preservation option: package bytes exist only
+under `pool/`, and views contain metadata. What matters is copying `pool/` and `dists/`
+together and applying deletion only after new pointers are in place.
 
 The result is byte-for-byte the source:
 
 ```bash
-diff -r --brief ~/repo/pigsty /srv/mirror-hardlink && echo "trees identical"
+diff -r --brief ~/repo/pigsty /srv/www/pigsty && echo "trees identical"
 ```
 
 ```console
@@ -293,14 +266,13 @@ Same idea, one hop at a time:
 
 ```bash
 sow check                                    # gate
-tar -C ~/repo -cf /mnt/usb/pigsty.tar pigsty # tar preserves hardlinks by default
+tar -C ~/repo -cf /mnt/usb/pigsty.tar pigsty
 # carry the media across
 tar -C /srv/www -xf /mnt/usb/pigsty.tar
 ```
 
-`tar` detects and records hardlinks without a flag. `cp -a` preserves them too. Anything that
-does not — most object-storage sync tools, for instance — produces the larger independent-file
-copy from the previous section, which still serves correctly.
+The archive contains only the public repository. Do not add `sow.yml` or `.sow/`; the
+receiving host does not need the authoritative database to serve static files.
 
 ## Step 6: Ship only what changed
 
@@ -316,9 +288,8 @@ sow changes 0 | wc -l
 
 ```console
 base=0 generation=9 dirty=false
-add	payload	dists/el9/aarch64/pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.aarch64.rpm	15289542	ceb1b8660f8bc1fe59fb7a28e750e19a1ccd010a254a50e82328adb5818a5943
-add	payload	dists/el9/aarch64/pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm	1451117	077938eac0fae939368887e4f20e55e2af7dfb9f0e885869df8841213bd97fd6
-      49
+add	payload	pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.aarch64.rpm	15289542	ceb1b8660f8bc1fe59fb7a28e750e19a1ccd010a254a50e82328adb5818a5943
+add	payload	pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm	1451117	077938eac0fae939368887e4f20e55e2af7dfb9f0e885869df8841213bd97fd6
 ```
 
 Passing the generation your mirror already has gives the incremental set. After adding one
@@ -330,7 +301,6 @@ sow changes 9
 
 ```console
 base=9 generation=10 dirty=false
-add	payload	dists/el9/x86_64/pool/g/gdal311-devel/gdal311-devel-3.11.0-2.rhel9.x86_64.rpm	251366	0663e42e48207189e5dde643fc779de022ade1e3ddd87519009d484bfd2d05fc
 add	payload	pool/g/gdal311-devel/gdal311-devel-3.11.0-2.rhel9.x86_64.rpm	251366	0663e42e48207189e5dde643fc779de022ade1e3ddd87519009d484bfd2d05fc
 add	metadata	dists/el9/x86_64/repodata/6439665d77d7129eb17c4775148fb2ab918b00525d0012572863fedbf2eb2ff9-filelists.xml.gz	4765	6439665d77d7129eb17c4775148fb2ab918b00525d0012572863fedbf2eb2ff9
 add	metadata	dists/el9/x86_64/repodata/90965c9a2093e32fb6e9a42a701a0be80510fd55a58ae8c4b7e78ccc95d3c79e-primary.xml.gz	3750	90965c9a2093e32fb6e9a42a701a0be80510fd55a58ae8c4b7e78ccc95d3c79e
@@ -355,9 +325,16 @@ Apply them out of order and a client mid-fetch gets a dangling reference. Follow
 readers always see a coherent tree, because they either read the old pointer or the new one, and
 both resolve.
 
-`changes` produces a plan, not a transfer. SOW has no endpoint configuration, no credentials, and
-calls no sync tool — feed the paths to `rsync --files-from`, or to whatever your environment
-already uses.
+`changes` is the low-level local plan for custom transports. When `sow.yml` defines a
+publication target, prefer the built-in ordered and resumable path:
+
+```bash
+sow publish prod
+```
+
+SOW supports `filesystem` and S3-compatible `r2` targets, records checkpoints, and resumes
+or aborts non-terminal attempts explicitly. Publication credentials stay in `env://` or
+`file://` references rather than in the public tree.
 
 {{% alert title="A dirty repository has no plan" color="warning" %}}
 `changes` refuses to answer while the repository is dirty, recovering, or in error. There is no
@@ -377,6 +354,6 @@ Do this before you publish anything clients will trust.
 Every path in the tree, and what must never reach a document root.
 {{< /doc-card >}}
 {{< doc-card title="Compatibility" link="/docs/reference/compatibility/" >}}
-Which clients were tested, and the hardlink and filesystem requirements.
+Which clients were tested, and the canonical-layout and provider boundaries.
 {{< /doc-card >}}
 {{< /doc-cards >}}

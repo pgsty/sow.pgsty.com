@@ -7,8 +7,8 @@ weight: 700
 icon: fa-solid fa-minus
 ---
 
-`sow rm` 把包从你选定的 Dist 的期望成员集中拿掉，并默认立即重建受影响的索引。它绝不从 `pool/` 删除
-字节——成员关系与内容是两个概念，而且系统没有垃圾回收。
+`sow rm` 把包从你选定的 Dist 的期望成员集中拿掉，并默认立即重建受影响的索引。它不会从 `pool/`
+删除字节——成员关系与内容是两个概念,回收由独立的保守操作 `sow gc` 完成。
 
 ## 语法
 
@@ -169,3 +169,4 @@ sow rm patroni -r pgsql -d el9 -c --json | jq -r '.result.changes[] | "\(.phase)
 - [sow add](/zh/docs/reference/cli/add/) —— 反向操作
 - [sow build](/zh/docs/reference/cli/build/) —— `--skip` 之后的收敛
 - [成员策略](/zh/docs/feature/policy/) —— 为什么被移除的成员不会复活
+- [发布、保留、GC 与导出](/zh/docs/reference/cli/publication/) —— 何时可以回收字节

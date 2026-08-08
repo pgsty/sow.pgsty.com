@@ -48,17 +48,24 @@ configuration valid: /srv/repo repositories=1 dists=2
 ## Top level
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures: [x86_64, aarch64]
 repos:
   <name>: <repository>
+targets:
+  <name>: <publication-target>
 ```
 
 | Field | Type | Required | Default | Meaning |
 |---|---|---|---|---|
-| `schema` | string | yes | — | Must be exactly `sow/v2`. Any other value is a configuration error. |
+| `schema` | string | yes | — | Must be exactly `sow/v3`. Any other value is a configuration error. |
 | `architectures` | list of strings | no | `[x86_64, aarch64]` | The CPU families this workspace is allowed to manage. |
 | `repos` | map | no | empty | Repository name to repository configuration. |
+| `targets` | map | no | empty | Publication target name to target configuration. |
+
+New workspaces require `schema: sow/v3`. `sow/v2` identifies the unreleased C2 layout and
+is accepted only through the explicit `sow repo migrate` transition; it is not a second
+current configuration format.
 
 ### architectures
 
@@ -398,6 +405,62 @@ Two rules apply:
   configuration error: ... repository "a" signing: rpm metadata agent key uses its ambient gpg-agent and cannot accept a passphrase reference
   ```
 
+## Publication targets
+
+Each target binds one configured Repository to a storage namespace. Target names use the
+same lower-case name grammar as repositories.
+
+```yaml
+targets:
+  local:
+    repository: pigsty
+    provider: filesystem
+    endpoint: file:///srv/mirror
+    prefix: pigsty
+    public_endpoint: file:///srv/mirror/pigsty/
+    max_cache_ttl: 0s
+    authoritative_workspace: true
+    single_writer: true
+    exclusive_write_authority: true
+
+  prod:
+    repository: pigsty
+    provider: r2
+    endpoint: https://0123456789abcdef.r2.cloudflarestorage.com
+    region: auto
+    bucket: packages
+    prefix: pigsty
+    credential: env://SOW_R2_CREDENTIAL
+    public_endpoint: https://repo.example.com/pigsty/
+    max_cache_ttl: 24h0m0s
+    authoritative_workspace: true
+    single_writer: true
+    exclusive_write_authority: true
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `repository` | yes | Existing Repository owned by this target. |
+| `provider` | yes | `filesystem` or `r2`. |
+| `endpoint` | yes | Canonical `file:///absolute/path` without trailing slash, or canonical `https://host` for R2. |
+| `region` | R2 | Must be `auto`; forbidden for filesystem. |
+| `bucket` | R2 | Lower-case canonical bucket name; forbidden for filesystem. |
+| `prefix` | yes | Relative public-tree prefix; empty means the storage namespace root. |
+| `credential` | R2 | `env://NAME` or `file:///absolute/path`; inline secrets are forbidden. |
+| `public_endpoint` | yes | Canonical `https://`, `http://`, or `file://` URL ending in `/`, used for public-absence evidence. |
+| `max_cache_ttl` | yes | Canonical non-negative Go duration, including explicit `0s`. |
+| `authoritative_workspace` | yes | Must be `true`. |
+| `single_writer` | yes | Must be `true`. |
+| `exclusive_write_authority` | yes | Must be `true`. |
+
+The three authority booleans are explicit safety acknowledgements, not defaults. Targets
+on the same storage may not have overlapping prefixes; filesystem targets may not resolve
+to overlapping effective paths. These rules protect conditional publication and GC from
+competing writers.
+
+R2 credentials are private references. The referenced material supplies the S3-compatible
+credentials at runtime; `config show`, JSON output, and the public tree never contain it.
+
 ## Complete example
 
 A workspace with two repositories: a protected production repository signing both
@@ -406,7 +469,7 @@ signing and no policy.
 
 ```yaml
 # sow.yml — workspace root configuration
-schema: sow/v2
+schema: sow/v3
 
 # CPU families this workspace may manage. This is a ceiling, not a target.
 # amd64/arm64 are accepted as input aliases and normalized to x86_64/aarch64.
@@ -469,6 +532,21 @@ repos:
         format: rpm
       trixie:
         format: deb
+
+targets:
+  prod:
+    repository: pigsty
+    provider: r2
+    endpoint: https://0123456789abcdef.r2.cloudflarestorage.com
+    region: auto
+    bucket: packages
+    prefix: pigsty
+    credential: env://SOW_R2_CREDENTIAL
+    public_endpoint: https://repo.example.com/pigsty/
+    max_cache_ttl: 24h0m0s
+    authoritative_workspace: true
+    single_writer: true
+    exclusive_write_authority: true
 ```
 
 Validate it before you rely on it:
@@ -487,14 +565,15 @@ Some things you might expect to configure are deliberately not configurable:
 - **APT components.** Always `main`. YUM has no component concept.
 - **Architecture views.** Derived from `architectures` and the package headers, never
   declared per package.
-- **Remote endpoints, mirrors, credentials.** SOW writes a local directory tree and stops
-  there; copying it anywhere is your job and your tool's.
-- **Anything about generations or retention counts.** The retention window is fixed by the
-  transaction model, not tunable.
+- **Inline secrets.** Targets accept only credential references; key and passphrase material
+  likewise stays behind a reference.
+- **Automatic retention counts.** Retention is an explicit `sow retain add/rm` operation,
+  not a rolling count in configuration.
 
 ## See also
 
 - [`sow config`](/docs/reference/cli/config/) — the commands that read this file
 - [Membership Policy](/docs/feature/policy/) — how `exclude` and `limit` behave over time
 - [Signing Model](/docs/feature/signing/) — the two trust chains explained
+- [Publish, Retain, GC, and Export](/docs/reference/cli/publication/) — target lifecycle commands
 - [Exit Codes](/docs/reference/exit-codes/) — what `2` and `6` mean here

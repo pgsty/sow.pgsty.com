@@ -31,7 +31,7 @@ SOW 是 [Pigsty](https://pigsty.cc) 出品的自包含软件仓库管理器:一�
 SOW 的工作原理:Plain 与 Managed 双引擎、包池与架构视图、成员策略、签名模型、事务与审计。
 {{< /doc-card >}}
 {{< doc-card title="设计" link="/zh/docs/design/" >}}
-架构与决策记录:所有权、0.3 单包体模型、发布、兼容性边界,以及从 v0.2 开始的设计演进。
+架构与决策记录:所有权、v0.2.0 单包体模型、发布、兼容性边界,以及从 v0.1.0 开始的设计演进。
 {{< /doc-card >}}
 {{< doc-card title="参考" link="/zh/docs/reference/" >}}
 完整命令行参考、`sow.yml` 配置、包引用文法、退出码、仓库布局与兼容矩阵。

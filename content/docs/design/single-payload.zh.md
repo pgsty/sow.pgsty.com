@@ -1,18 +1,19 @@
 ---
 title: "单包体仓库"
 linkTitle: "单包体布局"
-description: "0.3 如何让每个 Repository 只有一条正典包体路径，并渲染纯元数据 APT/RPM 视图。"
+description: "v0.2.0 如何让每个 Repository 只有一条正典包体路径，并渲染纯元数据 APT/RPM 视图。"
 url: "/zh/docs/design/single-payload/"
 weight: 300
 icon: fa-solid fa-box-archive
 ---
 
-0.3 开发线调整了 RPM 物理布局，但保留 v0.2 确立的所有权模型。它的目标很精确：在一个
-Repository 及其每个发布前缀内，每个 live Package Object 恰好只有一条包体路径。
+v0.2.0 布局的目标很精确：在一个 Repository 及其每个发布前缀内，每个 live Package Object
+恰好只有一条包体路径。
 
-{{% alert title="开发线设计" color="warning" %}}
-本页描述已经落入 0.3 源码的布局；已发布 v0.2 的操作参考仍然使用 C2 view-local 硬链接。
-迁移现有 v0.2 仓库前，请先读[设计演进](/zh/docs/design/evolution/)。
+{{% alert title="当前版本布局" color="primary" %}}
+这是 v0.2.0 的正典布局。未发布的 C2 原型工作区使用 `schema: sow/v2`，必须显式执行
+`sow repo migrate`；新工作区使用 `sow/v3`。迁移 C2 工作区前请先读
+[设计演进](/zh/docs/design/evolution/)。
 {{% /alert %}}
 
 ## 正典目录树
@@ -48,7 +49,7 @@ Filename: pool/p/postgresql-18/libpq5_18.3-1_amd64.deb
 
 ## RPM 寻址
 
-RPM 元数据相对于架构视图解析 `<location href>`。0.3 从实际 view root 计算到正典 Pool
+RPM 元数据相对于架构视图解析 `<location href>`。v0.2.0 从实际 view root 计算到正典 Pool
 对象的相对路径：
 
 ```text
@@ -65,11 +66,12 @@ HTTP 客户端可以在发请求前消解 dot segment；正典 object key 本身
 
 ## 为什么取消包体硬链接
 
-v0.2 用硬链接把 RPM 包投影进每个架构视图。在单个 POSIX 文件系统上，这些路径共享 inode，
+未正式发布的 C2 原型用硬链接把 RPM 包投影进每个架构视图。在单个 POSIX 文件系统上，
+这些路径共享 inode，
 本地磁盘成本很低，默认 EL `reposync` 也能工作。但对象存储没有 inode 身份：每条 alias 路径
 都会成为一个完整对象和一次完整上传；Dist、架构、Generation 与快照越多，远端包体越膨胀。
 
-0.3 不再让文件系统实现细节定义正典正确性。普通 copy、tar 或对象存储上传即使丢失硬链接，
+v0.2.0 不再让文件系统实现细节定义正典正确性。普通 copy、tar 或对象存储上传即使丢失硬链接，
 功能也必须保持不变。
 
 ## 搬迁契约
@@ -85,7 +87,7 @@ v0.2 用硬链接把 RPM 包投影进每个架构视图。在单个 POSIX 文件
 
 ## 兼容导出
 
-如果操作者需要让默认 `reposync` 或旧工具消费自包含 RPM leaf，0.3 显式生成外部导出：
+如果操作者需要让默认 `reposync` 或旧工具消费自包含 RPM leaf，v0.2.0 显式生成外部导出：
 
 ```text
 sow export rpm-leaf DIST ARCH DIR

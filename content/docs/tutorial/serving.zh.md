@@ -1,7 +1,7 @@
 ---
 title: "对外服务"
 linkTitle: "对外服务"
-description: "用 Nginx 通过 HTTP 发布仓库、本地临时预览,以及在不丢去重的前提下拷到隔离主机。"
+description: "用 Nginx 服务完整 SOW 仓库、安全复制,或把 Generation 发布到已配置目标。"
 url: "/zh/docs/tutorial/serving/"
 weight: 400
 icon: fa-solid fa-server
@@ -231,44 +231,19 @@ sow status --json
 
 判断 `.result.ready_to_copy` 即可。
 
-### rsync,保留硬链接
+### 复制闭合的公共树
 
 ```bash
-rsync -aH --delete ~/repo/pigsty/ user@mirror:/srv/www/pigsty/
+rsync -a --delete ~/repo/pigsty/ user@mirror:/srv/www/pigsty/
 ```
 
-关键在 `-H`。架构视图是指向包池的硬链接,所以一个 `noarch` 或 `all` 包无论被多少视图收录都只占
-一个 inode。不加 `-H`,rsync 会把每个名字写成独立文件:
-
-```bash
-du -sh pigsty
-rsync -aH --delete pigsty/ /srv/mirror-hardlink/ && du -sh /srv/mirror-hardlink
-rsync -a  --delete pigsty/ /srv/mirror-plain/    && du -sh /srv/mirror-plain
-```
-
-```console
-187M	pigsty
-187M	/srv/mirror-hardlink
-223M	/srv/mirror-plain
-```
-
-```bash
-stat -c "%h %n" /srv/mirror-hardlink/pool/p/pev2/pev2-1.22.0-1.noarch.rpm \
-                /srv/mirror-plain/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-```
-
-```console
-3 /srv/mirror-hardlink/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-1 /srv/mirror-plain/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-```
-
-在这个小仓库上多占 19% 磁盘,`noarch` 与 `all` 包占比越高差距越大。两份拷贝对客户端完全等效
-——丢硬链接付出的是空间而不是正确性——所以如果你的传输通道保不住硬链接,那是预算问题而不是阻塞点。
+v0.2.0 规范树不需要保留硬链接:包体只存在 `pool/`,视图只含元数据。关键是始终一起复制
+`pool/` 与 `dists/`,并且只有在新指针就位后才应用删除。
 
 结果与源逐字节一致:
 
 ```bash
-diff -r --brief ~/repo/pigsty /srv/mirror-hardlink && echo "trees identical"
+diff -r --brief ~/repo/pigsty /srv/www/pigsty && echo "trees identical"
 ```
 
 ```console
@@ -281,13 +256,12 @@ trees identical
 
 ```bash
 sow check                                    # 闸门
-tar -C ~/repo -cf /mnt/usb/pigsty.tar pigsty # tar 默认就保留硬链接
+tar -C ~/repo -cf /mnt/usb/pigsty.tar pigsty
 # 把介质搬过去
 tar -C /srv/www -xf /mnt/usb/pigsty.tar
 ```
 
-`tar` 不用加参数就会识别并记录硬链接,`cp -a` 也保留。做不到的工具——比如大多数对象存储同步工具
-——产出的是上一节那种独立文件拷贝,仍然能正常服务。
+归档只包含公共仓库。不要加入 `sow.yml` 或 `.sow/`;接收主机服务静态文件不需要权威数据库。
 
 ## 第 6 步:只投递变化的部分
 
@@ -302,9 +276,8 @@ sow changes 0 | wc -l
 
 ```console
 base=0 generation=9 dirty=false
-add	payload	dists/el9/aarch64/pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.aarch64.rpm	15289542	ceb1b8660f8bc1fe59fb7a28e750e19a1ccd010a254a50e82328adb5818a5943
-add	payload	dists/el9/aarch64/pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm	1451117	077938eac0fae939368887e4f20e55e2af7dfb9f0e885869df8841213bd97fd6
-      49
+add	payload	pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.aarch64.rpm	15289542	ceb1b8660f8bc1fe59fb7a28e750e19a1ccd010a254a50e82328adb5818a5943
+add	payload	pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm	1451117	077938eac0fae939368887e4f20e55e2af7dfb9f0e885869df8841213bd97fd6
 ```
 
 传入镜像当前所在的代,得到增量集。往一个处于第 9 代的仓库里加了一个包之后:
@@ -315,7 +288,6 @@ sow changes 9
 
 ```console
 base=9 generation=10 dirty=false
-add	payload	dists/el9/x86_64/pool/g/gdal311-devel/gdal311-devel-3.11.0-2.rhel9.x86_64.rpm	251366	0663e42e48207189e5dde643fc779de022ade1e3ddd87519009d484bfd2d05fc
 add	payload	pool/g/gdal311-devel/gdal311-devel-3.11.0-2.rhel9.x86_64.rpm	251366	0663e42e48207189e5dde643fc779de022ade1e3ddd87519009d484bfd2d05fc
 add	metadata	dists/el9/x86_64/repodata/6439665d77d7129eb17c4775148fb2ab918b00525d0012572863fedbf2eb2ff9-filelists.xml.gz	4765	6439665d77d7129eb17c4775148fb2ab918b00525d0012572863fedbf2eb2ff9
 add	metadata	dists/el9/x86_64/repodata/90965c9a2093e32fb6e9a42a701a0be80510fd55a58ae8c4b7e78ccc95d3c79e-primary.xml.gz	3750	90965c9a2093e32fb6e9a42a701a0be80510fd55a58ae8c4b7e78ccc95d3c79e
@@ -338,8 +310,15 @@ update	pointer	dists/el9/x86_64/repodata/repomd.xml.asc	832	d0de8d66071a1fb6ecc1
 顺序错了,正在取文件的客户端就会拿到悬空引用。按顺序做,读者永远看到自洽的树,因为它要么读到旧
 指针要么读到新指针,而两者都能解析。
 
-`changes` 产出的是计划而不是传输动作。SOW 没有 endpoint 配置、没有凭据,也不调用任何同步工具
-——把路径喂给 `rsync --files-from`,或者喂给你环境里现成的东西。
+`changes` 是给自定义传输使用的底层本地计划。`sow.yml` 已定义发布目标时,优先使用内置的
+有序、可恢复路径:
+
+```bash
+sow publish prod
+```
+
+SOW 支持 `filesystem` 与 S3 兼容的 `r2` 目标,记录 checkpoint,并要求对未终结尝试显式恢复
+或 abort。发布凭据通过 `env://` 或 `file://` 引用保存,不会进入公共树。
 
 {{% alert title="dirty 的仓库给不出计划" color="warning" %}}
 仓库处于 dirty、recovering 或 error 时,`changes` 拒绝作答——此时没有一棵自洽的物理树可供描述。
@@ -359,6 +338,6 @@ update	pointer	dists/el9/x86_64/repodata/repomd.xml.asc	832	d0de8d66071a1fb6ecc1
 树里的每一条路径,以及哪些绝不能进文档根目录。
 {{< /doc-card >}}
 {{< doc-card title="兼容性" link="/zh/docs/reference/compatibility/" >}}
-测过哪些客户端,以及硬链接与文件系统的要求。
+测过哪些客户端,以及规范布局与 Provider 边界。
 {{< /doc-card >}}
 {{< /doc-cards >}}

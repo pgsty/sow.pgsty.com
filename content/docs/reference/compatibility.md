@@ -1,163 +1,112 @@
 ---
 title: "Compatibility"
 linkTitle: "Compatibility"
-description: "Which clients consume SOW repositories, which platforms run the binary, and the constraints you must respect."
+description: "Verified package clients, release platforms, reposync boundaries, and publication-provider status for SOW 0.2.0."
 url: "/docs/reference/compatibility/"
 weight: 700
 icon: fa-solid fa-circle-check
 ---
 
-SOW writes standard rpm-md and Debian archive metadata, so the question is not whether a
-client *can* read it but which clients have actually been verified against it. This page
-lists the tested matrix, the platforms the binary runs on, and the handful of constraints
-that will bite you if you ignore them.
+SOW 0.2.0 writes standard rpm-md and Debian archive metadata. This page separates normal
+client consumption from compatibility exports and separates integration evidence from
+provider-specific production validation.
 
 ## Package manager clients
 
-Every row below was exercised end to end against a repository built by SOW: refresh the
-index, list packages, and install one.
+The maintained client matrix exercises index refresh, package discovery, and install:
 
-| Client | Version | Result |
-|---|---|---|
-| AlmaLinux 10 `dnf` | dnf4 | `makecache` and `install` with `repo_gpgcheck=1` and `gpgcheck=1` |
-| AlmaLinux 9 `dnf` | dnf4 | Same |
-| AlmaLinux 8 `dnf` | dnf4 | Same |
-| CentOS 7 `yum` | 3.4.3 | `makecache` and package listing, including correct multi-version NEVRA ordering |
-| Debian 13 `apt` | 3.0.3 | `update` with `InRelease` verification and by-hash fetching, then `install` |
-| Debian 12 `apt` | 2.6.1 | Same; also verified against a plain flat repository |
-| `dnf reposync` | EL9 | Complete mirror of the pool-based layout |
+| Client | Tested behavior |
+|---|---|
+| AlmaLinux 8 / 9 / 10 `dnf` | `makecache` and install, including repository and package signature checks |
+| CentOS 7 `yum` 3.4.3 | metadata and package listing, including multi-version NEVRA ordering |
+| Debian 12 / 13 `apt` | signed `InRelease`, by-hash index fetch, and install |
 
-Both signature checks were on for the RPM tests: `repo_gpgcheck=1` verifies
-`repodata/repomd.xml.asc`, and `gpgcheck=1` verifies the package signatures. For APT,
-`Signed-By` verification of `InRelease` was used, and HTTP logs confirm `apt` fetched its
-indexes through `by-hash/SHA256/` rather than the direct paths.
+Plain repositories from `sow create` are consumable by `dnf`, `yum`, and `apt` over
+`file://` and HTTP. A flat APT repository has no signed `Release`; use `[trusted=yes]` or
+use a signed managed distribution when authenticity matters.
 
-CentOS 7's `yum` 3.4.3 is the oldest client tested. It predates by-hash and does not need
-it — the RPM side has no equivalent mechanism, and checksum-named metadata files serve the
-same purpose.
+## Canonical RPM layout and reposync
 
-Plain flat repositories built with `sow create` are consumable by `dnf`, `yum`, and `apt`
-over both `file://` and `http://`.
+Ordinary DNF/YUM consumption is supported against metadata-only views. Default
+`dnf reposync` is **not** supported against that canonical view because rpm-md package
+hrefs use `../../../pool/...` and the mirror tool rejects destinations outside its leaf
+download root.
 
-{{% alert title="Flat repositories and APT" color="info" %}}
-A flat repository has no `Release` file, so `apt` will not verify it. Mark the source
-`[trusted=yes]`, or use a managed distribution with metadata signing when authenticity
-matters.
-{{% /alert %}}
+For a downstream mirror workflow, create an explicit self-contained artifact:
 
-## Platforms
+```bash
+sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
+```
 
-The binary is built with `CGO_ENABLED=0` and has no runtime library dependencies.
+The export rewrites hrefs to a local `pool/`. Treat export verification separately from
+canonical repository verification; exporting does not change the managed repository.
+
+## Binary platforms
+
+Release archives are built with `CGO_ENABLED=0` for:
 
 | OS | `amd64` | `arm64` |
 |---|---|---|
 | Linux | supported | supported |
 | macOS (Darwin) | supported | supported |
 
-Windows is not supported. SOW depends on POSIX advisory locks (`flock`), hardlinks, and
-atomic `rename`, and there is no portable equivalent.
+Linux also receives RPM and DEB packages. Windows is not supported: the workspace model
+depends on POSIX advisory locks and atomic rename semantics.
 
-Building a repository on macOS and serving it from Linux is a supported workflow. To keep
-it portable, SOW rejects any pool path that would collide under case-insensitive
-comparison, so a repository built on case-sensitive Linux stays valid when copied to a
-default macOS filesystem.
+## Filesystem boundary
 
-## Filesystem requirements
+Build managed repositories on a local POSIX filesystem. SOW does not claim NFS or other
+network-filesystem correctness because its transaction model depends on local locking,
+fsync, and rename behavior. The canonical v0.2.0 layout does not require hardlinks between
+`pool/` and `dists/`; the earlier view-local hardlink layout was an unreleased prototype.
 
-**Local POSIX filesystems only.** SOW is not tested on and does not claim support for NFS
-or other network filesystems, which do not provide the locking and durability semantics
-its transaction model depends on. Build locally, then copy the result wherever you like.
+Once committed, the complete public repository can be copied normally or published with
+SOW. Preserve `pool/` and `dists/` together.
 
-**`pool/` and `dists/` must share one filesystem.** Architecture views project the pool
-with hardlinks, which cannot cross a device boundary. If they are on different
-filesystems, SOW fails loudly rather than silently copying:
+## Publication providers
 
-```text
-<repo>/pool/...                                 # canonical bytes
-<repo>/dists/<dist>/x86_64/pool/...             # hardlink, same inode
-```
+| Provider | v0.2.0 status |
+|---|---|
+| `filesystem` | implemented, including conditional lifecycle maintenance after grace and absence checks |
+| `r2` | implemented through the S3-compatible API; Integration CI exercises the path with pinned MinIO |
+| Cloudflare R2 production account | provider-specific authorization, credentials, and hosted behavior must be verified in that environment |
+| R2 deletion | deliberately disabled; `sow gc TARGET` persists a report-only candidate set and never deletes objects |
 
-In practice this only matters if you mount a separate volume under a repository. The
-staging directory is placed on the same filesystem as the target for the same reason —
-that is what makes the final `rename` atomic.
+This distinction matters: a green S3-compatible integration test is implementation
+evidence, not proof that a particular Cloudflare account or public CDN is configured.
 
-Copying a repository elsewhere has no such requirement. A tool that does not preserve
-hardlinks turns each alias into an independent regular file: functionally identical for
-clients, just larger on disk. Use `rsync --hard-links` to keep the deduplication.
-
-## Metadata SOW does not emit
-
-A few things traditional tools produce are deliberately absent. All of them are optional
-for every client tested above.
+## Metadata SOW intentionally omits
 
 | Not generated | Consequence |
 |---|---|
-| SQLite repodata (`primary.sqlite.bz2` and friends) | None. `dnf` and `yum` use the XML metadata; the SQLite variants have been optional for years. |
-| `modulemd` | Modular streams are out of scope. Non-modular packages are unaffected. |
-| zchunk metadata | `dnf` falls back to full metadata downloads, which is its normal behavior when zchunk is absent. |
-| `MD5Sum` and `SHA1` in `Release` | Requires a client that accepts a SHA256-only manifest. Every tested `apt` does. |
-| `MD5sum` and `SHA1` fields in `Packages` | Same — `SHA256` is present and sufficient. |
-| Per-architecture `Release` stubs under `binary-<arch>/` | `apt` does not require them; `reprepro` writes them, SOW does not. |
-| Source indexes (SRPM, DSC) | Binary packages only. |
+| SQLite repodata | DNF/YUM use the XML metadata |
+| `modulemd` | modular streams are out of scope |
+| zchunk | clients download normal compressed metadata |
+| MD5/SHA1 DEB manifests | SHA256 is required |
+| source-package indexes | v0.2.0 manages binary packages |
 
-Taking `Release` and `Packages` together, a DEB distribution publishes exactly this and
-nothing more:
-
-```console
-Acquire-By-Hash: yes
-SHA256:
- 95e8c59d21d69285ac788bd8ea78b0544b0a1395ae9a0e3a700ec13b420e5c39 2245 main/binary-amd64/Packages
- 4d658bdf6a542999f737e5f89e3bdb504c205fb85cda76f3e4b1ef73619c5900 751 main/binary-amd64/Packages.gz
-```
-
-## by-hash and older APT
-
-Managed DEB distributions always publish `by-hash/SHA256/` and advertise
-`Acquire-By-Hash: yes`. This is what makes an index update safe for a client that fetched
-`Release` a moment earlier: the old index stays reachable by digest while the new one is
-published.
-
-APT 1.2 (2015) and later use by-hash automatically. Older clients ignore the field and
-fetch `main/binary-<arch>/Packages` directly, which SOW also always writes — so they work,
-just without the update-race protection.
-
-`reprepro` does not support by-hash at all, which is one practical reason to migrate.
+Managed DEB views publish `by-hash/SHA256/`; RPM views use checksum-named metadata files.
+Both keep immutable metadata reachable while the mutable pointer changes.
 
 ## External tools
 
-SOW does not invoke `createrepo_c`, `dpkg-scanpackages`, `modifyrepo_c`, or `repo2module`.
-RPM headers and Debian control files are parsed in-process, and all metadata is rendered
-in-process.
-
-Exactly two operations reach outside the binary:
-
-| Operation | Requires | Notes |
-|---|---|---|
-| RPM package signing | `rpm` and a working GPG environment | Plain `create --sign-with`, and managed `signing.rpm.packages.mode` set to `fill` or `always`. Signing always happens on a private staged copy. |
-| Metadata signing with `agent://` | `gpg` with a running agent | Only for `agent://` key references. |
-
-Metadata signing with a `file://` or `env://` key is done in-process, so a repository with
-signed `InRelease` and `repomd.xml.asc` needs no external tooling at all.
+Metadata generation and parsing are in-process. RPM package signing requires `rpm` and a
+working GPG environment. `agent://` metadata keys require `gpg` with an agent; `file://`
+and `env://` metadata signing is in-process.
 
 ## Version
 
-The compatibility results on this page were produced with:
-
-```bash
-sow version
-```
-
 ```console
-sow 0.2.0-dev darwin/arm64 go1.26.5
+$ sow version
+sow 0.2.0 darwin/arm64 go1.26.5
 ```
 
-Repository output is deterministic: fixed timestamps, fixed compression parameters, and
-stable ordering mean the same inputs and configuration produce byte-stable metadata.
-Re-running `sow create` over an unchanged directory is a no-op that rewrites nothing.
+The exact OS, architecture, and Go version reflect the binary being run. Release identity
+is `v0.2.0`; names such as `sow.cli/v1`, `sow/v3`, and `sow/export/v1` are protocol or
+schema identifiers, not product versions.
 
 ## See also
 
-- [Installation](/docs/start/install/) — platform matrix and how to build from source
-- [Repository Layout](/docs/reference/layout/) — where the hardlink constraint comes from
-- [Migrate from createrepo_c / reprepro](/docs/tutorial/migration/) — feature-level comparison
-- [Serve Repositories](/docs/tutorial/serving/) — client configuration for `dnf` and `apt`
+- [Repository Layout](/docs/reference/layout/)
+- [Configuration](/docs/reference/config/)
+- [CLI: Publish, Retain, GC, and Export](/docs/reference/cli/publication/)

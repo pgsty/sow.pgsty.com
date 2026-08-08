@@ -26,22 +26,22 @@ No row inherits PASS from another row or from an earlier Repository layout.
 
 ## The `reposync` lesson
 
-The v0.2 design tested an RPM view whose metadata used `../../../pool/...`. On AlmaLinux
+The pre-release C2 work tested an RPM view whose metadata used `../../../pool/...`. On AlmaLinux
 9.8, ordinary DNF operations passed: `makecache`, query, download, and install. Default
 `dnf reposync` failed because it normalized the destination outside its per-repository
 download root and rejected the write through its safe-path check.
 
-v0.2 treated default `reposync` as mandatory, so it selected C2: view-local `pool/...`
+C2 treated default `reposync` as mandatory, so it selected view-local `pool/...`
 hardlinks and metadata hrefs with no parent traversal. The resulting native and neutral
 package matrix passed ordinary DNF and default `reposync`, even after a copy lost hardlink
 identity.
 
-That result remains valid evidence for v0.2. It does not prove that the 0.3 canonical
-single-payload layout passes default `reposync`.
+That result remains valid evidence for the C2 prototype. It does not prove that the
+v0.2.0 canonical single-payload layout passes default `reposync`.
 
-## The 0.3 contract
+## The v0.2.0 contract
 
-The 0.3 development design makes these choices explicit:
+The current release makes these choices explicit:
 
 - APT and ordinary DNF against the complete Repository are required.
 - Whole-root relocation is required.
@@ -53,7 +53,7 @@ The 0.3 development design makes these choices explicit:
 
 ## Filesystem compatibility
 
-Canonical 0.3 correctness never depends on inode identity or hardlink count. A Repository
+Canonical v0.2.0 correctness never depends on inode identity or hardlink count. A Repository
 must keep working after a normal copy, tar extraction, or object-store upload. Hardlinks
 are limited to private transaction state, small immutable APT by-hash aliases, and an
 explicit trusted compatibility export.
@@ -80,9 +80,10 @@ upload, conditional put, listing, and public verification yet lack atomic condit
 delete. SOW records capabilities per provider and disables the state-machine branch that
 cannot be proven.
 
-In particular, the 0.3 R2 path is implemented and mock-verified for publication, while a
-fresh authorized nonproduction R2 run remains a separate release-evidence gate and physical
-remote deletion is disabled by design.
+The v0.2.0 R2 path is implemented and exercised against a pinned S3-compatible MinIO
+fixture in GitHub Integration. A fresh authorized nonproduction Cloudflare R2 run remains
+a separate provider-evidence gate. Physical R2 deletion is disabled by design; target GC
+records retained candidates instead.
 
 ## Reading status words
 
@@ -96,7 +97,7 @@ remote deletion is disabled by design.
 | `UNSUPPORTED` | intentionally outside the contract |
 | `UNVERIFIED` | no current evidence; never a synonym for failure or PASS |
 
-For the released v0.2 client matrix, use the operational
-[Compatibility reference](/docs/reference/compatibility/). For 0.3, consult the release
-notes when that line is published; this design page deliberately avoids upgrading local
-implementation evidence into a release claim.
+For the current client and tool matrix, use the operational
+[Compatibility reference](/docs/reference/compatibility/). It distinguishes ordinary
+Repository consumption from the explicit RPM leaf export and does not upgrade a C2 result
+into a current canonical-layout claim.

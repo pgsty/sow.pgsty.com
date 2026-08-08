@@ -11,11 +11,11 @@ This section records the reasoning that should survive an implementation rewrite
 SOW draws ownership boundaries, which invariants make a repository safe to copy and
 publish, and why a compatibility choice was accepted or rejected.
 
-{{% alert title="Version boundary" color="warning" %}}
-The operational guides and CLI reference on this site describe the released **v0.2.0**
-line. These design pages also document the implemented **0.3 development** architecture.
-They label the boundary explicitly; a development design is not a release or compatibility
-claim.
+{{% alert title="Current release" color="primary" %}}
+All maintained user, reference, and design pages describe **SOW v0.2.0**. The
+single-payload layout, publication targets, retention, garbage collection, migration, and
+RPM compatibility export are part of that line. Wire identifiers such as `sow.cli/v1` and
+configuration schema `sow/v3` are versioned independently from the product release.
 {{% /alert %}}
 
 {{< doc-cards cols="2" >}}
@@ -28,7 +28,7 @@ Workspace, Repository, Dist, Package Object, Membership, Generation, and publica
 target — and why each has a separate owner.
 {{< /doc-card >}}
 {{< doc-card title="Single-Payload Layout" link="/docs/design/single-payload/" >}}
-Why 0.3 keeps one canonical package path per Repository while rendering metadata-only
+Why v0.2.0 keeps one canonical package path per Repository while rendering metadata-only
 APT and RPM views.
 {{< /doc-card >}}
 {{< doc-card title="Publication & Recovery" link="/docs/design/publication/" >}}
@@ -40,17 +40,17 @@ Separate protocol, client, mirror-tool, filesystem, HTTP, and object-storage com
 instead of hiding them behind one green check mark.
 {{< /doc-card >}}
 {{< doc-card title="Design Evolution" link="/docs/design/evolution/" >}}
-How the V1 experiment, v0.2 C2 hardlink layout, and 0.3 single-payload layout relate —
-including the decision that 0.3 deliberately reverses.
+How the v0.1.0 experiment, the unreleased C2 prototype, and the current v0.2.0
+single-payload layout relate.
 {{< /doc-card >}}
 {{< /doc-cards >}}
 
 ## Authority and evidence
 
 These pages are the maintained design authority. Historical PRDs, review transcripts,
-ADRs, and dated acceptance reports are preserved in the source repository's sealed
-archive. They remain evidence for the version and environment they name, but they do not
-silently redefine the current product.
+ADRs, and dated acceptance reports remain available through Git history and version tags.
+They remain evidence for the revision and environment they name, but they do not silently
+redefine the current product.
 
 A claim progresses through distinct layers:
 

@@ -42,17 +42,23 @@ configuration valid: /srv/repo repositories=1 dists=2
 ## 根级字段
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures: [x86_64, aarch64]
 repos:
   <name>: <repository>
+targets:
+  <name>: <publication-target>
 ```
 
 | 字段 | 类型 | 必填 | 默认值 | 含义 |
 |---|---|---|---|---|
-| `schema` | string | 是 | — | 必须恰好是 `sow/v2`,其他值一律是配置错误。 |
+| `schema` | string | 是 | — | 必须恰好是 `sow/v3`,其他值一律是配置错误。 |
 | `architectures` | 字符串列表 | 否 | `[x86_64, aarch64]` | 本工作区允许管理的 CPU 架构族。 |
 | `repos` | map | 否 | 空 | 仓库名到仓库配置的映射。 |
+| `targets` | map | 否 | 空 | 发布目标名到目标配置的映射。 |
+
+新工作区要求 `schema: sow/v3`。`sow/v2` 标识未发布 C2 布局,只通过显式
+`sow repo migrate` transition 接受;它不是第二种当前配置格式。
 
 ### architectures
 
@@ -382,6 +388,59 @@ operation rejected: ... deb metadata key: gpg public-key export returned no boun
   configuration error: ... repository "a" signing: rpm metadata agent key uses its ambient gpg-agent and cannot accept a passphrase reference
   ```
 
+## 发布目标
+
+每个目标把一个已配置 Repository 绑定到一个存储命名空间。目标名使用与仓库相同的小写文法。
+
+```yaml
+targets:
+  local:
+    repository: pigsty
+    provider: filesystem
+    endpoint: file:///srv/mirror
+    prefix: pigsty
+    public_endpoint: file:///srv/mirror/pigsty/
+    max_cache_ttl: 0s
+    authoritative_workspace: true
+    single_writer: true
+    exclusive_write_authority: true
+
+  prod:
+    repository: pigsty
+    provider: r2
+    endpoint: https://0123456789abcdef.r2.cloudflarestorage.com
+    region: auto
+    bucket: packages
+    prefix: pigsty
+    credential: env://SOW_R2_CREDENTIAL
+    public_endpoint: https://repo.example.com/pigsty/
+    max_cache_ttl: 24h0m0s
+    authoritative_workspace: true
+    single_writer: true
+    exclusive_write_authority: true
+```
+
+| 字段 | 必填 | 含义 |
+|---|---|---|
+| `repository` | 是 | 本目标拥有的现有 Repository。 |
+| `provider` | 是 | `filesystem` 或 `r2`。 |
+| `endpoint` | 是 | 无尾斜杠的规范 `file:///absolute/path`,或 R2 的规范 `https://host`。 |
+| `region` | R2 | 必须是 `auto`;filesystem 禁用。 |
+| `bucket` | R2 | 小写规范 bucket 名;filesystem 禁用。 |
+| `prefix` | 是 | 相对公共树前缀;空串表示存储命名空间根。 |
+| `credential` | R2 | `env://NAME` 或 `file:///absolute/path`;禁止内联秘密。 |
+| `public_endpoint` | 是 | 以 `/` 结尾的规范 `https://`、`http://` 或 `file://` URL,用于公共缺失证据。 |
+| `max_cache_ttl` | 是 | 规范的非负 Go duration,包括显式 `0s`。 |
+| `authoritative_workspace` | 是 | 必须为 `true`。 |
+| `single_writer` | 是 | 必须为 `true`。 |
+| `exclusive_write_authority` | 是 | 必须为 `true`。 |
+
+三个 authority 布尔值是显式安全确认,不是默认值。同一存储上的目标前缀不能重叠;
+filesystem 目标也不能解析到重叠的有效路径。这些规则防止并发写者破坏条件式发布与 GC。
+
+R2 凭据是私有引用。被引用材料在运行时提供 S3 兼容凭据;`config show`、JSON 输出与公共树
+都不会包含它。
+
 ## 完整示例
 
 一个工作区,两个仓库:一个受保护的生产仓库(两条元数据签名链 + RPM 补签),
@@ -389,7 +448,7 @@ operation rejected: ... deb metadata key: gpg public-key export returned no boun
 
 ```yaml
 # sow.yml —— 工作区根配置
-schema: sow/v2
+schema: sow/v3
 
 # 本工作区允许管理的 CPU 架构族。这是上限,不是目标。
 # amd64/arm64 作为输入别名被接受,规范化为 x86_64/aarch64。
@@ -452,6 +511,21 @@ repos:
         format: rpm
       trixie:
         format: deb
+
+targets:
+  prod:
+    repository: pigsty
+    provider: r2
+    endpoint: https://0123456789abcdef.r2.cloudflarestorage.com
+    region: auto
+    bucket: packages
+    prefix: pigsty
+    credential: env://SOW_R2_CREDENTIAL
+    public_endpoint: https://repo.example.com/pigsty/
+    max_cache_ttl: 24h0m0s
+    authoritative_workspace: true
+    single_writer: true
+    exclusive_write_authority: true
 ```
 
 用之前先验证:
@@ -469,13 +543,13 @@ sow config show --all
   见[仓库布局](/zh/docs/reference/layout/)。
 - **APT component。** 固定为 `main`;YUM 没有 component 概念。
 - **架构视图。** 由 `architectures` 与包头共同推导,不能逐包声明。
-- **远端 endpoint、镜像、凭据。** SOW 只负责写出本地目录树,复制到哪里是你和你的
-  同步工具的事。
-- **代际保留数量。** 保留窗口由事务模型固定,不可调。
+- **内联秘密。** 目标只接受 credential 引用;key 与 passphrase 材料同样留在引用背后。
+- **自动保留数量。** 保留是显式 `sow retain add/rm` 操作,不是配置中的滚动计数。
 
 ## 延伸阅读
 
 - [`sow config`](/zh/docs/reference/cli/config/) —— 读取本文件的命令
 - [成员策略](/zh/docs/feature/policy/) —— `exclude` 与 `limit` 随时间演化的行为
 - [签名模型](/zh/docs/feature/signing/) —— 两条信任链的详细解释
+- [发布、保留、GC 与导出](/zh/docs/reference/cli/publication/) —— 目标生命周期命令
 - [退出码](/zh/docs/reference/exit-codes/) —— 这里的 `2` 与 `6` 分别意味着什么

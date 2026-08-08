@@ -8,8 +8,8 @@ icon: fa-solid fa-minus
 ---
 
 `sow rm` takes packages out of the Desired Membership of the Dists you select and, by default,
-rebuilds the affected indexes immediately. It never deletes bytes from `pool/` — membership and
-content are separate concepts, and there is no garbage collection.
+rebuilds the affected indexes immediately. It does not delete bytes from `pool/` — membership and
+content are separate concepts, and reclamation is the separate conservative `sow gc` operation.
 
 ## Synopsis
 
@@ -176,3 +176,4 @@ sow rm patroni -r pgsql -d el9 -c --json | jq -r '.result.changes[] | "\(.phase)
 - [sow add](/docs/reference/cli/add/) — the inverse operation
 - [sow build](/docs/reference/cli/build/) — converging after `--skip`
 - [Membership Policy](/docs/feature/policy/) — why removed members do not come back
+- [Publish, Retain, GC, and Export](/docs/reference/cli/publication/) — when bytes can be reclaimed

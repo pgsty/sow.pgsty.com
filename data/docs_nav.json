@@ -1,7 +1,7 @@
 {
  "meta": {
   "generated_by": "bin/gen_docs_nav.py",
-  "page_count": 46
+  "page_count": 47
  },
  "page_by_url": {
   "/docs/": "docs",
@@ -43,6 +43,7 @@
   "/docs/reference/cli/rm/": "docs/reference/cli/rm",
   "/docs/reference/cli/query/": "docs/reference/cli/query",
   "/docs/reference/cli/build/": "docs/reference/cli/build",
+  "/docs/reference/cli/publication/": "docs/reference/cli/publication",
   "/docs/reference/cli/log/": "docs/reference/cli/log",
   "/docs/reference/config/": "docs/reference/config",
   "/docs/reference/package-ref/": "docs/reference/package-ref",
@@ -109,6 +110,7 @@
    "docs/reference/cli/rm",
    "docs/reference/cli/query",
    "docs/reference/cli/build",
+   "docs/reference/cli/publication",
    "docs/reference/cli/log"
   ]
  },
@@ -310,6 +312,12 @@
    "/docs/reference/cli/",
    "/docs/reference/cli/build/"
   ],
+  "/docs/reference/cli/publication/": [
+   "/docs/",
+   "/docs/reference/",
+   "/docs/reference/cli/",
+   "/docs/reference/cli/publication/"
+  ],
   "/docs/reference/cli/log/": [
    "/docs/",
    "/docs/reference/",
@@ -464,8 +472,8 @@
     {
      "page": "docs/feature/views",
      "url": "/docs/feature/views/",
-     "title_en": "Pool & Architecture Views",
-     "title_zh": "包池与架构视图",
+     "title_en": "Pool & Views",
+     "title_zh": "包池与视图",
      "children": []
     },
     {
@@ -621,6 +629,13 @@
        "url": "/docs/reference/cli/build/",
        "title_en": "build / status / check / changes",
        "title_zh": "build / status / check / changes",
+       "children": []
+      },
+      {
+       "page": "docs/reference/cli/publication",
+       "url": "/docs/reference/cli/publication/",
+       "title_en": "Publish & Lifecycle",
+       "title_zh": "发布与生命周期",
        "children": []
       },
       {

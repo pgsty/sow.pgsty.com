@@ -25,7 +25,7 @@ sow version
 ```
 
 ```console
-sow 0.2.0-dev darwin/arm64 go1.26.5
+sow 0.2.0 darwin/arm64 go1.26.5
 ```
 
 If that fails, see [Installation](/docs/start/install/).
@@ -61,7 +61,7 @@ initialized /home/you/repo: config_created=true repositories_initialized=0 dists
 `sow init` wrote a minimal `sow.yml`:
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -199,78 +199,49 @@ The pool path is `pool/<prefix>/<source>/<filename>`. For RPMs the source comes 
 `pool/e/etcd/`. The pool is flat with respect to Dists: one object, one location, however many
 Dists reference it.
 
-### Architecture views
+### Metadata-only architecture views
 
-The pool is not what `dnf` reads. Each Dist renders one view per architecture:
+Each Dist renders one metadata view per architecture. `x86_64` metadata contains native
+`x86_64` packages plus `noarch`; `aarch64` contains native `aarch64` plus `noarch`.
+There are no RPM files beneath `dists/`:
 
 ```bash
-find pigsty/dists/el9 -name "*.rpm" | sort
+find pigsty/dists/el9 -type f | sort
 ```
 
 ```console
-pigsty/dists/el9/aarch64/pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.aarch64.rpm
-pigsty/dists/el9/aarch64/pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm
-pigsty/dists/el9/aarch64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-pigsty/dists/el9/aarch64/pool/p/pgbouncer/pgbouncer-1.25.2-42PGDG.rhel9.6.aarch64.rpm
-pigsty/dists/el9/x86_64/pool/a/armadillo/armadillo-10.8.2-3.el9.x86_64.rpm
-pigsty/dists/el9/x86_64/pool/e/etcd/etcd-3.5.12-1.el8.x86_64.rpm
-pigsty/dists/el9/x86_64/pool/e/etcd/etcd-3.5.30-1.el9.x86_64.rpm
-pigsty/dists/el9/x86_64/pool/e/etcd/etcd-debuginfo-3.3.11-4.el8.x86_64.rpm
-pigsty/dists/el9/x86_64/pool/e/etcd/etcd-debugsource-3.3.11-4.el8.x86_64.rpm
-pigsty/dists/el9/x86_64/pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm
-pigsty/dists/el9/x86_64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
+pigsty/dists/el9/aarch64/repodata/<sha256>-filelists.xml.gz
+pigsty/dists/el9/aarch64/repodata/<sha256>-other.xml.gz
+pigsty/dists/el9/aarch64/repodata/<sha256>-primary.xml.gz
+pigsty/dists/el9/aarch64/repodata/repomd.xml
+pigsty/dists/el9/x86_64/repodata/<sha256>-filelists.xml.gz
+pigsty/dists/el9/x86_64/repodata/<sha256>-other.xml.gz
+pigsty/dists/el9/x86_64/repodata/<sha256>-primary.xml.gz
+pigsty/dists/el9/x86_64/repodata/repomd.xml
 ```
 
-The `x86_64` view carries `x86_64` plus `noarch`; the `aarch64` view carries `aarch64` plus
-`noarch`. `noarch` is not a third architecture — it is a neutral projection that lands in every
-applicable view.
-
-Those view files are hardlinks to the root pool, not copies:
-
-```bash
-stat -c "%h %n" pigsty/pool/p/pev2/pev2-1.22.0-1.noarch.rpm \
-                pigsty/dists/el9/x86_64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm \
-                pigsty/dists/el9/aarch64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-```
-
-```console
-3 pigsty/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-3 pigsty/dists/el9/x86_64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-3 pigsty/dists/el9/aarch64/pool/p/pev2/pev2-1.22.0-1.noarch.rpm
-```
-
-One inode, three names. A `noarch` package appearing in two views costs its size once on disk.
-
-{{% alert title="Hardlinks are a hard requirement" color="warning" %}}
-The pool and the views must live on the same POSIX filesystem. If hardlinks are unavailable or
-the paths straddle a mount point, SOW fails loudly rather than silently falling back to copying.
-This matters when you put `pool/` on one volume and `dists/` on another — do not.
-{{% /alert %}}
-
-### Why the views exist
-
-The obvious alternative was to leave one physical pool and point package locations at
-`../../../pool/...`. That was tested against real clients and rejected: `dnf makecache`,
-`repoquery`, `download` and `install` all worked, but `dnf reposync` refused, because the
-normalized local target escaped its per-repository download root.
-
-The shipped layout writes safe relative hrefs with no `..` in them:
+The shipped layout points every package back to the one canonical pool:
 
 ```bash
 gzip -dc pigsty/dists/el9/x86_64/repodata/*-primary.xml.gz | grep -o '<location href="[^"]*"'
 ```
 
 ```console
-<location href="pool/a/armadillo/armadillo-10.8.2-3.el9.x86_64.rpm"
-<location href="pool/e/etcd/etcd-3.5.12-1.el8.x86_64.rpm"
-<location href="pool/e/etcd/etcd-3.5.30-1.el9.x86_64.rpm"
-<location href="pool/e/etcd/etcd-debuginfo-3.3.11-4.el8.x86_64.rpm"
-<location href="pool/e/etcd/etcd-debugsource-3.3.11-4.el8.x86_64.rpm"
-<location href="pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm"
-<location href="pool/p/pev2/pev2-1.22.0-1.noarch.rpm"
+<location href="../../../pool/a/armadillo/armadillo-10.8.2-3.el9.x86_64.rpm"
+<location href="../../../pool/e/etcd/etcd-3.5.30-1.el9.x86_64.rpm"
+<location href="../../../pool/p/patroni/patroni-4.1.4-1PGDG.rhel9.6.noarch.rpm"
 ```
 
-Everything resolves inside the view directory, so `reposync` mirrors the repository correctly.
+Ordinary `dnf makecache`, `repoquery`, `download`, and `install` resolve these paths.
+Default `dnf reposync` does not: its safe-write check refuses a target above its leaf
+download root. Create a self-contained compatibility artifact when needed:
+
+```bash
+sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
+```
+
+That export receives a local `pool/`, rewritten metadata, a manifest, and a
+`.sow-export.json` completion marker. It does not change the canonical repository.
 
 ## Step 6: Filter the noise
 
@@ -281,7 +252,7 @@ so the rules are reviewable and reproducible.
 Edit `~/repo/sow.yml`:
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -502,16 +473,18 @@ This configuration has been verified against AlmaLinux 8, 9, and 10 with dnf4, a
 CentOS 7 with yum 3.4.3, which parses multi-version NEVRA lists correctly. The full matrix is in
 [Compatibility](/docs/reference/compatibility/).
 
-### Mirroring with reposync
+### Build a reposync-compatible leaf
 
-Because the views use safe relative hrefs, `dnf reposync` mirrors the repository intact:
+Do not point default `dnf reposync` at the canonical metadata-only view. Export a leaf,
+serve or copy that directory, and verify it independently:
 
 ```bash
-reposync --repo=pigsty-el9 --download-metadata --downloadcomps -p /srv/mirror
+sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
+find /srv/export/el9-x86_64 -maxdepth 2 -type d | sort
 ```
 
-The mirror reproduces the `pool/` layout beneath the view. This is the check that failed under
-the rejected layout and passes under the shipped one.
+The exported `repodata/` uses local `pool/...` hrefs and is intended specifically for
+tools that require a self-contained repository root.
 
 ## Where to go next
 

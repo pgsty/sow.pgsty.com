@@ -13,9 +13,14 @@ means putting a single file on your `PATH`.
 
 ## Prebuilt binaries
 
-Release archives for every supported platform are published on the
-[GitHub releases page](https://github.com/pgsty/sow/releases). Download the archive that
-matches your OS and CPU, extract it, and move the binary into place:
+SOW v0.2.0 is published on the
+[GitHub releases page](https://github.com/pgsty/sow/releases/tag/v0.2.0) with four
+Linux/macOS archives, Linux RPM and DEB packages, and `SHA256SUMS`. Before automating a
+download, confirm that the release entry contains the matching archive and checksum; a
+source revision or tag alone does not prove that assets were uploaded. Extract the
+matching archive and move the binary into place:
+
+No Docker or other container image is published for v0.2.0.
 
 ```bash
 tar -xzf sow_*.tar.gz
@@ -36,13 +41,13 @@ any reasonably modern kernel of the matching OS and CPU family.
 | macOS (Darwin) | supported | supported | Intel and Apple Silicon |
 | Windows | — | — | not supported |
 
-Windows is out of scope: SOW depends on POSIX advisory locks, hardlinks, and atomic
+Windows is out of scope: SOW depends on POSIX advisory locks and atomic
 `rename`. For the same reason, keep repositories on local POSIX filesystems — network
 filesystems such as NFS do not provide the locking and durability semantics it relies on.
 
 ## Build from source
 
-A Go toolchain is the only build requirement. The project targets **Go 1.26** or newer.
+A Go toolchain is the only build requirement. The project declares **Go 1.26.5** or newer.
 
 ```bash
 git clone https://github.com/pgsty/sow.git
@@ -63,7 +68,7 @@ sow version
 ```
 
 ```console
-sow 0.2.0-dev darwin/arm64 go1.26.5
+sow 0.2.0 darwin/arm64 go1.26.5
 ```
 
 The line reports the SOW version, the platform the binary targets, and the Go toolchain

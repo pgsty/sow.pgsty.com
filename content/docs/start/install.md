@@ -21,22 +21,26 @@ reasonably modern kernel of the matching OS and CPU family.
 | Linux | supported | supported |
 | macOS (Darwin) | supported | supported |
 
-Windows is not supported. SOW relies on POSIX advisory locks, hardlinks, and atomic
+Windows is not supported. SOW relies on POSIX advisory locks and atomic
 `rename`, and it is only tested on local POSIX filesystems — network filesystems such as
 NFS do not provide the locking and durability semantics it depends on.
 
 {{% alert title="Filesystem requirement" color="info" %}}
-In [managed mode](/docs/start/workspace/), each architecture view is projected from the
-package pool with hardlinks, so a repository's `pool/` and `dists/` must live on the same
-filesystem. SOW fails loudly rather than silently falling back to copying. Plain mode has
-no such requirement.
+Build a [managed workspace](/docs/start/workspace/) on a local POSIX filesystem so locks,
+fsync, and atomic rename retain their contract. The committed public `pool/ + dists/` tree
+uses no view-local hardlink aliases and can be copied or published normally.
 {{% /alert %}}
 
 ## Download a release
 
-Prebuilt binaries for every supported platform are published on the
-[GitHub releases page](https://github.com/pgsty/sow/releases). Download the archive that
-matches your OS and architecture, extract it, and move the binary onto your `PATH`:
+SOW v0.2.0 is published on the
+[GitHub releases page](https://github.com/pgsty/sow/releases/tag/v0.2.0) with four
+Linux/macOS archives, Linux RPM and DEB packages, and `SHA256SUMS`. Before automating a
+download, confirm that the release entry contains the matching archive and checksum; a
+source revision or tag alone does not prove that assets were uploaded. Extract the
+matching archive and move the binary onto your `PATH`:
+
+No Docker or other container image is published for v0.2.0.
 
 ```bash
 tar -xzf sow_*.tar.gz
@@ -48,7 +52,7 @@ needs elevated privileges for its own operation.
 
 ## Build from source
 
-Building requires only a Go toolchain. Clone the repository and build the `cmd/sow`
+Building requires Go 1.26.5 or newer. Clone the repository and build the `cmd/sow`
 entrypoint:
 
 ```bash
@@ -71,7 +75,7 @@ sow version
 ```
 
 ```console
-sow 0.2.0-dev darwin/arm64 go1.26.5
+sow 0.2.0 darwin/arm64 go1.26.5
 ```
 
 The version line reports the SOW version, the platform the binary was built for, and the

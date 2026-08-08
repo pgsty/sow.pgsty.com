@@ -130,7 +130,7 @@ Signing is configured in `sow.yml` per repository. There is no command-line over
 signed a tree is a property of the configuration, and it is recorded in the audit log.
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -174,7 +174,7 @@ sow config show --all
 ```
 
 ```console
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64

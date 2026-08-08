@@ -22,7 +22,7 @@ Workspace 工作区                    发现与配置边界
 
 **工作区(Workspace)**只拥有两样东西:根级 `sow.yml` 和 `.sow/` 状态目录。工作区根下其他任何东西都不属于 SOW。它是发现的单位 —— 命令从某个起始目录向上找到工作区 —— 也是架构许可表所在的地方。
 
-**仓库(Repository)**固定在 `<workspace>/<name>`。你不能把它指到别处,没有 `path` 选项。一个 Repository 拥有自己的 `pool/`、`dists/`、独立 SQLite、独立锁和独立恢复状态。它是事务、Generation 与 Changeset 的边界。两个 Repository 之间永不去重 —— 同一个包 add 进两个仓库就存两份,这是刻意的:这样删掉一个仓库永远不可能伤到另一个。
+**仓库(Repository)**固定在 `<workspace>/<name>`。你不能把它指到别处,没有 `path` 选项。一个 Repository 拥有自己的 `pool/`、`dists/`、SQLite、锁、恢复状态、Generation、保留代根、发布 checkpoint 与 GC 证据。两个 Repository 之间永不去重 —— 同一个包 add 进两个仓库就存两份,这是刻意的:这样删掉一个仓库永远不可能伤到另一个。
 
 **Dist** 是一个单一格式(`rpm` 或 `deb`)的普通具名成员集合。名字对 SOW 是不透明字符串。`el9`、`trixie`、`el9-beta`、`customer-acme` —— 它们都不产生状态机、晋升流程或快照。想要一个 beta 频道,就建一个叫 `el9-beta` 的 Dist;含义存在于你的脑子和 `.repo` 文件里,不在 SOW 里。
 
@@ -79,7 +79,7 @@ $ find .sow | sort
 只有一个配置文件,用严格 decoder 解析。未知字段不会被忽略 —— 它会失败。重复的规范化架构、非法名称或 format、Dist 架构不是工作区许可表的子集、非法 glob 或分类、不完整的 signing 块,同样失败。
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -94,13 +94,24 @@ repos:
         format: rpm
       trixie:
         format: deb
+targets:
+  local:
+    repository: pigsty
+    provider: filesystem
+    endpoint: file:///srv/mirror
+    prefix: pigsty
+    public_endpoint: file:///srv/mirror/pigsty/
+    max_cache_ttl: 0s
+    authoritative_workspace: true
+    single_writer: true
+    exclusive_write_authority: true
 ```
 
 `config show --all` 展开全部默认值与规范化别名,让你看到 SOW 实际的决定:
 
 ```console
 $ sow config show --all
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -137,7 +148,8 @@ $ sow config check
 configuration valid: /data/ws repositories=1 dists=2
 ```
 
-完整 schema 见 [`sow.yml` 配置参考](/zh/docs/reference/config/)。
+完整 schema(包括 `filesystem` 与 `r2` 发布目标)见
+[`sow.yml` 配置参考](/zh/docs/reference/config/)。
 
 ## 发现:哪个工作区?
 
@@ -183,7 +195,7 @@ workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie);
 
 `sow init` 的幂等性是设计出来的,它的规则是架构不变式而不是使用便利:
 
-- **没有 `sow.yml`:** 创建一个,写入 `schema: sow/v2` 与 `architectures: [x86_64, aarch64]`,同时创建 `.sow/`。不自动创建任何 Repository。
+- **没有 `sow.yml`:** 创建一个,写入 `schema: sow/v3` 与 `architectures: [x86_64, aarch64]`,同时创建 `.sow/`。不自动创建任何 Repository。
 - **已有合法配置:** 按稳定名称顺序补齐尚未初始化的部分 —— 缺失的 Repository 外壳、缺失的 SQLite、整个缺失的 Dist。新建的 Dist 立刻生成其当前有效架构的全部空视图。
 - **已有有效数据库状态或有效协议指针:** 只校验。绝不覆盖、绝不清零 Generation、绝不重写字节。
 - **Dist 已初始化之后又往配置里加了架构:** `init` 不渲染新视图、不推进 Generation。该 Dist 保持 dirty,等待显式 `build`。移除仍被成员或 Built 状态使用的架构族则失败。
@@ -215,7 +227,8 @@ repos:
 
 ## 继续阅读
 
-- [包池与架构视图](/zh/docs/feature/views/) —— `build` 到底写了什么
+- [包池与元数据视图](/zh/docs/feature/views/) —— `build` 到底写了什么
+- [发布模型](/zh/docs/design/publication/) —— Generation 如何抵达目标
 - [成员策略](/zh/docs/feature/policy/) —— `exclude` 与 `limit` 如何决定谁留下
 - [第一个工作区](/zh/docs/start/workspace/) —— 本页的十分钟动手版
 - [`sow.yml` 配置参考](/zh/docs/reference/config/) —— 完整 schema

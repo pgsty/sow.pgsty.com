@@ -80,8 +80,8 @@ Retained Generation 保存元数据、manifest 与引用集合，不保存另一
 以及原子条件删除 primitive。无法满足这些条件的供应商仍可用于发布，但 SOW 只能报告不可达
 候选，不能发出不安全的无条件删除。
 
-0.3 设计对 Cloudflare R2 就采用这种处理：源码实现支持发布，但明确禁用远端物理删除。
-把 v0.2 C2 树迁移到这类供应商时，使用新的非重叠 prefix，不尝试在旧前缀内原地清理 alias。
+v0.2.0 对 Cloudflare R2 就采用这种处理：支持发布，但明确禁用远端物理删除。把发布前的
+C2 树迁移到这类供应商时，使用新的非重叠 prefix，不尝试在旧前缀内原地清理 alias。
 
 ## 恢复结果
 
@@ -92,5 +92,5 @@ Retained Generation 保存元数据、manifest 与引用集合，不保存另一
 | 已有 Applied Checkpoint | 收敛并进入 grace |
 | 证据互相矛盾 | 失败关闭，不虚构状态 |
 
-同一规则也适用于 v0.2 到 0.3 的本地迁移：`repo migrate --abort` 只在提交意图前合法；
-此后恢复必须完成 metadata-only 布局，并在 grace 结束后删除已记录的旧 alias。
+同一规则也适用于发布前 C2 工作区到 v0.2.0 单包体布局的本地迁移：`repo migrate --abort`
+只在提交意图前合法；此后恢复必须完成 metadata-only 布局，并在 grace 结束后删除已记录的旧 alias。

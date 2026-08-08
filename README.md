@@ -62,5 +62,5 @@ without vendoring its source.
 - Command transcripts are real executions against the current `sow` binary; do not
   invent output.
 - This repository is the authority for maintained user and design documentation.
-  Historical source-repository documents remain sealed evidence for their named version;
-  they are inputs to curation, not a second maintained documentation tree.
+  Historical source-repository documents remain available through Git history and version
+  tags; they are inputs to curation, not a second maintained documentation tree.

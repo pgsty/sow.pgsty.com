@@ -124,12 +124,14 @@ Dist 变 dirty，下一次 `build` 重新签名并产生新的 Generation。
 
 ## sow check
 
-对选定仓库与 Dist 做完整只读校验，分八层报告。
+对选定仓库与 Dist 做完整只读校验。终态 v0.2.0 Repository 报告九个有序层;
+活动布局 transition 会报告专用 transition 层,并保持不可交付。
 
 ```console
 sow check
 repository=pigsty status=clean ready_to_copy=true revision=5 generation=5
 config	ok=true	checked=5
+retained	ok=true	checked=0
 state	ok=true	checked=1
 public-modes	ok=true	checked=67
 package-bytes	ok=true	checked=8
@@ -142,6 +144,7 @@ generation-manifest	ok=true	checked=5
 | 层 | 校验内容 | `checked` 计的是 |
 |---|---|---|
 | `config` | 该仓库的 `sow.yml` 可解析且通过校验 | 配置对象数 |
+| `retained` | 显式保留 Generation 记录与冻结 manifest 可验证 | 保留记录数 |
 | `state` | SQLite `quick_check`、外键，以及 journal/恢复证据 | 恒为 1 |
 | `public-modes` | 对外服务目录树的文件与目录权限 | 检查的路径数 |
 | `package-bytes` | 每个 pool 与 pending 载荷的 SHA-256 | 包对象数 |
@@ -178,7 +181,7 @@ generation-manifest	ok=true	checked=5
 integrity or recovery error: managed: repository is not ready to copy: repository status is dirty
 ```
 
-八层全过。这里的退出码 `5` 意思是"旧树完好，但它不是你要的东西"——去跑 `build`。这正是发布流水线
+终态各层全过。这里的退出码 `5` 意思是"旧树完好，但它不是你要的东西"——去跑 `build`。这正是发布流水线
 里应该有的门禁。
 
 ## sow changes
@@ -188,7 +191,6 @@ integrity or recovery error: managed: repository is not ready to copy: repositor
 ```console
 sow changes
 base=4 generation=5 dirty=false
-add	payload	dists/el9/x86_64/pool/c/centos-release/centos-release-6-0.el6.centos.5.x86_64.rpm	19776	ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
 add	payload	pool/c/centos-release/centos-release-6-0.el6.centos.5.x86_64.rpm	19776	ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
 add	metadata	dists/el9/x86_64/repodata/5bc463cb00bec4d6185ea593a6fa8f180f24d3251b498f5bbeb14875581c33cc-primary.xml.gz	1460	5bc463cb00bec4d6185ea593a6fa8f180f24d3251b498f5bbeb14875581c33cc
 update	pointer	dists/el9/x86_64/repodata/repomd.xml	1514	05d3d5bf0f9236626b22a8ae9c92853277fff506f5773fbc33316ea12683cf0b
@@ -215,8 +217,6 @@ delete	delete	dists/el9/x86_64/repodata/0df96f0b046b6c098398194f908cc99d90bf3af8
 ```console
 sow changes 0
 base=0 generation=2 dirty=false
-add	payload	dists/el9/aarch64/pool/e/epel-release/epel-release-7-5.noarch.rpm	14524	d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab
-add	payload	dists/el9/x86_64/pool/e/epel-release/epel-release-7-5.noarch.rpm	14524	d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab
 add	payload	pool/e/epel-release/epel-release-7-5.noarch.rpm	14524	d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab
 add	metadata	dists/el9/aarch64/repodata/fb3777fe0da404b2ac78b26566e1eec95a4fc90f04b322e52925fc9baebb2764-primary.xml.gz	797	fb3777fe0da404b2ac78b26566e1eec95a4fc90f04b322e52925fc9baebb2764
 add	pointer	dists/el9/x86_64/repodata/repomd.xml	1511	16d334bc2b1c20c27aac9f3a353b97018a994e55ef45acc90fa50dcf5b8268a4
@@ -302,7 +302,7 @@ sow build -r pgsql -T 30s
 | `build` | `4` | 锁不可用 |
 | `build` | `5` | 恢复无法安全完成，或仓库处于 `error` |
 | `build` | `6` | 配置拒绝当前状态，例如仍在使用的架构被从许可表中删除 |
-| `check` | `0` | 八层全过且可交付 |
+| `check` | `0` | 九个终态层全过且可交付 |
 | `check` | `1` | 校验过程中的 I/O 失败 |
 | `check` | `2` | 用法错误或选择有歧义 |
 | `check` | `5` | 某一层失败，或仓库 dirty 因而不可交付 |

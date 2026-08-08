@@ -135,7 +135,7 @@ names what was found:
 [`sow.yml`](/docs/reference/config/) after normalization:
 
 ```json
-"result":{"schema":"sow/v2","architectures":["x86_64","aarch64"],
+"result":{"schema":"sow/v3","architectures":["x86_64","aarch64"],
  "repos":{"pigsty":{"protected":false,
  "signing":{"rpm":{"packages":{"mode":"never"}}},
  "dists":{"el9":{"format":"rpm","architectures":["x86_64","aarch64"],"limit":0,"exclude":null},
@@ -287,6 +287,7 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
 "result":{"repository":"pigsty","status":"clean","ready_to_copy":true,
  "built_generation":4,"desired_revision":4,
  "layers":[{"name":"config","ok":true,"checked":5,"issues":[]},
+  {"name":"retained","ok":true,"checked":0,"issues":[]},
   {"name":"state","ok":true,"checked":1,"issues":[]},
   {"name":"public-modes","ok":true,"checked":72,"issues":[]},
   {"name":"package-bytes","ok":true,"checked":7,"issues":[]},
@@ -296,8 +297,8 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
   {"name":"generation-manifest","ok":true,"checked":4,"issues":[]}]}
 ```
 
-Eight layers, always in this order, each with a count of what it examined and any issues
-found. A dirty repository reports every layer `ok: true` and still fails with exit `5`,
+Nine terminal layers, in this order, each with a count of what it examined and any issues
+found. A dirty repository can report every layer `ok: true` and still fail with exit `5`,
 because the layers verify consistency while `ready_to_copy` reports currency:
 
 ```json
@@ -364,6 +365,26 @@ The fields worth knowing:
 "result":{"reference":"pev2","locations":[{"repository":"pigsty","dists":["el9"],
  "built_dists":["el9"],"sha256":"d06d7f23...","coordinate":"rpm:pev2-0:1.23.0-1.noarch"}]}
 ```
+
+### repo migrate, publish, retain, gc, export
+
+v0.2.0 lifecycle commands use the same envelope and keep numeric Generation values as
+JSON strings:
+
+| Command | Important `result` fields |
+|---|---|
+| `repo migrate` | `repository`, `repository_id`, `from_layout`, `to_layout`, `phase`, `generation`, `grace_not_before`, `legacy_aliases`, `complete` |
+| `publish` | `repository`, `target`, `provider`, `generation`, `attempt`, `checkpoint`, `phase`, `objects`, `noop` |
+| `publish --abort` | `repository`, `target`, `provider`, `attempt`, `phase`, `objects` |
+| `retain add` / `retain rm` | `repository`, `record`, `record_identity`, `path` |
+| `retain ls` | `repository`, `generations[]` with the same retained record shape |
+| local `gc` | `operation`, `repository`, `base_generation`, `generation`, `objects`, `bytes`, `noop` |
+| target `gc` | `repository`, `target`, `provider`, `phase`, `reports`, `candidates`, `deleted_objects`, `deleted_bytes`, `retained_objects`, `pending_grace`, `completed_attempts`, `noop` |
+| `export rpm-leaf` | `repository`, `repository_id`, `generation`, `dist`, `arch`, `directory`, `method`, `signed`, `signer_identity`, `packages`, `files`, `manifest_sha256` |
+
+An optional identity such as `attempt`, `checkpoint`, or local-GC `operation` is omitted
+when there is no value. R2 target GC reports candidates as retained and never reports
+remote deletion performed by SOW.
 
 ### log
 

@@ -22,12 +22,16 @@ icon: fa-solid fa-terminal
 | [`sow init [DIR]`](/zh/docs/reference/cli/init/) | Managed | 初始化工作区，并收敛配置中声明的 Repository/Dist |
 | [`sow config check`](/zh/docs/reference/cli/config/) | Managed | 只读校验 `sow.yml` |
 | [`sow config show`](/zh/docs/reference/cli/config/) | Managed | 打印有效配置 |
-| [`sow repo ls\|new\|show\|rm`](/zh/docs/reference/cli/repo/) | Managed | 管理仓库 |
+| [`sow repo ls\|new\|show\|migrate\|rm`](/zh/docs/reference/cli/repo/) | Managed | 管理仓库并迁移预发布 C2 布局 |
 | [`sow dist ls\|new\|show\|rm`](/zh/docs/reference/cli/dist/) | Managed | 管理 Dist |
 | [`sow add PATH...`](/zh/docs/reference/cli/add/) | Managed | 把包加入期望成员集 |
 | [`sow rm PACKAGE...`](/zh/docs/reference/cli/rm/) | Managed | 移除期望成员集 |
 | [`sow ls` / `show` / `where`](/zh/docs/reference/cli/query/) | Managed | 查询成员、定位包 |
 | [`sow build` / `status` / `check` / `changes`](/zh/docs/reference/cli/build/) | Managed | 收敛、观察、校验与差分 |
+| [`sow publish TARGET`](/zh/docs/reference/cli/publication/) | Managed | 把已验证 Generation 发布到配置目标 |
+| [`sow retain add\|ls\|rm`](/zh/docs/reference/cli/publication/) | Managed | 管理显式保留代根 |
+| [`sow gc [TARGET]`](/zh/docs/reference/cli/publication/) | Managed | 回收本地包体或维护一个发布目标 |
+| [`sow export rpm-leaf`](/zh/docs/reference/cli/publication/) | Managed | 构建自包含 RPM 兼容 leaf |
 | [`sow log` / `log export` / `log prune`](/zh/docs/reference/cli/log/) | Managed | 操作审计账本 |
 
 ## 全局语法
@@ -41,7 +45,7 @@ sow [OPTIONS] COMMAND [ARGS]
 
 ```console
 sow version
-sow 0.2.0-dev darwin/arm64 go1.26.5
+sow 0.2.0 darwin/arm64 go1.26.5
 ```
 
 没有全局 `--format`、`--yes`、`--dry-run`、`-q/-v` 或 `--config`。未知参数一律报用法错误，绝不静默
@@ -130,8 +134,8 @@ repository=pigsty status=clean ready_to_copy=false revision=6 generation=6 dirty
 
 ## 并发
 
-`-j/--jobs N` 只出现在真正解析包、计算哈希、渲染索引或校验的命令上：`create`、`add`、`rm`、
-`build`、`check`。默认取逻辑 CPU 数，最小值为 `1`。
+`-j/--jobs N` 只出现在真正解析包、计算哈希、渲染索引或校验的命令上：`create`、
+`repo migrate`、`add`、`rm`、`build`、`check`。默认取逻辑 CPU 数，最小值为 `1`。
 
 ```console
 sow check -j 0

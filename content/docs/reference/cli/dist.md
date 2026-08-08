@@ -178,7 +178,7 @@ removed dist el9 from pgsql
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--json` | Emit the versioned JSON envelope | false |
 
-### Pool bytes always survive
+### Dist removal does not delete Pool bytes
 
 Removing a Dist never deletes a package from `pool/`. The whole Dist directory is moved into the
 recovery area and removed atomically; the pool is untouched:
@@ -191,7 +191,8 @@ find pgsql -type f
 pgsql/pool/e/epel-release/epel-release-7-5.noarch.rpm
 ```
 
-There is no garbage collection. Orphaned pool objects stay until you remove the whole Repository.
+Orphaned pool objects remain until `sow gc` proves they are unreachable from current,
+retained, migration, recovery, and publication roots.
 
 A Repository's `protected: true` blocks Repository deletion only; normal Dist maintenance on a
 protected Repository continues to work.

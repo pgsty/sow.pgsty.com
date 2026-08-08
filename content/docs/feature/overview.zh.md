@@ -9,7 +9,7 @@ icon: fa-solid fa-table-list
 
 SOW 是一个自包含的软件仓库管理器:一个纯静态 Go 二进制(`CGO_ENABLED=0`),在 Linux 与 macOS 上创建并维护 APT(DEB)与 YUM(RPM)软件仓库。它不调用 `createrepo_c`、`dpkg-scanpackages`、`reprepro` 或 `modifyrepo_c`,也不需要常驻进程。本页是覆盖面的地图,后续各页解释每一块是怎么实现的。
 
-当前版本为 `sow 0.2.0-dev`。
+当前版本为 `sow 0.2.0`。
 
 ## 两条运行路径
 
@@ -28,7 +28,9 @@ SOW 提供两种建仓方式,二者刻意相互隔离。除底层的包解析器
 
 手里已有一目录包、只想给它建个索引 —— 用 Plain。同一个仓库要按策略持续维护数月、并且需要审计线索 —— 用 Managed。
 
-两条路径都不理解远端。建好的仓库目录就是一堆文件:用任意 Web 服务器托管,或用 `rsync` 复制走。参见[对外服务](/zh/docs/tutorial/serving/)。
+Plain 模式止于本地目录。Managed 模式既可以把结果作为普通文件服务或复制,也可以把已提交的
+Generation 发布到配置好的 `filesystem` 或 `r2` 目标。参见[对外服务](/zh/docs/tutorial/serving/)
+与[发布模型](/zh/docs/design/publication/)。
 
 ## 格式覆盖
 
@@ -63,7 +65,9 @@ SOW 提供两种建仓方式,二者刻意相互隔离。除底层的包解析器
 
 SOW 唯一会调用的外部程序是 `rpm`(RPM 包体签名)与 `gpg`(`agent://` 密钥引用)。如果仓库不签名,或只用 `file://`/`env://` 元数据密钥,那么除了 `sow` 二进制本身之外什么都不用装。
 
-Managed 模式有一条硬性要求:仓库的 `pool/` 与 `dists/` 视图必须位于同一个 POSIX 文件系统,因为视图是硬链接投影。跨设备是硬失败,绝不静默降级为复制。参见[包池与架构视图](/zh/docs/feature/views/)。
+Managed 工作区必须在本地 POSIX 文件系统上构建,因为锁、fsync 与原子 rename 都属于事务
+契约。当前 `pool/ + dists/` 布局不使用视图级硬链接:`pool/` 拥有包体,RPM 视图只含元数据。
+参见[包池与元数据视图](/zh/docs/feature/views/)。
 
 ## 客户端兼容
 
@@ -75,7 +79,9 @@ Managed 模式有一条硬性要求:仓库的 `pool/` 与 `dists/` 视图必须�
 | CentOS 7 `yum` | 3.4.3 | `makecache` 通过,多版本 NEVRA 解析正确 |
 | Debian 13 `apt` | 3.0.3 | `update`(InRelease 验签 + by-hash 拉取)与 `install` 通过 |
 | Debian 12 `apt` | 2.6.1 | 同上;平面仓库经 `[trusted=yes]` 亦可用 |
-| `dnf reposync` | EL9 | 按 `pool/` 布局完整镜像 |
+
+默认 `dnf reposync` 有意不列为规范布局客户端:它的 safe-write 检查会拒绝
+`../../../pool/...` 包 href。下游必须满足该契约时,请使用 `sow export rpm-leaf`。
 
 完整矩阵(含 APT ≥ 1.2 的 by-hash 要求)见[兼容性](/zh/docs/reference/compatibility/)。
 
@@ -112,7 +118,7 @@ macOS arm64 冷启动实测:
 | `sow create` | 9 个 RPM | 0.31 s |
 | `sow create` | 87 个 RPM,2.9 GB(全量 SHA-256) | 10.7 s |
 | `sow add` + 自动 build | 9 个 RPM,31 MB | 约 1.3 s |
-| `sow check`(八层全过) | 16 包工作区 | 0.12 s |
+| 加入 retained/publication 层之前的历史 `sow check` | 16 包工作区 | 0.12 s |
 
 需要解析、哈希、渲染或校验的命令都接受 `-j/--jobs N`,默认取逻辑 CPU 数。并行不改变输出:最终序列化按固定顺序完成,相同输入永远产生相同字节。
 
@@ -123,13 +129,15 @@ macOS arm64 冷启动实测:
 - modulemd 的生成、注入与透传
 - sqlite repodata 与 zchunk
 - SRPM / DSC 源码索引
-- 远端发布、CDN、对象存储,以及任何形式的 endpoint 配置
 - 多写者与多机部署
-- 垃圾回收、跨仓库去重
+- 跨仓库去重
+- 远端多写者协调,以及充当 CDN
+- 对 R2 目标执行破坏性 GC(R2 维护仅生成报告)
 - 常驻服务或 Web UI
 - 造包
 
-SOW 在本地磁盘上管理仓库,交给你一个目录。用什么把这个目录运出去,是你的选择。
+SOW 管理权威工作区、已提交 Generation、显式发布目标、保留根与保守 GC。
+它不会取代实际交付公共目录的 HTTP 服务或 CDN。
 
 ## 继续阅读
 

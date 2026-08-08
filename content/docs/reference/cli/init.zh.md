@@ -30,7 +30,7 @@ initialized /srv/repo: config_created=true repositories_initialized=0 dists_init
 
 ```console
 cat sow.yml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -56,7 +56,7 @@ HTTP 访问。
 
 `init` 被设计成可以反复运行——无论是在 provisioning 脚本里还是手工执行：
 
-1. **创建新配置时写入 `schema: sow/v2` 与默认 `architectures: [x86_64, aarch64]`**。
+1. **创建新配置时写入 `schema: sow/v3` 与默认 `architectures: [x86_64, aarch64]`**。
 2. **它从不自动创建 Repository**。请用 [`sow repo new`](/zh/docs/reference/cli/repo/)，或先在
    `sow.yml` 中声明。
 3. **它从不覆盖已存在的 `sow.yml`**。重复运行只报告现状，并列出发现了什么：
@@ -74,7 +74,7 @@ HTTP 访问。
 空索引。已初始化的对象直接跳过，因此计数器准确反映本次运行做了什么。
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures: [x86_64, aarch64]
 
 repos:

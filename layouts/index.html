@@ -203,7 +203,7 @@
                 </div>
                 <div class="silo-board-canvas">
                   <div class="silo-board-core">
-                    <div class="silo-port silo-port--api"><small>YUM</small><strong>repodata/</strong><span>DNF · YUM · REPOSYNC</span></div>
+                    <div class="silo-port silo-port--api"><small>YUM</small><strong>repodata/</strong><span>DNF · YUM · EXPORT</span></div>
                     <div class="silo-chip">
                       <small>REPOSITORY ENGINE</small>
                       <strong>SOW</strong>
@@ -295,7 +295,7 @@
             <p class="module-motto"><span aria-hidden="true">↔</span> {{ if $zh }}包池持有内容，视图只是投影{{ else }}The pool owns the bytes. Views are projections{{ end }}</p>
             <ul class="module-list">
               <li>{{ if $zh }}Debian 风格 <code>pool/</code> 包池，内容不可变、按首字母分组{{ else }}A Debian-style <code>pool/</code> holds immutable payloads, grouped by initial{{ end }}</li>
-              <li>{{ if $zh }}架构视图用硬链接投影，不复制第二份包体{{ else }}Architecture views are hardlink projections, never a second copy{{ end }}</li>
+              <li>{{ if $zh }}架构视图只含元数据，包体只存在规范包池{{ else }}Architecture views contain metadata only; payloads stay in the canonical pool{{ end }}</li>
               <li>{{ if $zh }}<code>noarch</code> / <code>all</code> 作为中性包进入每个适用视图{{ else }}<code>noarch</code> / <code>all</code> packages land in every applicable view{{ end }}</li>
             </ul>
             <p class="module-value">{{ if $zh }}多架构仓库的磁盘占用，接近单架构{{ else }}A multi-architecture repository costs about as much disk as one{{ end }}</p>
@@ -356,10 +356,10 @@
           <div class="module-visual">
             <a href="{{ relLangURL "docs/feature/audit/" }}" class="code-plate security-plate">
               <span class="code-plate-head"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-file">sow check</span></span>
-              <pre class="code-body"><span class="c"># Eight layers, fail-closed</span>
+              <pre class="code-body"><span class="c"># Ordered proof, fail-closed</span>
 <span class="k">config</span>: <span class="s">strict schema</span>
 <span class="k">pool</span>: <span class="s">payload digests</span>
-<span class="k">views</span>: <span class="s">hardlink integrity</span>
+<span class="k">views</span>: <span class="s">canonical references</span>
 <span class="k">metadata</span>: <span class="s">index vs tree</span>
 <span class="k">generation</span>: <span class="v">clean or dirty</span>
 
@@ -423,7 +423,7 @@
           <article class="promise-card promise-card--no">
             <p class="silkscreen">{{ if $zh }}明确非目标{{ else }}EXPLICIT NON-GOALS{{ end }}</p>
             <h3>{{ if $zh }}SOW 不做的部分{{ else }}What SOW does not do{{ end }}</h3>
-            <ul><li>{{ if $zh }}造包：SOW 索引软件包，不构建软件包{{ else }}Building packages—SOW indexes them, it does not produce them{{ end }}</li><li>{{ if $zh }}远端发布、CDN 与对象存储上传{{ else }}Remote publishing, CDN integration, or object-storage upload{{ end }}</li><li>{{ if $zh }}多机多写：单写者模型，不做分布式协调{{ else }}Multi-writer setups—the model is single-writer by design{{ end }}</li><li>{{ if $zh }}modulemd、sqlite repodata、zchunk 与源码包索引{{ else }}modulemd, sqlite repodata, zchunk, and source package indexes{{ end }}</li></ul>
+            <ul><li>{{ if $zh }}造包：SOW 索引软件包，不构建软件包{{ else }}Building packages—SOW indexes them, it does not produce them{{ end }}</li><li>{{ if $zh }}充当 HTTP 服务或 CDN：SOW 发布静态树，但不负责在线分发{{ else }}Acting as an HTTP server or CDN—SOW publishes static trees but does not serve them{{ end }}</li><li>{{ if $zh }}多机多写：单写者模型，不做分布式协调{{ else }}Multi-writer setups—the model is single-writer by design{{ end }}</li><li>{{ if $zh }}modulemd、sqlite repodata、zchunk 与源码包索引{{ else }}modulemd, sqlite repodata, zchunk, and source package indexes{{ end }}</li></ul>
           </article>
         </div>
       </div>

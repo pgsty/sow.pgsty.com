@@ -50,12 +50,14 @@ The revision moved to 5, the generation stayed at 4, `el9` is dirty, and one pen
 
 ## `check` — a full proof
 
-`check` verifies the selected Repository or Dists across eight layers, in order, and writes nothing:
+`check` verifies the selected Repository or Dists through an ordered proof and writes nothing.
+A terminal v0.2.0 Repository reports nine layers:
 
 ```console
 $ sow check
 repository=pigsty status=clean ready_to_copy=true revision=4 generation=4
 config	ok=true	checked=5
+retained	ok=true	checked=0
 state	ok=true	checked=1
 public-modes	ok=true	checked=66
 package-bytes	ok=true	checked=5
@@ -68,6 +70,7 @@ generation-manifest	ok=true	checked=4
 | Layer | What it proves |
 |---|---|
 | `config` | `sow.yml` parses, and matches the live Dists, architectures, and signing availability |
+| `retained` | every explicit retained Generation record and frozen manifest verifies |
 | `state` | SQLite schema, migration ledger, and relational integrity |
 | `public-modes` | every public file and directory carries the expected permissions |
 | `package-bytes` | every pool and pending object hashes to its recorded SHA-256 |
@@ -88,16 +91,17 @@ integrity or recovery error: managed: repository is not ready to copy: repositor
 rc=5
 ```
 
-Every layer passed and the exit code is still `5`. That is the correct reading: nothing is broken, but what is on disk is not what you asked for, so it is not ready to copy. This is the command to put in a release pipeline — `status` tells you what is going on, `check` decides whether you ship.
+Every terminal layer passed and the exit code is still `5`. That is the correct reading: nothing is broken, but what is on disk is not what you asked for, so it is not ready to copy. This is the command to put in a release pipeline — `status` tells you what is going on, `check` decides whether you ship.
 
-On a 16-package workspace all eight layers complete in about 0.12 s. `-j/--jobs N` parallelizes the hashing.
+The historical 16-package measurement was about 0.12 s before retained/publication checks
+were added; treat it as an old scale anchor, not a v0.2.0 benchmark. `-j/--jobs N`
+parallelizes the hashing.
 
 ## `changes` — the delivery plan
 
 ```console
 $ sow changes
 base=4 generation=5 dirty=false
-add	payload	dists/el9/x86_64/pool/v/vray/vray-5.44.1-1.x86_64.rpm	18787411	4bb5c796…
 add	payload	pool/v/vray/vray-5.44.1-1.x86_64.rpm	18787411	4bb5c796…
 add	metadata	dists/el9/x86_64/repodata/75fdd4f3…-primary.xml.gz	1089	75fdd4f3…
 add	metadata	dists/el9/x86_64/repodata/a8de7a88…-filelists.xml.gz	512	a8de7a88…

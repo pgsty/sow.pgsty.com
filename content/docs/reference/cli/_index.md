@@ -23,12 +23,16 @@ file, no database. Everything else is Managed mode and runs inside a Workspace.
 | [`sow init [DIR]`](/docs/reference/cli/init/) | Managed | Initialize a Workspace and converge declared Repositories/Dists |
 | [`sow config check`](/docs/reference/cli/config/) | Managed | Validate `sow.yml` read-only |
 | [`sow config show`](/docs/reference/cli/config/) | Managed | Print the effective configuration |
-| [`sow repo ls\|new\|show\|rm`](/docs/reference/cli/repo/) | Managed | Manage Repositories |
+| [`sow repo ls\|new\|show\|migrate\|rm`](/docs/reference/cli/repo/) | Managed | Manage Repositories and migrate the pre-release C2 layout |
 | [`sow dist ls\|new\|show\|rm`](/docs/reference/cli/dist/) | Managed | Manage Dists |
 | [`sow add PATH...`](/docs/reference/cli/add/) | Managed | Add packages to Desired Membership |
 | [`sow rm PACKAGE...`](/docs/reference/cli/rm/) | Managed | Remove Desired Membership |
 | [`sow ls` / `show` / `where`](/docs/reference/cli/query/) | Managed | Query membership and locate packages |
 | [`sow build` / `status` / `check` / `changes`](/docs/reference/cli/build/) | Managed | Converge, inspect, verify and diff |
+| [`sow publish TARGET`](/docs/reference/cli/publication/) | Managed | Publish a verified Generation to a configured target |
+| [`sow retain add\|ls\|rm`](/docs/reference/cli/publication/) | Managed | Manage explicit retained-Generation roots |
+| [`sow gc [TARGET]`](/docs/reference/cli/publication/) | Managed | Collect local payloads or maintain one publication target |
+| [`sow export rpm-leaf`](/docs/reference/cli/publication/) | Managed | Build a standalone RPM compatibility leaf |
 | [`sow log` / `log export` / `log prune`](/docs/reference/cli/log/) | Managed | Operation audit ledger |
 
 ## Global syntax
@@ -43,7 +47,7 @@ binary identity:
 
 ```console
 sow version
-sow 0.2.0-dev darwin/arm64 go1.26.5
+sow 0.2.0 darwin/arm64 go1.26.5
 ```
 
 There is no global `--format`, `--yes`, `--dry-run`, `-q/-v` or `--config`. An unknown flag is a
@@ -134,8 +138,8 @@ repository=pigsty status=clean ready_to_copy=false revision=6 generation=6 dirty
 ## Parallelism
 
 `-j/--jobs N` appears only on commands that actually parse packages, hash bytes, render indexes or
-verify: `create`, `add`, `rm`, `build`, `check`. It defaults to the logical CPU count and must be at
-least `1`.
+verify: `create`, `repo migrate`, `add`, `rm`, `build`, `check`. It defaults to the logical CPU
+count and must be at least `1`.
 
 ```console
 sow check -j 0

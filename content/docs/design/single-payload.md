@@ -1,20 +1,19 @@
 ---
 title: "Single-Payload Repository"
 linkTitle: "Single-Payload Layout"
-description: "How the 0.3 design keeps one canonical package path per Repository and renders metadata-only APT and RPM views."
+description: "How v0.2.0 keeps one canonical package path per Repository and renders metadata-only APT and RPM views."
 url: "/docs/design/single-payload/"
 weight: 300
 icon: fa-solid fa-box-archive
 ---
 
-The 0.3 development design changes the physical RPM layout while preserving the ownership
-model introduced in v0.2. Its objective is precise: within one Repository and within each
-publish prefix, every live Package Object has exactly one payload path.
+The v0.2.0 layout has one precise objective: within one Repository and within each publish
+prefix, every live Package Object has exactly one payload path.
 
-{{% alert title="Development design" color="warning" %}}
-This page describes the implemented 0.3 source layout. The released v0.2 operational
-reference still describes C2 view-local hardlinks. Read [Design Evolution](/docs/design/evolution/)
-before migrating an existing v0.2 repository.
+{{% alert title="Current release layout" color="primary" %}}
+This is the canonical v0.2.0 layout. Workspaces created by the unreleased C2 prototype use
+`schema: sow/v2` and require explicit `sow repo migrate`; new workspaces use `sow/v3`.
+Read [Design Evolution](/docs/design/evolution/) before migrating a C2 workspace.
 {{% /alert %}}
 
 ## Canonical tree
@@ -54,7 +53,7 @@ applied exactly once by the retrieval layer.
 
 ## RPM addressing
 
-RPM metadata resolves `<location href>` relative to the architecture view. In 0.3, the
+RPM metadata resolves `<location href>` relative to the architecture view. In v0.2.0, the
 renderer computes a relative path from the actual view root to the canonical Pool object:
 
 ```text
@@ -73,13 +72,13 @@ own compatibility gate.
 
 ## Why package hardlinks disappeared
 
-v0.2 projected RPM packages into every architecture view with hardlinks. On one POSIX
-filesystem those paths shared an inode, so local disk cost stayed low and default EL
+The unreleased C2 prototype projected RPM packages into every architecture view with
+hardlinks. On one POSIX filesystem those paths shared an inode, so local disk cost stayed low and default EL
 `reposync` worked. Object storage has no inode identity: each alias path becomes another
 full object and another upload. Dist, architecture, generation, and snapshot count would
 therefore multiply remote payload storage.
 
-0.3 makes filesystem implementation details irrelevant to canonical correctness. A normal
+v0.2.0 makes filesystem implementation details irrelevant to canonical correctness. A normal
 copy, tar archive, or object-store upload must preserve behavior even when hardlinks do not
 exist.
 
@@ -98,7 +97,7 @@ references the sibling root Pool.
 ## Compatibility export
 
 When an operator needs a self-contained RPM leaf for default `reposync` or another legacy
-tool, 0.3 creates an explicit external export:
+tool, v0.2.0 creates an explicit external export:
 
 ```text
 sow export rpm-leaf DIST ARCH DIR

@@ -136,7 +136,10 @@ item input="pkg/libpq5_18.4-1.bookworm_amd64.deb" status=accepted format=deb coo
 收敛是单向的,而且这是写进不变式的:**收紧策略可以移除成员,放宽策略永远不会恢复成员。** 正是这种不对称让 `build` 在任何时刻都能安全执行。假如它是对称的,那么编辑 `sow.yml` 就可能静默地重新发布一个你刻意下架的包 —— 而这恰恰是安全更新场景里最不能出的事故。
 
 {{% alert title="真正下架一个包" color="warning" %}}
-`sow rm` 移除的是成员关系,不是 pool 字节。包会从所有索引和所有架构视图里消失,客户端再也无法通过这个仓库解析或下载它。文件本身仍留在 `pool/` —— 本版本没有垃圾回收。如果你必须保证字节从镜像上彻底消失,请在 build 之后自行从已对外服务的副本里删除。
+`sow rm` 移除的是成员关系,不是 pool 字节。包会从所有索引中消失,客户端不再能通过仓库
+解析它。只有当包体不再被当前代、保留代、迁移与发布根引用时,才运行 `sow gc`。
+已发布目标使用 `sow gc TARGET`;filesystem 删除是条件式的,R2 只生成报告。
+不要绕过 SOW 状态手工删除规范包池文件。
 {{% /alert %}}
 
 ## 预览一次决策
@@ -154,3 +157,4 @@ sow rm patroni -r pgsql -d el9 -c
 - [`sow.yml` 配置参考](/zh/docs/reference/config/) —— 完整策略 schema
 - [`sow add` 参考](/zh/docs/reference/cli/add/) —— 逐条目状态与部分成功退出码
 - [包池与架构视图](/zh/docs/feature/views/) —— 存活下来的成员被渲染到哪里
+- [CLI:发布、保留、GC 与导出](/zh/docs/reference/cli/publication/) —— 包体生命周期控制

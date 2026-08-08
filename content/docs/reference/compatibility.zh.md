@@ -1,147 +1,104 @@
 ---
 title: "兼容性"
 linkTitle: "兼容性"
-description: "哪些客户端消费过 SOW 仓库、二进制支持哪些平台,以及你必须遵守的约束。"
+description: "SOW 0.2.0 的已验证客户端、发布平台、reposync 边界与发布 Provider 状态。"
 url: "/zh/docs/reference/compatibility/"
 weight: 700
 icon: fa-solid fa-circle-check
 ---
 
-SOW 输出的是标准 rpm-md 与 Debian archive 元数据,所以问题不在于客户端"能不能"读,
-而在于哪些客户端**确实被验证过**。本页给出实测矩阵、二进制支持的平台,
-以及少数几条忽略了就会出问题的约束。
+SOW 0.2.0 输出标准 rpm-md 与 Debian archive 元数据。本页把普通客户端消费与兼容性
+导出分开,也把集成测试证据与特定 Provider 的生产验证分开。
 
 ## 包管理器客户端
 
-下表每一行都对 SOW 构建的仓库做过端到端验证:刷新索引、列出软件包、安装其中一个。
+维护中的客户端矩阵覆盖刷新索引、发现软件包与安装:
 
-| 客户端 | 版本 | 结果 |
-|---|---|---|
-| AlmaLinux 10 `dnf` | dnf4 | `repo_gpgcheck=1` + `gpgcheck=1` 下 `makecache` 与 `install` 通过 |
-| AlmaLinux 9 `dnf` | dnf4 | 同上 |
-| AlmaLinux 8 `dnf` | dnf4 | 同上 |
-| CentOS 7 `yum` | 3.4.3 | `makecache` 与包列表解析通过,多版本 NEVRA 排序正确 |
-| Debian 13 `apt` | 3.0.3 | `update`(验签 `InRelease`、走 by-hash)与 `install` 通过 |
-| Debian 12 `apt` | 2.6.1 | 同上;另外也验证了平面仓库 |
-| `dnf reposync` | EL9 | 按 pool 布局完整镜像 |
+| 客户端 | 已测行为 |
+|---|---|
+| AlmaLinux 8 / 9 / 10 `dnf` | `makecache` 与安装,包括仓库和包签名校验 |
+| CentOS 7 `yum` 3.4.3 | 元数据与包列表,包括多版本 NEVRA 排序 |
+| Debian 12 / 13 `apt` | 已签名 `InRelease`、by-hash 索引拉取与安装 |
 
-RPM 测试**两道签名校验都开着**:`repo_gpgcheck=1` 验证 `repodata/repomd.xml.asc`,
-`gpgcheck=1` 验证包签名。APT 侧使用 `Signed-By` 验证 `InRelease`,
-HTTP 日志证实 `apt` 实际是通过 `by-hash/SHA256/` 而不是直接路径拉取索引的。
+`sow create` 生成的平面仓库可通过 `file://` 与 HTTP 被 `dnf`、`yum`、`apt` 消费。
+平面 APT 仓库没有已签名 `Release`;请使用 `[trusted=yes]`,或在需要认证时采用已签名
+Managed Dist。
 
-CentOS 7 的 `yum` 3.4.3 是测过的最老客户端。它早于 by-hash,也不需要 by-hash ——
-RPM 侧没有等价机制,校验和命名的元数据文件起到了同样的作用。
+## 规范 RPM 布局与 reposync
 
-`sow create` 构建的平面仓库,`dnf`、`yum`、`apt` 都能通过 `file://` 与 `http://` 消费。
+普通 DNF/YUM 消费支持纯元数据视图。默认 `dnf reposync` **不支持**直接镜像规范视图,
+因为 rpm-md 包 href 使用 `../../../pool/...`,镜像工具会拒绝逃出 leaf 下载根的目标。
 
-{{% alert title="平面仓库与 APT" color="info" %}}
-平面仓库没有 `Release` 文件,所以 `apt` 不会为它验签。
-请把该源标记为 `[trusted=yes]`;真正需要来源认证时,请改用带元数据签名的 Managed Dist。
-{{% /alert %}}
+下游镜像流程应显式生成自包含产物:
 
-## 平台
+```bash
+sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
+```
 
-二进制以 `CGO_ENABLED=0` 构建,没有任何运行时库依赖。
+导出会把 href 改写为本地 `pool/`。应把导出验证与规范仓库验证分开;导出不会修改
+Managed 仓库。
+
+## 二进制平台
+
+Release archive 使用 `CGO_ENABLED=0` 构建:
 
 | 操作系统 | `amd64` | `arm64` |
 |---|---|---|
 | Linux | 支持 | 支持 |
 | macOS (Darwin) | 支持 | 支持 |
 
-不支持 Windows。SOW 依赖 POSIX 建议锁(`flock`)、硬链接和原子 `rename`,没有可移植的替代。
+Linux 另外提供 RPM 与 DEB 包。不支持 Windows:工作区模型依赖 POSIX 建议锁与原子 rename。
 
-**在 macOS 上构建、在 Linux 上服务**是受支持的工作流。为了保证这种可移植性,
-SOW 会拒绝任何在大小写不敏感比较下会碰撞的池路径,
-因此在大小写敏感的 Linux 上构建的仓库,复制到默认的 macOS 文件系统上依然有效。
+## 文件系统边界
 
-## 文件系统要求
+Managed 仓库应在本地 POSIX 文件系统上构建。SOW 不声称 NFS 等网络文件系统正确,
+因为事务模型依赖本地锁、fsync 与 rename 语义。v0.2.0 规范布局不要求 `pool/` 与
+`dists/` 间使用硬链接;早先的视图级硬链接布局只是未发布原型。
 
-**只支持本地 POSIX 文件系统。** SOW 未在 NFS 等网络文件系统上测试,也不声称支持 ——
-它们不提供 SOW 事务模型所依赖的锁与持久化语义。请在本地构建,再把结果复制到任何地方。
+提交完成后,完整公共仓库可以普通复制,也可以由 SOW 发布。始终一起保留 `pool/` 与 `dists/`。
 
-**`pool/` 与 `dists/` 必须在同一个文件系统上。** 架构视图用硬链接投影包池,
-而硬链接不能跨设备。两者不在同一文件系统时,SOW 会明确失败,而不是静默改成复制:
+## 发布 Provider
 
-```text
-<repo>/pool/...                                 # 规范字节
-<repo>/dists/<dist>/x86_64/pool/...             # 硬链接,同一 inode
-```
+| Provider | v0.2.0 状态 |
+|---|---|
+| `filesystem` | 已实现;宽限期与缺失检查后可做条件式生命周期维护 |
+| `r2` | 已通过 S3 兼容 API 实现;Integration CI 使用固定版本 MinIO 验证该路径 |
+| Cloudflare R2 生产账户 | 授权、凭据与托管行为必须在目标环境另行验证 |
+| R2 删除 | 有意禁用;`sow gc TARGET` 只持久化候选报告,绝不删除对象 |
 
-实践中只有在仓库目录下单独挂载卷时才会遇到这个问题。stage 目录同样放在与目标相同的
-文件系统上 —— 这正是最终那次 `rename` 能够原子完成的前提。
+这一边界很重要:S3 兼容集成测试通过是实现证据,并不证明某个 Cloudflare 账户或公共 CDN
+已经正确配置。
 
-把仓库**复制**到别处没有这个要求。不保留硬链接的工具会把每个别名复制成独立的普通文件:
-对客户端功能完全一致,只是多占磁盘。想保留去重就用 `rsync --hard-links`。
-
-## SOW 不生成哪些元数据
-
-传统工具会产出、而 SOW 有意不产出的东西如下。对上面测过的所有客户端来说,它们都是可选的。
+## SOW 有意省略的元数据
 
 | 不生成 | 后果 |
 |---|---|
-| SQLite repodata(`primary.sqlite.bz2` 等) | 无影响。`dnf` / `yum` 使用 XML 元数据;SQLite 变体多年来一直是可选的。 |
-| `modulemd` | 模块化流不在范围内。非模块化的包不受影响。 |
-| zchunk 元数据 | `dnf` 退回完整元数据下载 —— 这本就是没有 zchunk 时的正常行为。 |
-| `Release` 中的 `MD5Sum` 与 `SHA1` | 需要客户端接受只有 SHA256 的清单。测过的每个 `apt` 都可以。 |
-| `Packages` 中的 `MD5sum` 与 `SHA1` 字段 | 同上 —— `SHA256` 存在且足够。 |
-| `binary-<arch>/` 下的逐架构 `Release` 存根 | `apt` 不需要;`reprepro` 会写,SOW 不写。 |
-| 源码包索引(SRPM、DSC) | 只处理二进制包。 |
+| SQLite repodata | DNF/YUM 使用 XML 元数据 |
+| `modulemd` | 模块化流不在范围内 |
+| zchunk | 客户端下载普通压缩元数据 |
+| DEB MD5/SHA1 清单 | 要求 SHA256 |
+| 源码包索引 | v0.2.0 管理二进制包 |
 
-把 `Release` 与 `Packages` 合起来看,一个 DEB Dist 发布的就是这些,不多不少:
-
-```console
-Acquire-By-Hash: yes
-SHA256:
- 95e8c59d21d69285ac788bd8ea78b0544b0a1395ae9a0e3a700ec13b420e5c39 2245 main/binary-amd64/Packages
- 4d658bdf6a542999f737e5f89e3bdb504c205fb85cda76f3e4b1ef73619c5900 751 main/binary-amd64/Packages.gz
-```
-
-## by-hash 与较老的 APT
-
-Managed DEB Dist 始终发布 `by-hash/SHA256/` 并声明 `Acquire-By-Hash: yes`。
-它保证了索引更新对"刚刚取过 `Release` 的客户端"是安全的:
-新索引发布的同时,旧索引仍可按摘要访问。
-
-APT 1.2(2015 年)及以后版本会自动使用 by-hash。更老的客户端忽略这个字段,
-直接拉取 `main/binary-<arch>/Packages` —— SOW 也始终写这个文件,所以它们照样能工作,
-只是少了那层更新竞态保护。
-
-`reprepro` **完全不支持** by-hash,这是迁移的一条现实理由。
+Managed DEB 视图发布 `by-hash/SHA256/`;RPM 视图使用校验和命名的元数据文件。
+两者都让不可变元数据在可变指针切换时继续可达。
 
 ## 外部工具
 
-SOW 不调用 `createrepo_c`、`dpkg-scanpackages`、`modifyrepo_c` 或 `repo2module`。
-RPM 头与 Debian control 文件在进程内解析,所有元数据也在进程内渲染。
-
-只有两类操作会跳出二进制:
-
-| 操作 | 需要 | 说明 |
-|---|---|---|
-| RPM 包签名 | `rpm` 以及可用的 GPG 环境 | Plain 的 `create --sign-with`,以及 Managed 中 `signing.rpm.packages.mode` 为 `fill` / `always` 时。签名始终发生在私有 stage 副本上。 |
-| 使用 `agent://` 的元数据签名 | `gpg` 与运行中的 agent | 仅限 `agent://` 形式的 key 引用。 |
-
-用 `file://` 或 `env://` key 做元数据签名是**进程内**完成的 ——
-也就是说,一个带已签名 `InRelease` 与 `repomd.xml.asc` 的仓库,可以完全不依赖外部工具产出。
+元数据生成与解析都在进程内完成。RPM 包签名需要 `rpm` 与可用的 GPG 环境。
+`agent://` 元数据 key 需要带 agent 的 `gpg`;`file://` 与 `env://` 元数据签名在进程内完成。
 
 ## 版本
 
-本页的兼容性结论由以下版本产出:
-
-```bash
-sow version
-```
-
 ```console
-sow 0.2.0-dev darwin/arm64 go1.26.5
+$ sow version
+sow 0.2.0 darwin/arm64 go1.26.5
 ```
 
-仓库输出是确定性的:固定的时间戳、固定的压缩参数与稳定排序,
-使得相同输入 + 相同配置产出字节稳定的元数据。
-对未变化的目录重跑 `sow create` 是 no-op,一个字节都不会重写。
+具体 OS、架构与 Go 版本取决于所运行二进制。Release 身份是 `v0.2.0`;
+`sow.cli/v1`、`sow/v3`、`sow/export/v1` 是协议或 Schema 标识,不是产品版本。
 
 ## 延伸阅读
 
-- [安装](/zh/docs/start/install/) —— 平台矩阵与源码构建
-- [仓库布局](/zh/docs/reference/layout/) —— 硬链接约束的由来
-- [从 createrepo_c / reprepro 迁移](/zh/docs/tutorial/migration/) —— 功能层面的对比
-- [对外服务](/zh/docs/tutorial/serving/) —— `dnf` 与 `apt` 的客户端配置
+- [仓库布局](/zh/docs/reference/layout/)
+- [配置参考](/zh/docs/reference/config/)
+- [CLI:发布、保留、GC 与导出](/zh/docs/reference/cli/publication/)

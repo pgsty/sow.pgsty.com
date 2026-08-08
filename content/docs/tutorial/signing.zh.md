@@ -118,7 +118,7 @@ ls -l ~/secure
 签名按仓库配置在 `sow.yml` 里。没有命令行覆盖——用什么签了这棵树是配置的属性,而且会记进操作日志。
 
 ```yaml
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64
@@ -161,7 +161,7 @@ sow config show --all
 ```
 
 ```console
-schema: sow/v2
+schema: sow/v3
 architectures:
   - x86_64
   - aarch64

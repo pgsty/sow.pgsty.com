@@ -87,10 +87,9 @@ grace expiry, cache-absence evidence when applicable, and an atomic conditional 
 primitive. A provider that cannot satisfy the primitive can still publish, but SOW must
 report unreachable candidates rather than issue an unsafe unconditional delete.
 
-Cloudflare R2 is handled this way in the 0.3 design: publication is supported by the source
-implementation, while remote physical deletion is deliberately disabled. Migrating a v0.2
-C2 tree to such a provider uses a fresh non-overlapping prefix instead of trying to clean
-aliases in place.
+Cloudflare R2 is handled this way in v0.2.0: publication is supported, while remote
+physical deletion is deliberately disabled. Migrating a pre-release C2 tree to such a
+provider uses a fresh non-overlapping prefix instead of trying to clean aliases in place.
 
 ## Recovery outcomes
 
@@ -101,6 +100,7 @@ aliases in place.
 | Applied checkpoint present | converge and enter grace |
 | Evidence contradicts | fail closed; do not invent state |
 
-The same rule applies to the v0.2-to-0.3 local migration. `repo migrate --abort` is legal
-only before commit intent; afterward recovery completes the metadata-only layout and then
-removes recorded legacy aliases after grace.
+The same rule applies when a pre-release C2 workspace is migrated into the v0.2.0
+single-payload layout. `repo migrate --abort` is legal only before commit intent;
+afterward recovery completes the metadata-only layout and removes recorded legacy aliases
+after grace.
