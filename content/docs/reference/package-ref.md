@@ -215,6 +215,6 @@ identical input, SOW recognizes it and reports `reused`.
 
 ## See also
 
-- [`sow rm`](/docs/reference/cli/rm/) — removal, preview, and batch semantics
-- [`sow ls` / `show` / `where`](/docs/reference/cli/query/) — the query commands
+- [`sow rm`](/docs/command/rm/) — removal, preview, and batch semantics
+- [`sow ls`](/docs/command/ls/), [`show`](/docs/command/show/), and [`where`](/docs/command/where/) — the query commands
 - [Exit Codes](/docs/reference/exit-codes/) — `6` covers both "no match" and "ambiguous"

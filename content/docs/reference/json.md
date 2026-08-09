@@ -474,5 +474,5 @@ sow changes 0 -r pigsty --json \
 ## See also
 
 - [Exit Codes](/docs/reference/exit-codes/) — the `code` and `class` values in `errors`
-- [CLI Commands](/docs/reference/cli/) — which commands accept `--json`
+- [CLI Commands](/docs/command/) — which commands accept `--json`
 - [Observability & Audit](/docs/feature/audit/) — what the operation ledger records

@@ -1,14 +1,15 @@
 ---
 title: "参考"
 linkTitle: "参考"
-description: "命令语法、配置 Schema、磁盘布局、退出码、JSON 输出与兼容性证据。"
+description: "配置 Schema、包引用、磁盘布局、退出码、JSON 输出与兼容性证据。"
 url: "/zh/docs/reference/"
 weight: 400
 icon: fa-solid fa-book-open
 ---
 
-这一部分是文档的"查阅"半边。它回答"这个参数到底做什么"、"`sow.yml` 里允许出现哪些字段"、
-"退出码 5 是什么意思"、"某个文件落在哪里" —— 只给精确答案,不铺叙事。如果你想先弄懂
+这一部分记录稳定的数据与接口契约："`sow.yml` 里允许出现哪些字段"、"退出码 5 是什么意思"、
+"某个文件落在哪里" —— 只给精确答案，不铺叙事。命令语法与行为放在独立的
+[命令手册](/zh/docs/command/)中。如果你想先弄懂
 SOW 的工作方式,请从[上手指南](/zh/docs/start/)或[功能](/zh/docs/feature/)开始,
 那些页面讲模型,并在需要细节时链接回这里。
 
@@ -16,9 +17,6 @@ SOW 的工作方式,请从[上手指南](/zh/docs/start/)或[功能](/zh/docs/fe
 标识符、路径、哈希与计数会随工作区变化。
 
 {{< doc-cards cols="2" >}}
-{{< doc-card title="命令行" link="/zh/docs/reference/cli/" >}}
-全部命令、参数、可用的全局选项,以及决定命令作用于哪个仓库和 Dist 的发现与选择规则。
-{{< /doc-card >}}
 {{< doc-card title="配置参考" link="/zh/docs/reference/config/" >}}
 完整配置 schema：工作区、仓库、Dist、成员策略、签名与发布目标。
 {{< /doc-card >}}

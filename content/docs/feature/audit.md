@@ -131,6 +131,6 @@ for later evidence.
 
 ## See also
 
-- [Build and check commands](/docs/reference/cli/build/)
-- [Log commands](/docs/reference/cli/log/)
-- [Publication lifecycle](/docs/reference/cli/publication/)
+- [`sow build`](/docs/command/build/) and [`sow check`](/docs/command/check/)
+- [Log commands](/docs/command/log/)
+- [`sow publish`](/docs/command/publish/) and [`sow gc`](/docs/command/gc/)

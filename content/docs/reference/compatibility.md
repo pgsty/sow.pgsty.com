@@ -120,5 +120,5 @@ OS, architecture, and Go toolchain reflect the binary being run. `sow/v3` and
 ## See also
 
 - [Repository Layout](/docs/reference/layout/)
-- [Publication commands](/docs/reference/cli/publication/)
+- [`sow publish`](/docs/command/publish/) and [`sow gc`](/docs/command/gc/)
 - [Compatibility design](/docs/design/compatibility/)

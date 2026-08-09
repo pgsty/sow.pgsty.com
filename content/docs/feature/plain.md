@@ -151,7 +151,7 @@ sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
 - The journal is persisted only after every signature and every index has verified. Package replacement is ordered before the metadata pointer swap, and each replacement records both the original and the new SHA-256.
 - A DEB-only directory, a missing `rpm` binary, an unavailable key or agent, or a failed verification all fail before anything public changes.
 
-Details and exit codes are in the [`sow create` reference](/docs/reference/cli/create/); a walkthrough is in [Sign Your Repository](/docs/tutorial/signing/).
+Details and exit codes are in the [`sow create` reference](/docs/command/create/); a walkthrough is in [Sign Your Repository](/docs/tutorial/signing/).
 
 ## Crash recovery
 
@@ -173,6 +173,6 @@ The journal is read through a no-follow, descriptor-bound handle with a 64 MiB c
 
 ## Next
 
-- [`sow create` reference](/docs/reference/cli/create/) — every flag, exit code, and failure mode
+- [`sow create` reference](/docs/command/create/) — every flag, exit code, and failure mode
 - [Quick Start](/docs/start/quickstart/) — build one in five minutes
 - [Managed Workspaces](/docs/feature/managed/) — when a flat directory is no longer enough

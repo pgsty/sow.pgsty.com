@@ -110,5 +110,5 @@ OS、架构与 Go 工具链取决于实际二进制。`sow/v3`、`sow.cli/v1` �
 ## 延伸阅读
 
 - [仓库布局](/zh/docs/reference/layout/)
-- [发布命令](/zh/docs/reference/cli/publication/)
+- [`sow publish`](/zh/docs/command/publish/) 与 [`sow gc`](/zh/docs/command/gc/)
 - [兼容性设计](/zh/docs/design/compatibility/)

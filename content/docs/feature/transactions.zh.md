@@ -175,4 +175,4 @@ Managed 路径从不由用户提供的字符串拼装。每次创建、rename �
 
 - [可观测与审计](/zh/docs/feature/audit/) —— 如何读取这些机制维护的状态
 - [退出码](/zh/docs/reference/exit-codes/) —— `4`、`5`、`6` 分别意味着什么、什么时候会看到
-- [`build` / `status` / `check` / `changes` 参考](/zh/docs/reference/cli/build/)
+- [`build`](/zh/docs/command/build/)、[`status`](/zh/docs/command/status/)、[`check`](/zh/docs/command/check/) 与 [`changes`](/zh/docs/command/changes/)

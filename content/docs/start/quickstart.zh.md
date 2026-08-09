@@ -121,5 +121,5 @@ sow create /srv/repo --json
 如果目录已经恰好包含要发布的全部内容，使用 Plain。需要具名 Dist、架构视图、成员策略、
 已签名元数据、Generation、审计或发布目标时，使用 [Managed 工作区](/zh/docs/start/workspace/)。
 
-另见 [`sow create`](/zh/docs/reference/cli/create/) 与
+另见 [`sow create`](/zh/docs/command/create/) 与
 [Plain 平面仓库](/zh/docs/feature/plain/)。

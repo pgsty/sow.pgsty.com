@@ -597,8 +597,8 @@ Some things you might expect to configure are deliberately not configurable:
 
 ## See also
 
-- [`sow config`](/docs/reference/cli/config/) — the commands that read this file
+- [`sow config`](/docs/command/config/) — the commands that read this file
 - [Membership Policy](/docs/feature/policy/) — how `exclude` and `limit` behave over time
 - [Signing Model](/docs/feature/signing/) — the two trust chains explained
-- [Publish, Retain, GC, and Export](/docs/reference/cli/publication/) — target lifecycle commands
+- [`publish`](/docs/command/publish/), [`retain`](/docs/command/retain/), [`gc`](/docs/command/gc/), and [`export`](/docs/command/export/) — delivery lifecycle commands
 - [Exit Codes](/docs/reference/exit-codes/) — what `2` and `6` mean here

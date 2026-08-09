@@ -126,5 +126,5 @@ Use Plain mode when the directory already contains exactly what should be publis
 a [Managed workspace](/docs/start/workspace/) when you need named Dists, architecture
 views, membership policy, signed metadata, generations, audit, or publication targets.
 
-See also [`sow create`](/docs/reference/cli/create/) and
+See also [`sow create`](/docs/command/create/) and
 [Plain Flat Repositories](/docs/feature/plain/).

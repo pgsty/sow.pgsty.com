@@ -152,6 +152,6 @@ replay, and recovery in a nonproduction prefix before relying on it. See
 
 ## Next
 
-- [Publication commands](/docs/reference/cli/publication/)
+- [`sow publish`](/docs/command/publish/) and [`sow gc`](/docs/command/gc/)
 - [Publication design](/docs/design/publication/)
 - [Signing tutorial](/docs/tutorial/signing/)

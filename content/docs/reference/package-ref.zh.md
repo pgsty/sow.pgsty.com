@@ -195,6 +195,6 @@ operation rejected: ... package reference "nosuchpkg" was not found in the selec
 
 ## 延伸阅读
 
-- [`sow rm`](/zh/docs/reference/cli/rm/) —— 移除、预览与批量语义
-- [`sow ls` / `show` / `where`](/zh/docs/reference/cli/query/) —— 三条查询命令
+- [`sow rm`](/zh/docs/command/rm/) —— 移除、预览与批量语义
+- [`sow ls`](/zh/docs/command/ls/)、[`show`](/zh/docs/command/show/) 与 [`where`](/zh/docs/command/where/) —— 三条查询命令
 - [退出码](/zh/docs/reference/exit-codes/) —— `6` 同时覆盖"无匹配"与"歧义"

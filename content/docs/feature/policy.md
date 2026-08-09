@@ -157,6 +157,6 @@ sow rm patroni -r pgsql -d el9 -c
 ## Next
 
 - [`sow.yml` reference](/docs/reference/config/) — the complete policy schema
-- [`sow add` reference](/docs/reference/cli/add/) — per-item statuses and the partial-success exit code
+- [`sow add` reference](/docs/command/add/) — per-item statuses and the partial-success exit code
 - [Pool & Architecture Views](/docs/feature/views/) — where the surviving members get rendered
-- [CLI: Publish, Retain, GC, and Export](/docs/reference/cli/publication/) — payload lifecycle controls
+- [`sow retain`](/docs/command/retain/) and [`sow gc`](/docs/command/gc/) — payload lifecycle controls

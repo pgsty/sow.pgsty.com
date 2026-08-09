@@ -1,7 +1,7 @@
 {
  "meta": {
   "generated_by": "bin/gen_docs_nav.py",
-  "page_count": 45
+  "page_count": 53
  },
  "page_by_url": {
   "/docs/": "docs",
@@ -31,24 +31,32 @@
   "/docs/design/publication/": "docs/design/publication",
   "/docs/design/compatibility/": "docs/design/compatibility",
   "/docs/reference/": "docs/reference",
-  "/docs/reference/cli/": "docs/reference/cli",
-  "/docs/reference/cli/create/": "docs/reference/cli/create",
-  "/docs/reference/cli/init/": "docs/reference/cli/init",
-  "/docs/reference/cli/config/": "docs/reference/cli/config",
-  "/docs/reference/cli/repo/": "docs/reference/cli/repo",
-  "/docs/reference/cli/dist/": "docs/reference/cli/dist",
-  "/docs/reference/cli/add/": "docs/reference/cli/add",
-  "/docs/reference/cli/rm/": "docs/reference/cli/rm",
-  "/docs/reference/cli/query/": "docs/reference/cli/query",
-  "/docs/reference/cli/build/": "docs/reference/cli/build",
-  "/docs/reference/cli/publication/": "docs/reference/cli/publication",
-  "/docs/reference/cli/log/": "docs/reference/cli/log",
   "/docs/reference/config/": "docs/reference/config",
   "/docs/reference/package-ref/": "docs/reference/package-ref",
   "/docs/reference/layout/": "docs/reference/layout",
   "/docs/reference/exit-codes/": "docs/reference/exit-codes",
   "/docs/reference/json/": "docs/reference/json",
-  "/docs/reference/compatibility/": "docs/reference/compatibility"
+  "/docs/reference/compatibility/": "docs/reference/compatibility",
+  "/docs/command/": "docs/command",
+  "/docs/command/create/": "docs/command/create",
+  "/docs/command/init/": "docs/command/init",
+  "/docs/command/config/": "docs/command/config",
+  "/docs/command/repo/": "docs/command/repo",
+  "/docs/command/dist/": "docs/command/dist",
+  "/docs/command/add/": "docs/command/add",
+  "/docs/command/rm/": "docs/command/rm",
+  "/docs/command/ls/": "docs/command/ls",
+  "/docs/command/show/": "docs/command/show",
+  "/docs/command/where/": "docs/command/where",
+  "/docs/command/status/": "docs/command/status",
+  "/docs/command/build/": "docs/command/build",
+  "/docs/command/check/": "docs/command/check",
+  "/docs/command/changes/": "docs/command/changes",
+  "/docs/command/publish/": "docs/command/publish",
+  "/docs/command/retain/": "docs/command/retain",
+  "/docs/command/gc/": "docs/command/gc",
+  "/docs/command/export/": "docs/command/export",
+  "/docs/command/log/": "docs/command/log"
  },
  "children_by_url": {
   "/docs/": [
@@ -56,7 +64,8 @@
    "docs/tutorial",
    "docs/feature",
    "docs/design",
-   "docs/reference"
+   "docs/reference",
+   "docs/command"
   ],
   "/docs/start/": [
    "docs/start/install",
@@ -88,7 +97,6 @@
    "docs/design/compatibility"
   ],
   "/docs/reference/": [
-   "docs/reference/cli",
    "docs/reference/config",
    "docs/reference/package-ref",
    "docs/reference/layout",
@@ -96,18 +104,26 @@
    "docs/reference/json",
    "docs/reference/compatibility"
   ],
-  "/docs/reference/cli/": [
-   "docs/reference/cli/create",
-   "docs/reference/cli/init",
-   "docs/reference/cli/config",
-   "docs/reference/cli/repo",
-   "docs/reference/cli/dist",
-   "docs/reference/cli/add",
-   "docs/reference/cli/rm",
-   "docs/reference/cli/query",
-   "docs/reference/cli/build",
-   "docs/reference/cli/publication",
-   "docs/reference/cli/log"
+  "/docs/command/": [
+   "docs/command/create",
+   "docs/command/init",
+   "docs/command/config",
+   "docs/command/repo",
+   "docs/command/dist",
+   "docs/command/add",
+   "docs/command/rm",
+   "docs/command/ls",
+   "docs/command/show",
+   "docs/command/where",
+   "docs/command/status",
+   "docs/command/build",
+   "docs/command/check",
+   "docs/command/changes",
+   "docs/command/publish",
+   "docs/command/retain",
+   "docs/command/gc",
+   "docs/command/export",
+   "docs/command/log"
   ]
  },
  "active_path_by_url": {
@@ -239,77 +255,6 @@
    "/docs/",
    "/docs/reference/"
   ],
-  "/docs/reference/cli/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/"
-  ],
-  "/docs/reference/cli/create/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/create/"
-  ],
-  "/docs/reference/cli/init/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/init/"
-  ],
-  "/docs/reference/cli/config/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/config/"
-  ],
-  "/docs/reference/cli/repo/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/repo/"
-  ],
-  "/docs/reference/cli/dist/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/dist/"
-  ],
-  "/docs/reference/cli/add/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/add/"
-  ],
-  "/docs/reference/cli/rm/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/rm/"
-  ],
-  "/docs/reference/cli/query/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/query/"
-  ],
-  "/docs/reference/cli/build/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/build/"
-  ],
-  "/docs/reference/cli/publication/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/publication/"
-  ],
-  "/docs/reference/cli/log/": [
-   "/docs/",
-   "/docs/reference/",
-   "/docs/reference/cli/",
-   "/docs/reference/cli/log/"
-  ],
   "/docs/reference/config/": [
    "/docs/",
    "/docs/reference/",
@@ -339,6 +284,105 @@
    "/docs/",
    "/docs/reference/",
    "/docs/reference/compatibility/"
+  ],
+  "/docs/command/": [
+   "/docs/",
+   "/docs/command/"
+  ],
+  "/docs/command/create/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/create/"
+  ],
+  "/docs/command/init/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/init/"
+  ],
+  "/docs/command/config/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/config/"
+  ],
+  "/docs/command/repo/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/repo/"
+  ],
+  "/docs/command/dist/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/dist/"
+  ],
+  "/docs/command/add/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/add/"
+  ],
+  "/docs/command/rm/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/rm/"
+  ],
+  "/docs/command/ls/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/ls/"
+  ],
+  "/docs/command/show/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/show/"
+  ],
+  "/docs/command/where/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/where/"
+  ],
+  "/docs/command/status/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/status/"
+  ],
+  "/docs/command/build/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/build/"
+  ],
+  "/docs/command/check/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/check/"
+  ],
+  "/docs/command/changes/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/changes/"
+  ],
+  "/docs/command/publish/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/publish/"
+  ],
+  "/docs/command/retain/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/retain/"
+  ],
+  "/docs/command/gc/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/gc/"
+  ],
+  "/docs/command/export/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/export/"
+  ],
+  "/docs/command/log/": [
+   "/docs/",
+   "/docs/command/",
+   "/docs/command/log/"
   ]
  },
  "sections": [
@@ -535,91 +579,6 @@
    "title_zh": "参考",
    "children": [
     {
-     "page": "docs/reference/cli",
-     "url": "/docs/reference/cli/",
-     "title_en": "CLI Commands",
-     "title_zh": "命令行",
-     "children": [
-      {
-       "page": "docs/reference/cli/create",
-       "url": "/docs/reference/cli/create/",
-       "title_en": "sow create",
-       "title_zh": "sow create",
-       "children": []
-      },
-      {
-       "page": "docs/reference/cli/init",
-       "url": "/docs/reference/cli/init/",
-       "title_en": "sow init",
-       "title_zh": "sow init",
-       "children": []
-      },
-      {
-       "page": "docs/reference/cli/config",
-       "url": "/docs/reference/cli/config/",
-       "title_en": "sow config",
-       "title_zh": "sow config",
-       "children": []
-      },
-      {
-       "page": "docs/reference/cli/repo",
-       "url": "/docs/reference/cli/repo/",
-       "title_en": "sow repo",
-       "title_zh": "sow repo",
-       "children": []
-      },
-      {
-       "page": "docs/reference/cli/dist",
-       "url": "/docs/reference/cli/dist/",
-       "title_en": "sow dist",
-       "title_zh": "sow dist",
-       "children": []
-      },
-      {
-       "page": "docs/reference/cli/add",
-       "url": "/docs/reference/cli/add/",
-       "title_en": "sow add",
-       "title_zh": "sow add",
-       "children": []
-      },
-      {
-       "page": "docs/reference/cli/rm",
-       "url": "/docs/reference/cli/rm/",
-       "title_en": "sow rm",
-       "title_zh": "sow rm",
-       "children": []
-      },
-      {
-       "page": "docs/reference/cli/query",
-       "url": "/docs/reference/cli/query/",
-       "title_en": "ls / show / where",
-       "title_zh": "ls / show / where",
-       "children": []
-      },
-      {
-       "page": "docs/reference/cli/build",
-       "url": "/docs/reference/cli/build/",
-       "title_en": "build / status / check / changes",
-       "title_zh": "build / status / check / changes",
-       "children": []
-      },
-      {
-       "page": "docs/reference/cli/publication",
-       "url": "/docs/reference/cli/publication/",
-       "title_en": "Publish & Lifecycle",
-       "title_zh": "发布与生命周期",
-       "children": []
-      },
-      {
-       "page": "docs/reference/cli/log",
-       "url": "/docs/reference/cli/log/",
-       "title_en": "sow log",
-       "title_zh": "sow log",
-       "children": []
-      }
-     ]
-    },
-    {
      "page": "docs/reference/config",
      "url": "/docs/reference/config/",
      "title_en": "Configuration",
@@ -659,6 +618,147 @@
      "url": "/docs/reference/compatibility/",
      "title_en": "Compatibility",
      "title_zh": "兼容性",
+     "children": []
+    }
+   ]
+  },
+  {
+   "page": "docs/command",
+   "url": "/docs/command/",
+   "title_en": "Command",
+   "title_zh": "命令手册",
+   "children": [
+    {
+     "page": "docs/command/create",
+     "url": "/docs/command/create/",
+     "title_en": "create",
+     "title_zh": "create",
+     "children": []
+    },
+    {
+     "page": "docs/command/init",
+     "url": "/docs/command/init/",
+     "title_en": "init",
+     "title_zh": "init",
+     "children": []
+    },
+    {
+     "page": "docs/command/config",
+     "url": "/docs/command/config/",
+     "title_en": "config",
+     "title_zh": "config",
+     "children": []
+    },
+    {
+     "page": "docs/command/repo",
+     "url": "/docs/command/repo/",
+     "title_en": "repo",
+     "title_zh": "repo",
+     "children": []
+    },
+    {
+     "page": "docs/command/dist",
+     "url": "/docs/command/dist/",
+     "title_en": "dist",
+     "title_zh": "dist",
+     "children": []
+    },
+    {
+     "page": "docs/command/add",
+     "url": "/docs/command/add/",
+     "title_en": "add",
+     "title_zh": "add",
+     "children": []
+    },
+    {
+     "page": "docs/command/rm",
+     "url": "/docs/command/rm/",
+     "title_en": "rm",
+     "title_zh": "rm",
+     "children": []
+    },
+    {
+     "page": "docs/command/ls",
+     "url": "/docs/command/ls/",
+     "title_en": "ls",
+     "title_zh": "ls",
+     "children": []
+    },
+    {
+     "page": "docs/command/show",
+     "url": "/docs/command/show/",
+     "title_en": "show",
+     "title_zh": "show",
+     "children": []
+    },
+    {
+     "page": "docs/command/where",
+     "url": "/docs/command/where/",
+     "title_en": "where",
+     "title_zh": "where",
+     "children": []
+    },
+    {
+     "page": "docs/command/status",
+     "url": "/docs/command/status/",
+     "title_en": "status",
+     "title_zh": "status",
+     "children": []
+    },
+    {
+     "page": "docs/command/build",
+     "url": "/docs/command/build/",
+     "title_en": "build",
+     "title_zh": "build",
+     "children": []
+    },
+    {
+     "page": "docs/command/check",
+     "url": "/docs/command/check/",
+     "title_en": "check",
+     "title_zh": "check",
+     "children": []
+    },
+    {
+     "page": "docs/command/changes",
+     "url": "/docs/command/changes/",
+     "title_en": "changes",
+     "title_zh": "changes",
+     "children": []
+    },
+    {
+     "page": "docs/command/publish",
+     "url": "/docs/command/publish/",
+     "title_en": "publish",
+     "title_zh": "publish",
+     "children": []
+    },
+    {
+     "page": "docs/command/retain",
+     "url": "/docs/command/retain/",
+     "title_en": "retain",
+     "title_zh": "retain",
+     "children": []
+    },
+    {
+     "page": "docs/command/gc",
+     "url": "/docs/command/gc/",
+     "title_en": "gc",
+     "title_zh": "gc",
+     "children": []
+    },
+    {
+     "page": "docs/command/export",
+     "url": "/docs/command/export/",
+     "title_en": "export",
+     "title_zh": "export",
+     "children": []
+    },
+    {
+     "page": "docs/command/log",
+     "url": "/docs/command/log/",
+     "title_en": "log",
+     "title_zh": "log",
      "children": []
     }
    ]

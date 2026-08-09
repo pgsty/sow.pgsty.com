@@ -151,7 +151,7 @@ sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
 - 只有全部签名与元数据都验证通过,才持久化 journal;journal 把包体替换排在元数据指针切换之前,并同时绑定原始与新的 SHA-256。
 - 纯 DEB 目录、缺少 `rpm` 可执行文件、key/agent 不可用或签名验证失败,都在任何公开变更之前失败。
 
-参数与退出码见 [`sow create` 参考](/zh/docs/reference/cli/create/),操作演练见[仓库签名](/zh/docs/tutorial/signing/)。
+参数与退出码见 [`sow create` 参考](/zh/docs/command/create/),操作演练见[仓库签名](/zh/docs/tutorial/signing/)。
 
 ## 崩溃恢复
 
@@ -173,6 +173,6 @@ journal 通过 no-follow、绑定文件描述符的句柄读取,上限 64 MiB,�
 
 ## 继续阅读
 
-- [`sow create` 参考](/zh/docs/reference/cli/create/) —— 全部参数、退出码与失败模式
+- [`sow create` 参考](/zh/docs/command/create/) —— 全部参数、退出码与失败模式
 - [快速上手](/zh/docs/start/quickstart/) —— 五分钟建一个
 - [Managed 工作区](/zh/docs/feature/managed/) —— 当平面目录不够用的时候
