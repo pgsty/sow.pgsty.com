@@ -1,23 +1,7 @@
-# SOW docs chrome UI strings (sidebar / search dialog / TOC).
-# Keys not listed here fall back to the Docsy theme defaults.
-ui_search: Search
-silo_sidebar_nav: Documentation menu
-silo_sidebar_collapse: Collapse sidebar
-silo_sidebar_expand: Expand sidebar
-silo_drawer_open: Open navigation
-silo_drawer_close: Close navigation
-silo_theme_toggle: Toggle theme
-silo_lang_label: Language
-silo_search_nav: to navigate
-silo_search_open: to select
-silo_search_close: to close
-silo_search_empty: No results found
-silo_search_loading: Loading search index…
-silo_root_menu_label: Switch section
-silo_footer_author: Ruohang Feng
-silo_toc_hide: Hide this panel
-silo_toc_show: Show table of contents
-silo_quick_docs: Documentation
-silo_quick_blog: Blog
-silo_tags_title: Tags
-silo_published_on: Published
+# SOW landing-page strings. Common shell strings come from OINK.
+sow_search_nav: to navigate
+sow_search_open: to select
+sow_search_close: to close
+sow_search_empty: No results found
+sow_search_loading: Loading search index…
+sow_footer_author: Ruohang Feng

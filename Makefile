@@ -6,9 +6,9 @@ dev:
 	$(HUGO) server
 
 build:
-	$(HUGO) build --minify --cleanDestinationDir
+	$(HUGO) build --gc --minify --cleanDestinationDir
 
 check:
 	go mod verify
-	$(HUGO) build --minify --cleanDestinationDir --printPathWarnings --printI18nWarnings --panicOnWarning
+	$(HUGO) build --gc --minify --cleanDestinationDir --printPathWarnings --printI18nWarnings --panicOnWarning
 	python3 bin/check_internal_links.py public

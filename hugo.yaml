@@ -18,10 +18,9 @@ module:
   proxy: direct
   hugoVersion:
     extended: true
-    min: "0.155.0"
+    min: "0.160.1"
   imports:
-    - path: github.com/google/docsy
-      disable: false
+    - path: github.com/pgsty/oink
 
 #=======================================#
 # Languages and navigation
@@ -145,15 +144,15 @@ markup:
 # Outputs
 #=======================================#
 outputs:
-  home: [HTML, RSS, JSON]
-  page: [HTML]
-  section: [HTML, RSS]
+  home: [HTML, RSS, JSON, markdown, LLMS]
+  page: [HTML, markdown]
+  section: [HTML, RSS, print, markdown]
 
 #=======================================#
 # Services
 #=======================================#
 services:
-  # Google Analytics 4：仅生产构建注入（docsy head.html / layouts/index.html
+  # Google Analytics 4：仅生产构建注入（OINK head.html / layouts/index.html
   # 都用 hugo.IsProduction 包裹），本地 hugo server 不会加载埋点。
   googleAnalytics:
     id: G-K5J5RV8H58
@@ -163,13 +162,13 @@ services:
 #=======================================#
 params:
   description: "SOW is the Software Object Warehouse by Pigsty: one self-contained binary that builds and manages APT / YUM package repositories on Linux and macOS."
+  logo: img/sow.svg
   images:
     - images/sow-social-card.png
   version: 0.2.0
   copyright:
-    authors: PIGSTY & SOW Contributors
+    authors: '[PIGSTY & SOW Contributors](https://pgsty.com) · [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)'
     from_year: 2026
-    url: https://pgsty.com
 
   # 正文列宽模式：normal（1050px，默认）| wide（1300px）| full（占满可用宽）。
   page_width: normal
@@ -182,11 +181,14 @@ params:
   github_project_repo: https://github.com/pgsty/sow
   github_branch: main
 
-  # 站内搜索由项目自有的 ⌘K 弹窗实现（lunr 自托管 + 按语言索引）。
-  offlineSearch: false
+  # 文档与博客使用 OINK 自带的同源离线搜索；独立首页保留自己的同源入口。
+  offlineSearch: true
+  offlineSearchIndex: content
+  offlineSearchMaxResults: 10
   prism_syntax_highlighting: false
 
   ui:
+    quick_links: [docs, blog]
     breadcrumb_disable: false
     navbar_logo: true
     navbar_translucent_over_cover_disable: false
@@ -194,7 +196,6 @@ params:
     sidebar_menu_compact: true
     sidebar_menu_foldable: true
     sidebar_menu_truncate: 2000
-    sidebar_cache_limit: 1000
     sidebar_root_enabled: true
     ul_show: 2
     showLightDarkModeMenu: true
@@ -204,6 +205,9 @@ params:
     sidebar_width_min: 220
     sidebar_width_max: 480
     sidebar_item_overflow: ellipsis
+    page_context_menu:
+      enable: true
+      links: []
     feedback:
       enable: false
     readingtime:

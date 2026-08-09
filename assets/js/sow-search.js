@@ -1,9 +1,9 @@
 /**
- * silo-search.js — ⌘K 搜索弹窗（lunr + 中文子串兜底）。
+ * sow-search.js — SOW 首页的 ⌘K 搜索弹窗（lunr + 中文子串兜底）。
  *
  * 首页独立载入；交互与文档页内置搜索保持一致，样式通过
  * scss/landing-search.scss 桥接 landing 主题令牌。
- * 依赖：全局 lunr、#silo-search 弹窗标记（layouts/_partials/silo/search-dialog.html）。
+ * 依赖：全局 lunr、#silo-search 弹窗标记（layouts/_partials/sow/search-dialog.html）。
  */
 (function () {
   'use strict';

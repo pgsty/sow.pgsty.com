@@ -1,6 +1,6 @@
 // ============================================================
 // landing-search —— 首页 ⌘K 搜索弹窗样式。
-// 复用文档站 silo/_search.scss 的全部规则，此处仅把它引用的
+// 复用首页专用 sow/_search.scss 的全部规则，此处仅把它引用的
 // --bs-* / --silo-* 变量桥接到 landing-v3.css 的主题令牌上。
 // ============================================================
 
@@ -20,4 +20,4 @@ html[data-silo-lock] {
   overflow: hidden;
 }
 
-@import 'silo/search';
+@import 'sow/search';

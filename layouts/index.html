@@ -85,11 +85,13 @@
   <script>
     (function () {
       var theme = null;
-      try { theme = window.localStorage.getItem('silo-landing-theme'); } catch (error) {}
+      try { theme = window.localStorage.getItem('td-color-theme'); } catch (error) {}
+      if (theme === 'auto') theme = null;
       if (theme !== 'light' && theme !== 'dark') {
         theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       }
       document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.setAttribute('data-bs-theme', theme);
       document.documentElement.classList.remove('no-js');
       document.documentElement.classList.add('js');
     })();
@@ -123,17 +125,17 @@
           <a href="{{ relLangURL "download/" }}" class="nav-link">{{ if $zh }}下载{{ else }}Download{{ end }}</a>
           <div class="nav-utils">
             <button type="button" class="nav-util" data-silo-search-open title="{{ if $zh }}搜索（⌘K）{{ else }}Search (⌘K){{ end }}" aria-label="{{ if $zh }}搜索{{ else }}Search{{ end }}">
-              {{- partialCached "silo/icon.html" "search" "search" -}}
+              {{- partialCached "sow/icon.html" "search" "search" -}}
             </button>
             <button type="button" class="nav-util" data-theme-toggle title="{{ if $zh }}切换深浅主题{{ else }}Switch light / dark mode{{ end }}" aria-label="{{ if $zh }}切换深浅主题{{ else }}Switch light / dark mode{{ end }}">
-              {{- partialCached "silo/icon.html" "moon" "moon" -}}
-              {{- partialCached "silo/icon.html" "sun" "sun" -}}
+              {{- partialCached "sow/icon.html" "moon" "moon" -}}
+              {{- partialCached "sow/icon.html" "sun" "sun" -}}
             </button>
             {{ range .Translations }}
-            <a href="{{ .RelPermalink }}" class="nav-util" title="{{ .Language.Label }}" aria-label="{{ .Language.Label }}">{{ partialCached "silo/icon.html" "languages" "languages" }}</a>
+            <a href="{{ .RelPermalink }}" class="nav-util" title="{{ .Language.Label }}" aria-label="{{ .Language.Label }}">{{ partialCached "sow/icon.html" "languages" "languages" }}</a>
             {{ end }}
             <a href="https://github.com/pgsty/sow" class="nav-github" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
-              {{ partialCached "silo/icon.html" "github" "github" }}
+              {{ partialCached "sow/icon.html" "github" "github" }}
             </a>
           </div>
         </div>
@@ -470,12 +472,12 @@
 
   </main>
 
-  {{ partial "footer.html" . }}
+  {{ partial "home/sow-footer.html" . }}
 
   <script src="{{ "js/landing-v3.js" | relURL }}?v={{ substr (md5 (readFile "static/js/landing-v3.js")) 0 8 }}"></script>
-  {{ partial "silo/search-dialog.html" . }}
-  {{- $searchJs := slice (resources.Get "js/vendor/lunr.min.js") (resources.Get "js/silo-search.js")
-        | resources.Concat "js/landing-search-bundle.js" | minify | fingerprint }}
+  {{ partial "sow/search-dialog.html" . }}
+  {{- $searchJs := slice (resources.Get "js/vendor/lunr.min.js") (resources.Get "js/sow-search.js")
+        | resources.Concat "js/sow-landing-search-bundle.js" | minify | fingerprint }}
   <script src="{{ $searchJs.RelPermalink }}" integrity="{{ $searchJs.Data.Integrity }}" defer></script>
 </body>
 </html>
