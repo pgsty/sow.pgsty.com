@@ -132,7 +132,7 @@ sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
 
 Plain mode signs RPM package bodies only; it has no metadata signing. `KEY` is exactly 16, 40, or 64 hexadecimal characters, without an `0x` prefix; it is normalized to uppercase and passed to `rpm` as the `_gpg_name` macro. Without `--overwrite`, only RPMs with no parseable embedded signature are signed. With it, every retained RPM is re-signed.
 
-`--sign-with` requires at least one top-level RPM. A DEB-only directory, a missing `rpm` binary, or an unavailable key fails before anything public changes. Crash recovery for a signing run requires exactly the same authorization flags — see [Plain Flat Repositories](/docs/feature/plain/).
+`--sign-with` requires at least one top-level RPM retained after `--pigsty` cleanup. A DEB-only directory, a missing `rpm` binary, or an unavailable key fails before anything public changes. Signing is an explicit slow path with necessary copy, signature-verification, and final-RPM parse reads; if interrupted, rerun from the current package directory rather than replaying a Plain journal. See [Plain Flat Repositories](/docs/feature/plain/).
 
 ## What the client verifies
 

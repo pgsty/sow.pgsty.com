@@ -10,7 +10,7 @@ icon: fa-solid fa-folder-tree
 
 `sow create` turns a directory that already contains `.rpm` and `.deb` files into a flat repository
 by writing indexes next to the packages. It is the whole of Plain mode: no `sow.yml`, no SQLite, no
-Workspace discovery. This page covers the scan rules, the atomic `--pigsty` compatibility operation,
+Workspace discovery. This page covers the one-pass scan contract, the `--pigsty` completion gate,
 and RPM signing with `--sign-with`.
 
 ## Synopsis
@@ -39,8 +39,8 @@ replaces index paths it owns; unknown files are left alone.
 
 | Flag | Description | Default |
 |---|---|---|
-| `-j, --jobs N` | Parallel workers for parsing and hashing | logical CPU count |
-| `--pigsty` | Enable the atomic Pigsty compatibility operation | off |
+| `-j, --jobs N` | Parallel workers for the single package hash/parse pass | logical CPU count |
+| `--pigsty` | Enable Pigsty compatibility cleanup and completion marker | off |
 | `-S, --sign-with KEY` | Sign unsigned RPMs with a 16/40/64-hex GPG key ID | off |
 | `--overwrite` | Re-sign every RPM; requires `--sign-with` | off |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
@@ -54,12 +54,30 @@ replaces index paths it owns; unknown files are left alone.
 - No recursion, no symlink following, no Workspace config.
 - Every valid version enters the index. Two files claiming the same logical coordinate with
   different content is a hard failure.
-- A directory with no supported package is a rejection, not an empty repository.
+- A directory with no supported package is rejected in default mode. `--pigsty` accepts an empty
+  authoritative set so an interrupted all-package cleanup can converge and write its marker.
 
 ```console
 sow create /srv/empty
 plain: scan /srv/empty: no supported top-level regular RPM or DEB packages
 ```
+
+## Package I/O and final validation
+
+For the normal unsigned path, each selected package has exactly one full content pass. A worker opens
+it, computes SHA-256 once, parses its header/control metadata, and retains the complete parsed result.
+RPM XML and DEB `Packages` are rendered from that retained result; neither rendering nor generated
+metadata validation reopens package payloads. `--jobs` parallelizes this pass while canonical result
+ordering keeps output bytes independent of worker scheduling.
+
+Immediately before publication, `create` relists the top-level package set and compares file identity,
+type/mode, size, and mtime with the post-scan snapshot. This is a cheap `stat` check, not a second hash.
+A changed set or stat returns integrity error `5` before any staged output is published. Deliberately
+preserving inode, size, and mtime while modifying bytes is outside the local cooperative-writer
+contract.
+
+Explicit RPM signing is an exception: copying, signing, signature verification, and parsing the final
+signed RPM necessarily add reads for packages that are modified.
 
 ## Deterministic output and idempotence
 
@@ -85,15 +103,16 @@ sow create /srv/pigsty
 plain: marker gate /srv/pigsty/repo_complete: repo_complete exists; use --pigsty or remove it explicitly before rebuilding
 ```
 
-Either re-run with `--pigsty` (which manages the marker as part of its transaction) or remove the
-marker yourself.
+Either re-run with `--pigsty` (which withdraws and republishes the marker in its documented order)
+or remove the marker yourself.
 
 ## --pigsty
 
-`--pigsty` is a single indivisible compatibility-and-cleanup operation. It cannot be split:
+`--pigsty` enables three coupled compatibility actions in one invocation. Their publication order
+is marker-gated, but the operation is rebuilt on retry rather than recovered from a journal:
 
-1. Delete 32-bit x86 packages identified from parsed package facts — RPM `i386/i486/i586/i686`,
-   DEB `i386`.
+1. Delete DEB packages whose parsed architecture is `i386`. RPMs are not removed merely for
+   carrying an `i386/i486/i586/i686` architecture.
 2. Delete RPM/DEB whose binary package name is exactly `patroni` and whose upstream version is
    exactly `3.0.4`. RPM compares `VERSION`, ignoring epoch and release; DEB strips epoch and Debian
    revision first. `3.0.4+foo` is not a match.
@@ -114,10 +133,9 @@ d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab  epel-release-7
 Cleanup only touches top-level regular package files that parsed successfully and matched a rule.
 Directories and unknown files are never removed by glob.
 
-The commit order matters for callers that gate on the marker: the existing `repo_complete` is
-withdrawn *before* indexes switch, deleted packages are renamed atomically into a same-filesystem
-recovery trash, and the new marker is written last. A caller polling for `repo_complete` therefore
-never observes an intermediate state, and clients never see an index referencing a deleted package.
+The publication order matters for callers that gate on the marker: the existing `repo_complete` is
+withdrawn *before* indexes switch, matched packages are deleted only after replacement metadata is
+installed, and the new marker is written last. A caller must treat a missing marker as incomplete.
 
 {{% alert title="Marker semantics" color="info" %}}
 Treat a missing `repo_complete` as "build in progress". That is the contract `--pigsty` is designed
@@ -138,7 +156,7 @@ SOW never receives, persists or echoes a secret.
 - Signing happens on a private same-filesystem stage copy. Each result is re-parsed to confirm the
   embedded signature, the signature-neutral digest and NEVRA are unchanged, and rpm-md is generated
   from the final complete bytes.
-- The directory must contain at least one top-level RPM, and `rpm` must be on `PATH`.
+- At least one top-level RPM must remain after `--pigsty` cleanup, and `rpm` must be on `PATH`.
 
 ```console
 sow create /srv/flat -S 0123456789ABCDEF --overwrite
@@ -147,7 +165,7 @@ plain: sign rpm epel-release-7-5.noarch.rpm: rpm executable is required for --si
 
 ```console
 sow create /srv/deb-only -S 0123456789ABCDEF
-plain: sign rpm: --sign-with requires at least one top-level RPM package
+plain: sign rpm: --sign-with requires at least one retained top-level RPM package
 ```
 
 ```console
@@ -160,21 +178,21 @@ sow create /srv/flat -S ZZZZ
 usage error: --sign-with must be a 16, 40, or 64 hexadecimal GPG key ID/fingerprint
 ```
 
-## Locking, staging and recovery
+## Locking, staging and overwrite rebuild
 
-`create` takes a write lock on the target directory and honors `--timeout`/`--no-wait`. Metadata is
-written to a same-filesystem stage, verified, and only then switched in; on failure the previous
-index stays usable.
+`create` takes a write lock on the target directory and honors `--timeout`/`--no-wait`. All metadata
+is written to a private stage and validated before publication begins. The lock coordinates SOW
+writers on the local machine; arbitrary external package mutation is unsupported.
 
-When one run finds both RPMs and DEBs, both renderers belong to the same Plain Operation: everything
-is staged and verified before any switch begins. A crash mid-way is completed or rolled back by a
-lightweight durable journal on the next invocation, which reports `recovered=true`. Recovery from an
-interrupted signing run requires the exact same `--sign-with`/`--overwrite` authorization — a weaker
-invocation will not silently replay it.
+Plain create does not create a durable operation journal, rollback pre-images, or recovery trash.
+Publication consists of several single-file renames, so a crash may leave a partially replaced set of
+derived files. Re-run `sow create` with the intended current options: it discards reserved stale Plain
+temporary state and rebuilds all indexes from the packages that currently exist. `recovered` remains
+in the stable JSON schema but is always `false`; a rerun is a fresh overwrite build, not replay.
 
-A flat directory has no generation pointer, and packages plus `repomd.xml` cannot be swapped by a
-single POSIX rename. Concurrent readers therefore do not get cross-file instantaneous atomicity;
-what SOW guarantees is that the journal always recovers to a complete terminal state.
+A flat directory has no whole-repository generation pointer, and RPM plus DEB entry points cannot be
+swapped in one POSIX rename. Plain therefore does not promise cross-file instantaneous atomicity. Use
+`repo_complete` as the `--pigsty` gate, or use Managed mode when transactional recovery is required.
 
 ## Examples
 
@@ -224,7 +242,7 @@ sow create /srv/empty --json
 | `1` | Directory unreadable or missing, package parse failure, renderer failure, signing tool failure |
 | `2` | Usage error — `--overwrite` without `--sign-with`, malformed key, `--no-wait` with a non-zero `--timeout` |
 | `4` | Directory write lock held and `--no-wait` given or `--timeout` expired |
-| `5` | The Plain journal could not be recovered to a terminal state |
+| `5` | Input set/stat changed before publication, or a controlled output path failed an integrity check |
 | `6` | No supported package found, `repo_complete` gate hit, `--sign-with` on a DEB-only directory, coordinate conflict |
 
 ## See also

@@ -21,7 +21,7 @@ generates repository metadata in-process and has no serving daemon.
 | `exclude` and version `limit` policy | no | yes |
 | Metadata signing | no | RPM and DEB |
 | RPM package signing | `--sign-with` | `never`, `fill`, `always` |
-| Transaction journal and recovery | operation-local | Workspace, Repository, publication |
+| Transaction journal and recovery | no; rerun to rebuild | Workspace, Repository, publication |
 | Audit log and JSONL export | no | yes |
 | Publication targets | no | filesystem and R2 |
 

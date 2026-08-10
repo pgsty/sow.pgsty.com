@@ -1,7 +1,7 @@
 ---
 title: "Transactions & Recovery"
 linkTitle: "Transactions & Recovery"
-description: "The three journals, the two-level lock model, the fixed commit order, and what happens when a write command is killed halfway through."
+description: "Managed-mode journals, the two-level lock model, fixed commit order, and evidence-driven crash recovery."
 url: "/docs/feature/transactions/"
 weight: 700
 icon: fa-solid fa-shield-halved
@@ -11,9 +11,14 @@ Repository tools fail in one of two embarrassing ways: they leave an index that 
 
 ## The invariant
 
-**A client following a protocol pointer always reads a complete old view or a complete new view. There is no third option, including after a power loss.**
+**For Managed repositories, a client following a protocol pointer always reads a complete old view or a complete new view. There is no third option, including after a power loss.**
 
 Everything below exists to hold that line: metadata is fully staged and verified before anything public moves, the pointer swap is the commit decision, and every operation records enough durable evidence that the next command can finish it or undo it without guessing.
+
+Plain `sow create` is intentionally outside this transaction model. Its package directory is the
+authority and its metadata is a disposable projection: it performs one content pass, a final stat
+check, and overwrite publication. An interruption is handled by running `sow create` again, not by
+replaying a journal. See [Plain Flat Repositories](/docs/feature/plain/).
 
 Note what this does *not* claim. `dirty` does not mean a half-written index — it means the
 Desired state is ahead of the Built Generation while the old Built view remains complete.
@@ -21,19 +26,16 @@ SOW also does not promise that two Dists flip at the same instant; it promises t
 protocol view is self-consistent and that, when a write returns, every Dist included in
 that Operation is on its recorded Built Generation.
 
-## Three journals
+## Two durable journals
 
-Different phases of a repository's life need different durability substrates, so there are three, each with a narrow scope:
+Managed lifecycle and repository mutation use two durability substrates, each with a narrow scope:
 
 | Journal | Location | Covers | Recovered by |
 |---|---|---|---|
-| Plain file journal | `.sow-plain-operation.json` in the target directory | one `sow create` run | the next `sow create` on that directory |
 | Workspace file journal | `.sow/workspace-ops/active.json` | `init`, `repo new`, `repo rm` | the next workspace-lifecycle command |
 | Repository operation journal | the repository's SQLite | `dist new/rm`, `add`, `rm`, `build`, `log prune` | the next write command on that repository |
 
-The split is not arbitrary. Workspace lifecycle operations run when the target repository's database does not exist yet or is about to be deleted, so they cannot use it. Plain mode has no database at all by design. Everything else has a repository database available and uses it.
-
-The **Plain journal** binds the parsed inputs, the complete ordered action plan, and a durable pre-image of every file it will replace — old hash, mode, UID, GID, and its location in a same-filesystem recovery trash. Details and the `--pigsty` ordering are in [Plain Flat Repositories](/docs/feature/plain/).
+The split is not arbitrary. Workspace lifecycle operations run when the target repository's database does not exist yet or is about to be deleted, so they cannot use it. Repository mutations have a database available and use it. Plain has neither because its recovery unit is a fresh rebuild from packages.
 
 The **workspace journal** stores the operation kind, a random 64-hex id, the repository name, and both the old and new raw `sow.yml` bytes with their SHA-256. The workspace lock guarantees at most one active operation. The atomic rename of `sow.yml` is the commit decision: if the current config still hashes to the old value, the planned journal is cleaned up and rolled back; if it hashes to the new value, SOW idempotently finishes creating the repository shell or moves the removed objects into recovery. If it matches neither, SOW refuses to guess.
 
@@ -130,7 +132,7 @@ into offline staging and switch it into service atomically. See
 
 ## Crash recovery
 
-**Every write command recovers before it does its own work.** There is no separate repair command and no daemon watching for stale state; recovery is a precondition of mutation. If a nonterminal operation exists, the next `add`, `rm`, `build`, `dist new/rm`, or `log prune` completes or rolls it back first, then proceeds.
+**Every Managed write command recovers before it does its own work.** There is no separate repair command and no daemon watching for stale state; recovery is a precondition of mutation. If a nonterminal operation exists, the next `add`, `rm`, `build`, `dist new/rm`, or `log prune` completes or rolls it back first, then proceeds.
 
 Global recovery order is fixed: workspace lifecycle first under the workspace lock, then — if that was not a repository removal — repository operations in repository-name order under each stable repository lock. A workspace operation that has already passed the repository-removal commit decision takes precedence and forbids any nested repository recovery, since recovering state inside a repository that is being deleted would be meaningless.
 
@@ -162,14 +164,14 @@ Managed paths are never assembled from user-supplied strings. Every create, rena
 1. resolve the workspace root to an absolute real path;
 2. reconstruct the target from a fixed relative fragment and verify the relative path contains no escape;
 3. `Lstat` every existing controlled component and reject symlinks and unexpected file types;
-4. delete only objects that were first atomically moved into `.sow/.../recovery` (or the Plain recovery trash);
+4. delete only objects that were first atomically moved into `.sow/.../recovery`;
 5. before deleting, prove again that the recovery target sits inside the corresponding private state directory.
 
 Names must match `[a-z0-9][a-z0-9._-]*`, and `.`, `..`, `.sow`, `pool`, `dists` and workspace-reserved names are rejected outright.
 
-The same posture applies to file handles. The Plain journal is read through a no-follow, descriptor-bound handle, so a symlink cannot be substituted between the check and the open. SQLite is opened with `O_NOFOLLOW` and bound to a regular-file inode, re-verified by path after the connection is established; a database, WAL, shm, or rollback journal that is a symlink, a non-regular file, multiply hardlinked, or rebound during the open is rejected. `log export` refuses to overwrite an existing file and refuses a symlinked parent directory — which is why exporting into `/tmp` on macOS fails, since `/tmp` is a symlink there.
+The same posture applies to file handles. SQLite is opened with `O_NOFOLLOW` and bound to a regular-file inode, re-verified by path after the connection is established; a database, WAL, shm, or rollback journal that is a symlink, a non-regular file, multiply hardlinked, or rebound during the open is rejected. `log export` refuses to overwrite an existing file and refuses a symlinked parent directory — which is why exporting into `/tmp` on macOS fails, since `/tmp` is a symlink there.
 
-Journals are bounded by size: 64 MiB for Plain, 32 MiB for the workspace, 16 MiB for a repository operation payload, and 64 MiB each for the external mutation and base manifests. An oversized journal is never truncated and never degraded — it fails outside the commit window, so a writer can never produce an operation record that a recovery reader would be unable to read back.
+Journals are bounded by size: 32 MiB for the workspace, 16 MiB for a repository operation payload, and 64 MiB each for the external mutation and base manifests. An oversized journal is never truncated and never degraded — it fails outside the commit window, so a writer can never produce an operation record that a recovery reader would be unable to read back.
 
 None of this claims to defend against a malicious process running as the same user with unlimited privileges. It defends against the realistic failure modes: crashes, races between cooperating processes, and paths that changed shape between the check and the use.
 

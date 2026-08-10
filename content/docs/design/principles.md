@@ -29,14 +29,13 @@ must not create distributed ownership.
 
 ## Canonical data, rebuildable projections
 
-Package bytes in `pool/` are canonical data. Protocol indexes, architecture views, reports,
-and compatibility exports are projections. A projection may be rebuilt only when SOW can
-prove its complete input set and ownership; it never becomes a second owner of package
-bytes.
+Managed package bytes in `pool/` are canonical data. In Plain mode, the top-level package
+files are canonical instead. Protocol indexes, architecture views, reports, and compatibility
+exports are projections; they never become a second owner of package bytes.
 
-This distinction leads to a simple deletion rule: remove a projection only through the
-operation that created and recorded it; remove canonical data only after reachability has
-been computed across every live and retained owner.
+The durability rule follows the authority. Managed removes a projection through its recorded
+operation and removes canonical data only after reachability across every live and retained
+owner. Plain simply regenerates its owned index paths from the current package directory.
 
 ## The public tree is the delivery unit
 
@@ -59,12 +58,16 @@ Payload and immutable metadata may arrive before they are visible. A protocol po
 as `repomd.xml`, `Release`, or `InRelease` is the commit boundary. Nothing is deleted until
 the new pointer is durable and the old reader/cache window is closed.
 
-## Recovery follows durable evidence
+## Recovery cost follows state cost
 
-Before commit intent, an operation may be abandoned if exact reconciliation proves that no
-public pointer changed. After commit intent, recovery is forward-only. SOW does not guess
-whether a half-finished publication "probably worked"; it compares journals, manifests,
-checkpoints, provider identities, and the public tree.
+Plain has no desired-state history to preserve. Its cheapest correct recovery is a fresh
+one-pass scan and overwrite rebuild, so it stores no transaction journal and does not spend
+package-size I/O proving an old attempt.
+
+Managed state is different. Before commit intent, an operation may be abandoned if exact
+reconciliation proves that no public pointer changed. After commit intent, recovery is
+forward-only. Managed does not guess whether a half-finished publication "probably worked";
+it compares journals, manifests, checkpoints, provider identities, and the public tree.
 
 Contradictory evidence stops the operation. A visible refusal is safer than an invisible
 fork in repository history.

@@ -1,7 +1,7 @@
 ---
 title: "事务与恢复"
 linkTitle: "事务与恢复"
-description: "三类操作日志、两级锁模型、固定的提交顺序,以及写命令被中途杀掉时会发生什么。"
+description: "Managed 模式的操作日志、两级锁模型、固定提交顺序与证据驱动崩溃恢复。"
 url: "/zh/docs/feature/transactions/"
 weight: 700
 icon: fa-solid fa-shield-halved
@@ -11,28 +11,29 @@ icon: fa-solid fa-shield-halved
 
 ## 不变式
 
-**沿协议指针读取的客户端,永远只会读到完整的旧视图或完整的新视图。没有第三种可能 —— 包括掉电之后。**
+**对 Managed 仓库，沿协议指针读取的客户端永远只会读到完整旧视图或完整新视图。没有第三种可能 —— 包括掉电之后。**
 
 下面所有内容都是为了守住这条线:元数据在任何公开变更之前完整 stage 并校验,指针切换就是提交决策,每个操作都留下足够的持久证据,让下一条命令能把它做完或撤销,而不需要猜。
+
+Plain `sow create` 刻意不属于这套事务模型。它以包目录为权威事实、把元数据视为可丢弃投影：一遍内容
+扫描、一次最终 stat 校验，然后覆盖发布。中断后重新运行 `sow create`，而不是重放 journal。详见
+[Plain 平面仓库](/zh/docs/feature/plain/)。
 
 也要注意它**没有**声称什么。`dirty` 不是指索引写了一半；它表示 Desired 状态领先于
 Built Generation，而旧的 Built View 仍然完整。SOW 也不承诺两个不同 Dist 在同一瞬间翻代；
 它承诺每个协议视图始终自洽，且写命令返回时，本次 Operation 包含的每个 Dist 都处于记录的
 Built Generation。
 
-## 三类操作日志
+## 两类持久日志
 
-仓库生命周期的不同阶段需要不同的持久化载体,所以有三类,各自作用域很窄:
+Managed 仓库生命周期与变更使用两类持久化载体，各自作用域很窄：
 
 | 日志 | 位置 | 覆盖范围 | 由谁恢复 |
 |---|---|---|---|
-| Plain 文件 journal | 目标目录下的 `.sow-plain-operation.json` | 一次 `sow create` | 对该目录的下一次 `sow create` |
 | Workspace 文件 journal | `.sow/workspace-ops/active.json` | `init`、`repo new`、`repo rm` | 下一条工作区生命周期命令 |
 | Repository 操作日志 | 该仓库的 SQLite | `dist new/rm`、`add`、`rm`、`build`、`log prune` | 该仓库的下一条写命令 |
 
-这个划分不是随意的。工作区生命周期操作发生在目标仓库数据库尚不存在、或即将被删除的时候,因此不能用它。Plain 模式按设计根本没有数据库。其余情况都有可用的仓库数据库,就用它。
-
-**Plain journal** 绑定解析后的输入、完整有序的动作计划,以及每个将被替换文件的持久 pre-image —— 旧哈希、mode、UID、GID,以及它在同文件系统 recovery trash 中的位置。细节与 `--pigsty` 的顺序见 [Plain 平面仓库](/zh/docs/feature/plain/)。
+这个划分不是随意的。工作区生命周期操作发生在目标仓库数据库尚不存在、或即将被删除的时候，因此不能用它；仓库变更有可用数据库，就用数据库。Plain 两者都没有，因为它的恢复单元是按包重新构建。
 
 **Workspace journal** 保存操作类型、随机 64 位十六进制 id、仓库名,以及新旧 `sow.yml` 的原始字节与各自 SHA-256。工作区锁保证同时只有一条 active operation。`sow.yml` 的原子 rename 就是提交决策:如果当前 config 仍然哈希为旧值,就清理 planned journal 并回滚;如果哈希为新值,就幂等地补齐仓库外壳,或把自有对象移入 recovery。两边都不匹配则拒绝猜测。
 
@@ -128,7 +129,7 @@ payload  →  metadata  →  pointer  →  delete
 
 ## 崩溃恢复
 
-**每条写命令都先恢复,再做自己的事。** 没有单独的修复命令,也没有守护进程盯着陈旧状态;恢复是变更的前置条件。只要存在非终态 Operation,下一条 `add`、`rm`、`build`、`dist new/rm` 或 `log prune` 就先把它做完或回滚,然后才继续。
+**每条 Managed 写命令都先恢复,再做自己的事。** 没有单独的修复命令,也没有守护进程盯着陈旧状态;恢复是变更的前置条件。只要存在非终态 Operation,下一条 `add`、`rm`、`build`、`dist new/rm` 或 `log prune` 就先把它做完或回滚,然后才继续。
 
 全局恢复顺序是固定的:先在工作区锁下恢复工作区生命周期;如果那不是一次仓库删除,再按仓库名顺序、在各自稳定的仓库锁下恢复仓库 Operation。已经越过"删除仓库"提交决策的工作区操作具有支配权,并禁止任何嵌套的仓库恢复 —— 在一个正被删除的仓库内部恢复状态毫无意义。
 
@@ -160,14 +161,14 @@ Managed 路径从不由用户提供的字符串拼装。每次创建、rename �
 1. 把工作区根解析为绝对真实路径;
 2. 用固定相对片段重新构造目标,并验证相对路径不含任何逃逸分量;
 3. 对路径上每个已存在的受控组件执行 `Lstat`,拒绝符号链接和非预期文件类型;
-4. 只删除已经先被原子移入 `.sow/.../recovery`(或 Plain recovery trash)的对象;
+4. 只删除已经先被原子移入 `.sow/.../recovery` 的对象;
 5. 删除前再次证明该 recovery 目标确实位于对应的私有状态目录内。
 
 名称必须匹配 `[a-z0-9][a-z0-9._-]*`,`.`、`..`、`.sow`、`pool`、`dists` 及工作区保留名一律拒绝。
 
-对文件句柄也是同样的姿态。Plain journal 通过 no-follow、绑定描述符的句柄读取,符号链接无法在检查与打开之间被换进来。SQLite 以 `O_NOFOLLOW` 打开并绑定普通文件 inode,连接建立后再按路径复核一次;数据库、WAL、shm 或 rollback journal 中任何一个是符号链接、非普通文件、有多个硬链接,或在打开期间被换绑,都会被拒绝。`log export` 拒绝覆盖已存在的文件,也拒绝父目录是符号链接的目标 —— 这就是为什么在 macOS 上往 `/tmp` 导出会失败:那里的 `/tmp` 本身是个符号链接。
+对文件句柄也是同样的姿态。SQLite 以 `O_NOFOLLOW` 打开并绑定普通文件 inode,连接建立后再按路径复核一次;数据库、WAL、shm 或 rollback journal 中任何一个是符号链接、非普通文件、有多个硬链接,或在打开期间被换绑,都会被拒绝。`log export` 拒绝覆盖已存在的文件,也拒绝父目录是符号链接的目标 —— 这就是为什么在 macOS 上往 `/tmp` 导出会失败:那里的 `/tmp` 本身是个符号链接。
 
-各类 journal 都有大小上限:Plain 64 MiB、工作区 32 MiB、仓库 Operation payload 16 MiB,外置的 mutation manifest 与 base manifest 各 64 MiB。超限既不截断也不降级,而是在提交窗口之外直接失败 —— 这样写者永远不会产出一条"自己写得进去、恢复读者却永远读不回来"的 Operation 记录。
+各类 journal 都有大小上限:工作区 32 MiB、仓库 Operation payload 16 MiB,外置的 mutation manifest 与 base manifest 各 64 MiB。超限既不截断也不降级,而是在提交窗口之外直接失败 —— 这样写者永远不会产出一条"自己写得进去、恢复读者却永远读不回来"的 Operation 记录。
 
 以上没有一条声称能抵御以同一用户身份运行、拥有无限权限的恶意进程。它抵御的是现实中的失败模式:崩溃、协作进程之间的竞态,以及在检查与使用之间形态发生变化的路径。
 

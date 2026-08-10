@@ -13,7 +13,7 @@ SOW 只生成静态文件，不是 HTTP 服务器。本指南把可写 Workspace
 
 | 模式 | 公共单元 | 绝不能服务 |
 |---|---|---|
-| Plain | 传给 `sow create` 的目录 | 操作中断后可能存在的 `.sow-plain-*` 临时状态 |
+| Plain | 传给 `sow create` 的目录 | 临时 `.sow-plain-stage-*` 输出；没有持久 journal |
 | Managed | 一个 Repository 的完整 `pool/ + dists/` 树 | Workspace `sow.yml`、`.sow/`、SQLite、锁、日志与 staging |
 
 [第一个工作区](/zh/docs/start/workspace/)里的源 Repository 是 `/srv/sow/local`。不要把

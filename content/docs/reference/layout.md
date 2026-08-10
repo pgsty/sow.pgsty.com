@@ -31,8 +31,9 @@ unchanged:
 ```
 
 Flat RPM metadata uses a bare package basename; flat DEB metadata uses `./<filename>`.
-While a build is active, `.sow-plain-*` paths contain private journal, stage, and recovery
-state. Never serve or copy those temporary paths.
+While a build is active, `.sow-plain-stage-*` contains private generated output. Plain has no
+durable journal or recovery state; a later create discards stale reserved temporary paths and
+rebuilds. Never serve or copy those temporary paths.
 
 ## Managed workspace
 

@@ -124,7 +124,7 @@ sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
 
 Plain 模式只签 RPM 包体,没有元数据签名。`KEY` 必须是恰好 16、40 或 64 位十六进制 GPG key ID/fingerprint，不接受 `0x` 前缀；规范化为大写后作为 `_gpg_name` macro 传给 `rpm`。不带 `--overwrite` 时只签没有可解析嵌入签名的 RPM;带上则对全部保留的 RPM 重签。
 
-`--sign-with` 要求目录里至少有一个顶层 RPM。纯 DEB 目录、缺少 `rpm` 可执行文件、密钥不可用,都在任何公开变更之前失败。签名运行的崩溃恢复要求给出完全相同的授权参数,见 [Plain 平面仓库](/zh/docs/feature/plain/)。
+`--sign-with` 要求 `--pigsty` 清理后至少保留一个顶层 RPM。纯 DEB 目录、缺少 `rpm` 可执行文件、密钥不可用,都在任何公开变更之前失败。签名是显式慢路径，必然包含复制、签名验证与最终 RPM 解析读取；中断后按当前包目录重跑，而不是重放 Plain journal。见 [Plain 平面仓库](/zh/docs/feature/plain/)。
 
 ## 客户端验证什么
 

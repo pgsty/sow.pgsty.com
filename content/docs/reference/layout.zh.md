@@ -29,7 +29,8 @@ SOW 0.2.0 的 Managed 布局只有一种:软件包体在 `pool/` 下只存一份
 ```
 
 平面 RPM 元数据引用裸文件名,平面 DEB 元数据使用 `./<filename>`。构建过程中出现的
-`.sow-plain-*` 是私有 journal、stage 与 recovery 状态,不得服务或复制。
+构建期间 `.sow-plain-stage-*` 保存私有生成输出。Plain 没有持久 journal 或 recovery 状态；下次
+create 会丢弃保留命名空间里的陈旧临时路径并重建。不得服务或复制这些临时路径。
 
 ## Managed 工作区
 

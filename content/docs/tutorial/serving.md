@@ -14,7 +14,7 @@ separate from the path Nginx serves.
 
 | Mode | Public unit | Never serve |
 |---|---|---|
-| Plain | the directory passed to `sow create` | transient `.sow-plain-*` state if an operation is interrupted |
+| Plain | the directory passed to `sow create` | transient `.sow-plain-stage-*` output; no durable journal |
 | Managed | one Repository's complete `pool/ + dists/` tree | Workspace `sow.yml`, `.sow/`, SQLite, locks, journals, staging |
 
 For the workspace in [First Workspace](/docs/start/workspace/), the source Repository is

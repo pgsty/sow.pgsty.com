@@ -21,7 +21,7 @@ SOW 本身不提供服务守护进程。
 | `exclude` 与版本 `limit` 策略 | 否 | 是 |
 | 元数据签名 | 否 | RPM 与 DEB |
 | RPM 包签名 | `--sign-with` | `never`、`fill`、`always` |
-| 事务日志与恢复 | 单次操作 | Workspace、Repository、发布 |
+| 事务日志与恢复 | 无；重跑即重建 | Workspace、Repository、发布 |
 | 审计日志与 JSONL 导出 | 否 | 是 |
 | 发布目标 | 否 | filesystem 与 R2 |
 
