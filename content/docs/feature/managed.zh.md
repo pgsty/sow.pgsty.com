@@ -26,7 +26,7 @@ Workspace 工作区                    发现与配置边界
 
 **Dist** 是一个单一格式(`rpm` 或 `deb`)的普通具名成员集合。名字对 SOW 是不透明字符串。`el9`、`trixie`、`el9-beta`、`customer-acme` —— 它们都不产生状态机、晋升流程或快照。想要一个 beta 频道,就建一个叫 `el9-beta` 的 Dist;含义存在于你的脑子和 `.repo` 文件里,不在 SOW 里。
 
-**架构视图(Architecture View)**是 `build` 渲染出来的东西,不产生第二份成员关系。一个 `noarch` RPM 只有一个包对象、一条成员记录,构建时投影进每个适用视图。参见[包池与架构视图](/zh/docs/feature/views/)。
+**架构视图(Architecture View)**是 `build` 渲染出来的东西,不产生第二份成员关系。一个 `noarch` RPM 只有一个包对象、一条成员记录,构建时投影进每个适用视图。参见[包池与元数据视图](/zh/docs/feature/views/)。
 
 一个 Repository 可以同时拥有 RPM Dist 与 DEB Dist,共用同一个 `pool/`。
 
@@ -73,11 +73,26 @@ $ find .sow | sort
 `<repo>/` 下是公共交付树：可以直接服务、由 SOW 发布，或整根复制到离线 staging 后原子切换。
 `.sow/` 下全部是私有状态，绝不能暴露；详见[对外服务](/zh/docs/tutorial/serving/)。
 
-名称必须匹配 `[a-z0-9][a-z0-9._-]*`,`.`、`..`、`.sow`、`pool`、`dists` 以及工作区保留名一律拒绝。
+名称必须匹配 `[a-z0-9][a-z0-9._-]*`；`.`、`..`、`.sow`、`pool`、`dists` 以及工作区保留名一律拒绝。
+
+## 状态数据库与软件包事实
+
+私有 SQLite 数据库按 `package_sha256` 索引 Desired/Built Membership，因此查询与构建可以
+一次批量展开完整成员投影，而不是为每个软件包单独查询。数据库还保存以不可变包体 SHA-256
+为键、可重建的软件包事实缓存。Ingest 只需完整认证并解析每个新软件包一次；构建时批量载入
+这些事实，遇到缺失或损坏的缓存记录，再从已认证包体惰性重建。
+
+对于未改变的 Pool 文件，暖构建使用设备号、inode、size、mtime 与 ctime 指纹避免重新读取
+包体。指纹漂移时会执行一次权威 SHA-256 校验并自动修复；[`sow check`](/zh/docs/command/check/)
+仍是显式的完整密码学审计。
+
+缓存与指纹只属于私有实现状态，不改变公共 `pool/ + dists/` 布局。不要手工编辑数据库或
+`PRAGMA user_version`。Repository 需要显式布局维护时，`status` 会报告原因，由
+[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 执行封闭转换。
 
 ## `sow.yml` 驱动一切
 
-只有一个配置文件,用严格 decoder 解析。未知字段不会被忽略 —— 它会失败。重复的规范化架构、非法名称或 format、Dist 架构不是工作区许可表的子集、非法 glob 或分类、不完整的 signing 块,同样失败。
+只有一个配置文件，用严格 decoder 解析。未知字段不会被忽略——它会失败。重复的规范化架构、非法名称或 format、Dist 架构不是工作区许可表的子集、非法 glob 或分类、不完整的 signing 块，同样失败。
 
 ```yaml
 schema: sow/v3
@@ -156,9 +171,9 @@ configuration valid: /data/ws repositories=1 dists=2
 
 Managed 命令按以下顺序寻找最近祖先中的 `sow.yml`:
 
-1. 给了 `-C/--workdir DIR`:只从 `DIR` 向上找。找不到就失败 —— 不会回退到当前目录。
+1. 给了 `-C/--workdir DIR`：从 `DIR` 向上找，并跳过当前目录候选。
 2. 否则从当前目录向上找。
-3. 仍未找到:从 `$SOW_DIR` 向上找。
+3. 仍未找到：从 `$SOW_DIR` 向上找；显式 `-C` 查找失败后也保留这条回退。
 4. 还是没有:失败,并提示 `sow init`、`--workdir` 与 `SOW_DIR`。
 
 找到第一个 `sow.yml` 就停,不会越过它继续往上找"更好的那个"。

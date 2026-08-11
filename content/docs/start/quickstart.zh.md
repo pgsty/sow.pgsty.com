@@ -9,7 +9,9 @@ icon: fa-solid fa-bolt
 
 Plain 模式在一个目录内生成平面仓库。它不读取 `sow.yml`，不创建工作区，也不维护数据库。
 
-## 1. 准备目录
+{{% steps %}}
+
+## 准备目录 {#1-准备目录}
 
 把 RPM 和/或 DEB 文件放在目录顶层。`sow create` 不递归扫描，也不移动或改名包文件。
 
@@ -20,7 +22,7 @@ cp /path/to/packages/*.rpm /path/to/packages/*.deb /srv/repo/
 
 如果某种格式不存在，请只复制你实际拥有的软件包。
 
-## 2. 生成元数据
+## 生成元数据 {#2-生成元数据}
 
 ```bash
 sow create /srv/repo
@@ -46,7 +48,7 @@ created /srv/repo: rpm=1 deb=1 signed=0 removed=0 marker=false noop=false recove
 Plain 模式不生成 DEB `Release`、`InRelease` 或 `Release.gpg`。RPM 与 DEB 元数据在一次
 操作中生成；任何解析或渲染错误都会阻止新索引提交。
 
-## 3. 对外服务
+## 对外服务 {#3-对外服务}
 
 本地检查可以使用任意静态文件服务器：
 
@@ -64,7 +66,7 @@ curl --fail http://127.0.0.1:8080/Packages.gz >/dev/null
 
 Python 服务器只适合预览；长期服务请使用正常维护的 HTTP 服务器。
 
-## 4. 配置客户端
+## 配置客户端 {#4-配置客户端}
 
 把 `REPO_HOST` 换成客户端能访问的地址。
 
@@ -99,7 +101,7 @@ sudo apt install PACKAGE_NAME
 APT source 末尾的 `./` 表示平面仓库。`[trusted=yes]` 与关闭 DNF 签名检查只适用于这个
 未签名的快速示例；需要真实性保证时应使用已签名 Managed 仓库。
 
-## 5. 更新仓库
+## 更新仓库 {#5-更新仓库}
 
 增删包文件后重新执行同一条命令：
 
@@ -115,6 +117,8 @@ sow create /srv/repo
 ```bash
 sow create /srv/repo --json
 ```
+
+{{% /steps %}}
 
 ## 何时使用 Managed 模式
 

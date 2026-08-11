@@ -1,20 +1,14 @@
 ---
 title: "Design"
 linkTitle: "Design"
-description: "The architectural decisions behind SOW 0.2.0: ownership, layout, publication, recovery, and compatibility."
+description: "The durable decisions behind SOW: ownership, state, publication ordering, recovery, and evidence."
 url: "/docs/design/"
 weight: 350
 icon: fa-solid fa-compass-drafting
 ---
 
-This section records the reasoning that should survive an implementation rewrite: where
-SOW draws ownership boundaries, which invariants make a repository safe to copy and
-publish, and why a compatibility choice was accepted or rejected.
-
-{{% alert title="Current release" color="primary" %}}
-All maintained pages describe **SOW v0.2.0**. The configuration schema is `sow/v3`;
-wire identifiers such as `sow.cli/v1` are protocol identifiers, not product versions.
-{{% /alert %}}
+This section records SOW's ownership boundaries and the invariants that make a repository
+safe to build, copy, publish, recover, and collect.
 
 {{< doc-cards cols="2" >}}
 {{< doc-card title="Design Principles" link="/docs/design/principles/" >}}
@@ -25,28 +19,24 @@ fail closed.
 Workspace, Repository, Dist, Package Object, Membership, Generation, and publication
 target — and why each has a separate owner.
 {{< /doc-card >}}
-{{< doc-card title="Single-Payload Layout" link="/docs/design/single-payload/" >}}
-Why one canonical package path per Repository feeds metadata-only
-APT and RPM views.
-{{< /doc-card >}}
 {{< doc-card title="Publication & Recovery" link="/docs/design/publication/" >}}
 Pointer-last publication, commit intent, forward recovery, retained generations, and
 evidence-gated garbage collection.
 {{< /doc-card >}}
-{{< doc-card title="Compatibility Boundaries" link="/docs/design/compatibility/" >}}
-Separate protocol, client, mirror-tool, filesystem, HTTP, and object-storage compatibility
-instead of hiding them behind one green check mark.
-{{< /doc-card >}}
 {{< /doc-cards >}}
+
+The canonical one-payload layout is documented with the mechanism in
+[Pool & Metadata Views](/docs/feature/views/). Platform and integration requirements live
+in [Platforms & Integrations](/docs/reference/compatibility/).
 
 ## Authority and evidence
 
-These pages describe the current contract. A claim should name the evidence layer it has
-actually reached:
+Each operational claim should match the evidence layer it has actually reached:
 
 ```text
 design -> implementation -> focused tests -> real client/provider run -> release artifact
 ```
 
-Passing one layer does not imply the next. The [compatibility reference](/docs/reference/compatibility/)
-states the current evidence without upgrading adjacent tests into product claims.
+Passing one layer does not imply the next. The [platform and integration reference](/docs/reference/compatibility/)
+records the automated client, Provider, and filesystem coverage; release artifacts are a
+separate delivery gate.

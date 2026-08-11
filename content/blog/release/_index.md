@@ -1,12 +1,12 @@
 ---
 title: Release Notes
 linkTitle: Release
-description: Notes for every published SOW release, newest first.
+description: Published SOW release notes covering features, performance, correctness, packaging, and verification.
 weight: 20
 icon: fa-solid fa-tag
 sidebar_expanded: true
-default_featured_image: /images/blog/sow-release.png
+default_featured: /images/sow-social-card.png
 ---
 
-Every published SOW version gets a page here: what changed, what it means for existing
-repositories, and where to read more.
+Published SOW release notes cover features, performance, correctness, packaging, and
+verification, with the newest release first.

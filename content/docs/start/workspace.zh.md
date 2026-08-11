@@ -1,7 +1,7 @@
 ---
 title: "第一个工作区"
 linkTitle: "第一个工作区"
-description: "创建全新的 v0.2.0 工作区，建立 RPM/DEB Dist，添加软件包并校验公共树。"
+description: "创建工作区，建立 RPM/DEB Dist，添加软件包并校验公共树。"
 url: "/zh/docs/start/workspace/"
 weight: 300
 icon: fa-solid fa-layer-group
@@ -9,7 +9,9 @@ icon: fa-solid fa-layer-group
 
 Managed 模式会持久保存配置、成员关系、Generation 与审计状态。下面从空目录开始。
 
-## 1. 初始化工作区
+{{% steps %}}
+
+## 初始化工作区 {#1-初始化工作区}
 
 ```bash
 sow init /srv/sow
@@ -29,7 +31,7 @@ cd /srv/sow
 
 默认架构族是 `x86_64` 与 `aarch64`。配置接受 `amd64`、`arm64` 别名，并规范化为上述族名。
 
-## 2. 创建 Repository 与两个 Dist
+## 创建 Repository 与两个 Dist {#2-创建-repository-与两个-dist}
 
 ```bash
 sow repo new local
@@ -56,7 +58,7 @@ sow dist new bookworm --format deb
             └── binary-arm64/{Packages,Packages.gz,by-hash/}
 ```
 
-## 3. 添加软件包
+## 添加软件包 {#3-添加软件包}
 
 显式选择目标 Dist：
 
@@ -78,7 +80,7 @@ sow build
 Desired Membership 领先于 Built Generation 时，Repository 状态为 `dirty`，且
 `ready_to_copy=false`。
 
-## 4. 查看与校验
+## 查看与校验 {#4-查看与校验}
 
 ```bash
 sow status
@@ -97,7 +99,7 @@ sow check
 sow config show --all
 ```
 
-## 5. 对外服务 Repository
+## 对外服务 Repository {#5-对外服务-repository}
 
 公共交付单元是 `/srv/sow/local`，不是工作区根。把这个目录挂到稳定 URL 前缀；不要暴露
 `sow.yml` 或 `.sow/`。
@@ -106,6 +108,8 @@ sow config show --all
 - APT source：`deb https://repo.example.com/local bookworm main`
 
 安全的 Nginx 与 filesystem 发布流程见[对外服务](/zh/docs/tutorial/serving/)。
+
+{{% /steps %}}
 
 ## 选择规则
 

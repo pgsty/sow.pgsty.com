@@ -65,7 +65,7 @@ sow config check
 configuration error: load config "/srv/repo/sow.yml": config schema must be "sow/v3", got "invalid"
 ```
 
-For v0.2.0 the only valid value is `schema: sow/v3`. Do not change the schema string as a
+The only valid value is `schema: sow/v3`. Do not change the schema string as a
 way to bypass a validation error.
 
 `check` also verifies that every declared signing key reference resolves and is usable for signing —

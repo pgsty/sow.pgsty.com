@@ -1,11 +1,11 @@
 ---
 title: 发布注记
 linkTitle: 发布注记
-description: SOW 各版本的发布说明,按时间从新到旧排列。
+description: SOW 发布注记，涵盖功能、性能、正确性、打包与验证。
 weight: 20
 icon: fa-solid fa-tag
 sidebar_expanded: true
-default_featured_image: /images/blog/sow-release.png
+default_featured: /images/sow-social-card.png
 ---
 
-每个 SOW 版本在这里都有一页:改了什么、对已有仓库意味着什么、以及去哪里读更多。
+SOW 发布注记涵盖功能、性能、正确性、打包与验证，并按发布时间从新到旧排列。

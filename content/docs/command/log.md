@@ -125,6 +125,20 @@ Output excerpt:
 The `files` array uses the same `phase` vocabulary as
 [`sow changes`](/docs/command/changes/): `payload`, `metadata`, `pointer`, `delete`.
 
+Build Operations also contain progress events. They keep the current state and put a
+versioned object in `detail_json`:
+
+```json
+{
+  "state": "applied",
+  "detail_json": "{\"version\":1,\"kind\":\"build_progress\",\"phase\":\"rendering\",\"completed\":1,\"total\":2,\"jobs\":8}"
+}
+```
+
+The phases are `rendering`, `promoting_payload`, `publishing_dists`,
+`normalizing_public_tree`, and `finalizing`. A progress row is durable audit data but does
+not advance the recovery state machine or force its own SQLite checkpoint.
+
 ### Filtering by Dist
 
 `-d` restricts the listing to Operations that touched that Dist — useful when one Repository serves
@@ -221,8 +235,8 @@ usage error: BEFORE must be YYYY-MM-DD or an RFC 3339 timestamp with timezone
 - a Built Generation or its Changeset.
 
 The `pruned` counter tells you exactly how many records were eligible, which is normally fewer than
-the number of Operations older than the cutoff. Log and Changeset live in the same SQLite database in
-this release, but they follow different retention rules.
+the number of Operations older than the cutoff. Log and Changeset live in the same SQLite database,
+but they follow different retention rules.
 
 ## Examples
 

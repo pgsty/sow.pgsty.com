@@ -1,7 +1,7 @@
 ---
 title: "Core Concepts"
 linkTitle: "Core Concepts"
-description: "The v0.2.0 model: Plain and Managed execution, pools and views, Desired Membership, and Built Generations."
+description: "The SOW model: Plain and Managed execution, pools and views, Desired Membership, and Built Generations."
 url: "/docs/start/concepts/"
 weight: 400
 icon: fa-solid fa-diagram-project

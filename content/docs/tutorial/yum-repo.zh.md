@@ -7,7 +7,7 @@ weight: 100
 icon: fa-solid fa-box-open
 ---
 
-本教程从零创建一个 Managed RPM 仓库。你需要 SOW 0.2.0、一个可写目录，以及一个或多个
+本教程从零创建一个 Managed RPM 仓库。你需要一个可写目录，以及一个或多个
 RPM 文件。
 
 ## 1. 创建工作区
@@ -149,4 +149,4 @@ sow check -r pigsty
 `add` 与 `rm` 修改 Desired 成员关系；策略或签名配置变化后用 `build` 收敛；发布门禁是
 `check`，不能只看 `status`。
 
-当前测试矩阵究竟证明了哪些客户端行为，请看[兼容性](/zh/docs/reference/compatibility/)。
+自动化客户端与平台覆盖见[平台与集成](/zh/docs/reference/compatibility/)。

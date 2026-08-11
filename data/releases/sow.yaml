@@ -1,0 +1,6 @@
+version: 0.3.0
+tag: v0.3.0
+published: true
+release_url: https://github.com/pgsty/sow/releases/tag/v0.3.0
+source_url: https://github.com/pgsty/sow
+go_version: 1.26.5

@@ -118,7 +118,7 @@ sow create /srv/offline --json
 | `marker` | Whether `repo_complete` was written |
 | `marker_sha256` | Digest of the marker file; present only with `--pigsty` |
 | `noop` | `true` when the indexes were already correct and nothing changed |
-| `recovered` | `true` when this run completed an interrupted previous run |
+| `recovered` | Reserved for schema compatibility; Plain create has no journal recovery and always reports `false` |
 | `signed` | Filenames re-signed; present only with `--sign-with` |
 
 ### init
@@ -379,7 +379,7 @@ The fields worth knowing:
 
 ### publish, retain, gc, export
 
-v0.2.0 lifecycle commands use the same envelope and keep numeric Generation values as
+Managed lifecycle commands use the same envelope and keep numeric Generation values as
 JSON strings:
 
 | Command | Important `result` fields |
@@ -415,14 +415,15 @@ stored verbatim so the audit record is byte-stable; parse them with a second pas
 sow log --json | jq -r '.result.operations[] | .payload_json | fromjson | .config_sha256'
 ```
 
-Passing an operation ID returns the full detail — state transitions, packages,
-memberships, and every file action:
+Passing an operation ID returns the full detail — state transitions, structured
+`build_progress` events, packages, memberships, and every file action:
 
 ```json
 "result":{"repository":"pigsty","detail":{"operation":{...},"duration_ms":598,
  "events":[{"sequence":0,"state":"planned","detail_json":"{}","occurred_at":"..."},
   {"sequence":1,"state":"staged",...},{"sequence":2,"state":"applied",...},
-  {"sequence":3,"state":"built",...},{"sequence":4,"state":"done",...}],
+  {"sequence":3,"state":"applied","detail_json":"{\"version\":1,\"kind\":\"build_progress\",\"phase\":\"rendering\",\"completed\":1,\"total\":2,\"jobs\":8}",...},
+  {"sequence":4,"state":"built",...},{"sequence":5,"state":"done",...}],
  "packages":[{"sequence":0,"input_path":"pgbouncer_fdw_18","package_sha256":"45171966...",
   "coordinate":"rpm:pgbouncer_fdw_18-0:1.4.0-1PGDG.rhel9.8.x86_64","disposition":"removed"}],
  "memberships":[{"sequence":0,"dist":"el9","package_sha256":"45171966...","action":"remove"}],

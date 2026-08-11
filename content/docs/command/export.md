@@ -7,7 +7,7 @@ weight: 1800
 icon: fa-solid fa-file-export
 ---
 
-SOW 0.2.0 provides one export subcommand: `sow export rpm-leaf`. It creates an external, standalone
+SOW provides one export subcommand: `sow export rpm-leaf`. It creates an external, standalone
 RPM repository whose repodata uses local `pool/...` hrefs.
 
 ## Synopsis
@@ -69,6 +69,6 @@ from being mistaken for, or modifying, a managed publication target.
 
 ## See also
 
-- [Compatibility Design](/docs/design/compatibility/) — compatibility surfaces and non-goals
+- [Platforms & Integrations](/docs/reference/compatibility/) — validated and unsupported workflows
 - [Repository Layout](/docs/reference/layout/) — source tree and export boundaries
 - [`sow publish`](/docs/command/publish/) — managed delivery to configured targets

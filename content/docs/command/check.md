@@ -27,7 +27,7 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 
 ## Verification layers
 
-SOW 0.2.0 reports nine ordered layers:
+The current checker reports nine ordered layers:
 
 | Layer | Verification | `checked` counts |
 |---|---|---|

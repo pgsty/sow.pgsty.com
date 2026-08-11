@@ -1,0 +1,117 @@
+{{ define "main" -}}
+{{- $release := hugo.Data.releases.sow -}}
+{{- $version := $release.version -}}
+{{- $tag := $release.tag -}}
+{{- $published := $release.published -}}
+{{- $zh := eq .Language.Lang "zh" -}}
+{{- $base := printf "https://github.com/pgsty/sow/releases/download/%s" $tag -}}
+{{- $releasesURL := "https://github.com/pgsty/sow/releases" -}}
+{{- $releaseURL := cond $published $release.release_url $releasesURL -}}
+{{- $sourceTagURL := printf "%s/tree/%s" $release.source_url $tag -}}
+{{- $sourceURL := cond $published $sourceTagURL $release.source_url -}}
+{{- $checksum := "SHA256SUMS" -}}
+{{- $archives := slice
+  (dict "os" "Linux" "arch" "amd64" "icon" "fa-brands fa-linux" "file" (printf "sow_%s_linux_amd64.tar.gz" $version))
+  (dict "os" "Linux" "arch" "arm64" "icon" "fa-brands fa-linux" "file" (printf "sow_%s_linux_arm64.tar.gz" $version))
+  (dict "os" "macOS" "arch" "Intel" "icon" "fa-brands fa-apple" "file" (printf "sow_%s_darwin_amd64.tar.gz" $version))
+  (dict "os" "macOS" "arch" "Apple Silicon" "icon" "fa-brands fa-apple" "file" (printf "sow_%s_darwin_arm64.tar.gz" $version))
+-}}
+{{- $packages := slice
+  (dict "kind" "RPM" "arch" "x86_64" "icon" "fa-brands fa-redhat" "file" (printf "sow-%s-1PGSTY.x86_64.rpm" $version) "install" (printf "sudo rpm -Uvh sow-%s-1PGSTY.x86_64.rpm" $version))
+  (dict "kind" "RPM" "arch" "aarch64" "icon" "fa-brands fa-redhat" "file" (printf "sow-%s-1PGSTY.aarch64.rpm" $version) "install" (printf "sudo rpm -Uvh sow-%s-1PGSTY.aarch64.rpm" $version))
+  (dict "kind" "DEB" "arch" "amd64" "icon" "fa-brands fa-debian" "file" (printf "sow_%s-1PGSTY_amd64.deb" $version) "install" (printf "sudo apt install ./sow_%s-1PGSTY_amd64.deb" $version))
+  (dict "kind" "DEB" "arch" "arm64" "icon" "fa-brands fa-debian" "file" (printf "sow_%s-1PGSTY_arm64.deb" $version) "install" (printf "sudo apt install ./sow_%s-1PGSTY_arm64.deb" $version))
+-}}
+<div class="oink-landing sow-download">
+  <section class="oink-hero sow-download__hero" aria-labelledby="download-title">
+    <div class="oink-hero__glow" aria-hidden="true"></div>
+    <div class="landing-container">
+      <div class="oink-hero__copy">
+        <p class="oink-hero__eyebrow"><span class="oink-status-dot{{ if not $published }} is-pending{{ end }}" aria-hidden="true"></span><span>{{ if $published }}{{ if $zh }}SOW {{ $version }} 已发布{{ else }}SOW {{ $version }} released{{ end }}{{ else }}{{ if $zh }}SOW {{ $version }} 制品清单{{ else }}SOW {{ $version }} artifact matrix{{ end }}{{ end }}</span></p>
+        <h1 class="oink-hero__title" id="download-title">{{ if $zh }}下载 SOW {{ $version }}{{ else }}Download SOW {{ $version }}{{ end }}</h1>
+        <p class="oink-hero__lead">{{ if $zh }}一个自包含二进制，支持 Linux 与 macOS；Linux 同时提供 RPM 与 DEB 安装包。{{ else }}One self-contained binary for Linux and macOS, plus native RPM and DEB packages for Linux.{{ end }}</p>
+        <p class="oink-hero__note sow-release-state"><i class="fa-solid {{ if $published }}fa-circle-check{{ else }}fa-clock{{ end }}" aria-hidden="true"></i><span>{{ if $published }}{{ if $zh }}SOW {{ $version }} 已发布，请下载适配操作系统与架构的归档或安装包。{{ else }}SOW {{ $version }} is released. Download the archive or native package for your platform.{{ end }}{{ else }}{{ if $zh }}以下列出 {{ $tag }} 的全部计划制品；Release 发布后下载按钮会自动启用。{{ else }}All planned {{ $tag }} artifacts are listed below; download buttons activate when the release is published.{{ end }}{{ end }}</span></p>
+        <div class="oink-hero__actions">
+          <a class="oink-button oink-button--primary" href="{{ $releaseURL }}" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github" aria-hidden="true"></i><span>GitHub Releases</span></a>
+          <a class="oink-button oink-button--ghost" href="{{ "docs/start/install/" | relLangURL }}"><i class="fa-solid fa-book-open" aria-hidden="true"></i><span>{{ if $zh }}安装说明{{ else }}Install guide{{ end }}</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="oink-section" aria-labelledby="archives-title">
+    <div class="landing-container">
+      <header class="oink-section__head"><p class="oink-section__eyebrow"><span>{{ if $zh }}二进制归档{{ else }}Binary archives{{ end }}</span><i aria-hidden="true"></i></p><h2 id="archives-title">{{ if $zh }}选择操作系统与架构{{ else }}Choose an OS and architecture{{ end }}</h2><p class="oink-section__description">{{ if $zh }}归档包含 <code>sow</code> 可执行文件、<code>README.md</code>、<code>CHANGELOG.md</code> 与 Apache-2.0 <code>LICENSE</code>。{{ else }}Each archive contains the <code>sow</code> executable, <code>README.md</code>, <code>CHANGELOG.md</code>, and the Apache-2.0 <code>LICENSE</code>.{{ end }}</p></header>
+      <div class="oink-card-grid sow-download-grid" style="--oink-columns: 4">
+        {{- range $archives }}
+        <article class="oink-card sow-asset-card">
+          <div class="oink-card__media"><i class="{{ .icon }}" aria-hidden="true"></i></div>
+          <p class="oink-card__meta">{{ .arch }}</p><h3>{{ .os }}</h3>
+          <code class="sow-asset-name">{{ .file }}</code>
+          {{- if $published }}<a class="oink-button oink-button--ghost sow-asset-action" href="{{ $base }}/{{ .file }}" aria-label="{{ if $zh }}下载 {{ .file }}{{ else }}Download {{ .file }}{{ end }}"><i class="fa-solid fa-download" aria-hidden="true"></i>{{ if $zh }}下载{{ else }}Download{{ end }}</a>{{ else }}<span class="oink-button oink-button--ghost sow-asset-action is-disabled" aria-disabled="true"><i class="fa-regular fa-clock" aria-hidden="true"></i>{{ if $zh }}待发布{{ else }}Pending{{ end }}</span>{{ end }}
+        </article>
+        {{- end }}
+      </div>
+      <div class="sow-install-snippet"><code>tar -xzf sow_*.tar.gz<br>sudo install -m 0755 sow /usr/local/bin/sow</code></div>
+    </div>
+  </section>
+
+  <section class="oink-section sow-download-band" aria-labelledby="packages-title">
+    <div class="landing-container">
+      <header class="oink-section__head"><p class="oink-section__eyebrow"><span>{{ if $zh }}Linux 软件包{{ else }}Linux packages{{ end }}</span><i aria-hidden="true"></i></p><h2 id="packages-title">RPM &amp; DEB</h2><p class="oink-section__description">{{ if $zh }}安装包把二进制放入标准系统路径，并随包安装 License。{{ else }}Native packages install the binary into the standard system path and ship the license with it.{{ end }}</p></header>
+      <div class="oink-card-grid sow-download-grid" style="--oink-columns: 4">
+        {{- range $packages }}
+        <article class="oink-card sow-asset-card">
+          <div class="oink-card__media"><i class="{{ .icon }}" aria-hidden="true"></i></div>
+          <p class="oink-card__meta">{{ .arch }}</p><h3>{{ .kind }}</h3>
+          <code class="sow-asset-name">{{ .file }}</code><code class="sow-install-command">{{ .install }}</code>
+          {{- if $published }}<a class="oink-button oink-button--ghost sow-asset-action" href="{{ $base }}/{{ .file }}" aria-label="{{ if $zh }}下载 {{ .file }}{{ else }}Download {{ .file }}{{ end }}"><i class="fa-solid fa-download" aria-hidden="true"></i>{{ if $zh }}下载{{ else }}Download{{ end }}</a>{{ else }}<span class="oink-button oink-button--ghost sow-asset-action is-disabled" aria-disabled="true"><i class="fa-regular fa-clock" aria-hidden="true"></i>{{ if $zh }}待发布{{ else }}Pending{{ end }}</span>{{ end }}
+        </article>
+        {{- end }}
+      </div>
+    </div>
+  </section>
+
+  <section class="oink-section" aria-labelledby="source-title">
+    <div class="landing-container sow-download-details">
+      <article>
+        <p class="sow-detail-eyebrow">{{ if $zh }}源码构建{{ else }}Build from source{{ end }}</p>
+        <h2 id="source-title">Go {{ $release.go_version }}</h2>
+        <p>{{ if $zh }}从 <code>{{ $tag }}</code> Tag 构建，即可与对应 Release 保持一致。{{ else }}Build from the <code>{{ $tag }}</code> tag to match the corresponding release.{{ end }}</p>
+        <pre><code>git clone {{ $release.source_url }}.git
+cd sow
+git checkout {{ $tag }}
+CGO_ENABLED=0 go build -trimpath \
+  -ldflags "-s -w -X github.com/pgsty/sow/internal/v2cli.Version={{ $version }}" \
+  -o sow ./cmd/sow</code></pre>
+      </article>
+      <article>
+        <p class="sow-detail-eyebrow">{{ if $zh }}校验{{ else }}Verify{{ end }}</p>
+        <h2>{{ if $zh }}哈希、版本与平台{{ else }}Checksum, version, platform{{ end }}</h2>
+        <p>{{ if $zh }}从 {{ $tag }} Release 下载 <code>{{ $checksum }}</code>，安装前校验制品。{{ else }}Download <code>{{ $checksum }}</code> from the {{ $tag }} release and verify the artifact before installing it.{{ end }}</p>
+        <pre><code>ASSET=sow_{{ $version }}_linux_amd64.tar.gz
+{{ if $zh }}# 将 ASSET 改为已下载的文件名。{{ else }}# Replace ASSET with the downloaded filename.{{ end }}
+# Linux
+grep "  ${ASSET}$" {{ $checksum }} | sha256sum -c -
+# macOS
+grep "  ${ASSET}$" {{ $checksum }} | shasum -a 256 -c -
+sow version
+sow help</code></pre>
+        <div class="sow-detail-actions">
+          {{- if $published }}<a class="oink-button oink-button--ghost" href="{{ $base }}/{{ $checksum }}"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>{{ if $zh }}下载校验清单{{ else }}Download checksums{{ end }}</a>{{ else }}<span class="oink-button oink-button--ghost is-disabled" aria-disabled="true"><i class="fa-regular fa-clock" aria-hidden="true"></i>{{ if $zh }}校验清单待发布{{ else }}Checksums pending{{ end }}</span>{{ end }}
+          <a class="oink-button oink-button--ghost" href="{{ $sourceURL }}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-code-branch" aria-hidden="true"></i>{{ if $published }}{{ if $zh }}查看源码 Tag{{ else }}View source tag{{ end }}{{ else }}{{ if $zh }}查看源码仓库{{ else }}View source repository{{ end }}{{ end }}</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="oink-section sow-download-band" aria-labelledby="status-title">
+    <div class="landing-container">
+      <div class="sow-release-note">
+        <div><p class="sow-detail-eyebrow">{{ if $zh }}发布状态{{ else }}Release status{{ end }}</p><h2 id="status-title">{{ $tag }}</h2></div>
+        <p>{{ if $published }}{{ if $zh }}SOW {{ $tag }} 已在 GitHub Releases 发布，提供 4 个 Linux/macOS 归档、4 个 Linux RPM/DEB 安装包与 <code>{{ $checksum }}</code>。{{ else }}SOW {{ $tag }} is published on GitHub Releases with four Linux/macOS archives, four Linux RPM/DEB packages, and <code>{{ $checksum }}</code>.{{ end }}{{ else }}{{ if $zh }}SOW {{ $tag }} 尚未发布。页面已列出 4 个 Linux/macOS 归档、4 个 Linux RPM/DEB 安装包与 <code>{{ $checksum }}</code>；发布后只需把 <code>data/releases/sow.yaml</code> 中的 <code>published</code> 改为 <code>true</code>。{{ else }}SOW {{ $tag }} is not published yet. This page already lists four Linux/macOS archives, four Linux RPM/DEB packages, and <code>{{ $checksum }}</code>; set <code>published</code> to <code>true</code> in <code>data/releases/sow.yaml</code> after publication.{{ end }}{{ end }}</p>
+      </div>
+    </div>
+  </section>
+</div>
+{{- end }}

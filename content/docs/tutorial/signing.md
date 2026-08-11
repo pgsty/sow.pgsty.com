@@ -201,6 +201,6 @@ of re-signing them in place. Use `fill` with the old public key in `trusted_keys
 package coordinates have been withdrawn or replaced. Finish with a real client acceptance
 test in the target environment.
 
-The current automated matrix does not claim a complete signed Managed dnf/APT acceptance
-gate. The exact evidence boundary is documented under
-[Compatibility](/docs/reference/compatibility/).
+Run the final signed repository through the exact dnf/APT versions and trust policy used
+in production. The automated scope is listed under
+[Platforms & Integrations](/docs/reference/compatibility/).

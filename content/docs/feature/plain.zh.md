@@ -85,7 +85,7 @@ worker 完成先后不会影响结果：解析事实始终按规范 basename / �
 
 `repomd.xml` 的 revision 与 timestamp 固定为 `0`，gzip header 固定，排序规范化。因此同一包集合生成逐字节一致的元数据。发布前 SOW 会比较 stage 与 live 元数据；如果无需清理/签名且所有输出已经相同，就只删私有 stage，不替换公开 inode，并返回 `noop=true`。
 
-稳定 CLI schema 仍保留 `recovered` 字段以维持兼容，但 Plain create 已不做 journal 恢复，始终报告 `false`。
+Plain create 不做 journal 恢复，因此 JSON 字段 `recovered` 始终为 `false`。
 
 ## 发布与中断语义
 
@@ -93,7 +93,8 @@ worker 完成先后不会影响结果：解析事实始终按规范 basename / �
 
 这不是多文件事务。进程在发布中被杀，可能留下新 RPM 元数据配旧 DEB 元数据、只剩一个 DEB 索引文件，或多余的旧 checksum RPM 元数据。这些状态不是需要调和的事务证据，只是可丢弃输出。下一次运行按当前包集合重新渲染完整投影，覆盖或删除残留。
 
-实现不再创建 `.sow-plain-operation.json` 或 recovery trash。启动时会先丢弃保留命名空间中的 `.sow-plain-stage-*`、历史 `.sow-plain-recovery-*`、journal-write 残留与旧版 Plain journal，然后开始全新扫描。
+实现不创建持久 journal 或 recovery trash。启动时会先丢弃 Plain 保留 staging 命名空间中
+属于 SOW 的残留，再开始全新扫描。
 
 ## `--pigsty` marker 门禁
 
@@ -111,7 +112,7 @@ stage + 校验
   -> 最后写 repo_complete
 ```
 
-marker 缺失就表示“尚未完成”，消费方不得使用该目录。若运行在撤 marker 后停止，重新执行 `sow create --pigsty`：它扫描现在仍存在的包，覆盖元数据、完成清理，最后写新 marker，不需要历史动作日志。
+marker 缺失就表示“尚未完成”，消费方不得使用该目录。若运行在撤 marker 后停止，重新执行 `sow create --pigsty`：它扫描现在仍存在的包，覆盖元数据、完成清理，最后写新 marker，无需动作日志。
 
 默认模式看到已有 `repo_complete` 会拒绝运行，避免未受门禁控制的命令留下过期就绪声明。
 

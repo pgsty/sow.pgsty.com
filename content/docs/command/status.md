@@ -72,6 +72,11 @@ The JSON result additionally includes `dirty_reasons` and the most recent Operat
 `ready_to_copy=false` is a hard warning. `true` is only a cheap state result, not a byte-level proof;
 run [`sow check`](/docs/command/check/) before delivery.
 
+## Read-only contract
+
+`status` never migrates or repairs state. If the Repository database cannot be read safely,
+the command exits `5`; run the maintenance command named by the diagnostic before retrying.
+
 ## Exit behavior
 
 `status` returns `0` for every readable state, including `dirty`, `recovering`, and `error`. Scripts

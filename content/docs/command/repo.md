@@ -113,7 +113,7 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-This is a specialized maintenance command, not part of the fresh v0.2.0 workflow. A
+This is a specialized maintenance command, not part of the fresh Managed workflow. A
 Repository created by `sow init` and `sow repo new` already uses the canonical
 single-payload layout and must not be migrated speculatively. Use this command only when
 SOW explicitly diagnoses that maintenance path, and take a backup first.

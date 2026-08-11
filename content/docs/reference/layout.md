@@ -1,13 +1,13 @@
 ---
 title: "Repository Layout"
 linkTitle: "Layout"
-description: "The public and private paths SOW 0.2.0 creates, including the canonical pool and metadata-only views."
+description: "Public and private paths, including the canonical pool and metadata-only views."
 url: "/docs/reference/layout/"
 weight: 400
 icon: fa-solid fa-folder-tree
 ---
 
-SOW 0.2.0 has one fixed managed layout: package payloads live once under `pool/`, while
+SOW has one fixed Managed layout: package payloads live once under `pool/`, while
 `dists/` contains metadata-only client views. The complete repository directory is the
 unit to serve, copy, or publish.
 
@@ -54,8 +54,13 @@ rebuilds. Never serve or copy those temporary paths.
     └── dists/
 ```
 
-Repositories do not deduplicate across repository boundaries. `.sow/` is mode `0700`
-and may contain unpublished package bytes, credentials-derived state, and recovery data.
+Repositories do not deduplicate across repository boundaries. `.sow/` and the pending
+directory are private (`0700`). Pending payload files use their final public mode (`0644`),
+so promotion can be a namespace-only operation. Private state may contain unpublished bytes,
+credentials-derived state, and recovery data.
+
+`<repo>.db` and its rebuildable package-facts cache are private. Neither changes the public
+repository layout or the `sow/v3` configuration identifier.
 
 ## Canonical pool
 
@@ -105,8 +110,7 @@ points back to the canonical pool:
 ```
 
 The layout requires a client that honors relative rpm-md locations across the complete
-Repository root. The active matrix does not yet include a current Managed DNF/YUM
-acceptance gate. Default `dnf reposync` rejects the parent-traversing href because its
+Repository root. Default `dnf reposync` rejects the parent-traversing href because its
 download destination escapes the view root. When a downstream tool requires a
 self-contained leaf, create one explicitly with:
 
@@ -140,7 +144,7 @@ Filename: pool/p/postgresql-18/libpq5_18.3-1.pgdg12+1_amd64.deb
 ```
 
 `Release` uses SHA256 manifests and advertises `Acquire-By-Hash: yes`. Checksum-named
-rpm-md files and APT by-hash entries allow old metadata to remain reachable while the
+rpm-md files and APT by-hash entries keep the preceding metadata reachable while the
 mutable pointer is replaced last.
 
 ## Publication targets

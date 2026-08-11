@@ -190,5 +190,5 @@ key 必须是恰好 16、40 或 64 位十六进制字符，不能带 `0x` 前缀
 既有 RPM 会拒绝，而不是原地重签。旧软件包坐标尚未下架或由新 Release 替代前，应使用 `fill`
 并把旧公钥保留在 `trusted_keys`。最后在目标环境做真实客户端验收。
 
-当前自动化矩阵并未声明完整的签名 Managed dnf/APT 验收门禁；确切证据边界见
-[兼容性](/zh/docs/reference/compatibility/)。
+最后应使用生产中的确切 dnf/APT 版本与信任策略验收签名仓库。自动化覆盖见
+[平台与集成](/zh/docs/reference/compatibility/)。

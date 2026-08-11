@@ -90,7 +90,7 @@ the relevant gate.
 
 ## Non-goals keep the model honest
 
-v0.2.0 does not promise cross-Repository deduplication, overlapping writers,
+The current contract does not promise cross-Repository deduplication, overlapping writers,
 bucket-global coordination, arbitrary third-party mirror compatibility, or safe remote
 deletion on providers without an atomic conditional delete primitive. Excluding these is
 part of the safety contract, not an unfinished implementation detail.

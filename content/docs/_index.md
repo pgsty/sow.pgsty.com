@@ -1,57 +1,47 @@
 ---
-title: "SOW Documentation"
-linkTitle: "Documentation"
-description: "Create and manage APT / YUM package repositories with a single self-contained binary."
+title: "SOW Docs"
+linkTitle: "Docs"
+description: "Create and manage RPM/YUM and DEB/APT repositories with one self-contained binary."
 url: "/docs/"
 weight: 1
 type: docs
 icon: fa-solid fa-book
 sidebar_expanded: true
+sidebar_root_for: self
+sidebar_root_link_self: true
 ---
 
-SOW 0.2.0 is a self-contained package repository manager built by
-[Pigsty](https://pigsty.io). One Go executable creates RPM/YUM and DEB/APT repository
-metadata; no repository daemon or metadata toolchain is required.
-
-It operates in two isolated modes:
-
-- **Plain mode** — `sow create` indexes the top-level RPM and DEB files in one directory,
-  in place.
-- **Managed mode** — a workspace with Debian-style package pools, per-architecture views,
-  signing, membership policy, transactional generations, auditing, and publication targets.
+SOW is Pigsty's self-contained package repository manager. `sow create` turns the RPM and
+DEB files in a directory into a usable flat repository. Managed workspaces add package
+membership, policy, signing, immutable generations, audit history, and publication targets.
 
 {{< doc-cards cols="2" >}}
-{{< doc-card title="Getting Started" link="/docs/start/" >}}
-Install SOW, build your first flat repository in five minutes, and learn the core concepts.
+{{< doc-card title="Get Started" link="/docs/start/" >}}
+Install SOW, create a flat repository, and build the first Managed workspace.
 {{< /doc-card >}}
 {{< doc-card title="Tutorials" link="/docs/tutorial/" >}}
-End-to-end walkthroughs: YUM and APT repositories, GPG signing, serving with Nginx, and
-publishing a verified public tree.
+Complete YUM, APT, signing, serving, and publication walkthroughs.
 {{< /doc-card >}}
 {{< doc-card title="Features" link="/docs/feature/" >}}
-How SOW works: the Plain and Managed engines, package pools and architecture views,
-membership policy, signing, transactions, and auditing.
+Plain and Managed execution, pool projections, policy, signing, transactions, and audit.
 {{< /doc-card >}}
 {{< doc-card title="Design" link="/docs/design/" >}}
-Architecture and decision records: ownership, the v0.2.0 single-payload model,
-publication, recovery, and compatibility boundaries.
+Ownership, state, publication ordering, recovery, and evidence boundaries.
 {{< /doc-card >}}
-{{< doc-card title="Command" link="/docs/command/" >}}
-One page per top-level command: syntax, options, behavior, output, and exit codes.
+{{< doc-card title="Commands" link="/docs/command/" >}}
+Syntax, selection rules, output, state transitions, and exit behavior for every command.
 {{< /doc-card >}}
 {{< doc-card title="Reference" link="/docs/reference/" >}}
-`sow.yml` schema, package reference grammar, exit codes, JSON contracts, repository
-layouts, and compatibility evidence.
+Configuration, package references, layouts, JSON, exit codes, platforms, and integration coverage.
 {{< /doc-card >}}
 {{< /doc-cards >}}
 
-## Where to begin
+## Choose a path
 
-| If you want to… | Read |
+| Goal | Start here |
 |---|---|
-| Get a repository online right now | [Quick Start](/docs/start/quickstart/) |
-| Understand the mental model first | [Core Concepts](/docs/start/concepts/) |
-| Build a Managed YUM / APT repository | [Tutorials](/docs/tutorial/) |
-| Understand the ownership and publication model | [Design](/docs/design/) |
-| Look up command syntax and behavior | [Command](/docs/command/) |
-| Look up a config field or data contract | [Reference](/docs/reference/) |
+| Index a package directory now | [Quick Start](/docs/start/quickstart/) |
+| Maintain a curated long-lived repository | [First Workspace](/docs/start/workspace/) |
+| Build a complete YUM or APT repository | [Tutorials](/docs/tutorial/) |
+| Look up exact CLI behavior | [Commands](/docs/command/) |
+| Check a field, path, or compatibility claim | [Reference](/docs/reference/) |

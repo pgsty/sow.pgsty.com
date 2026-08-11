@@ -41,7 +41,7 @@ sow status -r local
 sow check -r local
 ```
 
-v0.2.0 checker 按顺序报告九层：
+当前 checker 按顺序报告九层：
 
 | 层 | 校验内容 |
 |---|---|

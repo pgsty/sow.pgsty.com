@@ -1,22 +1,18 @@
 ---
 title: "Reference"
 linkTitle: "Reference"
-description: "Configuration schema, package references, on-disk layout, exit codes, JSON output, and compatibility evidence."
+description: "Configuration schema, package references, on-disk layout, exit codes, JSON output, platforms, and integrations."
 url: "/docs/reference/"
 weight: 400
 icon: fa-solid fa-book-open
 ---
 
-This section covers stable data and interface contracts: "what fields may appear in
-`sow.yml`", "what does exit code 5 mean", and "which file lands where" — precisely,
-without a narrative around it. Command syntax and behavior live in the separate
-[Command manual](/docs/command/). If you are trying to learn
-how SOW works, start with [Getting Started](/docs/start/) or [Features](/docs/feature/)
-instead; those pages explain the model, and link back here for the details.
+This section is the stable contract for configuration fields, package references, paths,
+exit codes, JSON, platforms, and integrations. CLI syntax and state transitions live in
+[Commands](/docs/command/); use [Get Started](/docs/start/) for the operating model.
 
-Syntax and configuration rules on these pages are checked against the v0.2.0 binary and
-its strict parser. Output examples illustrate shape; identifiers, paths, hashes, and
-counts vary with the workspace.
+Output examples show shape; identifiers, paths, hashes, timestamps, and counts vary by
+workspace. The built-in `sow help` remains the exact syntax authority.
 
 {{< doc-cards cols="2" >}}
 {{< doc-card title="sow.yml Reference" link="/docs/reference/config/" >}}
@@ -38,18 +34,17 @@ The seven exit codes and what each one means.
 The `sow.cli/v1` envelope, the meaning of each top-level field, and result shapes for the
 primary command families.
 {{< /doc-card >}}
-{{< doc-card title="Compatibility" link="/docs/reference/compatibility/" >}}
-The exact current build, client, Provider, and filesystem evidence, including what is not
-yet established.
+{{< doc-card title="Platforms & Integrations" link="/docs/reference/compatibility/" >}}
+Release targets, filesystem requirements, repository-client checks, publication Providers,
+and the exact scope of each automated integration.
 {{< /doc-card >}}
 {{< /doc-cards >}}
 
-## Conventions used on these pages
+## Conventions
 
 Command examples are written without a `$` prompt so you can copy a whole block. Output
-blocks are representative of v0.2.0; identifiers, timestamps, hashes, counts, and paths
-vary, and long structures may be shortened where marked. The built-in `sow help` remains
-the exact syntax authority shipped with the binary.
+blocks are representative; variable values and long structures may be shortened where
+marked. The built-in `sow help` remains the exact syntax authority shipped with a binary.
 
 Placeholders in syntax blocks are uppercase (`NAME`, `DIR`, `PACKAGE`); literal text is
 lowercase. Square brackets mark optional arguments, `...` marks a repeatable one, and a

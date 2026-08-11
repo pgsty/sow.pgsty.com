@@ -63,7 +63,7 @@ targets:
 | `repos` | map | no | empty | Repository name to repository configuration. |
 | `targets` | map | no | empty | Publication target name to target configuration. |
 
-The v0.2.0 configuration value is exactly `schema: sow/v3`.
+The configuration value must be exactly `schema: sow/v3`.
 
 ### architectures
 

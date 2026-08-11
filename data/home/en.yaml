@@ -1,0 +1,149 @@
+sections:
+  - hero
+  - capabilities
+  - cta
+
+hero:
+  eyebrow: Software Object Warehouse
+  title_lines:
+    - Build Package Repo
+    - Ship only what changed
+  lead: One self-contained binary turns local RPM and DEB packages into usable repositories, then manages snapshots, audit history, and incremental publication when you need more control.
+  note: Single binary · Linux + macOS · RPM + DEB · Apache-2.0
+  detail:
+    label: SOW 0.3.0 is available — download now
+    url: download/
+    icon: fa-solid fa-circle-check
+  actions:
+    - label: Get Started
+      url: docs/start/
+      icon: fa-solid fa-arrow-right
+      style: primary
+    - label: Download
+      url: download/
+      icon: fa-solid fa-download
+      style: ghost
+
+capabilities:
+  eyebrow: Core capabilities
+  title: Flat or Managed
+  text: Use the one-command path for a local repository, or keep package membership, immutable generations, and publication history in a Managed workspace.
+  items:
+    - ref: 01 / CREATE
+      title: Create repo in one command
+      url: docs/command/create/
+      motto: Point SOW at a directory of packages
+      bullets:
+        - '`sow create` indexes top-level RPM and DEB files in place'
+        - Produces a directly usable flat YUM/APT repository
+        - Replaces basic `createrepo_c`, `dpkg-scanpackages`, or simple `reprepro` indexing flows
+      value: From package files to repository metadata without a daemon or toolchain.
+      visual:
+        type: code
+        aria_label: Create a flat RPM and DEB repository
+        title: create.sh
+        lines:
+          - { class: p, prefix: '$ ', text: 'sow create /srv/repo --jobs 8' }
+          - { class: ok, prefix: '✓ ', text: 'repodata/repomd.xml' }
+          - { class: ok, prefix: '✓ ', text: Packages }
+          - { class: ok, prefix: '✓ ', text: Packages.gz }
+    - ref: 02 / MANAGED
+      title: One pool, many views
+      url: docs/feature/managed/
+      motto: Curate Enterprise Linux, Debian, and Ubuntu repositories
+      bullets:
+        - Stores each live package once per Repository and projects metadata-only Dists
+        - Avoids duplicate object keys and redundant uploads on object storage
+        - Records immutable Built Generation manifests for retained snapshots and repository variants
+      value: Desired membership, policies, signing, and snapshots remain explicit and auditable.
+      visual:
+        type: components
+        aria_label: Managed repository model
+        columns: 2
+        items:
+          - { icon: fa-brands fa-redhat, title: EL, detail: rpm-md views, url: docs/tutorial/yum-repo/ }
+          - { icon: fa-brands fa-debian, title: Debian, detail: APT views, url: docs/tutorial/apt-repo/ }
+          - { icon: fa-brands fa-ubuntu, title: Ubuntu, detail: APT views, url: docs/tutorial/apt-repo/ }
+          - { icon: fa-solid fa-box-archive, title: One Pool, detail: deduplicated payload, url: docs/feature/views/ }
+          - { icon: fa-solid fa-camera, title: Generations, detail: immutable manifests, url: docs/feature/transactions/ }
+          - { icon: fa-solid fa-code-branch, title: Variants, detail: Dists and targets, url: docs/reference/config/ }
+    - ref: 03 / READY TO RUN
+      title: One binary, production ready
+      url: download/
+      motto: The same executable on macOS and Linux
+      bullets:
+        - Self-contained `CGO_ENABLED=0` archives for `amd64` and `arm64`
+        - The release pipeline produces RPM and DEB installation packages for Linux
+        - Safe paths, bounded concurrency, fsync, atomic publication, and strict checks
+      value: No repository daemon and no runtime language environment to operate.
+      visual:
+        type: components
+        aria_label: Supported release targets
+        columns: 2
+        items:
+          - { icon: fa-brands fa-linux, title: Linux, detail: amd64 · arm64 }
+          - { icon: fa-brands fa-apple, title: macOS, detail: Intel · Apple Silicon }
+          - { icon: fa-solid fa-box, title: RPM, detail: x86_64 · aarch64 }
+          - { icon: fa-solid fa-box-open, title: DEB, detail: amd64 · arm64 }
+    - ref: 04 / INCREMENTAL
+      title: Publish only the change set
+      url: docs/command/changes/
+      motto: Inspect first, then synchronize
+      bullets:
+        - '`sow changes` reports payload, metadata, pointer, and removal records'
+        - The operation log preserves who changed what and when
+        - Publication uses recorded target state to upload the delta instead of every repository object
+      value: Small repository changes stay small when synchronized to filesystem or cloud targets.
+      visual:
+        type: code
+        aria_label: Inspect and publish an incremental change set
+        title: publish.sh
+        lines:
+          - { class: p, prefix: '$ ', text: 'sow changes -r pgsql' }
+          - { class: ok, prefix: '+ ', text: 'pool/p/postgresql-18/...' }
+          - { class: ok, prefix: '~ ', text: 'dists/el9/x86_64/repodata/...' }
+          - { class: p, prefix: '$ ', text: 'sow publish prod' }
+          - { class: ok, prefix: '✓ ', text: 'changed objects verified' }
+
+cta:
+  title: Build the first repository now.
+  text: Start with `sow create`; move to a Managed workspace when you need policy, snapshots, and publication history.
+  actions:
+    - label: Get Started
+      url: docs/start/
+      icon: fa-solid fa-arrow-right
+      style: primary
+    - label: Browse Docs
+      url: docs/
+      icon: fa-solid fa-book-open
+      style: ghost
+
+footer:
+  brand:
+    name: SOW
+    tagline: '**S**oftware **O**bject **W**arehouse'
+    slogan: Package repository creation, management, and incremental delivery by Pigsty.
+  columns:
+    - title: Product
+      links:
+        - { label: Get Started, url: docs/start/ }
+        - { label: Plain mode, url: docs/feature/plain/ }
+        - { label: Managed mode, url: docs/feature/managed/ }
+        - { label: Download, url: download/ }
+    - title: Docs
+      links:
+        - { label: Docs, url: docs/ }
+        - { label: Commands, url: docs/command/ }
+        - { label: Tutorials, url: docs/tutorial/ }
+        - { label: Reference, url: docs/reference/ }
+    - title: Project
+      links:
+        - { label: Blog, url: blog/ }
+        - { label: Release notes, url: blog/release/ }
+        - { label: GitHub, url: 'https://github.com/pgsty/sow', external: true }
+        - { label: Issues, url: 'https://github.com/pgsty/sow/issues', external: true }
+    - title: Pigsty
+      links:
+        - { label: Pigsty, url: 'https://pigsty.io', external: true }
+        - { label: Package repository, url: 'https://pigsty.io/docs/repo/', external: true }
+        - { label: License, url: 'https://www.apache.org/licenses/LICENSE-2.0', external: true }

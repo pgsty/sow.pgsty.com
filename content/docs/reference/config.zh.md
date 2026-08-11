@@ -57,7 +57,7 @@ targets:
 | `repos` | map | 否 | 空 | 仓库名到仓库配置的映射。 |
 | `targets` | map | 否 | 空 | 发布目标名到目标配置的映射。 |
 
-v0.2.0 的配置值必须恰好是 `schema: sow/v3`。
+`schema` 配置值必须恰好是 `sow/v3`。
 
 ### architectures
 

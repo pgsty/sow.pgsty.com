@@ -42,7 +42,7 @@ Use `status` to diagnose. Do not use it as a substitute for `check`.
 sow check -r local
 ```
 
-The v0.2.0 checker reports nine ordered layers:
+The current checker reports nine ordered layers:
 
 | Layer | Verifies |
 |---|---|

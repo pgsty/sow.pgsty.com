@@ -155,9 +155,9 @@ Signed-By: /etc/apt/keyrings/repo-signing.asc
 
 `repo_gpgcheck=1` makes dnf verify `repomd.xml.asc`; `gpgcheck=1` makes it verify each
 package's embedded signature. On the APT side, `Signed-By` makes apt verify `InRelease`.
-The active suite checks generated signatures directly, but it does not currently provide
-a complete signed Managed dnf/APT acceptance gate. Run a real client test in the target
-environment; see [Compatibility](/docs/reference/compatibility/) for the exact evidence.
+Automated checks validate generated signatures directly. Complete signed Managed dnf/APT
+acceptance must run with real clients in the target environment; see
+[Platforms & Integrations](/docs/reference/compatibility/) for the exact evidence.
 
 `sow check` verifies every declared signature and file hash as part of its normal run, so a signing misconfiguration shows up before you ship rather than on a customer's machine.
 

@@ -85,7 +85,7 @@ When one format disappears, SOW removes its known derived outputs. A rerun also 
 
 `repomd.xml` always uses revision and timestamps `0`; gzip headers are fixed; ordering is canonical. A given package set therefore produces byte-identical metadata. Before publication SOW compares the staged metadata with live metadata. If package cleanup/signing is unnecessary and every output already matches, it removes the private stage without replacing public inodes and returns `noop=true`.
 
-The JSON field `recovered` remains in the stable CLI schema for compatibility but Plain create no longer performs journal recovery and always reports `false`.
+The JSON field `recovered` is always `false` because Plain create never performs journal recovery.
 
 ## Publication and interruption semantics
 
@@ -93,7 +93,8 @@ All metadata is generated and validated in a same-directory private stage before
 
 This is not a multi-file transaction. A process killed during publication may leave new RPM metadata with old DEB metadata, one member of the DEB pair, or extra old checksum-named RPM metadata. That state is not evidence to reconcile; it is disposable output. The next run renders the complete current projection and overwrites/removes the residue.
 
-The implementation does not create `.sow-plain-operation.json` or recovery trash. On startup it discards reserved stale `.sow-plain-stage-*`, historical `.sow-plain-recovery-*`, journal-write residue, and a legacy Plain journal before starting a fresh scan.
+The implementation creates no durable journal or recovery trash. On startup it discards
+SOW-owned residue in the reserved Plain staging namespace before starting a fresh scan.
 
 ## The `--pigsty` marker gate
 
@@ -111,7 +112,7 @@ stage + validate
   -> write repo_complete last
 ```
 
-A missing marker means “not complete”; consumers must not use the directory until the marker reappears. If a run stops after withdrawing the marker, rerun `sow create --pigsty`. The rerun scans the packages that now exist, overwrites metadata, finishes cleanup, and writes a fresh marker. No historical action log is required.
+A missing marker means “not complete”; consumers must not use the directory until the marker reappears. If a run stops after withdrawing the marker, rerun `sow create --pigsty`. The rerun scans the packages that now exist, overwrites metadata, finishes cleanup, and writes a fresh marker. No action log is required.
 
 Default mode refuses to run while `repo_complete` exists, preventing an un-gated command from leaving a stale readiness claim.
 

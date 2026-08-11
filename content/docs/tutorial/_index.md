@@ -7,7 +7,7 @@ weight: 200
 icon: fa-solid fa-graduation-cap
 ---
 
-Each tutorial starts from a new v0.2.0 workspace. Commands are intended to be run in order;
+Each tutorial starts from a new workspace. Commands are intended to be run in order;
 replace uppercase placeholders and package paths for your environment.
 
 If you have not installed SOW yet, start with [Installation](/docs/start/install/) and
@@ -30,6 +30,10 @@ clients to reject anything unsigned.
 Serve a Repository with Nginx and publish a verified Generation to a configured filesystem
 target without exposing private workspace state.
 {{< /doc-card >}}
+{{< doc-card title="Build the pigsty-infra Repository" link="/docs/tutorial/infra-repo/" >}}
+Turn existing dual-architecture infra-pkg RPMs and DEBs into a real repository, then rehearse local
+installation, rolling updates, Stable promotion, and monthly snapshots.
+{{< /doc-card >}}
 {{< /doc-cards >}}
 
 ## Which one first
@@ -40,6 +44,7 @@ target without exposing private workspace state.
 | You ship DEBs for Debian or Ubuntu | [Build an APT Repository](/docs/tutorial/apt-repo/) |
 | You need signed metadata or signed RPM payloads | [Sign Your Repository](/docs/tutorial/signing/) |
 | The tree is built but nothing can reach it | [Serve Repositories](/docs/tutorial/serving/) |
+| You want to turn a dual-architecture package pool into a maintained Infra repository | [Build the pigsty-infra Repository](/docs/tutorial/infra-repo/) |
 
 The YUM and APT tutorials are independent fresh-workspace paths. A real Workspace may hold
 both RPM and DEB Dists in one Repository when that ownership boundary suits your operation.

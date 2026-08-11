@@ -1,7 +1,7 @@
 ---
 title: "Your First Workspace"
 linkTitle: "First Workspace"
-description: "Create a new v0.2.0 workspace with RPM and DEB Dists, add packages, and verify the public tree."
+description: "Create a workspace with RPM and DEB Dists, add packages, and verify the public tree."
 url: "/docs/start/workspace/"
 weight: 300
 icon: fa-solid fa-layer-group
@@ -10,7 +10,9 @@ icon: fa-solid fa-layer-group
 Managed mode keeps configuration, membership, generations, and audit state. This example
 starts from an empty directory.
 
-## 1. Initialize the workspace
+{{% steps %}}
+
+## Initialize the workspace {#1-initialize-the-workspace}
 
 ```bash
 sow init /srv/sow
@@ -31,7 +33,7 @@ declared repositories and Dists; it does not reset a valid workspace.
 The default architecture families are `x86_64` and `aarch64`. Configuration accepts
 `amd64` and `arm64` as aliases and normalizes them to those family names.
 
-## 2. Create a Repository and two Dists
+## Create a Repository and two Dists {#2-create-a-repository-and-two-dists}
 
 ```bash
 sow repo new local
@@ -59,7 +61,7 @@ The public layout is now:
             └── binary-arm64/{Packages,Packages.gz,by-hash/}
 ```
 
-## 3. Add packages
+## Add packages {#3-add-packages}
 
 Select the target Dist explicitly:
 
@@ -83,7 +85,7 @@ sow build
 While Desired Membership is ahead of the Built Generation, the Repository is `dirty` and
 `ready_to_copy=false`.
 
-## 4. Inspect and verify
+## Inspect and verify {#4-inspect-and-verify}
 
 ```bash
 sow status
@@ -103,7 +105,7 @@ To see normalized configuration and defaults:
 sow config show --all
 ```
 
-## 5. Serve the Repository
+## Serve the Repository {#5-serve-the-repository}
 
 The public unit is `/srv/sow/local`, not the workspace root. Serve that directory at a
 stable URL prefix; do not expose `sow.yml` or `.sow/`.
@@ -113,6 +115,8 @@ stable URL prefix; do not expose `sow.yml` or `.sow/`.
 
 For a safe Nginx and filesystem-publication workflow, continue with
 [Serve Repositories](/docs/tutorial/serving/).
+
+{{% /steps %}}
 
 ## Selection rules
 

@@ -7,7 +7,7 @@ weight: 200
 icon: fa-solid fa-cube
 ---
 
-This tutorial creates a new Managed DEB repository. You need SOW 0.2.0, a writable
+This tutorial creates a new Managed DEB repository. You need a writable
 directory, and one or more DEB files.
 
 ## 1. Create the workspace
@@ -159,5 +159,5 @@ sow check -r pigsty
 Use `build` after policy or signing configuration changes. Use `check`, not `status` alone,
 as the publication gate.
 
-The active automated client proof is intentionally narrower than this Managed workflow;
-see [Compatibility](/docs/reference/compatibility/) before making a platform support claim.
+The automated client and platform scope is listed under
+[Platforms & Integrations](/docs/reference/compatibility/).

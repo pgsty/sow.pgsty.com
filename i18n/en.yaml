@@ -1,7 +1,0 @@
-# SOW landing-page strings. Common shell strings come from OINK.
-sow_search_nav: to navigate
-sow_search_open: to select
-sow_search_close: to close
-sow_search_empty: No results found
-sow_search_loading: Loading search index…
-sow_footer_author: Ruohang Feng

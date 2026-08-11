@@ -144,11 +144,11 @@ live target without those controls.
 
 ## R2 targets
 
-The configuration parser and current implementation support `provider: r2`, with
-S3-compatible publication and report-only target GC. Current real CLI-to-R2 end-to-end
-evidence is not complete; validate credentials, bucket policy, public endpoint, cache,
-replay, and recovery in a nonproduction prefix before relying on it. See
-[Compatibility](/docs/reference/compatibility/).
+`provider: r2` uses an S3-compatible storage transport and report-only target GC. The
+transport integration covers list, HEAD, GET, and conditional PUT against a pinned MinIO
+fixture. Validate credentials, bucket policy, public endpoint, cache behavior, replay, and
+recovery on a nonproduction prefix before enabling a production target. See
+[Platforms & Integrations](/docs/reference/compatibility/).
 
 ## Next
 

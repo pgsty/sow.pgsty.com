@@ -1,7 +1,7 @@
 ---
-title: "命令手册"
-linkTitle: "命令手册"
-description: "SOW 0.2.0 完整命令手册：语法、参数、行为、输出与退出码。"
+title: "命令"
+linkTitle: "命令"
+description: "SOW CLI 的完整语法、参数、行为、输出与退出码。"
 url: "/zh/docs/command/"
 aliases:
   - "/docs/reference/cli/"
@@ -12,7 +12,7 @@ weight: 450
 icon: fa-solid fa-terminal
 ---
 
-这里是 SOW 0.2.0 的命令手册。每条顶层命令单独成页；`config`、`repo`、`dist`、`retain`、
+每条顶层命令单独成页；`config`、`repo`、`dist`、`retain`、
 `export`、`log` 等命令组在同一页说明其子命令。
 
 二进制内置的 `sow help` 是语法权威。本手册在此基础上补充选择规则、状态变化、输出契约、

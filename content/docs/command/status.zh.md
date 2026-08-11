@@ -66,6 +66,11 @@ JSON 结果还包含 `dirty_reasons` 与最近一次 Operation：
 `ready_to_copy=false` 是明确警告；`true` 只是廉价状态判断，并非字节级完整性证明。交付前应运行
 [`sow check`](/zh/docs/command/check/)。
 
+## 只读契约
+
+`status` 不迁移也不修复状态。Repository 数据库无法安全读取时，命令退出 `5`；请先执行
+诊断信息明确指出的维护命令，再重新查询。
+
 ## 退出行为
 
 只要状态可读，`status` 在 `clean`、`dirty`、`recovering`、`error` 四种状态下都返回 `0`。

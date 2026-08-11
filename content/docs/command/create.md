@@ -187,8 +187,8 @@ writers on the local machine; arbitrary external package mutation is unsupported
 Plain create does not create a durable operation journal, rollback pre-images, or recovery trash.
 Publication consists of several single-file renames, so a crash may leave a partially replaced set of
 derived files. Re-run `sow create` with the intended current options: it discards reserved stale Plain
-temporary state and rebuilds all indexes from the packages that currently exist. `recovered` remains
-in the stable JSON schema but is always `false`; a rerun is a fresh overwrite build, not replay.
+temporary state and rebuilds all indexes from the packages that currently exist. `recovered` is
+always `false`; a rerun is a fresh overwrite build, not replay.
 
 A flat directory has no whole-repository generation pointer, and RPM plus DEB entry points cannot be
 swapped in one POSIX rename. Plain therefore does not promise cross-file instantaneous atomicity. Use

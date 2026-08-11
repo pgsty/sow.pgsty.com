@@ -10,7 +10,9 @@ icon: fa-solid fa-bolt
 Plain mode builds a flat repository in one directory. It does not read `sow.yml`, create
 a workspace, or keep a database.
 
-## 1. Prepare a directory
+{{% steps %}}
+
+## Prepare a directory {#1-prepare-a-directory}
 
 Put RPM and/or DEB files at the directory top level. `sow create` does not recurse and
 does not move or rename package files.
@@ -22,7 +24,7 @@ cp /path/to/packages/*.rpm /path/to/packages/*.deb /srv/repo/
 
 If one glob has no matches, copy the formats you actually have instead.
 
-## 2. Generate metadata
+## Generate metadata {#2-generate-metadata}
 
 ```bash
 sow create /srv/repo
@@ -49,7 +51,7 @@ Plain mode does not generate a DEB `Release`, `InRelease`, or `Release.gpg`. RPM
 metadata are generated in one operation; a parse or render failure prevents the new
 indexes from being committed.
 
-## 3. Serve the directory
+## Serve the directory {#3-serve-the-directory}
 
 For a local check, any static file server is sufficient:
 
@@ -67,7 +69,7 @@ curl --fail http://127.0.0.1:8080/Packages.gz >/dev/null
 
 Python's server is only a preview. Use a maintained HTTP server for persistent service.
 
-## 4. Configure a client
+## Configure a client {#4-configure-a-client}
 
 Replace `REPO_HOST` with the address clients can reach.
 
@@ -103,7 +105,7 @@ The APT source ends in `./` because this is a flat repository. `[trusted=yes]` a
 disabled DNF signature checks are appropriate only for this unsigned quick start. Use a
 signed Managed repository when authenticity matters.
 
-## 5. Update the repository
+## Update the repository {#5-update-the-repository}
 
 Change the package files and run the same command again:
 
@@ -119,6 +121,8 @@ For automation, request the versioned JSON envelope:
 ```bash
 sow create /srv/repo --json
 ```
+
+{{% /steps %}}
 
 ## When to use Managed mode
 

@@ -7,7 +7,7 @@ weight: 1800
 icon: fa-solid fa-file-export
 ---
 
-SOW 0.2.0 提供一个导出子命令：`sow export rpm-leaf`。它创建外部、独立的 RPM 仓库，
+SOW 提供一个导出子命令：`sow export rpm-leaf`。它创建外部、独立的 RPM 仓库，
 repodata 使用本地 `pool/...` href。
 
 ## 语法
@@ -67,6 +67,6 @@ SOW 会拒绝与已配置 filesystem 发布根重叠的输出，避免导出物�
 
 ## 参见
 
-- [兼容性设计](/zh/docs/design/compatibility/) —— 兼容表面与非目标
+- [平台与集成](/zh/docs/reference/compatibility/) —— 已验证与明确不支持的工作流
 - [仓库布局](/zh/docs/reference/layout/) —— 源目录与导出边界
 - [`sow publish`](/zh/docs/command/publish/) —— 向配置目标执行 Managed 交付

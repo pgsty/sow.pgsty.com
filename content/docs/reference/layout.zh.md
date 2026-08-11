@@ -1,13 +1,13 @@
 ---
 title: "仓库布局"
 linkTitle: "仓库布局"
-description: "SOW 0.2.0 创建的公共与私有路径,包括唯一规范包池与纯元数据视图。"
+description: "SOW 的公共与私有路径，包括唯一规范包池与纯元数据视图。"
 url: "/zh/docs/reference/layout/"
 weight: 400
 icon: fa-solid fa-folder-tree
 ---
 
-SOW 0.2.0 的 Managed 布局只有一种:软件包体在 `pool/` 下只存一份,`dists/`
+SOW 的 Managed 布局只有一种：软件包体在 `pool/` 下只存一份，`dists/`
 只保存客户端视图元数据。对外服务、复制或发布时,单位始终是完整仓库目录。
 
 ## Plain 模式
@@ -28,8 +28,8 @@ SOW 0.2.0 的 Managed 布局只有一种:软件包体在 `pool/` 下只存一份
 └── repo_complete                         # 仅 --pigsty 生成
 ```
 
-平面 RPM 元数据引用裸文件名,平面 DEB 元数据使用 `./<filename>`。构建过程中出现的
-构建期间 `.sow-plain-stage-*` 保存私有生成输出。Plain 没有持久 journal 或 recovery 状态；下次
+平面 RPM 元数据引用裸文件名，平面 DEB 元数据使用 `./<filename>`。构建期间
+`.sow-plain-stage-*` 保存私有生成输出。Plain 没有持久 journal 或 recovery 状态；下次
 create 会丢弃保留命名空间里的陈旧临时路径并重建。不得服务或复制这些临时路径。
 
 ## Managed 工作区
@@ -51,12 +51,16 @@ create 会丢弃保留命名空间里的陈旧临时路径并重建。不得服�
     └── dists/
 ```
 
-去重不跨仓库边界。`.sow/` 权限为 `0700`,可能包含尚未发布的包体、从凭据派生的状态与
-恢复数据。
+去重不跨仓库边界。`.sow/` 与 pending 目录权限为 `0700`。Pending 包体文件直接使用最终
+公开权限 `0644`，因此提升只需修改命名空间。私有状态
+可能包含尚未发布的包体、从凭据派生的状态与恢复数据。
+
+`<repo>.db` 与可重建的软件包事实缓存都属于私有状态，不改变公共仓库布局或
+`sow/v3` 配置标识。
 
 ## 规范包池
 
-每个包体只有一条规范路径:
+每个包体只有一条规范路径：
 
 ```text
 pool/<prefix>/<source>/<filename>
@@ -97,8 +101,8 @@ Pool 对象不可变。从 Dist 删除成员关系不会立即删除字节；`so
 <location href="../../../pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm"/>
 ```
 
-该布局要求客户端在完整 Repository Root 内正确处理 rpm-md 相对路径；当前自动化矩阵尚未包含
-现行 Managed DNF/YUM 验收门禁。默认 `dnf reposync` 会拒绝父级跳转 href，因为下载目标逃出
+该布局要求客户端在完整 Repository Root 内正确处理 rpm-md 相对路径。默认 `dnf reposync`
+会拒绝父级跳转 href，因为下载目标逃出
 View Root。下游工具需要自包含 Leaf 时，请显式导出：
 
 ```bash
@@ -130,7 +134,7 @@ Filename: pool/p/postgresql-18/libpq5_18.3-1.pgdg12+1_amd64.deb
 ```
 
 `Release` 使用 SHA256 清单并声明 `Acquire-By-Hash: yes`。校验和命名的 rpm-md 文件与
-APT by-hash 条目让旧元数据在可变指针最后替换时仍然可达。
+APT by-hash 条目让上一组元数据在可变指针最后替换时仍然可达。
 
 ## 发布目标
 

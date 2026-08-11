@@ -1,20 +1,17 @@
 ---
 title: "参考"
 linkTitle: "参考"
-description: "配置 Schema、包引用、磁盘布局、退出码、JSON 输出与兼容性证据。"
+description: "配置 Schema、包引用、磁盘布局、退出码、JSON 输出、平台与集成。"
 url: "/zh/docs/reference/"
 weight: 400
 icon: fa-solid fa-book-open
 ---
 
-这一部分记录稳定的数据与接口契约："`sow.yml` 里允许出现哪些字段"、"退出码 5 是什么意思"、
-"某个文件落在哪里" —— 只给精确答案，不铺叙事。命令语法与行为放在独立的
-[命令手册](/zh/docs/command/)中。如果你想先弄懂
-SOW 的工作方式,请从[上手指南](/zh/docs/start/)或[功能](/zh/docs/feature/)开始,
-那些页面讲模型,并在需要细节时链接回这里。
+这一部分记录配置字段、包引用、路径、退出码、JSON、平台与集成等稳定契约。CLI 语法和状态变化
+见[命令](/zh/docs/command/)，使用模型见[上手](/zh/docs/start/)。
 
-本节语法与配置规则已按 v0.2.0 二进制及其严格解析器核对。输出示例用于说明形态；
-标识符、路径、哈希与计数会随工作区变化。
+输出示例只说明形态；标识符、路径、哈希、时间戳与计数会随工作区变化。二进制自带的
+`sow help` 始终是精确语法权威。
 
 {{< doc-cards cols="2" >}}
 {{< doc-card title="配置参考" link="/zh/docs/reference/config/" >}}
@@ -33,15 +30,15 @@ Plain 与 Managed 两种模式下 SOW 创建的每一条路径、包池分组规
 {{< doc-card title="JSON 输出" link="/zh/docs/reference/json/" >}}
 `sow.cli/v1` Envelope、各顶层字段含义与主要命令族的 Result 形态。
 {{< /doc-card >}}
-{{< doc-card title="兼容性" link="/zh/docs/reference/compatibility/" >}}
-当前构建、客户端、Provider 与文件系统的确切证据，包括尚未成立的结论。
+{{< doc-card title="平台与集成" link="/zh/docs/reference/compatibility/" >}}
+Release 目标、文件系统要求、仓库客户端检查、发布 Provider，以及各项自动化集成的确切范围。
 {{< /doc-card >}}
 {{< /doc-cards >}}
 
-## 本节的约定
+## 约定
 
-命令示例不带 `$` 提示符，方便整块复制。输出块代表 v0.2.0 的形态；标识符、时间戳、哈希、
-计数与路径会变化，长结构在标注处会省略。二进制自带的 `sow help` 始终是精确语法权威。
+命令示例不带 `$` 提示符，方便整块复制。输出块只代表结构，可变值与长结构会在标注处省略。
+二进制自带的 `sow help` 始终是精确语法权威。
 
 语法块中占位符用大写(`NAME`、`DIR`、`PACKAGE`),字面量用小写。方括号表示可选参数,
 `...` 表示可重复,竖线分隔互斥项 —— 与 `sow help` 的写法一致。

@@ -59,11 +59,31 @@ sow build
 SOW 在同一文件系统暂存新元数据，验证完成后再切换可变协议指针。RPM 校验和命名元数据与 APT
 by-hash 确保新旧读者看到的视图始终自洽。
 
+Pending 包体提升采用有界单写者 group commit。每批最多 512 个对象或 1 GiB：先创建 Pool
+链接并持久化所有不同的目标父目录，再删除 pending 名称并持久化共享 pending 目录。中断只会
+留下 pending-only、指向同一 inode 的双链接或 Pool-only 状态，都能按 journal 恢复；不会
+持久地同时丢失两个名称。
+
 一个 Operation 可以覆盖多个 Dist。每个 Dist 始终暴露完整视图；`build` 返回时，本次包含的所有
 Dist 属于同一个 Built Generation。
 
 开始新工作前，`build` 会尝试前向恢复或安全回滚非终态 Operation。如果日志、数据库与文件系统
 证据互相矛盾，Repository 进入 `error`，`build` 拒绝猜测；不存在强制修复参数。
+
+## 进度事件
+
+耗时较长的构建会向 Operation Log 追加结构化 `build_progress` 记录。每条事件包含 `phase`、
+`completed`、`total` 与 `jobs`。当前阶段为：
+
+- `rendering`；
+- `promoting_payload`；
+- `publishing_dists`；
+- `normalizing_public_tree`；
+- `finalizing`。
+
+这些事件不会推进 Operation 状态，也不会在每次更新后 checkpoint SQLite；它们只用于审计
+与可观测性，不参与恢复决策。使用 [`sow log OPERATION`](/zh/docs/command/log/#查看单条-operation)
+查看明细。
 
 ## 元数据签名
 

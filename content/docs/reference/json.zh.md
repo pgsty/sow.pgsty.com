@@ -113,7 +113,7 @@ sow create /srv/offline --json
 | `marker` | 是否写入了 `repo_complete` |
 | `marker_sha256` | marker 文件的摘要;仅 `--pigsty` 时出现 |
 | `noop` | 索引本来就正确、什么都没改时为 `true` |
-| `recovered` | 本次运行完成了上一次被中断的操作时为 `true` |
+| `recovered` | 为兼容稳定 schema 保留；Plain create 没有 journal 恢复，始终为 `false` |
 | `signed` | 被重签的文件名;仅 `--sign-with` 时出现 |
 
 ### init
@@ -364,7 +364,7 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
 
 ### publish、retain、gc、export
 
-v0.2.0 生命周期命令使用同一 envelope,数字 Generation 仍序列化为 JSON 字符串:
+Managed 生命周期命令使用同一 envelope，数字 Generation 仍序列化为 JSON 字符串：
 
 | 命令 | 重要 `result` 字段 |
 |---|---|
@@ -398,13 +398,14 @@ R2 目标 GC 会把候选计入 retained,SOW 从不报告自己执行了远端�
 sow log --json | jq -r '.result.operations[] | .payload_json | fromjson | .config_sha256'
 ```
 
-传入 Operation ID 会返回完整细节 —— 状态迁移、包、成员关系与每一个文件动作:
+传入 Operation ID 会返回完整细节 —— 状态迁移、结构化 `build_progress` 事件、包、成员关系与每一个文件动作：
 
 ```json
 "result":{"repository":"pigsty","detail":{"operation":{...},"duration_ms":598,
  "events":[{"sequence":0,"state":"planned","detail_json":"{}","occurred_at":"..."},
   {"sequence":1,"state":"staged",...},{"sequence":2,"state":"applied",...},
-  {"sequence":3,"state":"built",...},{"sequence":4,"state":"done",...}],
+  {"sequence":3,"state":"applied","detail_json":"{\"version\":1,\"kind\":\"build_progress\",\"phase\":\"rendering\",\"completed\":1,\"total\":2,\"jobs\":8}",...},
+  {"sequence":4,"state":"built",...},{"sequence":5,"state":"done",...}],
  "packages":[{"sequence":0,"input_path":"pgbouncer_fdw_18","package_sha256":"45171966...",
   "coordinate":"rpm:pgbouncer_fdw_18-0:1.4.0-1PGDG.rhel9.8.x86_64","disposition":"removed"}],
  "memberships":[{"sequence":0,"dist":"el9","package_sha256":"45171966...","action":"remove"}],

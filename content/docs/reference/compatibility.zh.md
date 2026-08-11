@@ -1,114 +1,94 @@
 ---
-title: "兼容性"
-linkTitle: "兼容性"
-description: "v0.2.0 在构建、客户端、镜像工具、文件系统与发布方面的确切证据。"
+title: "平台与集成"
+linkTitle: "平台"
+description: "Release 目标、文件系统要求、仓库客户端、发布 Provider 与自动化集成覆盖。"
 url: "/zh/docs/reference/compatibility/"
+aliases:
+  - "/docs/design/compatibility/"
 weight: 700
 icon: fa-solid fa-circle-check
 ---
 
-本页只报告证据，不推导兼容性。元数据语法、clean-room CLI、真实包管理器、镜像工具与存储
-Provider 是相互独立的检查。
+本页说明 SOW 提供哪些构建目标、工作区依赖什么存储语义，以及自动化集成具体覆盖哪些行为。
+仓库生成在 SOW 二进制内部完成；部署后的最终门禁仍是实际软件包管理器。
 
-## 当前自动化证据
+## Release 目标
 
-| 表面 | 环境 | 现行检查真正证明了什么 | 没有证明什么 |
-|---|---|---|---|
-| v0.2.0 CLI clean room | Linux CI | 构建生产二进制；生成混合 Plain RPM/DEB 元数据；初始化 `sow/v3`；创建空 RPM/DEB Dist；添加 fixture；运行查询、build、check、changes、config 与 log | 没有真实包管理器或远端 Provider |
-| Plain APT 客户端 | Ubuntu 22.04 容器 | 当前 `sow create` 结果通过 HTTP 被 `apt update`、发现并按精确版本安装；使用 `[trusted=yes]` 未签名平面源 | Managed APT、`Release` 签名或 `by-hash` 消费 |
-| RPM detached-signature 探针 | AlmaLinux 8、9、10 容器 | `repomd.xml` 与分离签名串行变化时的真实 DNF 行为 | 当前 Managed CLI 布局、包安装、包签名或 `sow export rpm-leaf` |
-| S3 兼容协议 fixture | 固定版本 MinIO | 独立 `internal/publish` Provider 实现的 S3 操作与条件删除失败行为 | 当前 `internal/v2/managed` 的 `sow publish r2` CLI 路径或 Cloudflare R2 账户 |
+| 操作系统 | `amd64` | `arm64` | 制品 |
+|---|---:|---:|---|
+| Linux | 是 | 是 | 归档、RPM、DEB |
+| macOS | 是 | 是 | 归档 |
+| Windows | 否 | 否 | 不支持 |
 
-后两行是有价值的协议证据，但不能宣传成产品端到端兼容性。
+Release 二进制使用 `CGO_ENABLED=0`，不需要语言运行时；项目使用 Go 1.26.5 构建。归档包含
+`README.md`、`CHANGELOG.md` 与 Apache-2.0 `LICENSE`，Linux 软件包会随二进制安装同一份
+协议文件。使用 [`sow version`](/zh/docs/command/) 查看产品版本、目标 OS/架构与构建工具链。
 
-## 当前客户端结论
+## 工作区文件系统
 
-- **已验证：** v0.2.0 CLI 生成的 Plain DEB 仓库，在显式信任时可由 Ubuntu 22.04 APT
-  通过 HTTP 消费并安装。
-- **格式已实现、当前缺少完整客户端门禁：** Plain/Managed rpm-md、Managed APT
-  `Release`/`by-hash`、元数据签名与 RPM 包签名。
-- **现行矩阵不声明：** CentOS 7、Debian 12/13、DNF 消费规范 Managed Repository、
-  已签名 Managed APT 安装或完整已签名 DNF 安装。
+Managed 工作区应放在本地 POSIX 文件系统上。正确性依赖建议锁、`fsync`、基于描述符的路径
+校验与同文件系统原子 rename；NFS 等网络文件系统不属于受支持的工作区位置。
 
-缺少门禁表示当前未验证，不表示已知不兼容。
+公共 `<workspace>/<repo>/` 树是另一条边界：它是闭合的 `pool/ + dists/` 命名空间，可整根
+复制或发布，不依赖 SQLite、私有 journal 或 view-local hardlink identity。必须保持完整
+Repository，不得暴露 `.sow/`。
 
-## 规范 RPM 布局与 `reposync`
+SOW 会拒绝符号链接控制路径、不安全普通文件、重叠 filesystem target，以及大小写折叠后冲突
+的 Pool 路径，使同一个 Repository 可以在大小写敏感的 Linux 与默认大小写不敏感的 macOS
+文件系统间移动。
 
-Managed RPM view 只含元数据。包 href 从架构仓库基址 `dists/DIST/ARCH/` 解析回
-Repository 包池：
+## 自动化集成矩阵
 
-```text
-../../../pool/p/package/package.rpm
-```
+| 表面 | 环境 | 已验证行为 |
+|---|---|---|
+| 生产 CLI 干净环境 | Linux CI | 构建交付二进制；生成混合 Plain RPM/DEB 元数据；初始化 `sow/v3`；创建 RPM/DEB Dist；加入 Fixture；执行查询、build、check、changes、config 与 log 命令 |
+| Plain APT 客户端 | Ubuntu 22.04 容器 | 通过 HTTP 服务 `sow create` 输出；在显式信任未签名源时执行 `apt-get update`、包发现、精确版本选择、下载与安装 |
+| RPM 分离签名切换 | AlmaLinux 8、9、10 容器 | 使用真实 DNF 客户端遍历 `repomd.xml` / `repomd.xml.asc` 串行切换状态，并固定各组合的成功/失败行为 |
+| S3 兼容传输 | 固定 MinIO 容器 | 验证 Bucket 列表、HEAD、GET、仅创建 PUT、CAS PUT、重放、对象元数据与 Prefix 约束 |
+| Release 打包 | Linux CI | 构建四个归档、两个 RPM、两个 DEB 与 `SHA256SUMS`；检查包内路径、Apache-2.0 元数据与协议文件字节 |
 
-rpm-md 的包位置是相对 URL。默认 `dnf reposync` 使用 leaf-root 安全检查并拒绝这种父级跳转，
-所以规范 Managed view 明确不支持作为默认 `reposync` 源。
+DNF 签名切换是协议测试，不是完整 Managed RPM 安装；APT 作业覆盖未签名 Plain 仓库，不覆盖
+Managed 元数据签名。正式上线前，应使用部署中的确切 dnf/APT 版本、仓库 URL、访问策略与
+签名策略完成验收。
 
-需要自包含产物时执行：
+## 仓库客户端契约
 
-```bash
-sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
-```
+Plain RPM 仓库在包文件旁提供 `repodata/`；Plain DEB 仓库在包文件旁提供 `Packages` 与
+`Packages.gz`。配置好客户端信任策略后，可通过 `file://` 或 HTTP 使用。
 
-导出会把包 href 改写为本地 `pool/`，且不修改 Repository。现行 Integration workflow
-尚未用真实 `reposync` 客户端消费该导出，因此最后一层客户端门禁仍是未验证。
+Managed 客户端必须消费完整 Repository Root：
 
-## 二进制平台
+- APT 索引位于 `dists/<dist>/main/binary-<arch>/`，并引用根级 `pool/`。`Release` 声明
+  SHA-256 by-hash 索引；配置签名后增加 `InRelease` 与 `Release.gpg`。
+- RPM 元数据位于 `dists/<dist>/<arch>/repodata/`，通过相对位置回指根级 `pool/`。必须服务
+  整个 Repository，不能只发布一个架构目录。
 
-Release 配置构建以下 `CGO_ENABLED=0` Archive：
-
-| 操作系统 | `amd64` | `arm64` |
-|---|---:|---:|
-| Linux | 构建 | 构建 |
-| macOS (Darwin) | 构建 | 构建 |
-
-Linux 还会生成 RPM 与 DEB 包。不支持 Windows。构建目标不等于证明所有操作系统版本/运行时
-组合；当前自动化 clean-room 与客户端作业运行在 Linux。
-
-## 文件系统边界
-
-Managed 工作区应位于本地 POSIX 文件系统。正确性依赖建议锁、fsync、安全路径检查与原子
-rename；不声明 NFS 等网络文件系统为受支持工作区位置。
-
-已提交公共 Repository 是闭合的 `pool/ + dists/` 树，不依赖 view-local hardlink identity。
-两者必须一起保留。发布时应优先使用配置 target，或由操作者控制 staging 后原子切换，
-不要直接原地修改 live tree。
-
-`filesystem` target 的 `file:///...` endpoint 目录必须预先存在，并解析为唯一规范真实目录。
-缺失目录或 symlink alias 会被拒绝。全新 v0.2.0 本地运行已验证首次发布与幂等重放。
+默认 `dnf reposync` 会拒绝规范 Managed RPM 的父级相对包路径。该工作流应使用
+[`sow export rpm-leaf`](/zh/docs/command/export/) 生成自包含副本。导出使用本地包路径并带有
+完成清单，但不是第二个规范 Repository。
 
 ## 发布 Provider
 
-| Provider | 已实现行为 | 当前证据边界 |
-|---|---|---|
-| `filesystem` | 发布、校验、checkpoint、grace、条件式生命周期维护 | 聚焦测试 + 全新本地 CLI 实跑 |
-| `r2` | S3 兼容发布；target GC 只记录候选报告，绝不删除对象 | 源码与聚焦测试；没有当前真实 CLI/Provider 端到端实跑 |
+| Provider | 契约 |
+|---|---|
+| `filesystem` | 发布到预先存在且安全的 `file://` endpoint 下。Target GC 只有在缓存 grace 与存储/公共缺失证据成立后，才执行精确条件删除。 |
+| `r2` | 通过 S3 兼容存储传输发布。Target GC 只写入精确候选报告，绝不删除远端对象。 |
 
-`public_endpoint` 是 target 校验的一部分；它不会创建 Web 服务、CDN、bucket policy、DNS
-或凭据。请在部署环境单独验证这些层。
+两种 Provider 都在配置 Prefix 下发布同一棵完整 `pool/ + dists/` 树。`public_endpoint` 属于
+Target 校验的一部分；SOW 不创建 HTTP 服务、DNS 记录、Bucket Policy、CDN 或凭据。启用生产
+发布前，应先在非生产 Prefix 验证这些由部署方负责的表面。
 
-## 有意省略的元数据
+## 部署门禁
 
-- SQLite rpm-md、zchunk 与 modulemd；
-- 源码包索引；
-- DEB MD5/SHA1 manifest；
-- Plain 模式的 DEB `Release` 与签名。
+交付前必须通过深度校验，并检查物理变更计划：
 
-## 外部工具
-
-元数据生成与解析在进程内完成。RPM 包签名需要 `rpm` 与可用 GPG 环境。`agent://` 元数据
-key 需要 `gpg` 与 `gpg-agent`；路径、`file://`、`env://` key 在进程内签名。
-
-## 版本
-
-```console
-sow 0.2.0 darwin/arm64 go1.26.5
+```bash
+sow check -r REPOSITORY
+sow changes 0 -r REPOSITORY
 ```
 
-OS、架构与 Go 工具链取决于实际二进制。`sow/v3`、`sow.cli/v1` 是配置/协议标识。
+发布后，再访问实际 `repomd.xml` 或 `Release` URL，并运行目标软件包管理器。本地构建、Provider
+写入、HTTP 可达与客户端安装是四个独立检查。
 
-## 延伸阅读
-
-- [仓库布局](/zh/docs/reference/layout/)
-- [`sow publish`](/zh/docs/command/publish/) 与 [`sow gc`](/zh/docs/command/gc/)
-- [兼容性设计](/zh/docs/design/compatibility/)
+相关契约见[仓库布局](/zh/docs/reference/layout/)、[签名模型](/zh/docs/feature/signing/)与
+[发布与恢复](/zh/docs/design/publication/)。

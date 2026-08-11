@@ -1,8 +1,8 @@
-# SOW Documentation
+# SOW Docs
 
-This repository contains the bilingual documentation for **SOW**, the self-contained
+This repository contains the bilingual docs for **SOW**, the self-contained
 APT / YUM package repository manager by [Pigsty](https://pigsty.io). It uses
-[Hugo](https://gohugo.io/) and the [OINK](https://github.com/pgsty/oink) documentation
+[Hugo](https://gohugo.io/) and the [OINK](https://github.com/pgsty/oink) docs
 theme, with English at `/` and Simplified Chinese at `/zh/`.
 
 - Site: <https://sow.pgsty.com>
@@ -13,16 +13,18 @@ theme, with English at `/` and Simplified Chinese at `/zh/`.
 ```
 content/
   _index.md            # landing page metadata
-  docs/                # documentation, one .md (en) + one .zh.md (zh) per page
-    start/             # getting started
+  docs/                # docs, one .md (en) + one .zh.md (zh) per page
+    start/             # Get Started
     tutorial/          # task-oriented walkthroughs
     feature/           # explanation: how SOW works
     design/            # maintained architecture, invariants, and compatibility boundaries
-    command/           # complete command manual
+    command/           # complete command reference
     reference/         # sow.yml, layouts, exit codes, compatibility
   blog/                # release notes and announcements
-data/home/metrics.yaml # repository facts used by the custom landing page
-layouts/index.html     # SOW-specific landing page; docs/blog come from OINK
+data/home/{en,zh}.yaml # OINK landing-page structure and bilingual copy
+data/releases/sow.yaml # release blueprint and publication switch
+layouts/download/     # SOW-specific download content inside the OINK shell
+assets/scss/          # minimal SOW download-page styles
 ```
 
 OINK owns the common docs/blog shell, navigation, search, content blocks, and core
@@ -31,26 +33,25 @@ OINK or Docsy templates into this repository.
 
 ## Theme dependency
 
-OINK is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The site keeps
-its product landing page, homepage search index, and product assets, while ordinary
-documentation and blog pages render directly through the theme.
+OINK 0.2.0 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
+composed by OINK from bilingual data. Docs and blog pages also render through the theme;
+the site keeps only product-specific data and templates.
 
 The intentional site-level template surface is:
 
-- `layouts/index.html` and `layouts/_partials/home/sow-footer.html` for the landing page;
-- `layouts/_default/index.json` and `layouts/_partials/sow/` for landing-page search;
+- `data/home/{en,zh}.yaml` for the OINK landing page and footer;
+- `layouts/download/single.html` for release assets and installation choices;
 - `layouts/robots.txt` for the deployment-specific crawler policy.
 
 All docs/blog base templates, navigation, table of contents, search, Markdown/LLMS and
 print outputs, and content shortcodes resolve from OINK.
 
-For local theme development, connect a sibling OINK checkout with an ignored Go
-workspace:
+For local theme development, connect the sibling OINK checkout with the debug
+shortcut. It creates or refreshes an ignored Go workspace and lets Hugo select
+an available preview port:
 
 ```bash
-go work init .
-go work edit -replace=github.com/pgsty/oink=../oink
-HUGO_MODULE_WORKSPACE=go.work make dev
+make d
 ```
 
 ## Local development
@@ -58,20 +59,24 @@ HUGO_MODULE_WORKSPACE=go.work make dev
 Install Hugo Extended 0.160.1 or newer, Go, and Git, then run the local server:
 
 ```bash
-make dev
+make s
 ```
 
 Build the static site with:
 
 ```bash
-make build
+make b
 ```
 
 Run the module verification and warning-strict production build with:
 
 ```bash
-make check
+make c
 ```
+
+The corresponding long targets are `debug`, `serve`, `build`, and `check`;
+`make dev` retains the pinned-theme preview. Do not run `go mod tidy`: OINK is a Hugo
+Module rather than an imported Go package, so `tidy` would remove the required theme pin.
 
 The build is Hugo-only: OINK ships its styles, scripts, fonts, search, and content
 runtimes with the theme, so this repository has no Node.js or CDN build dependency.
@@ -80,14 +85,13 @@ runtimes with the theme, so this repository has no Node.js or CDN build dependen
 
 - Every page ships as an English `.md` / Chinese `.zh.md` pair with aligned content.
 - Front matter must set an explicit `url:` (Chinese pages carry the `/zh/` prefix).
-- Command transcripts are real executions against the current `sow` binary; do not
+- Command transcripts are real executions against the repository-matched `sow` binary; do not
   invent output.
-- This repository is the authority for maintained user and design documentation for the
-  current SOW release.
+- This repository is the authority for maintained SOW user and design documentation.
 
 ## License
 
-Unless otherwise noted, the documentation and original site content in this repository
+Unless otherwise noted, the docs and original site content in this repository
 are licensed under the [Creative Commons Attribution 4.0 International License][cc-by-4].
 See [LICENSE](LICENSE) for the complete legal code. Third-party software and assets retain
 their respective licenses; OINK itself is licensed under Apache License 2.0.

@@ -26,7 +26,7 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 
 ## 校验层
 
-SOW 0.2.0 按顺序报告九层校验：
+当前 checker 按顺序报告九层校验：
 
 | 层 | 校验内容 | `checked` 计数 |
 |---|---|---|

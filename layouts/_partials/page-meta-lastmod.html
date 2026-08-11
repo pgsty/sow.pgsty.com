@@ -1,0 +1,30 @@
+{{ $upstream := .Params.upstream_attribution -}}
+{{ $modified := .Params.downstream_modified -}}
+{{ $showLastmod := not .Lastmod.IsZero -}}
+{{ if or $showLastmod $upstream $modified -}}
+<div class="td-page-meta__footer">
+  {{ if $showLastmod -}}
+  <div class="td-page-meta__item td-page-meta__lastmod">
+    <span class="td-page-meta__icon"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span>
+    <span>
+      {{- T "post_last_mod" }} {{ .Lastmod.Format .Site.Params.time_format_default -}}
+      {{- with .GitInfo -}}
+        {{- with $.Site.Params.github_repo }} · <a data-proofer-ignore href="{{ . }}/commit/{{ $.GitInfo.Hash }}">commit {{ $.GitInfo.AbbreviatedHash }}</a>{{ end -}}
+      {{- end -}}
+    </span>
+  </div>
+  {{ end -}}
+  {{ with $upstream -}}
+  <div class="td-page-meta__item td-page-meta__upstream">
+    <span class="td-page-meta__icon"><i class="fa-solid fa-copyright" aria-hidden="true"></i></span>
+    <a href="{{ . }}" target="_blank" rel="noopener">{{ T "post_upstream_attribution" }}</a>
+  </div>
+  {{ end -}}
+  {{ if $modified -}}
+  <div class="td-page-meta__item td-page-meta__modified">
+    <span class="td-page-meta__icon"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></span>
+    <span>{{ T "post_downstream_modified" . }}</span>
+  </div>
+  {{ end -}}
+</div>
+{{ end -}}

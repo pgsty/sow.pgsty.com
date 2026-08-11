@@ -1,7 +1,7 @@
 ---
-title: "Command"
-linkTitle: "Command"
-description: "Complete SOW 0.2.0 command manual: syntax, options, behavior, output, and exit codes."
+title: "Commands"
+linkTitle: "Commands"
+description: "Complete SOW CLI syntax, options, behavior, output, and exit codes."
 url: "/docs/command/"
 aliases:
   - "/docs/reference/cli/"
@@ -12,7 +12,7 @@ weight: 450
 icon: fa-solid fa-terminal
 ---
 
-This is the command manual for SOW 0.2.0. Each top-level command has its own page. Command groups
+Each top-level command has its own page. Command groups
 such as `config`, `repo`, `dist`, `retain`, `export`, and `log` document their subcommands together.
 
 The built-in `sow help` output is the syntax authority. These pages add selection rules, state

@@ -26,7 +26,7 @@ Each tier has one job, and the boundaries are strict:
 
 **Dist** is an ordinary named set of memberships in exactly one format, `rpm` or `deb`. The name is an opaque string to SOW. `el9`, `trixie`, `el9-beta`, `customer-acme` — none of these create a state machine, a promotion workflow, or a snapshot. If you want a beta channel, make a Dist called `el9-beta`; the meaning lives in your head and your `.repo` files, not in SOW.
 
-**Architecture View** is what `build` renders. It creates no second membership. A `noarch` RPM has exactly one package object and exactly one membership, and gets projected into every applicable view. See [Pool & Architecture Views](/docs/feature/views/).
+**Architecture View** is what `build` renders. It creates no second membership. A `noarch` RPM has exactly one package object and exactly one membership, and gets projected into every applicable view. See [Pool & Metadata Views](/docs/feature/views/).
 
 One Repository can hold an RPM Dist and a DEB Dist at the same time, sharing one `pool/`.
 
@@ -76,6 +76,24 @@ SOW, or copy the whole tree through offline staging and an atomic switch. Everyt
 [serving guide](/docs/tutorial/serving/).
 
 Names must match `[a-z0-9][a-z0-9._-]*`, and `.`, `..`, `.sow`, `pool`, `dists` and workspace-reserved names are rejected outright.
+
+## State database and package facts
+
+The private SQLite database indexes Desired and Built Membership by `package_sha256`, so
+queries and builds expand a complete membership projection in bulk instead of issuing one
+query per package. It also keeps a rebuildable package-facts cache keyed by immutable
+package SHA-256. Ingest authenticates and parses a new package once; builds bulk-load those
+facts and lazily rebuild a missing or corrupt cache row from authenticated package bytes.
+
+For unchanged Pool files, warm builds use device, inode, size, mtime, and ctime
+fingerprints to avoid rereading payload bodies. Fingerprint drift triggers an authoritative
+SHA-256 pass and self-heals; [`sow check`](/docs/command/check/) remains the explicit full
+cryptographic audit.
+
+The cache and its fingerprints are private implementation state; they do not change the
+public `pool/ + dists/` layout. Never edit the database or its `PRAGMA user_version` by
+hand. If a Repository needs explicit layout maintenance, `status` reports it and
+[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) performs the closed transition.
 
 ## `sow.yml` drives everything
 
@@ -158,9 +176,9 @@ The full schema, including `filesystem` and `r2` publication targets, is in the
 
 Managed commands look for the nearest ancestor `sow.yml`, in this order:
 
-1. If `-C/--workdir DIR` is given, search upward from `DIR` only. If nothing is found there, the command fails — it does not fall back to the current directory.
+1. If `-C/--workdir DIR` is given, search upward from `DIR`; this suppresses the current-directory candidate.
 2. Otherwise search upward from the current directory.
-3. If that finds nothing, search upward from `$SOW_DIR`.
+3. If that finds nothing, search upward from `$SOW_DIR`, including after an explicit `-C` search fails.
 4. Still nothing: fail, with a hint about `sow init`, `--workdir`, and `SOW_DIR`.
 
 The first `sow.yml` found wins; SOW does not keep climbing past it looking for a better one.

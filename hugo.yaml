@@ -144,7 +144,7 @@ markup:
 # Outputs
 #=======================================#
 outputs:
-  home: [HTML, RSS, JSON, markdown, LLMS]
+  home: [HTML, RSS, markdown, LLMS]
   page: [HTML, markdown]
   section: [HTML, RSS, print, markdown]
 
@@ -165,7 +165,8 @@ params:
   logo: img/sow.svg
   images:
     - images/sow-social-card.png
-  version: 0.2.0
+  # Current released version.
+  version: 0.3.0
   copyright:
     authors: '[PIGSTY & SOW Contributors](https://pgsty.com) · [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)'
     from_year: 2026
@@ -181,13 +182,15 @@ params:
   github_project_repo: https://github.com/pgsty/sow
   github_branch: main
 
-  # 文档与博客使用 OINK 自带的同源离线搜索；独立首页保留自己的同源入口。
+  # 文档、博客与 OINK 首页共用同源离线搜索。
   offlineSearch: true
   offlineSearchIndex: content
   offlineSearchMaxResults: 10
   prism_syntax_highlighting: false
 
   ui:
+    # OINK 0.2.0 can apply the shared shell to product-specific content types.
+    shell_types: [docs, blog, swagger, download]
     quick_links: [docs, blog]
     breadcrumb_disable: false
     navbar_logo: true
@@ -228,7 +231,7 @@ params:
         url: https://github.com/pgsty/sow/releases
         icon: fa fa-box-archive
         desc: SOW release artifacts
-      - name: Documentation source
+      - name: Docs source
         url: https://github.com/pgsty/sow.pgsty.com
         icon: fab fa-github
-        desc: SOW documentation repository
+        desc: SOW docs repository

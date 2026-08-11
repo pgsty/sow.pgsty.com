@@ -7,7 +7,7 @@ weight: 100
 icon: fa-solid fa-box-open
 ---
 
-This tutorial creates a new Managed RPM repository. You need SOW 0.2.0, a writable
+This tutorial creates a new Managed RPM repository. You need a writable
 directory, and one or more RPM files.
 
 ## 1. Create the workspace
@@ -155,5 +155,5 @@ sow check -r pigsty
 `add` and `rm` change Desired membership. `build` is useful after policy or signing
 configuration changes. `check` is the publication gate; `status` alone is not.
 
-See [Compatibility](/docs/reference/compatibility/) for the exact client evidence carried
-by the current test matrix.
+The automated client and platform scope is listed under
+[Platforms & Integrations](/docs/reference/compatibility/).

@@ -1,0 +1,149 @@
+sections:
+  - hero
+  - capabilities
+  - cta
+
+hero:
+  eyebrow: Software Object Warehouse
+  title_lines:
+    - 构建软件仓库
+    - 同步增量变化
+  lead: 一个自包含二进制，即可把本地 RPM 与 DEB 软件包变成可用仓库；需要更强控制时，再用托管模式管理快照、审计记录与增量发布。
+  note: 单一二进制 · Linux + macOS · RPM + DEB · Apache-2.0
+  detail:
+    label: SOW 0.3.0 已发布 — 立即下载
+    url: download/
+    icon: fa-solid fa-circle-check
+  actions:
+    - label: 上手
+      url: docs/start/
+      icon: fa-solid fa-arrow-right
+      style: primary
+    - label: 下载
+      url: download/
+      icon: fa-solid fa-download
+      style: ghost
+
+capabilities:
+  eyebrow: 核心价值
+  title: 从平面仓库起步，按需升级为托管交付
+  text: 先用一条命令生成本地仓库；需要治理时，再由 Managed 工作区维护成员关系、不可变 Generation 与发布历史。
+  items:
+    - ref: 01 / 快速创建
+      title: 一条命令创建可用仓库
+      url: docs/command/create/
+      motto: 直接把装有软件包的目录交给 SOW
+      bullets:
+        - '`sow create` 就地索引目录顶层的 RPM 与 DEB 文件'
+        - 同时生成可直接使用的平面 YUM/APT 仓库
+        - 可替代 `createrepo_c`、`dpkg-scanpackages` 与简单 `reprepro` 索引流程
+      value: 不需要守护进程或元数据工具链，从软件包直接得到仓库索引。
+      visual:
+        type: code
+        aria_label: 创建平面 RPM 与 DEB 仓库
+        title: create.sh
+        lines:
+          - { class: p, prefix: '$ ', text: 'sow create /srv/repo --jobs 8' }
+          - { class: ok, prefix: '✓ ', text: 'repodata/repomd.xml' }
+          - { class: ok, prefix: '✓ ', text: Packages }
+          - { class: ok, prefix: '✓ ', text: Packages.gz }
+    - ref: 02 / 托管模式
+      title: 一份包体，多个托管视图
+      url: docs/feature/managed/
+      motto: 统一管理 Enterprise Linux、Debian 与 Ubuntu 仓库
+      bullets:
+        - 每个 Repository 的 live 软件包只存一份，各 Dist 只投影元数据视图
+        - 避免对象存储上的重复 object key 与冗余上传
+        - 用不可变 Built Generation manifest 保留快照，并组织不同仓库变体
+      value: 成员关系、筛选策略、签名与快照都有明确状态和审计记录。
+      visual:
+        type: components
+        aria_label: 托管仓库模型
+        columns: 2
+        items:
+          - { icon: fa-brands fa-redhat, title: EL, detail: rpm-md 视图, url: docs/tutorial/yum-repo/ }
+          - { icon: fa-brands fa-debian, title: Debian, detail: APT 视图, url: docs/tutorial/apt-repo/ }
+          - { icon: fa-brands fa-ubuntu, title: Ubuntu, detail: APT 视图, url: docs/tutorial/apt-repo/ }
+          - { icon: fa-solid fa-box-archive, title: 唯一包池, detail: 包体去重, url: docs/feature/views/ }
+          - { icon: fa-solid fa-camera, title: Generation, detail: 不可变 manifest, url: docs/feature/transactions/ }
+          - { icon: fa-solid fa-code-branch, title: 仓库变体, detail: Dist 与 target, url: docs/reference/config/ }
+    - ref: 03 / 开箱即用
+      title: 一个二进制，内置生产实践
+      url: download/
+      motto: macOS 与 Linux 使用同一个可执行程序
+      bullets:
+        - 为 `amd64` 与 `arm64` 提供自包含 `CGO_ENABLED=0` 归档
+        - Release Pipeline 为 Linux 生成 RPM 与 DEB 安装包
+        - 内置安全路径、有界并发、fsync、原子发布与严格校验
+      value: 不需要运营仓库守护进程，也不需要额外语言运行时。
+      visual:
+        type: components
+        aria_label: Release 构建目标
+        columns: 2
+        items:
+          - { icon: fa-brands fa-linux, title: Linux, detail: amd64 · arm64 }
+          - { icon: fa-brands fa-apple, title: macOS, detail: Intel · Apple Silicon }
+          - { icon: fa-solid fa-box, title: RPM, detail: x86_64 · aarch64 }
+          - { icon: fa-solid fa-box-open, title: DEB, detail: amd64 · arm64 }
+    - ref: 04 / 增量同步
+      title: 只发布本次变更集
+      url: docs/command/changes/
+      motto: 先查看，再同步
+      bullets:
+        - '`sow changes` 列出包体、元数据、指针与删除记录'
+        - Operation Log 保留谁在何时修改了什么
+        - 发布复用已记录的 target 状态，只上传差异，而不是所有仓库对象
+      value: 无论同步到文件系统还是云端，小改动都只产生小批量传输。
+      visual:
+        type: code
+        aria_label: 查看并发布增量变更集
+        title: publish.sh
+        lines:
+          - { class: p, prefix: '$ ', text: 'sow changes -r pgsql' }
+          - { class: ok, prefix: '+ ', text: 'pool/p/postgresql-18/...' }
+          - { class: ok, prefix: '~ ', text: 'dists/el9/x86_64/repodata/...' }
+          - { class: p, prefix: '$ ', text: 'sow publish prod' }
+          - { class: ok, prefix: '✓ ', text: '变更对象已校验' }
+
+cta:
+  title: 现在就构建第一个仓库。
+  text: 从 `sow create` 开始；需要筛选策略、快照与发布历史时，再进入 Managed 工作区。
+  actions:
+    - label: 上手
+      url: docs/start/
+      icon: fa-solid fa-arrow-right
+      style: primary
+    - label: 浏览文档
+      url: docs/
+      icon: fa-solid fa-book-open
+      style: ghost
+
+footer:
+  brand:
+    name: SOW
+    tagline: '**S**oftware **O**bject **W**arehouse'
+    slogan: Pigsty 出品的软件仓库创建、管理与增量交付工具。
+  columns:
+    - title: 产品
+      links:
+        - { label: 上手, url: docs/start/ }
+        - { label: 平面模式, url: docs/feature/plain/ }
+        - { label: 托管模式, url: docs/feature/managed/ }
+        - { label: 下载, url: download/ }
+    - title: 文档
+      links:
+        - { label: 文档, url: docs/ }
+        - { label: 命令, url: docs/command/ }
+        - { label: 教程, url: docs/tutorial/ }
+        - { label: 参考, url: docs/reference/ }
+    - title: 项目
+      links:
+        - { label: 博客, url: blog/ }
+        - { label: 发行说明, url: blog/release/ }
+        - { label: GitHub, url: 'https://github.com/pgsty/sow', external: true }
+        - { label: 问题反馈, url: 'https://github.com/pgsty/sow/issues', external: true }
+    - title: Pigsty
+      links:
+        - { label: Pigsty, url: 'https://pigsty.cc', external: true }
+        - { label: 软件仓库, url: 'https://pigsty.cc/docs/repo/', external: true }
+        - { label: 开源协议, url: 'https://www.apache.org/licenses/LICENSE-2.0', external: true }

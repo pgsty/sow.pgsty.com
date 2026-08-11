@@ -146,9 +146,9 @@ Signed-By: /etc/apt/keyrings/repo-signing.asc
 ```
 
 `repo_gpgcheck=1` 让 dnf 验证 `repomd.xml.asc`；`gpgcheck=1` 让它验证每个包的嵌入签名。
-APT 侧的 `Signed-By` 让 apt 验证 `InRelease`。当前测试套件会直接校验生成的签名，但尚未
-提供完整的签名 Managed dnf/APT 验收门禁。请在目标环境执行真实客户端测试；确切证据见
-[兼容性](/zh/docs/reference/compatibility/)。
+APT 侧的 `Signed-By` 让 apt 验证 `InRelease`。自动化检查会直接校验生成的签名；完整的签名
+Managed dnf/APT 验收必须在目标环境中使用真实客户端执行。确切证据见
+[平台与集成](/zh/docs/reference/compatibility/)。
 
 `sow check` 在常规运行中就会校验全部已声明的签名与文件哈希,所以签名配置出错会在发货之前暴露,而不是在客户机器上暴露。
 

@@ -3,6 +3,8 @@ title: "Pool & Metadata Views"
 linkTitle: "Pool & Views"
 description: "One package, one owner, metadata-only APT/RPM views: canonical pool addressing, neutral packages, relocation, and the explicit reposync export."
 url: "/docs/feature/views/"
+aliases:
+  - "/docs/design/single-payload/"
 weight: 400
 icon: fa-solid fa-layer-group
 ---
@@ -64,6 +66,17 @@ Repository, and proves that it reaches the expected Pool object.
 The complete Repository root is therefore the client and delivery boundary. Point DNF at
 `dists/el9/x86_64/`, but serve or copy the parent Repository that also contains `pool/`.
 
+## Why views contain metadata only
+
+Copying each package into every architecture view would create extra object keys and
+uploads on storage systems without inode identity. SOW therefore gives payload ownership
+to the Repository Pool and lets indexes project membership. A complete copy, archive, or
+publication preserves that contract without depending on hardlinks.
+
+The one-copy boundary is one Repository or one publication prefix—not a Workspace,
+bucket, account, or fleet. Identical packages in separate Repositories or targets retain
+separate owners.
+
 ## Neutral packages are selected, not duplicated
 
 An `x86_64` view selects `x86_64 + noarch`; an `aarch64` view selects `aarch64 + noarch`.
@@ -89,10 +102,10 @@ protocol pointers and signatures. There is no per-view package alias and no per-
 ## Ordinary clients and `reposync` are different contracts
 
 The canonical layout is designed for package clients that consume the complete Repository
-and honor relative protocol paths. A current Managed DNF/YUM client gate is still absent.
-Default EL `dnf reposync` has a different contract: its safe-write check rejects a package
+and honor relative protocol paths. Default EL `dnf reposync` has a different contract: its
+safe-write check rejects a package
 location that normalizes above the per-repository download directory. This is an explicit
-unsupported combination, not evidence about an ordinary client run.
+unsupported combination; use an exported leaf for that workflow.
 
 When a self-contained RPM leaf is required, create it outside the Repository and every
 configured filesystem publication root:
@@ -128,7 +141,7 @@ There are no package-payload entries under `dists/`.
 
 ## Next
 
-- [Single-Payload Design](/docs/design/single-payload/) — ownership and relocation invariants
-- [Compatibility](/docs/reference/compatibility/) — tested and unsupported combinations
+- [Managed Workspaces](/docs/feature/managed/) — ownership and Generation state
+- [Platforms & Integrations](/docs/reference/compatibility/) — tested and unsupported combinations
 - [Serve Repositories](/docs/tutorial/serving/) — HTTP, copies, and publication targets
 - [Repository Layout](/docs/reference/layout/) — exact public and private paths

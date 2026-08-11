@@ -1,124 +1,105 @@
 ---
-title: "Compatibility"
-linkTitle: "Compatibility"
-description: "The exact v0.2.0 build, client, mirror-tool, filesystem, and publication evidence."
+title: "Platforms & Integrations"
+linkTitle: "Platforms"
+description: "Release targets, filesystem requirements, repository clients, publication Providers, and automated integration coverage."
 url: "/docs/reference/compatibility/"
+aliases:
+  - "/docs/design/compatibility/"
 weight: 700
 icon: fa-solid fa-circle-check
 ---
 
-This page reports evidence, not inferred compatibility. Metadata syntax, a clean-room CLI
-run, a real package client, a mirror tool, and a storage provider are separate checks.
+This page defines the environments SOW ships for, the storage semantics it requires, and
+the exact scope of its automated integrations. Repository generation happens inside the
+SOW binary; a real package manager remains the final check for a deployed repository.
 
-## Current automated evidence
+## Release targets
 
-| Surface | Environment | What the active check proves | What it does not prove |
-|---|---|---|---|
-| v0.2.0 CLI clean room | Linux CI | builds the production binary; creates mixed Plain RPM/DEB metadata; initializes `sow/v3`; creates empty RPM/DEB Dists; adds fixtures; runs query, build, check, changes, config, and log commands | no real package-manager client or remote Provider |
-| Plain APT client | Ubuntu 22.04 container | current `sow create` output over HTTP; `apt update`, discovery, exact-version install; unsigned flat source with `[trusted=yes]` | Managed APT, `Release` signatures, or `by-hash` consumption |
-| RPM detached-signature probe | AlmaLinux 8, 9, 10 containers | real DNF behavior while `repomd.xml` and its detached signature are changed serially | current Managed CLI layout, package install, package signatures, or `sow export rpm-leaf` |
-| S3-compatible protocol fixture | pinned MinIO | the separate `internal/publish` provider implementation's S3 operations and conditional-delete failure behavior | the current `internal/v2/managed` `sow publish r2` CLI path or a Cloudflare R2 account |
+| Operating system | `amd64` | `arm64` | Artifact |
+|---|---:|---:|---|
+| Linux | yes | yes | archive, RPM, DEB |
+| macOS | yes | yes | archive |
+| Windows | no | no | not supported |
 
-The distinction in the last two rows is intentional. They are useful protocol evidence,
-but must not be advertised as end-to-end product compatibility.
+Release binaries use `CGO_ENABLED=0` and require no language runtime. The project builds
+with Go 1.26.5. Archives include `README.md`, `CHANGELOG.md`, and the Apache-2.0 `LICENSE`;
+Linux packages install the same license with the binary. Use [`sow version`](/docs/command/)
+to print the product version, target OS/architecture, and build toolchain.
 
-## Current client claims
+## Workspace filesystem
 
-- **Verified:** a Plain DEB repository from the v0.2.0 CLI is consumable and installable by
-  Ubuntu 22.04 APT over HTTP when explicitly trusted.
-- **Format implemented, current full-client gate absent:** Plain and Managed rpm-md output;
-  Managed APT `Release`/`by-hash`; metadata and RPM payload signatures.
-- **Not claimed by the active matrix:** CentOS 7, Debian 12/13, DNF against the canonical
-  Managed Repository, signed Managed APT installation, or a complete signed DNF install.
+Managed workspaces belong on a local POSIX filesystem. Correctness depends on advisory
+locks, `fsync`, descriptor-bound path checks, and atomic same-filesystem rename. NFS and
+other network filesystems are not supported workspace locations.
 
-These absences mean unverified in the current gate, not known incompatible.
+The public `<workspace>/<repo>/` tree is different: it is a closed `pool/ + dists/`
+namespace designed for whole-root copying and publication. It does not depend on SQLite,
+private journals, or view-local hard-link identity. Keep the complete Repository together
+and never expose `.sow/`.
 
-## Canonical RPM layout and `reposync`
+SOW rejects symlinked control paths, unsafe regular files, overlapping filesystem targets,
+and case-folded pool-path collisions. This keeps one Repository portable between
+case-sensitive Linux filesystems and the default case-insensitive macOS setup.
 
-Managed RPM views contain metadata only. Package hrefs resolve from the architecture
-repository base `dists/DIST/ARCH/` back to the Repository pool, for example:
+## Automated integration matrix
 
-```text
-../../../pool/p/package/package.rpm
-```
+| Surface | Environment | Verified behavior |
+|---|---|---|
+| Production CLI clean room | Linux CI | Builds the shipping binary; creates mixed Plain RPM/DEB metadata; initializes `sow/v3`; creates RPM and DEB Dists; adds fixtures; runs query, build, check, changes, config, and log commands |
+| Plain APT client | Ubuntu 22.04 container | Serves `sow create` output over HTTP; runs `apt-get update`, package discovery, exact-version selection, download, and install with an explicitly trusted unsigned source |
+| RPM detached-signature transition | AlmaLinux 8, 9, and 10 containers | Runs real DNF clients against serial `repomd.xml` / `repomd.xml.asc` transition states and pins which combinations succeed or fail |
+| S3-compatible transport | Pinned MinIO container | Exercises bucket listing, HEAD, GET, create-only PUT, compare-and-swap PUT, replay, object metadata, and prefix confinement |
+| Release packaging | Linux CI | Builds four archives, two RPMs, two DEBs, and `SHA256SUMS`; checks package paths, Apache-2.0 metadata, and packaged license bytes |
 
-rpm-md package locations are relative URLs. Default `dnf reposync` applies a leaf-root
-safety check and rejects this parent traversal, so the canonical Managed view is explicitly
-unsupported as a default `reposync` source.
+The DNF signature-transition probe is a protocol test, not a complete Managed RPM install.
+The APT job covers an unsigned Plain repository, not Managed metadata signing. Run the
+exact dnf/APT version, repository URL, access policy, and signing policy used by your
+deployment before promoting it.
 
-Create a self-contained artifact when that contract is required:
+## Repository client contract
 
-```bash
-sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
-```
+Plain RPM repositories expose `repodata/` beside package files. Plain DEB repositories
+expose `Packages` and `Packages.gz` beside package files. They can be consumed through
+`file://` or HTTP after the client trust policy is configured.
 
-The export rewrites package hrefs to a local `pool/` and does not modify the Repository.
-The active Integration workflow does not currently run a real `reposync` client against
-this export, so treat that final client gate as unverified.
+Managed clients consume the complete Repository root:
 
-## Binary platforms
+- APT indexes live below `dists/<dist>/main/binary-<arch>/` and refer to the root `pool/`.
+  `Release` advertises SHA-256 by-hash indexes; configured signing adds `InRelease` and
+  `Release.gpg`.
+- RPM metadata lives below `dists/<dist>/<arch>/repodata/` and uses relative locations
+  that point back to the root `pool/`. Serve the whole Repository, not one architecture
+  directory.
 
-The release configuration builds `CGO_ENABLED=0` archives for:
-
-| OS | `amd64` | `arm64` |
-|---|---:|---:|
-| Linux | built | built |
-| macOS (Darwin) | built | built |
-
-Linux RPM and DEB packages are also staged. Windows is not supported. A build target is
-not proof of every OS-version/runtime combination; the current automated clean-room and
-client jobs run on Linux.
-
-## Filesystem boundary
-
-Build Managed workspaces on a local POSIX filesystem. Correctness depends on advisory
-locks, fsync, safe path inspection, and atomic rename. NFS and other network filesystems
-are not claimed as supported workspace locations.
-
-The committed public Repository is a closed `pool/ + dists/` tree and does not depend on
-view-local hardlink identity. Keep both directories together. For publication, prefer a
-configured target or an operator-controlled staged atomic switch over modifying a live
-tree in place.
-
-For a `filesystem` target, the `file:///...` endpoint directory must already exist and
-resolve to one canonical real directory. SOW refuses a missing endpoint or a symlinked
-alias. A fresh v0.2.0 local run has verified initial publication and idempotent replay.
+Default `dnf reposync` rejects the canonical Managed RPM parent-relative package paths.
+For that workflow, generate a self-contained copy with
+[`sow export rpm-leaf`](/docs/command/export/). The export has local package paths and a
+completion manifest; it is not a second canonical Repository.
 
 ## Publication Providers
 
-| Provider | Implemented behavior | Current evidence boundary |
-|---|---|---|
-| `filesystem` | publish, verify, checkpoint, grace, conditional lifecycle maintenance | focused tests plus a fresh local CLI run |
-| `r2` | S3-compatible publish; target GC records report-only candidates and never deletes objects | source and focused tests; no current real CLI/Provider end-to-end run |
+| Provider | Contract |
+|---|---|
+| `filesystem` | Publishes beneath a pre-existing safe `file://` endpoint. Target GC performs exact conditional deletion only after cache grace and storage/public absence evidence. |
+| `r2` | Publishes through the S3-compatible storage transport. Target GC writes exact report-only candidate records and never deletes remote objects. |
 
-A configured `public_endpoint` is part of target verification; it does not create a web
-server, CDN, bucket policy, DNS record, or credentials. Validate those in the deployment
-environment.
+Both Providers publish the same complete `pool/ + dists/` namespace beneath the configured
+prefix. `public_endpoint` is part of target verification; SOW does not create an HTTP
+server, DNS record, bucket policy, CDN, or credentials. Validate those deployment-owned
+surfaces on a nonproduction prefix before enabling production publication.
 
-## Intentionally omitted metadata
+## Deployment gate
 
-- SQLite rpm-md, zchunk, and modulemd;
-- source-package indexes;
-- MD5/SHA1 DEB manifests;
-- Plain-mode DEB `Release` and signatures.
+Before delivery, require a clean deep check and inspect the physical change plan:
 
-## External tools
-
-Metadata generation and parsing are in-process. RPM package signing needs `rpm` and a
-working GPG environment. `agent://` metadata keys need `gpg` with `gpg-agent`; path,
-`file://`, and `env://` metadata keys are signed in-process.
-
-## Version
-
-```console
-sow 0.2.0 darwin/arm64 go1.26.5
+```bash
+sow check -r REPOSITORY
+sow changes 0 -r REPOSITORY
 ```
 
-OS, architecture, and Go toolchain reflect the binary being run. `sow/v3` and
-`sow.cli/v1` are configuration/protocol identifiers.
+After publication, fetch the actual `repomd.xml` or `Release` URL and run the target package
+manager. A local build, a Provider write, HTTP reachability, and a client install are
+separate checks.
 
-## See also
-
-- [Repository Layout](/docs/reference/layout/)
-- [`sow publish`](/docs/command/publish/) and [`sow gc`](/docs/command/gc/)
-- [Compatibility design](/docs/design/compatibility/)
+See [Repository Layout](/docs/reference/layout/), [Signing](/docs/feature/signing/), and
+[Publication & Recovery](/docs/design/publication/) for the corresponding contracts.

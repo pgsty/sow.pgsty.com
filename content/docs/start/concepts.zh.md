@@ -1,7 +1,7 @@
 ---
 title: "核心概念"
 linkTitle: "核心概念"
-description: "v0.2.0 模型：Plain 与 Managed、包池与视图、Desired Membership 与 Built Generation。"
+description: "SOW 模型：Plain 与 Managed、包池与视图、Desired Membership 与 Built Generation。"
 url: "/zh/docs/start/concepts/"
 weight: 400
 icon: fa-solid fa-diagram-project

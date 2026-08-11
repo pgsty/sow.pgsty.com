@@ -7,11 +7,13 @@ weight: 700
 icon: fa-solid fa-shield-halved
 ---
 
-Repository tools fail in one of two embarrassing ways: they leave an index that points at packages that no longer exist, or they corrupt their own database and require a rebuild from scratch. SOW is built to make both impossible, and this page explains the machinery that does it.
+This page explains how Managed mode prevents a live pointer from naming missing content
+and how it coordinates SQLite state with filesystem changes.
 
 ## The invariant
 
-**For Managed repositories, a client following a protocol pointer always reads a complete old view or a complete new view. There is no third option, including after a power loss.**
+**On a supported local POSIX filesystem, a client following a Managed protocol pointer
+reads a complete old view or a complete new view, including after interruption.**
 
 Everything below exists to hold that line: metadata is fully staged and verified before anything public moves, the pointer swap is the commit decision, and every operation records enough durable evidence that the next command can finish it or undo it without guessing.
 
@@ -120,6 +122,11 @@ payload  →  metadata  →  pointer  →  delete
 2. **metadata** — checksum-named RPM metadata, `Packages`, `Packages.gz`, and by-hash index copies. Still nothing points at them.
 3. **pointer** — the client entry points: `repomd.xml` (plus `.asc` if configured) for RPM; for Managed APT, `Release` (plus `InRelease` and `Release.gpg`) after every per-architecture direct and by-hash index is in place. **This is the commit.**
 4. **delete** — expired metadata from generations that have aged out.
+
+Pending payload promotion is batched under the single writer: at most 512 objects or
+1 GiB per group commit. Pool directory entries are persisted before pending names are
+removed, so recovery can bind a pending-only, exact dual-link, or Pool-only state back to
+the Operation without risking loss of both names.
 
 Read it forward: a package always exists before an index names it, and an index always exists before a pointer names it. Read it backward: nothing is deleted until a pointer that no longer references it is durable. There is no window in which a client can follow a live pointer to a missing file.
 

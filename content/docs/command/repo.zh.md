@@ -111,7 +111,7 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-这是专用维护命令，不属于全新 v0.2.0 工作流。由 `sow init` 与 `sow repo new` 创建的 Repository
+这是专用维护命令，不属于全新 Managed 工作流。由 `sow init` 与 `sow repo new` 创建的 Repository
 已经使用规范单包体布局，不应试探性执行迁移。只有 SOW 明确诊断需要该维护路径时才使用，并先做备份。
 
 | 参数 | 含义 | 默认值 |

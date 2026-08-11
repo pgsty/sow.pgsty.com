@@ -7,7 +7,7 @@ weight: 200
 icon: fa-solid fa-cube
 ---
 
-本教程从零创建一个 Managed DEB 仓库。你需要 SOW 0.2.0、一个可写目录，以及一个或多个
+本教程从零创建一个 Managed DEB 仓库。你需要一个可写目录，以及一个或多个
 DEB 文件。
 
 ## 1. 创建工作区
@@ -151,5 +151,4 @@ sow check -r pigsty
 
 策略或签名配置变化后用 `build` 收敛；发布门禁是 `check`，不能只看 `status`。
 
-当前自动化客户端证据比这套 Managed 流程更窄；对外声明平台兼容前，请先看
-[兼容性](/zh/docs/reference/compatibility/)。
+自动化客户端与平台覆盖见[平台与集成](/zh/docs/reference/compatibility/)。

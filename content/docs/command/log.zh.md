@@ -122,6 +122,19 @@ sow log 4262183287563704350 -r pigsty
 `files` 数组使用与 [`sow changes`](/zh/docs/command/changes/) 相同的 `phase` 词表：`payload`、
 `metadata`、`pointer`、`delete`。
 
+Build Operation 还会包含进度事件。它们保持当前 state，并把版本化对象放入 `detail_json`：
+
+```json
+{
+  "state": "applied",
+  "detail_json": "{\"version\":1,\"kind\":\"build_progress\",\"phase\":\"rendering\",\"completed\":1,\"total\":2,\"jobs\":8}"
+}
+```
+
+阶段包括 `rendering`、`promoting_payload`、`publishing_dists`、
+`normalizing_public_tree` 与 `finalizing`。进度行是持久审计数据，但不会推进恢复状态机，也不会
+单独触发 SQLite checkpoint。
+
 ### 按 Dist 过滤
 
 `-d` 把列表限制为触及该 Dist 的 Operation——一个仓库服务多个发行版时很有用：
@@ -210,7 +223,7 @@ usage error: BEFORE must be YYYY-MM-DD or an RFC 3339 timestamp with timezone
 - 当前的 Package 或 Membership 状态；
 - Built Generation 或其 Changeset。
 
-`pruned` 计数准确告诉你有多少条记录符合条件——通常少于截止时间之前的 Operation 总数。本版本中日志与
+`pruned` 计数准确告诉你有多少条记录符合条件——通常少于截止时间之前的 Operation 总数。日志与
 Changeset 位于同一个 SQLite 数据库，但保留规则不同。
 
 ## 示例

@@ -136,9 +136,9 @@ target checkpoint、缓存 grace 或恢复状态。`sow changes` 描述 Generati
 
 ## R2 target
 
-配置解析器与当前实现支持 `provider: r2`，提供 S3 兼容发布与只报告的 target GC。当前真实
-CLI-to-R2 端到端证据尚不完整；依赖前请在非生产 prefix 验证凭据、bucket policy、公共 endpoint、
-缓存、重放与恢复。详见[兼容性](/zh/docs/reference/compatibility/)。
+`provider: r2` 使用 S3 兼容存储传输与只报告的 target GC。传输集成会针对固定 MinIO fixture
+验证 list、HEAD、GET 与条件 PUT。启用生产目标前，请先在非生产 prefix 验证凭据、bucket
+policy、公共 endpoint、缓存行为、重放与恢复。详见[平台与集成](/zh/docs/reference/compatibility/)。
 
 ## 下一步
 

@@ -164,8 +164,8 @@ usage error: --sign-with must be a 16, 40, or 64 hexadecimal GPG key ID/fingerpr
 
 Plain create 不创建持久操作 journal、回滚 pre-image 或 recovery trash。发布由多个单文件 rename 组成，
 因此崩溃可能留下部分替换的派生文件。使用你当前想要的参数重新执行 `sow create`：它丢弃保留命名空间
-中的陈旧 Plain 临时状态，再按现在仍存在的包重建全部索引。稳定 JSON schema 仍保留 `recovered`，但始终
-为 `false`；重跑是一次全新覆盖构建，不是事务重放。
+中的陈旧 Plain 临时状态，再按现在仍存在的包重建全部索引。`recovered` 始终为 `false`；
+重跑是一次全新覆盖构建，不是事务重放。
 
 平面目录没有整个仓库的 generation 指针，RPM 与 DEB 入口也无法用一次 POSIX rename 同时切换。因此
 Plain 不承诺跨文件瞬时原子性。`--pigsty` 用 `repo_complete` 做门禁；需要事务恢复时使用 Managed。

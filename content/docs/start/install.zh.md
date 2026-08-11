@@ -1,107 +1,84 @@
 ---
-title: "安装 SOW"
+title: "安装"
 linkTitle: "安装"
-description: "下载预编译二进制或从源码构建,并验证安装结果。"
+description: "通过归档、RPM/DEB 安装包或源码安装 SOW，并核对二进制与文件系统要求。"
 url: "/zh/docs/start/install/"
 weight: 100
 icon: fa-solid fa-download
 ---
 
-SOW 以单个自包含可执行文件分发。Archive 安装就是把它放到 `PATH`；Linux 也可使用 Release
-中的 RPM/DEB 包常规安装。没有服务要启用，在命令真正需要状态前也不会创建状态目录。
+SOW 只有一个可执行文件，不需要启用服务，也不依赖语言运行时。Release 构建目标是 Linux 与
+macOS 的 `amd64`、`arm64`；Linux 另外提供 RPM 与 DEB 安装包。不支持 Windows。
 
-## Release 构建目标
+在[下载页](/zh/download/)选择匹配操作系统与架构的归档或 Linux 安装包。页面同时提供每个
+已发布制品、对应源码 Tag 与 `SHA256SUMS` 的链接。
 
-Release Pipeline 以 `CGO_ENABLED=0` 构建，不需要另装 cgo 工具链或语言运行时；二进制仍会使用
-操作系统标准 ABI 与 Framework。Release 资产的构建目标如下：
+## 安装归档
 
-| 操作系统 | `amd64` | `arm64` |
-|---|---|---|
-| Linux | 构建 | 构建 |
-| macOS(Darwin) | 构建 | 构建 |
-
-不支持 Windows。SOW 依赖 POSIX 建议锁与原子 `rename`,且只在本地 POSIX 文件系统上
-验证过 —— NFS 之类的网络文件系统不提供它所需的锁与持久化语义。
-
-{{% alert title="文件系统要求" color="info" %}}
-请在本地 POSIX 文件系统上构建 [Managed 工作区](/zh/docs/start/workspace/),以保证锁、
-fsync 与原子 rename 契约。已提交的公共 `pool/ + dists/` 树没有视图级硬链接 alias,
-可以普通复制或发布。
-{{% /alert %}}
-
-## 下载发行版本
-
-SOW v0.2.0 的 GitHub Release 当前仍是 **Draft**。其中四个 Linux/macOS 归档、
-`1PGSTY` Linux RPM/DEB 包与 `SHA256SUMS` 尚不可公开下载。在操作者把它发布到
-[Releases 页面](https://github.com/pgsty/sow/releases)之前,请按下文从源码构建。
-公开后,自动下载前仍要确认 Release 条目中
-确实存在匹配的归档与校验和,再把解压出的二进制放到 `PATH` 上:
-
-v0.2.0 不发布 Docker 或其他容器镜像。
+下载一个归档与 `SHA256SUMS`，解压前只校验对应条目：
 
 ```bash
-tar -xzf sow_*.tar.gz
+# Linux amd64
+grep 'sow_.*_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
+tar -xzf sow_*_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
-没有 root 时可以安装到 `~/.local/bin`。SOW 不需要特权守护进程。执行用户必须能读写
-Workspace 或 Plain 目标目录及发布目标，并能读取输入包、解析签名引用。
+macOS 选择 `darwin_amd64` 或 `darwin_arm64`，并把 `sha256sum -c -` 换成
+`shasum -a 256 -c -`。没有 root 时，把二进制装到已经加入 `PATH` 的目录，例如
+`~/.local/bin`。
+
+## 安装 Linux 软件包
+
+Linux 软件包使用 `1PGSTY` Release 后缀：
+
+```bash
+sudo rpm -Uvh ./sow-*-1PGSTY.x86_64.rpm
+sudo apt install ./sow_*-1PGSTY_amd64.deb
+```
+
+只执行符合本机发行版与架构的那条命令。RPM 把 License 安装到
+`/usr/share/licenses/sow/LICENSE`；DEB 把版权/协议文件安装到 `/usr/share/doc/sow/`。
 
 ## 从源码构建
 
-构建需要 Go 1.26.5 或更高版本。克隆仓库并构建 `cmd/sow` 入口:
+Go Module 声明使用 Go 1.26.5，元数据生成不需要 C 工具链。请把 `vX.Y.Z` 替换为下载页
+链接的源码 Tag：
 
 ```bash
 git clone https://github.com/pgsty/sow.git
 cd sow
-CGO_ENABLED=0 go build -trimpath -o sow ./cmd/sow
+set -euo pipefail
+SOW_TAG=vX.Y.Z
+git checkout "$SOW_TAG"
+SOW_VERSION="${SOW_TAG#v}"
+CGO_ENABLED=0 go build -trimpath \
+  -ldflags="-s -w -X github.com/pgsty/sow/internal/v2cli.Version=${SOW_VERSION}" \
+  -o sow ./cmd/sow
+sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
-设置 `GOOS` 与 `GOARCH` 即可交叉编译;因为没有 cgo,交叉构建不需要 Go 之外的任何工具链:
+这组命令使用 Release 构建参数，并把所选 Tag 的产品版本写入二进制。
 
-```bash
-CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -o sow-linux-arm64 ./cmd/sow
-```
-
-## 验证安装
+## 校验
 
 ```bash
 sow version
-```
-
-```console
-sow 0.2.0 darwin/arm64 go1.26.5
-```
-
-这一行给出 SOW 版本、二进制针对的平台,以及构建它的 Go 工具链版本。`sow --version` 输出相同内容。
-
-查看完整命令树:
-
-```bash
 sow help
 ```
 
-每条命令都有自己的帮助页 —— `sow help create`、`sow help dist new` 等等 ——
-其中列出该命令**确切**接受的参数。不在该命令参数矩阵内的 flag 会被拒绝,而不是被忽略。
+`sow version` 输出产品版本、目标 OS/架构与构建 Go 工具链；`sow help` 列出命令树。
+归档中还包含 `README.md`、`CHANGELOG.md` 与 Apache-2.0 `LICENSE`。
 
-## 外部依赖
+## 权限与可选工具
 
-生成仓库元数据的全过程不调用任何外部程序。SOW 自己解析 RPM 头与 Debian control 文件、
-自己算校验和、在进程内写出 `repodata/`、`Packages` 与 `Release`。`createrepo_c`、
-`dpkg-scanpackages`、`reprepro`、`modifyrepo_c` 都不会被执行。
+执行用户需要读取输入软件包，并能写入 Plain 目标目录或 Managed 工作区。Managed 工作区
+应放在本地 POSIX 文件系统上；锁、fsync、安全路径与原子 rename 都属于正确性契约。
 
-只有两项可选能力会用到环境中的工具:
+软件包解析与元数据渲染都在进程内完成。只有两条可选路径需要主机工具：
 
-| 能力 | 需要 | 原因 |
-|---|---|---|
-| RPM **包体**签名 —— `sow create --sign-with`,或 Managed 的 `packages.mode` 为 `fill` / `always` | `rpm` 与可用的 GPG 环境 | 包体签名由 `rpm --addsign` 对私有 stage 副本产生 |
-| 使用 `agent://<fingerprint>` 密钥引用的元数据签名 | `gpg` 与运行中的 `gpg-agent` | 私钥留在 agent 内,不进入 SOW 进程 |
+- RPM **包签名**需要 `rpm` 与可用的 GPG 环境；
+- `agent://` 元数据密钥需要 `gpg` 与 `gpg-agent`。
 
-使用 `file://` 或 `env://` 密钥引用的元数据签名在进程内完成,不需要外部 GPG。
-完整配置见[仓库签名](/zh/docs/tutorial/signing/)。
-
-## 下一步
-
-- [快速上手](/zh/docs/start/quickstart/) —— 五分钟发布一个装包的目录。
-- [第一个工作区](/zh/docs/start/workspace/) —— 搭建可精选、多架构的仓库。
-- [核心概念](/zh/docs/start/concepts/) —— 两条路径背后的模型。
+接下来可用[快速上手](/zh/docs/start/quickstart/)进入 Plain 模式，或用
+[第一个工作区](/zh/docs/start/workspace/)进入 Managed 模式。

@@ -62,12 +62,33 @@ Membership. Loosening policy does not reconstruct historical members from leftov
 SOW stages new metadata on the same filesystem, verifies it, then switches mutable protocol pointers
 last. RPM checksum-named metadata and APT by-hash keep old and new readers self-consistent.
 
+Pending package promotion is a bounded, single-writer group commit. Each batch contains at
+most 512 objects or 1 GiB: SOW creates Pool links, persists every distinct target parent,
+then removes pending names and persists the shared pending directory. An interruption can
+leave a pending-only, exact dual-link, or Pool-only state, all recoverable from the journal;
+it cannot durably lose both names.
+
 One Operation may cover several Dists. Each Dist always exposes a complete view; when `build`
 returns, every included Dist belongs to the same Built Generation.
 
 Before starting new work, `build` attempts forward recovery or safe rollback of a non-terminal
 Operation. If journal, database, and filesystem evidence contradict each other, the Repository enters
 `error` and `build` refuses to guess. There is no force-repair flag.
+
+## Progress events
+
+Long builds append structured `build_progress` records to the Operation log. Each event
+contains `phase`, `completed`, `total`, and `jobs`. Current phases are:
+
+- `rendering`;
+- `promoting_payload`;
+- `publishing_dists`;
+- `normalizing_public_tree`;
+- `finalizing`.
+
+These events do not advance the Operation state and deliberately do not checkpoint SQLite
+after every update. They are audit/observability records, not recovery decisions. Inspect
+them with [`sow log OPERATION`](/docs/command/log/#one-operation-in-detail).
 
 ## Metadata signing
 

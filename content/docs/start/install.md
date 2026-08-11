@@ -1,119 +1,90 @@
 ---
-title: "Install SOW"
+title: "Installation"
 linkTitle: "Installation"
-description: "Download a prebuilt binary or build from source, then verify the install."
+description: "Install SOW from an archive, RPM/DEB package, or source, then verify the binary and filesystem requirements."
 url: "/docs/start/install/"
 weight: 100
 icon: fa-solid fa-download
 ---
 
-SOW ships as one self-contained executable. Archive installation means putting that file
-on your `PATH`; RPM and DEB release packages provide a conventional Linux path. There is
-no service to enable and no state directory until a command needs one.
+SOW is one executable: there is no service to enable and no runtime language environment.
+Release builds target Linux and macOS on `amd64` and `arm64`; Linux also gets RPM and DEB
+packages. Windows is not supported.
 
-## Release build targets
+Use the [Download page](/download/) to select the archive or Linux package that matches
+your operating system and architecture. It links each published artifact, its source tag,
+and `SHA256SUMS`.
 
-The release pipeline builds with `CGO_ENABLED=0`, avoiding a separately installed cgo
-toolchain or language runtime. Binaries still use the operating system's standard ABI and
-frameworks. The release artifact targets are:
+## Install an archive
 
-| OS | `amd64` | `arm64` |
-|---|---|---|
-| Linux | built | built |
-| macOS (Darwin) | built | built |
-
-Windows is not supported. SOW relies on POSIX advisory locks and atomic
-`rename`, and it is only tested on local POSIX filesystems — network filesystems such as
-NFS do not provide the locking and durability semantics it depends on.
-
-{{% alert title="Filesystem requirement" color="info" %}}
-Build a [managed workspace](/docs/start/workspace/) on a local POSIX filesystem so locks,
-fsync, and atomic rename retain their contract. The committed public `pool/ + dists/` tree
-uses no view-local hardlink aliases and can be copied or published normally.
-{{% /alert %}}
-
-## Download a release
-
-The SOW v0.2.0 GitHub Release is currently a **draft**. Its four Linux/macOS archives,
-`1PGSTY` Linux RPM and DEB packages, and `SHA256SUMS` are not publicly downloadable.
-Until an operator publishes it on the
-[releases page](https://github.com/pgsty/sow/releases), build from source below. After
-publication, confirm that the release entry contains the
-matching archive and checksum before automating a download, then move the extracted
-binary onto your `PATH`:
-
-No Docker or other container image is published for v0.2.0.
+Download one archive plus `SHA256SUMS`, then verify the matching line before extraction:
 
 ```bash
-tar -xzf sow_*.tar.gz
+# Linux amd64
+grep 'sow_.*_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
+tar -xzf sow_*_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
-If you do not have root, install into `~/.local/bin`. SOW does not require a privileged
-daemon. The invoking user needs read/write access to the Workspace or Plain target and
-publication destination, plus read or resolution access to package inputs and signing
-references.
+On macOS, select `darwin_amd64` or `darwin_arm64` and replace `sha256sum -c -` with
+`shasum -a 256 -c -`. Without root, install to a directory already on your `PATH`, such
+as `~/.local/bin`.
+
+## Install a Linux package
+
+Linux packages use the `1PGSTY` release suffix:
+
+```bash
+sudo rpm -Uvh ./sow-*-1PGSTY.x86_64.rpm
+sudo apt install ./sow_*-1PGSTY_amd64.deb
+```
+
+Choose only the command and architecture that match the host. RPM installs the license at
+`/usr/share/licenses/sow/LICENSE`; DEB installs copyright/license metadata under
+`/usr/share/doc/sow/`.
 
 ## Build from source
 
-Building requires Go 1.26.5 or newer. Clone the repository and build the `cmd/sow`
-entrypoint:
+The module declares Go 1.26.5. Metadata generation needs no C toolchain. Replace
+`vX.Y.Z` with the source tag linked from the Download page:
 
 ```bash
 git clone https://github.com/pgsty/sow.git
 cd sow
-CGO_ENABLED=0 go build -trimpath -o sow ./cmd/sow
+set -euo pipefail
+SOW_TAG=vX.Y.Z
+git checkout "$SOW_TAG"
+SOW_VERSION="${SOW_TAG#v}"
+CGO_ENABLED=0 go build -trimpath \
+  -ldflags="-s -w -X github.com/pgsty/sow/internal/v2cli.Version=${SOW_VERSION}" \
+  -o sow ./cmd/sow
+sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
-Set `GOOS` and `GOARCH` to cross-compile; because there is no cgo, cross-building needs
-no toolchain beyond Go itself:
+This uses the release build flags and embeds the selected tag's product version.
 
-```bash
-CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -o sow-linux-arm64 ./cmd/sow
-```
-
-## Verify the install
+## Verify
 
 ```bash
 sow version
-```
-
-```console
-sow 0.2.0 darwin/arm64 go1.26.5
-```
-
-The version line reports the SOW version, the platform the binary was built for, and the
-Go toolchain that built it. `sow --version` prints the same string.
-
-To see the full command tree:
-
-```bash
 sow help
 ```
 
-Every command has its own help page — `sow help create`, `sow help dist new`, and so on —
-which lists the exact flags that command accepts. Flags that are not in a command's
-matrix are rejected rather than ignored.
+`sow version` reports product version, target OS/architecture, and build Go toolchain.
+`sow help` lists the command tree. Each archive also contains `README.md`, `CHANGELOG.md`,
+and the Apache-2.0 `LICENSE`.
 
-## External tools
+## Permissions and optional tools
 
-Nothing about generating repository metadata calls out to another program. SOW parses
-RPM headers and Debian control files itself, computes checksums itself, and writes
-`repodata/`, `Packages`, and `Release` in-process. `createrepo_c`, `dpkg-scanpackages`,
-`reprepro`, and `modifyrepo_c` are never invoked.
+The invoking user needs read access to package inputs and write access to the Plain target
+or Managed workspace. Keep Managed workspaces on a local POSIX filesystem: locks, fsync,
+safe paths, and atomic rename are part of the correctness contract.
 
-Two optional features do use the environment:
+Repository parsing and metadata rendering are in-process. Only two optional paths need
+host tools:
 
-| Feature | Requires | Why |
-|---|---|---|
-| RPM **package** signing — `sow create --sign-with`, or a managed `packages.mode` of `fill` / `always` | `rpm` and a working GPG environment | Package payload signatures are produced by `rpm --addsign` against a private staged copy |
-| Metadata signing with an `agent://<fingerprint>` key reference | `gpg` with a running `gpg-agent` | The private key stays in the agent and never reaches SOW |
+- RPM **package** signing requires `rpm` and a working GPG environment;
+- an `agent://` metadata key requires `gpg` and `gpg-agent`.
 
-Metadata signing with a `file://` or `env://` key reference is done in-process and needs
-no external GPG. See [Signing](/docs/tutorial/signing/) for the full setup.
-
-## Next steps
-
-- [Quick Start](/docs/start/quickstart/) — publish a directory of packages in five minutes.
-- [First Workspace](/docs/start/workspace/) — build a curated, multi-architecture repository.
-- [Core Concepts](/docs/start/concepts/) — the model behind both paths.
+Next: [Quick Start](/docs/start/quickstart/) for Plain mode, or
+[First Workspace](/docs/start/workspace/) for Managed mode.
