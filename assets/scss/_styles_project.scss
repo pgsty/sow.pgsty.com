@@ -2,6 +2,39 @@
   grid-template-columns: minmax(0, 860px);
 }
 
+// Keep the product emblem quieter than OINK's square hero default. The wider
+// copy track preserves SOW's two-line product promise on desktop; the emblem
+// is hidden at narrower widths where it would compete with that promise.
+.oink-hero--with-media > .landing-container {
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  gap: clamp(24px, 3vw, 36px);
+}
+
+.oink-hero__copy {
+  max-width: none;
+}
+
+.oink-hero__media {
+  max-width: 220px;
+  transform: none;
+}
+
+@media (max-width: 960px) {
+  .oink-hero--with-media > .landing-container {
+    display: block;
+  }
+
+  .oink-hero__media {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .oink-hero__title {
+    font-size: clamp(1.72rem, 7.8vw, 2.3rem);
+  }
+}
+
 .sow-release-state {
   max-width: 850px;
 }

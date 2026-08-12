@@ -1,6 +1,9 @@
 sections:
   - hero
+  - metrics
   - capabilities
+  - principles
+  - faq
   - cta
 
 hero:
@@ -10,6 +13,10 @@ hero:
     - 同步增量变化
   lead: 一个自包含二进制，即可把本地 RPM 与 DEB 软件包变成可用仓库；需要更强控制时，再用托管模式管理快照、审计记录与增量发布。
   note: 单一二进制 · Linux + macOS · RPM + DEB · Apache-2.0
+  image:
+    light: img/sow.svg
+    dark: img/sow.svg
+    alt: 由软件包与新芽组成的 SOW 标志
   detail:
     label: SOW 0.3.0 已发布 — 立即下载
     url: download/
@@ -23,6 +30,37 @@ hero:
       url: download/
       icon: fa-solid fa-download
       style: ghost
+
+metrics:
+  eyebrow: 一览
+  title: 一个工具，两条仓库路径
+  desc: 从本地目录起步，只在交付需要时引入托管状态。
+  columns: 4
+  items:
+    - value: '1'
+      name: 下载 SOW
+      label: 自包含二进制
+      desc: Linux 与 macOS
+      icon: fa-solid fa-cube
+      url: download/
+    - value: '2'
+      name: 对比仓库模式
+      label: 仓库模式
+      desc: Plain 与 Managed
+      icon: fa-solid fa-code-branch
+      url: docs/start/concepts/
+    - value: '2'
+      name: 查看软件包兼容性
+      label: 软件包格式
+      desc: RPM 与 DEB
+      icon: fa-solid fa-boxes-stacked
+      url: docs/reference/compatibility/
+    - value: '2'
+      name: 了解发布目标
+      label: 发布 Provider
+      desc: filesystem 与 R2
+      icon: fa-solid fa-cloud-arrow-up
+      url: docs/command/publish/
 
 capabilities:
   eyebrow: 核心价值
@@ -104,6 +142,41 @@ capabilities:
           - { class: ok, prefix: '~ ', text: 'dists/el9/x86_64/repodata/...' }
           - { class: p, prefix: '$ ', text: 'sow publish prod' }
           - { class: ok, prefix: '✓ ', text: '变更对象已校验' }
+
+principles:
+  eyebrow: 运行模型
+  title: 起步时保持简单，托管后保持显式
+  desc: SOW 让轻量路径随时可重建，并让每个托管交付决策都可见。
+  columns: 3
+  items:
+    - icon: fa-solid fa-rotate
+      title: 重建派生状态
+      desc: Plain 模式把仓库元数据视为软件包目录的确定性结果；修改输入后，重新执行 `sow create` 即可。
+    - icon: fa-solid fa-list-check
+      title: 显式管理意图
+      desc: Managed 模式分离 Desired Membership 与不可变 Built Generation，避免策略和发布沦为隐式副作用。
+    - icon: fa-solid fa-shield-halved
+      title: 交付前先验证
+      desc: 校验、签名、操作历史与原子发布，把一次仓库构建变成可审计的发布边界。
+
+faq:
+  eyebrow: 常见问题
+  title: 选择刚好满足需求的最小流程
+  desc: Plain 与 Managed 使用同一个二进制，但解决不同的运行问题。
+  items:
+    - question: 我应该从 Plain 还是 Managed 模式开始？
+      answer: |
+        如果目录已经恰好包含需要对外服务的全部内容，从 [Plain 模式](docs/start/quickstart/) 开始。需要由 SOW 管理成员关系、策略、已签名元数据、不可变 Generation、审计历史或发布目标时，使用 [Managed 工作区](docs/start/workspace/)。
+      open: true
+    - question: SOW 能同时处理 RPM 与 DEB 软件包吗？
+      answer: |
+        可以。Plain 目录可同时放置 RPM 与 DEB 软件包。在 Managed 模式中，每个 Dist 只有一种格式，但同一个 Repository 可从公共交付树中对外提供多个 RPM 与 DEB Dist。
+    - question: SOW 需要守护进程或数据库服务吗？
+      answer: |
+        不需要。SOW 是自包含 CLI，生成静态仓库文件。Managed 工作区把嵌入式状态保存在本地；只需使用现有 HTTP 服务器对外提供生成的公共树。
+    - question: Managed 仓库可以发布到哪里？
+      answer: |
+        配置好的目标可以是本地或挂载的 [filesystem，也可以是 Cloudflare R2 对象存储](docs/command/publish/)。`sow changes` 会在发布前展示差异，SOW 记录的 target 状态会用于下一次增量发布。
 
 cta:
   title: 现在就构建第一个仓库。
