@@ -10,6 +10,8 @@ aliases:
   - "/docs/reference/cli/publication/"
 weight: 450
 icon: fa-solid fa-terminal
+search_keywords: [CLI, 命令参考, sow help, 参数, 子命令]
+search_boost: 1.5
 ---
 
 每条顶层命令单独成页；`config`、`repo`、`dist`、`retain`、

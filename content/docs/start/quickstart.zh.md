@@ -5,6 +5,8 @@ description: "索引一个 RPM/DEB 软件包目录，对外服务，并配置客
 url: "/zh/docs/start/quickstart/"
 weight: 200
 icon: fa-solid fa-bolt
+search_keywords: [快速上手, 入门, sow create, 平面仓库, 软件源, RPM, DEB]
+search_boost: 1.6
 ---
 
 Plain 模式在一个目录内生成平面仓库。它不读取 `sow.yml`，不创建工作区，也不维护数据库。
@@ -70,8 +72,8 @@ Python 服务器只适合预览；长期服务请使用正常维护的 HTTP 服�
 
 把 `REPO_HOST` 换成客户端能访问的地址。
 
-{{< tabpane persist="header" >}}
-{{< tab header="dnf" lang="ini" >}}
+{{< code-group id="quickstart-client" sync="package-manager" persist=true label="选择包管理器" copy="all" >}}
+  {{< code-tab title="DNF / YUM" value="dnf" lang="ini" >}}
 # /etc/yum.repos.d/sow-quickstart.repo
 [sow-quickstart]
 name=SOW Quick Start
@@ -79,24 +81,27 @@ baseurl=http://REPO_HOST:8080/
 enabled=1
 gpgcheck=0
 repo_gpgcheck=0
-{{< /tab >}}
-{{< tab header="apt" lang="text" >}}
+  {{< /code-tab >}}
+
+  {{< code-tab title="APT" value="apt" lang="text" >}}
 # /etc/apt/sources.list.d/sow-quickstart.list
 deb [trusted=yes] http://REPO_HOST:8080/ ./
-{{< /tab >}}
-{{< /tabpane >}}
+  {{< /code-tab >}}
+{{< /code-group >}}
 
 刷新索引并安装软件包：
 
-```bash
-# RPM 客户端
+{{< code-group id="quickstart-install" sync="package-manager" persist=true label="刷新索引并安装" copy="all" >}}
+  {{< code-tab title="DNF / YUM" value="dnf" lang="bash" >}}
 sudo dnf makecache
 sudo dnf install PACKAGE_NAME
+  {{< /code-tab >}}
 
-# DEB 客户端
+  {{< code-tab title="APT" value="apt" lang="bash" >}}
 sudo apt update
 sudo apt install PACKAGE_NAME
-```
+  {{< /code-tab >}}
+{{< /code-group >}}
 
 APT source 末尾的 `./` 表示平面仓库。`[trusted=yes]` 与关闭 DNF 签名检查只适用于这个
 未签名的快速示例；需要真实性保证时应使用已签名 Managed 仓库。

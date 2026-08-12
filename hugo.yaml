@@ -34,33 +34,85 @@ languages:
     params:
       description: "Software Object Warehouse by Pigsty: a self-contained APT / YUM package repository manager."
       time_format_blog: 'January 02, 2006'
+      ui:
+        command_palette:
+          commands:
+            - id: quick_start
+              title: Quick Start
+              description: Build and serve a repository in five steps
+              url: /docs/start/quickstart/
+              icon: fa-solid fa-bolt
+              keywords: [start, create, plain, repository]
+            - id: cli_reference
+              title: CLI Reference
+              description: Look up every SOW command and option
+              url: /docs/command/
+              icon: fa-solid fa-terminal
+              keywords: [command, option, help, reference]
     menu:
       main:
         - identifier: docs
           name: Docs
+          pageRef: /docs
           weight: 10
-          url: /docs/
-          pre: <i class='fa-solid fa-book'></i>
+          params:
+            icon: fa-solid fa-book
+        - identifier: get-started
+          parent: docs
+          name: Get Started
+          pageRef: /docs/start
+          weight: 10
+          params:
+            icon: fa-solid fa-rocket
+            description: Install SOW and build your first repository
+        - identifier: tutorials
+          parent: docs
+          name: Tutorials
+          pageRef: /docs/tutorial
+          weight: 20
+          params:
+            icon: fa-solid fa-graduation-cap
+            description: Follow complete YUM, APT, signing, and serving guides
+        - identifier: commands
+          parent: docs
+          name: Commands
+          pageRef: /docs/command
+          weight: 30
+          params:
+            icon: fa-solid fa-terminal
+            description: Look up exact CLI syntax and behavior
+        - identifier: reference
+          parent: docs
+          name: Reference
+          pageRef: /docs/reference
+          weight: 40
+          params:
+            icon: fa-solid fa-book-open
+            description: Check configuration, formats, paths, and compatibility
         - identifier: blog
           name: Blog
+          pageRef: /blog
           weight: 20
-          url: /blog/
-          pre: <i class='fa-solid fa-blog'></i>
+          params:
+            icon: fa-solid fa-blog
         - identifier: download
           name: Download
+          pageRef: /download
           weight: 25
-          url: /download/
-          pre: <i class='fa-solid fa-download'></i>
+          params:
+            icon: fa-solid fa-download
         - identifier: pigsty
           name: Pigsty
           weight: 30
           url: https://pigsty.io
-          pre: <i class='fa-solid fa-database'></i>
+          params:
+            icon: fa-solid fa-database
         - identifier: github
           name: GitHub
           weight: 40
           url: https://github.com/pgsty/sow
-          pre: <i class='fa-brands fa-github'></i>
+          params:
+            icon: fa-brands fa-github
   zh:
     label: 简体中文
     locale: zh-CN
@@ -69,33 +121,83 @@ languages:
     params:
       description: "SOW：Pigsty 出品的自包含 APT / YUM 软件仓库管理器。"
       time_format_blog: '2006年01月02日'
+      ui:
+        command_palette:
+          commands:
+            - id: quick_start
+              title: 快速上手
+              description: 五步构建并对外服务软件仓库
+              icon: fa-solid fa-bolt
+              keywords: [上手, 创建, 平面仓库, 软件源]
+            - id: cli_reference
+              title: CLI 命令参考
+              description: 查询每一条 SOW 命令与参数
+              icon: fa-solid fa-terminal
+              keywords: [命令, 参数, 帮助, 参考]
     menu:
       main:
         - identifier: docs
           name: 文档
+          pageRef: /docs
           weight: 10
-          url: /zh/docs/
-          pre: <i class='fa-solid fa-book'></i>
+          params:
+            icon: fa-solid fa-book
+        - identifier: get-started
+          parent: docs
+          name: 上手
+          pageRef: /docs/start
+          weight: 10
+          params:
+            icon: fa-solid fa-rocket
+            description: 安装 SOW 并构建第一个软件仓库
+        - identifier: tutorials
+          parent: docs
+          name: 教程
+          pageRef: /docs/tutorial
+          weight: 20
+          params:
+            icon: fa-solid fa-graduation-cap
+            description: 完成 YUM、APT、签名与服务实战
+        - identifier: commands
+          parent: docs
+          name: 命令
+          pageRef: /docs/command
+          weight: 30
+          params:
+            icon: fa-solid fa-terminal
+            description: 查询精确 CLI 语法与行为
+        - identifier: reference
+          parent: docs
+          name: 参考
+          pageRef: /docs/reference
+          weight: 40
+          params:
+            icon: fa-solid fa-book-open
+            description: 核对配置、格式、路径与兼容性
         - identifier: blog
           name: 博客
+          pageRef: /blog
           weight: 20
-          url: /zh/blog/
-          pre: <i class='fa-solid fa-blog'></i>
+          params:
+            icon: fa-solid fa-blog
         - identifier: download
           name: 下载
+          pageRef: /download
           weight: 25
-          url: /zh/download/
-          pre: <i class='fa-solid fa-download'></i>
+          params:
+            icon: fa-solid fa-download
         - identifier: pigsty
           name: Pigsty
           weight: 30
           url: https://pigsty.cc
-          pre: <i class='fa-solid fa-database'></i>
+          params:
+            icon: fa-solid fa-database
         - identifier: github
           name: GitHub
           weight: 40
           url: https://github.com/pgsty/sow
-          pre: <i class='fa-brands fa-github'></i>
+          params:
+            icon: fa-brands fa-github
 
 #=======================================#
 # Taxonomies and blog URLs
@@ -189,9 +291,12 @@ params:
   prism_syntax_highlighting: false
 
   ui:
-    # OINK 0.2.0 can apply the shared shell to product-specific content types.
+    # OINK applies the shared shell to product-specific content types.
     shell_types: [docs, blog, swagger, download]
-    quick_links: [docs, blog]
+    quick_links: [docs, blog, download]
+    sidebar_icon_policy: groups
+    typography:
+      preset: technical
     breadcrumb_disable: false
     navbar_logo: true
     navbar_translucent_over_cover_disable: false
@@ -210,6 +315,8 @@ params:
     sidebar_item_overflow: ellipsis
     page_context_menu:
       enable: true
+      # Keep assistant hand-offs opt-in: activating one discloses the full URL.
+      assistant_links: false
       links: []
     feedback:
       enable: false

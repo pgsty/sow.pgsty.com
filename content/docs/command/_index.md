@@ -10,6 +10,8 @@ aliases:
   - "/docs/reference/cli/publication/"
 weight: 450
 icon: fa-solid fa-terminal
+search_keywords: [cli, command reference, sow help, options, subcommands]
+search_boost: 1.5
 ---
 
 Each top-level command has its own page. Command groups

@@ -9,11 +9,18 @@ icon: fa-solid fa-book
 sidebar_expanded: true
 sidebar_root_for: self
 sidebar_root_link_self: true
+search_keywords: [SOW 文档, 软件仓库, RPM, YUM, DEB, APT]
+search_boost: 1.5
+cascade:
+  search_boost: 1.15
 ---
 
 SOW 是 Pigsty 出品的自包含软件仓库管理器。`sow create` 能把目录中的 RPM 与 DEB
 文件直接变成可用平面仓库；Managed 工作区则进一步提供成员关系、筛选策略、签名、不可变
 Generation、审计历史与发布目标。
+
+按 {{< kbd "Ctrl" "K" >}}（macOS 上也可用 {{< kbd "⌘" "K" >}}）搜索本站；
+焦点不在输入框时按 {{< kbd "/" >}}，可直接打开命令模式。
 
 {{< doc-cards cols="2" >}}
 {{< doc-card title="上手" link="/zh/docs/start/" >}}
