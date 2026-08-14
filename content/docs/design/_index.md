@@ -23,6 +23,10 @@ target — and why each has a separate owner.
 Pointer-last publication, commit intent, forward recovery, retained generations, and
 evidence-gated garbage collection.
 {{< /doc-card >}}
+{{< doc-card title="Coordinated Publication Proposal" link="/docs/design/coordinated-publication/" >}}
+The proposed v0.4.0 user workflow and implementation plan for SOW-orchestrated,
+rclone-executed publication and deterministic interruption recovery.
+{{< /doc-card >}}
 {{< /doc-cards >}}
 
 The canonical one-payload layout is documented with the mechanism in

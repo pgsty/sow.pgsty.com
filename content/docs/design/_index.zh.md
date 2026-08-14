@@ -19,6 +19,9 @@ icon: fa-solid fa-compass-drafting
 {{< doc-card title="发布与恢复" link="/zh/docs/design/publication/" >}}
 指针最后写入、提交意图、前向恢复、保留代与证据门禁垃圾回收。
 {{< /doc-card >}}
+{{< doc-card title="协同发布设计提案" link="/zh/docs/design/coordinated-publication/" >}}
+面向 v0.4.0 的用户流程与实现计划：由 SOW 编排、rclone 执行，并确定性恢复中断。
+{{< /doc-card >}}
 {{< /doc-cards >}}
 
 规范单包体布局与其实现机制统一写在[包池与元数据视图](/zh/docs/feature/views/)；平台与集成要求
