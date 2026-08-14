@@ -20,13 +20,13 @@ Workspace 工作区                    发现与配置边界
 
 每层只做一件事,边界很硬:
 
-**工作区(Workspace)**只拥有两样东西:根级 `sow.yml` 和 `.sow/` 状态目录。工作区根下其他任何东西都不属于 SOW。它是发现的单位 —— 命令从某个起始目录向上找到工作区 —— 也是架构许可表所在的地方。
+**工作区(Workspace)** 只拥有两样东西:根级 `sow.yml` 和 `.sow/` 状态目录。工作区根下其他任何东西都不属于 SOW。它是发现的单位 —— 命令从某个起始目录向上找到工作区 —— 也是架构许可表所在的地方。
 
-**仓库(Repository)**固定在 `<workspace>/<name>`。你不能把它指到别处,没有 `path` 选项。一个 Repository 拥有自己的 `pool/`、`dists/`、SQLite、锁、恢复状态、Generation、保留代根、发布 checkpoint 与 GC 证据。两个 Repository 之间永不去重 —— 同一个包 add 进两个仓库就存两份,这是刻意的:这样删掉一个仓库永远不可能伤到另一个。
+**仓库(Repository)** 固定在 `<workspace>/<name>`。你不能把它指到别处,没有 `path` 选项。一个 Repository 拥有自己的 `pool/`、`dists/`、SQLite、锁、恢复状态、Generation、保留代根、发布 checkpoint 与 GC 证据。两个 Repository 之间永不去重 —— 同一个包 add 进两个仓库就存两份,这是刻意的:这样删掉一个仓库永远不可能伤到另一个。
 
 **Dist** 是一个单一格式(`rpm` 或 `deb`)的普通具名成员集合。名字对 SOW 是不透明字符串。`el9`、`trixie`、`el9-beta`、`customer-acme` —— 它们都不产生状态机、晋升流程或快照。想要一个 beta 频道,就建一个叫 `el9-beta` 的 Dist;含义存在于你的脑子和 `.repo` 文件里,不在 SOW 里。
 
-**架构视图(Architecture View)**是 `build` 渲染出来的东西,不产生第二份成员关系。一个 `noarch` RPM 只有一个包对象、一条成员记录,构建时投影进每个适用视图。参见[包池与元数据视图](/zh/docs/feature/views/)。
+**架构视图(Architecture View)** 是 `build` 渲染出来的东西,不产生第二份成员关系。一个 `noarch` RPM 只有一个包对象、一条成员记录,构建时投影进每个适用视图。参见[包池与元数据视图](/zh/docs/feature/views/)。
 
 一个 Repository 可以同时拥有 RPM Dist 与 DEB Dist,共用同一个 `pool/`。
 
@@ -198,7 +198,7 @@ Dist 选择,按序:
 3. 选定 Repository 只有一个 Dist。
 4. 否则失败并列出候选。
 
-关键的不对称在这里:没给 `-d` 时,`build`、`check`、`status` 默认作用于选定 Repository 的**全部** Dist —— 对这几个命令而言,"没有过滤条件"解释成"全都要"是安全的。而 `add`、`rm`、`ls` 必须得到明确的 Dist 集合,因为猜一个包该落到哪里并不安全:
+关键的不对称在这里:没给 `-d` 时,`build`、`check`、`status` 默认作用于选定 Repository 的 **全部** Dist —— 对这几个命令而言,"没有过滤条件"解释成"全都要"是安全的。而 `add`、`rm`、`ls` 必须得到明确的 Dist 集合,因为猜一个包该落到哪里并不安全:
 
 ```console
 $ sow ls

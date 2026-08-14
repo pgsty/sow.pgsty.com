@@ -7,7 +7,7 @@ weight: 600
 icon: fa-solid fa-code
 ---
 
-所有产出数据的命令都接受 `--json`。输出是 stdout 上的**一行**版本化信封 ——
+所有产出数据的命令都接受 `--json`。输出是 stdout 上的 **一行** 版本化信封 ——
 不管是哪条命令产生的,都能直接管道给 `jq`。
 
 ```bash
@@ -37,7 +37,7 @@ sow status --json
 | `result` | object 或 null | 命令专属载荷,详见下文。 |
 | `errors` | array | 零个或多个 `{code, class, message}` 对象。 |
 
-七个字段**永远存在**。只有命令在产出任何东西之前就失败时(比如未知参数),
+七个字段 **永远存在**。只有命令在产出任何东西之前就失败时(比如未知参数),
 `result` 才是 `null`。
 
 ### errors
@@ -65,7 +65,7 @@ sow status --json
 "operation":"8632724976452398569"
 ```
 
-Operation ID 是 64 位值,序列化为十进制**字符串**,因为它经常超出 IEEE 754 双精度
+Operation ID 是 64 位值,序列化为十进制 **字符串**,因为它经常超出 IEEE 754 双精度
 能精确表示的范围。在 JavaScript 里,`JSON.parse` 处理裸数字会静默损坏它们。
 请保持字符串形态;`jq` 原样处理即可。
 
@@ -81,7 +81,7 @@ Generation ID 覆盖完整的无符号 64 位范围，并固定序列化为 20 �
 
 ### stdout 与 stderr
 
-结果和 JSON 信封写 stdout;警告与错误诊断写 stderr,**同时**也出现在 `errors` 数组里。
+结果和 JSON 信封写 stdout;警告与错误诊断写 stderr,**同时** 也出现在 `errors` 数组里。
 所以这样写是可行的:
 
 ```bash
@@ -202,7 +202,7 @@ sow create /srv/offline --json
 ```
 
 每个输入路径对应一条 `items`,顺序稳定。`status` 是该项的总体结果,
-`dists` 给出**逐 Dist** 的裁决:
+`dists` 给出 **逐 Dist** 的裁决:
 
 | `status` | 含义 |
 |---|---|
@@ -244,7 +244,7 @@ sow create /srv/offline --json
   {"op":"delete","path":"dists/el9/x86_64/repodata/0df96f0b...-primary.xml.gz","phase":"delete"}]}
 ```
 
-带 `-c/--check` 运行时 `check` 为 `true`,此时**什么都没写**,`changes` 是一份预测。
+带 `-c/--check` 运行时 `check` 为 `true`,此时 **什么都没写**,`changes` 是一份预测。
 注意 `removed` 只列出成员关系的移除 —— `rm` 永远不删除包池字节。
 
 ### build
@@ -270,7 +270,7 @@ sow create /srv/offline --json
 ```
 
 `status` 取值为 `clean`、`dirty`、`recovering`、`error`。部署脚本该读的字段是
-`ready_to_copy` —— 但记住 `status` 在任何状态下都返回 `0`,所以要判断**字段**,不是退出码:
+`ready_to_copy` —— 但记住 `status` 在任何状态下都返回 `0`,所以要判断 **字段**,不是退出码:
 
 ```bash
 sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
@@ -296,8 +296,8 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
 ```
 
 终态九层按固定顺序报告,每层给出检查了多少项以及发现的问题。dirty 仓库可以各层全部
-`ok: true`,但仍以退出码 `5` 失败 —— 因为层校验的是**自洽性**,
-而 `ready_to_copy` 报告的是**时效性**:
+`ok: true`,但仍以退出码 `5` 失败 —— 因为层校验的是 **自洽性**,
+而 `ready_to_copy` 报告的是 **时效性**:
 
 ```json
 {...,"ok":false,"result":{"status":"dirty","ready_to_copy":false,...},
@@ -391,7 +391,7 @@ R2 目标 GC 会把候选计入 retained,SOW 从不报告自己执行了远端�
  "created_at":"2026-08-04T04:08:08.691678Z","updated_at":"2026-08-04T04:08:08.763019Z"}]}
 ```
 
-`payload_json` 与 `result_json` 是**内含 JSON 的字符串**,不是对象。
+`payload_json` 与 `result_json` 是 **内含 JSON 的字符串**,不是对象。
 它们原样保存以保证审计记录字节稳定;需要二次解析:
 
 ```bash

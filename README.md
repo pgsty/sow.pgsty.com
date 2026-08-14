@@ -85,6 +85,8 @@ runtimes with the theme, so this repository has no Node.js or CDN build dependen
 
 - Every page ships as an English `.md` / Chinese `.zh.md` pair with aligned content.
 - Front matter must set an explicit `url:` (Chinese pages carry the `/zh/` prefix).
+- Keep whitespace between strong-emphasis delimiters and adjacent words, especially in
+  Chinese prose; `make check` rejects ambiguous `text**strong**text` boundaries.
 - Command transcripts are real executions against the repository-matched `sow` binary; do not
   invent output.
 - This repository is the authority for maintained SOW user and design documentation.

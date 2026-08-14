@@ -8,7 +8,7 @@ icon: fa-solid fa-fingerprint
 ---
 
 `sow rm`、`sow show`、`sow where` 都接受一个 `PACKAGE` 参数。本页定义你能在那里写什么。
-三条命令共用同一套文法,只有对**歧义名称**的处理不同。
+三条命令共用同一套文法,只有对 **歧义名称** 的处理不同。
 
 这里的内容与 `sow add` 无关 —— `add` 接受的是文件系统路径,不是包引用。
 
@@ -22,7 +22,7 @@ icon: fa-solid fa-fingerprint
 | 完整文件名 | `pev2-1.23.0-1.noarch.rpm` | 以该文件名存储的包 |
 | 裸包名 | `pev2` | 该名称的全部版本与架构 |
 
-前三种是**精确**引用:指名道姓,要么命中要么失败。后两种是便利写法,可能匹配多个对象。
+前三种是 **精确** 引用:指名道姓,要么命中要么失败。后两种是便利写法,可能匹配多个对象。
 
 你不需要手工拼这些字符串。`sow ls` 会直接打印每个包的摘要与坐标,可以原样粘回命令行:
 
@@ -54,14 +54,14 @@ sow where sha256:d06d7f23b9cfc6aedaab7b60c8e890cda020efe84f1f246243414862b98b122
 {"reference":"sha256:d06d7f23...b98b1229","locations":[{"repository":"pigsty","dists":["el9"],"built_dists":["el9"],"sha256":"d06d7f23...b98b1229","coordinate":"rpm:pev2-0:1.23.0-1.noarch"}]}
 ```
 
-摘要必须完整且小写。**不支持**前缀匹配,也不做大小写折叠 —— 位数不足或大写都属于用法拒绝,
+摘要必须完整且小写。**不支持** 前缀匹配,也不做大小写折叠 —— 位数不足或大写都属于用法拒绝,
 不是"没找到":
 
 ```console
 operation rejected: managed: operation rejected: sha256 reference requires 64 lowercase hexadecimal digits
 ```
 
-注意这个摘要覆盖的是**已存储**的字节。如果仓库对 RPM 包体做了重签,
+注意这个摘要覆盖的是 **已存储** 的字节。如果仓库对 RPM 包体做了重签,
 对象摘要与你交给 `sow add` 的那个文件的摘要就不一样了。
 
 ### RPM 坐标
@@ -85,7 +85,7 @@ sow where 'rpm:pev2-1.23.0-1.noarch'
 operation rejected: managed: operation rejected: package reference "rpm:pev2-1.23.0-1.noarch" was not found in the selected Workspace scope
 ```
 
-架构那一段取自 RPM 包头:`x86_64`、`aarch64` 或 `noarch`。它**不是**规范族名 ——
+架构那一段取自 RPM 包头:`x86_64`、`aarch64` 或 `noarch`。它 **不是** 规范族名 ——
 `noarch` 包这里就写 `noarch`,尽管 SOW 内部把它归类为 neutral(中性)。
 
 ### DEB 坐标
@@ -112,7 +112,7 @@ sow where 'pev2-1.23.0-1.noarch.rpm'
 sow where 'libpq5_18.3-1.pgdg12+1_amd64.deb'
 ```
 
-看着目录列表操作时,这是最好敲的写法。但它**不是身份** —— SOW 不用文件名区分包,
+看着目录列表操作时,这是最好敲的写法。但它 **不是身份** —— SOW 不用文件名区分包,
 理论上两个不同对象可以叫同一个名字。脚本里请优先用坐标或摘要。
 
 ### 裸包名
@@ -125,7 +125,7 @@ sow where pev2
 
 它的含义取决于命令:
 
-- **`sow rm`** 把它理解为所选 Dist 中该名称的**全部**版本与原生架构。这是有意设计的 ——
+- **`sow rm`** 把它理解为所选 Dist 中该名称的 **全部** 版本与原生架构。这是有意设计的 ——
   下架一个包通常意味着全部下架。先用 `-c` 预览:
 
   ```bash
@@ -159,8 +159,8 @@ operation rejected: managed: operation rejected: package reference not found: pa
 ```
 
 另外,这里没有 glob、没有正则、没有版本区间,也没有 `--all` 参数。
-如果你想按模式**筛选**一批包,那是 `sow.yml` 里的[成员策略](/zh/docs/reference/config/),
-不是命令行选择器。命令行永远只用来指代**已经存在**的包。
+如果你想按模式 **筛选** 一批包,那是 `sow.yml` 里的[成员策略](/zh/docs/reference/config/),
+不是命令行选择器。命令行永远只用来指代 **已经存在** 的包。
 
 ## 作用域
 
@@ -187,8 +187,8 @@ operation rejected: ... package reference "nosuchpkg" was not found in the selec
 
 ## 坐标与身份
 
-上面的坐标形态是包的**逻辑身份**。SOW 强制约束:一个仓库内,一个坐标最多对应一个内容对象。
-用已存在的坐标加入一个**不同**的文件是硬冲突 —— SOW 不会悄悄挑一个赢家,也没有 `--replace`。
+上面的坐标形态是包的 **逻辑身份**。SOW 强制约束:一个仓库内,一个坐标最多对应一个内容对象。
+用已存在的坐标加入一个 **不同** 的文件是硬冲突 —— SOW 不会悄悄挑一个赢家,也没有 `--replace`。
 
 因此,两个只有签名不同的包仍然会冲突,因为它们坐标相同。如果你真的要重签发布,
 请提高 release 号;如果只是把同一个输入再加一次,SOW 会识别出来并报告 `reused`。

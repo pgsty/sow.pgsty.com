@@ -77,7 +77,7 @@ sow help
 
 软件包解析与元数据渲染都在进程内完成。只有两条可选路径需要主机工具：
 
-- RPM **包签名**需要 `rpm` 与可用的 GPG 环境；
+- RPM **包签名** 需要 `rpm` 与可用的 GPG 环境；
 - `agent://` 元数据密钥需要 `gpg` 与 `gpg-agent`。
 
 接下来可用[快速上手](/zh/docs/start/quickstart/)进入 Plain 模式，或用

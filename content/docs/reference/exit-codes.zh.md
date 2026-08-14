@@ -61,7 +61,7 @@ sow create /srv/offline --json
 ## 1 —— 运行时错误
 
 I/O、解析或渲染层面出了问题:目录不可写、磁盘满、包读不出来。
-这类是**环境问题**,不是用法问题。
+这类是 **环境问题**,不是用法问题。
 
 ```bash
 chmod 500 /srv/readonly
@@ -72,7 +72,7 @@ sow create /srv/readonly
 plain: create stage /srv/readonly: mkdir /srv/readonly/.sow-plain-stage-1457115008: permission denied
 ```
 
-stage 目录之所以一开始就创建,正是为了让这类失败发生在**任何东西被发布之前**。
+stage 目录之所以一开始就创建,正是为了让这类失败发生在 **任何东西被发布之前**。
 本来就有合法索引的仓库,索引依然完好。
 
 ## 2 —— 用法、发现或配置错误
@@ -138,7 +138,7 @@ configuration error: load config "/srv/repo/sow.yml": parse sow.yml: yaml: unmar
 ## 3 —— 部分成功
 
 一个批次里有的项已提交、有的项失败。这个码存在的意义是:你永远不必猜测一次失败的
-`sow add` 是否让仓库毫发无损 —— 返回 `3` 就意味着合法的包**已经进去了**,
+`sow add` 是否让仓库毫发无损 —— 返回 `3` 就意味着合法的包 **已经进去了**,
 失败的那些会被逐条点名。
 
 ```bash
@@ -153,7 +153,7 @@ managed: batch partially succeeded
 ```
 
 失败的输入文件原地不动。加上 `--json` 时,已提交的项仍然完整列出 ——
-非零退出**从不**截断 result:
+非零退出 **从不** 截断 result:
 
 ```console
 {..., "ok":false, "result":{"accepted":1,"failed":1,"items":[...]}, "errors":[{"code":3,"class":"partial","message":"managed: batch partially succeeded"}]}
@@ -164,7 +164,7 @@ managed: batch partially succeeded
 ## 4 —— 锁不可用
 
 另一个进程持有写锁。SOW 在设计上就是单写者(single-writer),
-所以这是**正常且预期**的结果 —— 重试,或者多等一会儿。
+所以这是 **正常且预期** 的结果 —— 重试,或者多等一会儿。
 
 带 `--no-wait` 时立即失败:
 
@@ -201,7 +201,7 @@ repository=pigsty status=clean ready_to_copy=false revision=7 generation=7 dirty
 
 常见的那种:仓库的期望状态领先于已构建的内容 —— `sow add --skip` 之后,
 或者改了策略/签名之后,对它执行 `sow check`。每一层校验都通过,
-仓库只是**尚未收敛**:
+仓库只是 **尚未收敛**:
 
 ```bash
 sow rm 'rpm:pev2-0:1.23.0-1.noarch' -d el9 --skip
@@ -226,7 +226,7 @@ integrity or recovery error: managed: repository is not ready to copy: repositor
 
 少见的那种是真正的完整性失败:状态数据库、journal 与文件树互相矛盾,
 且 SOW 无法安全地自行裁决。此时它拒绝覆盖任何东西,你应该从备份恢复,而不是强行修复。
-这里**有意**没有 `--force`。
+这里 **有意** 没有 `--force`。
 
 ## 6 —— 预期拒绝
 
@@ -303,7 +303,7 @@ operation rejected: ... deb metadata key: environment key reference SOW_METADATA
 
 ## 在脚本里使用
 
-这些码的设计目标就是让部署流水线**不必解析文本**即可分支:
+这些码的设计目标就是让部署流水线 **不必解析文本** 即可分支:
 
 ```bash
 #!/usr/bin/env bash
@@ -328,7 +328,7 @@ sow publish mirror
 
 这里的 `mirror` 是 `pigsty` 已配置的 Publication Target。
 
-两个值得养成的习惯:把 `4` 当作**可重试**而不是致命错误;
+两个值得养成的习惯:把 `4` 当作 **可重试** 而不是致命错误;
 永远不要把 `6` 当作崩溃 —— 它通常意味着需要改的是你的输入,而不是 SOW。
 
 ## 延伸阅读

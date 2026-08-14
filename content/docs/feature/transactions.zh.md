@@ -20,7 +20,7 @@ Plain `sow create` 刻意不属于这套事务模型。它以包目录为权威�
 扫描、一次最终 stat 校验，然后覆盖发布。中断后重新运行 `sow create`，而不是重放 journal。详见
 [Plain 平面仓库](/zh/docs/feature/plain/)。
 
-也要注意它**没有**声称什么。`dirty` 不是指索引写了一半；它表示 Desired 状态领先于
+也要注意它 **没有** 声称什么。`dirty` 不是指索引写了一半；它表示 Desired 状态领先于
 Built Generation，而旧的 Built View 仍然完整。SOW 也不承诺两个不同 Dist 在同一瞬间翻代；
 它承诺每个协议视图始终自洽，且写命令返回时，本次 Operation 包含的每个 Dist 都处于记录的
 Built Generation。
@@ -38,7 +38,7 @@ Managed 仓库生命周期与变更使用两类持久化载体，各自作用域
 
 **Workspace journal** 保存操作类型、随机 64 位十六进制 id、仓库名,以及新旧 `sow.yml` 的原始字节与各自 SHA-256。工作区锁保证同时只有一条 active operation。`sow.yml` 的原子 rename 就是提交决策:如果当前 config 仍然哈希为旧值,就清理 planned journal 并回滚;如果哈希为新值,就幂等地补齐仓库外壳,或把自有对象移入 recovery。两边都不匹配则拒绝猜测。
 
-**Repository 操作日志**在任何公开文件副作用**之前**先向 SQLite 提交一条 `planned` Operation,随后记录每次状态迁移。它的 payload 绑定仓库、config SHA-256、精确的选中 Dist 集合、精确的 `build_dists`、`--skip` 决策,以及一个 manifest 哈希 —— 后者覆盖新对象事实、完整期望集、逐 Dist 策略结果、RPM 公钥证书快照与目标 Generation。
+**Repository 操作日志** 在任何公开文件副作用 **之前** 先向 SQLite 提交一条 `planned` Operation,随后记录每次状态迁移。它的 payload 绑定仓库、config SHA-256、精确的选中 Dist 集合、精确的 `build_dists`、`--skip` 决策,以及一个 manifest 哈希 —— 后者覆盖新对象事实、完整期望集、逐 Dist 策略结果、RPM 公钥证书快照与目标 Generation。
 
 这不是 SQLite 的 WAL。WAL 负责 SQLite 自己的页面事务,它无法原子地协调 pool、staging 区与 `dists/`。跨数据库记录与 POSIX 文件动作的,是这套应用级操作日志。
 
@@ -87,7 +87,7 @@ planned → staged → applied → built → done
 
 两把都需要时,顺序固定:先工作区,后仓库,释放顺序相反。仓库锁的 inode 位于稳定路径,绝不随私有状态目录移动 —— 这样删除仓库时可以在别的进程还持有旧描述符的情况下撤下锁路径,而不会有第二个写者在新 inode 上形成。
 
-`sow create` 同时锁住目标目录**和**它稳定的父目录。父目录锁的作用是:阻止另一个协作写者用 rename 把目录整个换掉,再对替身取得一把独立的锁。
+`sow create` 同时锁住目标目录 **和** 它稳定的父目录。父目录锁的作用是:阻止另一个协作写者用 rename 把目录整个换掉,再对替身取得一把独立的锁。
 
 只读命令从不取写锁,也不接受锁参数。其中需要组合读取配置、SQLite 与 live 元数据的那几个(`config check`、`repo ls/show`、`dist ls/show`)会在整个快照期间持有共享锁。`status` 刻意更轻:它只探测仓库锁,以便在写入进行中报告 `recovering` 或 `locked`,而不会被它阻塞。
 

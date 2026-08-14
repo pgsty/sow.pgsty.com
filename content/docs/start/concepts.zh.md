@@ -40,7 +40,7 @@ Workspace                    /srv/sow
 - **Workspace** 是配置与发现边界。
 - **Repository** 是隔离、Generation、发布和公共树边界。不同 Repository 之间不去重包体。
 - **Dist** 是单一包格式的具名成员集合。
-- **架构视图**是派生输出，不是第二套成员关系。`noarch` RPM 与 `all` DEB 会进入所有适用
+- **架构视图** 是派生输出，不是第二套成员关系。`noarch` RPM 与 `all` DEB 会进入所有适用
   视图，但包池字节不重复。
 
 ## 一条规范包体路径

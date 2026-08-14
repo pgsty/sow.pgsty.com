@@ -27,6 +27,7 @@ build:
 	HUGO_MODULE_WORKSPACE=off $(HUGO) build --gc --minify --cleanDestinationDir
 
 check:
+	python3 bin/check_markdown.py README.md archetypes content
 	GOWORK=off go mod verify
 	HUGO_MODULE_WORKSPACE=off $(HUGO) build --gc --minify --cleanDestinationDir --printPathWarnings --printI18nWarnings --panicOnWarning
 	python3 bin/check_internal_links.py public

@@ -98,14 +98,14 @@ NEVRA 不变，并且签名身份与配置完全一致。`fill` 与 `always` 必
 
 ## 更换密钥会让 Dist 变 dirty
 
-一个 Dist 的 Built 配置摘要覆盖它的 format、canonical 架构、`limit`、`exclude`,以及**已冻结的签名身份**。改动密钥引用或 fingerprint 会改变这个摘要,于是所有受影响的 Dist 变 dirty:
+一个 Dist 的 Built 配置摘要覆盖它的 format、canonical 架构、`limit`、`exclude`,以及 **已冻结的签名身份**。改动密钥引用或 fingerprint 会改变这个摘要,于是所有受影响的 Dist 变 dirty:
 
 ```console
 $ sow status
 repository=pigsty status=dirty ready_to_copy=false revision=5 generation=4 dirty_dists=el9,trixie pending=0/0 locked=false
 ```
 
-更换**元数据** key 后，`sow build` 会用新身份签署索引并产生新 Generation。
+更换 **元数据** key 后，`sow build` 会用新身份签署索引并产生新 Generation。
 
 RPM 包体是不可变 Package Object；`build` 不会在同一坐标下静默重签既有对象。如果当前 Desired
 RPM 不满足新的包签名策略，`build` 会拒绝。分阶段轮换通常使用 `fill`：将新 key 设为当前 key，

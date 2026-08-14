@@ -61,7 +61,7 @@ targets:
 
 ### architectures
 
-这是**上限**,不是目标。它声明 SOW 最多可以接纳哪些架构;各 Dist 默认继承整张表,
+这是 **上限**,不是目标。它声明 SOW 最多可以接纳哪些架构;各 Dist 默认继承整张表,
 除非自己再收窄。
 
 目前只支持两个规范族(canonical family):`x86_64` 与 `aarch64`。DEB 生态名作为输入别名
@@ -79,7 +79,7 @@ targets:
 configuration error: load config "/srv/repo/sow.yml": workspace architectures: duplicate architecture "x86_64" after normalization
 ```
 
-`noarch`(RPM)与 `all`(DEB)**不是**这里的架构。它们是中性(neutral)包,构建时投影进
+`noarch`(RPM)与 `all`(DEB)**不是** 这里的架构。它们是中性(neutral)包,构建时投影进
 每个适用视图,解析器拒绝把它们写进这个列表。不支持的值(如 `riscv64`)立即失败:
 
 ```console
@@ -167,7 +167,7 @@ configuration error: load config "/srv/repo/sow.yml": repository "a" dist "d1" f
 ### architectures
 
 省略这个字段,Dist 继承工作区列表 —— 绝大多数情况下这就是你要的。
-只有需要**收窄**时才声明:比如双架构工作区里,某个 `el9` Dist 只做 x86。
+只有需要 **收窄** 时才声明:比如双架构工作区里,某个 `el9` Dist 只做 x86。
 
 列表必须是工作区列表的子集,且不能为空:
 
@@ -198,7 +198,7 @@ item input=".../libpq5_18.2-1.pgdg12+1_amd64.deb" status=excluded format=deb coo
 item input=".../libpq5_18.3-1.pgdg12+1_amd64.deb" status=accepted format=deb coordinate="libpq5=18.3-1.pgdg12+1:amd64" sha256:4b526223... dists=trixie:accepted
 ```
 
-事后调大 `limit` **不会**复活曾被策略移出的版本。包体字节可能还留在包池里,
+事后调大 `limit` **不会** 复活曾被策略移出的版本。包体字节可能还留在包池里,
 但成员关系已经没了;要拿回来就重新 `add` 一次。理由见[成员策略](/zh/docs/feature/policy/)。
 
 ### exclude
@@ -273,7 +273,7 @@ item input=".../blackbox_exporter-0.28.0-1.x86_64.rpm" status=excluded format=rp
           passphrase: env://SOW_METADATA_PASSPHRASE
 ```
 
-树形是固定的:`signing.rpm` 下有 `packages` 与 `metadata`;`signing.deb` 下**只有**
+树形是固定的:`signing.rpm` 下有 `packages` 与 `metadata`;`signing.deb` 下 **只有**
 `metadata` —— DEB 包体永远不会被重签,因为 APT 通过 `Release` 验证整个仓库,
 而不是逐包签名。
 
@@ -307,7 +307,7 @@ configuration error: load config "/srv/repo/sow.yml": repository "a" signing: rp
 configuration error: load config "/srv/repo/sow.yml": repository "a" signing: duplicate rpm trusted key reference "keys/x.asc"
 ```
 
-RPM 包签名是唯一会调用外部程序的操作:SOW 对**私有 stage 副本**调用环境里的
+RPM 包签名是唯一会调用外部程序的操作:SOW 对 **私有 stage 副本** 调用环境里的
 `rpm --addsign` / `rpm --resign`,永远不碰你的输入文件。私钥必须已经存在于 `rpm` 使用的
 GPG 环境中。
 
@@ -323,7 +323,7 @@ GPG 环境中。
 clearsign 的 `InRelease` 与分离的 `Release.gpg`。没配 key 就不生成这些文件 ——
 `repomd.xml` 与 `Release` 则始终会写。
 
-`file://` 与 `env://` 引用由 SOW 在**进程内**完成签名,不需要 `gpg` 可执行文件。
+`file://` 与 `env://` 引用由 SOW 在 **进程内** 完成签名,不需要 `gpg` 可执行文件。
 只有 `agent://` 需要环境里有 `gpg`。
 
 改变 key 引用或它背后的 fingerprint 会让相关 Dist 变 dirty ——
@@ -335,7 +335,7 @@ key 引用是下列四种写法之一:
 
 | 形态 | 例子 | 说明 |
 |---|---|---|
-| 路径 | `keys/repo-signing.asc` | ASCII-armored key 文件。相对路径相对**工作区根目录**解析,不是当前目录。 |
+| 路径 | `keys/repo-signing.asc` | ASCII-armored key 文件。相对路径相对 **工作区根目录** 解析,不是当前目录。 |
 | `file://<path>` | `file:///secure/repo-signing.asc` | 与上一行等价,只是显式写出。绝对路径因此是三个斜杠。 |
 | `env://<VAR>` | `env://SOW_METADATA_KEY` | 环境变量里存的是 armored key **内容本身**,不是路径。变量名须匹配 `[A-Za-z_][A-Za-z0-9_]*`。 |
 | `agent://<fingerprint>` | `agent://7F721C4AD40F...CF3B` | 委托给环境里的 `gpg-agent`。fingerprint 为 16、40 或 64 位十六进制,不区分大小写。 |
@@ -346,7 +346,7 @@ key 引用是下列四种写法之一:
 configuration error: load config "/srv/repo/sow.yml": repository "a" signing: deb metadata key: unsupported key reference scheme in "https://example.com/key.asc"
 ```
 
-引用分两阶段校验。**文法**在解析时检查,失败退出码 `2`;引用**能否解析出真实密钥**
+引用分两阶段校验。**文法** 在解析时检查,失败退出码 `2`;引用 **能否解析出真实密钥**
 由 `sow config check` 和每条写命令检查,失败退出码 `6`:
 
 ```console
@@ -370,7 +370,7 @@ operation rejected: ... deb metadata key: gpg public-key export returned no boun
 ### passphrase 引用
 
 `passphrase` 接受与 key 引用相同的路径、`file://`、`env://` 三种写法,
-但**不接受** `agent://` —— 口令是一个值,不是密钥句柄。
+但 **不接受** `agent://` —— 口令是一个值,不是密钥句柄。
 
 两条规则:
 
@@ -547,7 +547,7 @@ sow config show --all
 
 ## sow.yml 里没有什么
 
-有些你可能以为能配的东西,是**有意**不做成配置项的:
+有些你可能以为能配的东西,是 **有意** 不做成配置项的:
 
 - **仓库路径。** 仓库永远位于 `<workspace>/<name>`,没有 `path:` 字段。
   见[仓库布局](/zh/docs/reference/layout/)。
