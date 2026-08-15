@@ -558,8 +558,8 @@ sow config show --all
 
 ## 延伸阅读
 
-- [`sow config`](/zh/docs/reference/cli/config/) —— 读取本文件的命令
+- [`sow config`](/zh/docs/command/config/) —— 读取本文件的命令
 - [成员策略](/zh/docs/feature/policy/) —— `exclude` 与 `limit` 随时间演化的行为
 - [签名模型](/zh/docs/feature/signing/) —— 两条信任链的详细解释
-- [发布、保留、GC 与导出](/zh/docs/reference/cli/publication/) —— 目标生命周期命令
+- [`publish`](/zh/docs/command/publish/)、[`retain`](/zh/docs/command/retain/)、[`gc`](/zh/docs/command/gc/) 与 [`export`](/zh/docs/command/export/) —— 交付生命周期命令
 - [退出码](/zh/docs/reference/exit-codes/) —— 这里的 `2` 与 `6` 分别意味着什么

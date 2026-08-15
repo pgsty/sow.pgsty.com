@@ -9,7 +9,7 @@ icon: fa-solid fa-cubes
 
 This section explains the machinery. The [Getting Started](/docs/start/) pages show you which commands to type and the [Tutorials](/docs/tutorial/) walk through complete scenarios; the pages here answer the next question — *what is actually happening on disk, and why was it designed that way*.
 
-Every page opens with the invariants it protects, then shows the mechanism that enforces them. If you only need syntax, go to the [Reference](/docs/reference/) instead.
+Every page opens with the invariants it protects, then shows the mechanism that enforces them. If you only need syntax, go to the [Command manual](/docs/command/) instead.
 
 ## Which page answers which question
 

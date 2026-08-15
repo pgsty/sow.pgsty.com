@@ -1,4 +1,4 @@
-{{- /* ⌘K 搜索弹窗的离线索引（按语言输出：/index.json 与 /zh/index.json）。
+{{- /* SOW 首页 ⌘K 搜索弹窗的离线索引（按语言输出：/index.json 与 /zh/index.json）。
        字段与 lunr 建索引约定对应：ref/title/categories/tags/description/body/excerpt。
        作为 home 的 JSON 输出格式构建（outputs.home），不走 resources 管线。 */ -}}
 {{- $index := slice -}}

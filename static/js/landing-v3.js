@@ -1,5 +1,5 @@
 /**
- * SILO landing interactions, reused from Pigsty Landing v3.
+ * SOW landing interactions, reused from Pigsty Landing v3.
  * Theme switch / command copy / reveal / counters / gallery.
  */
 
@@ -8,7 +8,7 @@
 
   var DARK_THEME_COLOR = '#0b1119';
   var LIGHT_THEME_COLOR = '#f1f4f8';
-  var THEME_KEY = 'silo-landing-theme';
+  var THEME_KEY = 'td-color-theme';
 
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -33,6 +33,7 @@
   function applyTheme(theme) {
     var isLight = theme === 'light';
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-bs-theme', theme);
 
     document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
       var icon = btn.querySelector('i');
@@ -55,7 +56,7 @@
     });
 
     try {
-      window.dispatchEvent(new CustomEvent('silo-theme-change', { detail: { theme: theme } }));
+      window.dispatchEvent(new CustomEvent('sow-theme-change', { detail: { theme: theme } }));
     } catch (err) { /* ignore */ }
   }
 

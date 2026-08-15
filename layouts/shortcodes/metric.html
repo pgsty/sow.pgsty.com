@@ -1,6 +1,0 @@
-{{- $name := .Get 0 -}}
-{{- $value := index hugo.Data.home.metrics $name -}}
-{{- if eq $value nil -}}
-  {{- errorf "unknown homepage metric %q at %s" $name .Position -}}
-{{- end -}}
-{{- lang.FormatNumber 0 $value -}}

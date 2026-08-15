@@ -453,5 +453,5 @@ sow changes 0 -r pigsty --json \
 ## 延伸阅读
 
 - [退出码](/zh/docs/reference/exit-codes/) —— `errors` 里的 `code` 与 `class` 取值
-- [命令行](/zh/docs/reference/cli/) —— 哪些命令接受 `--json`
+- [命令行](/zh/docs/command/) —— 哪些命令接受 `--json`
 - [可观测与审计](/zh/docs/feature/audit/) —— 操作账本记录了什么

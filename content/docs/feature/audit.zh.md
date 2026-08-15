@@ -123,6 +123,6 @@ sow publish public
 
 ## 延伸阅读
 
-- [Build 与 check 命令](/zh/docs/reference/cli/build/)
-- [Log 命令](/zh/docs/reference/cli/log/)
-- [发布生命周期](/zh/docs/reference/cli/publication/)
+- [`sow build`](/zh/docs/command/build/) 与 [`sow check`](/zh/docs/command/check/)
+- [Log 命令](/zh/docs/command/log/)
+- [`sow publish`](/zh/docs/command/publish/) 与 [`sow gc`](/zh/docs/command/gc/)

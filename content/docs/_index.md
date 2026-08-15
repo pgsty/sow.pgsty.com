@@ -36,9 +36,12 @@ membership policy, signing, transactions, and auditing.
 Architecture and decision records: ownership, the v0.2.0 single-payload model,
 publication, recovery, and compatibility boundaries.
 {{< /doc-card >}}
+{{< doc-card title="Command" link="/docs/command/" >}}
+One page per top-level command: syntax, options, behavior, output, and exit codes.
+{{< /doc-card >}}
 {{< doc-card title="Reference" link="/docs/reference/" >}}
-Complete CLI reference, `sow.yml` configuration, package reference grammar, exit codes,
-repository layouts, and compatibility evidence.
+`sow.yml` schema, package reference grammar, exit codes, JSON contracts, repository
+layouts, and compatibility evidence.
 {{< /doc-card >}}
 {{< /doc-cards >}}
 
@@ -50,4 +53,5 @@ repository layouts, and compatibility evidence.
 | Understand the mental model first | [Core Concepts](/docs/start/concepts/) |
 | Build a Managed YUM / APT repository | [Tutorials](/docs/tutorial/) |
 | Understand the ownership and publication model | [Design](/docs/design/) |
-| Look up a command or config field | [Reference](/docs/reference/) |
+| Look up command syntax and behavior | [Command](/docs/command/) |
+| Look up a config field or data contract | [Reference](/docs/reference/) |

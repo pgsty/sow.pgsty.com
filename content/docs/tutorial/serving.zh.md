@@ -142,6 +142,6 @@ CLI-to-R2 端到端证据尚不完整；依赖前请在非生产 prefix 验证�
 
 ## 下一步
 
-- [发布命令](/zh/docs/reference/cli/publication/)
+- [`sow publish`](/zh/docs/command/publish/) 与 [`sow gc`](/zh/docs/command/gc/)
 - [发布设计](/zh/docs/design/publication/)
 - [签名教程](/zh/docs/tutorial/signing/)

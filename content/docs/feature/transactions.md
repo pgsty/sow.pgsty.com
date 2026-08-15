@@ -177,4 +177,4 @@ None of this claims to defend against a malicious process running as the same us
 
 - [Observability & Audit](/docs/feature/audit/) — reading the state these mechanisms maintain
 - [Exit Codes](/docs/reference/exit-codes/) — what `4`, `5`, and `6` mean and when you see them
-- [`build` / `status` / `check` / `changes` reference](/docs/reference/cli/build/)
+- [`build`](/docs/command/build/), [`status`](/docs/command/status/), [`check`](/docs/command/check/), and [`changes`](/docs/command/changes/)

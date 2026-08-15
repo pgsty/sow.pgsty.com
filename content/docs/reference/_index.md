@@ -1,15 +1,16 @@
 ---
 title: "Reference"
 linkTitle: "Reference"
-description: "Command syntax, configuration schema, on-disk layout, exit codes, JSON output, and compatibility evidence."
+description: "Configuration schema, package references, on-disk layout, exit codes, JSON output, and compatibility evidence."
 url: "/docs/reference/"
 weight: 400
 icon: fa-solid fa-book-open
 ---
 
-This section is the lookup half of the documentation. It answers "what exactly does this
-flag do", "what fields may appear in `sow.yml`", "what does exit code 5 mean", and "which
-file lands where" — precisely, without a narrative around it. If you are trying to learn
+This section covers stable data and interface contracts: "what fields may appear in
+`sow.yml`", "what does exit code 5 mean", and "which file lands where" — precisely,
+without a narrative around it. Command syntax and behavior live in the separate
+[Command manual](/docs/command/). If you are trying to learn
 how SOW works, start with [Getting Started](/docs/start/) or [Features](/docs/feature/)
 instead; those pages explain the model, and link back here for the details.
 
@@ -18,10 +19,6 @@ its strict parser. Output examples illustrate shape; identifiers, paths, hashes,
 counts vary with the workspace.
 
 {{< doc-cards cols="2" >}}
-{{< doc-card title="CLI Commands" link="/docs/reference/cli/" >}}
-Every command, its arguments, the global options they accept, and the discovery and
-selection rules that decide which repository and distribution they act on.
-{{< /doc-card >}}
 {{< doc-card title="sow.yml Reference" link="/docs/reference/config/" >}}
 The complete configuration schema: workspace, repository, distribution, membership
 policy, signing, and publication targets.

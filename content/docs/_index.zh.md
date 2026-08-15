@@ -31,8 +31,11 @@ SOW 的工作原理:Plain 与 Managed 双引擎、包池与架构视图、成员
 {{< doc-card title="设计" link="/zh/docs/design/" >}}
 架构与决策记录:所有权、单包体模型、发布、恢复与兼容性边界。
 {{< /doc-card >}}
+{{< doc-card title="命令手册" link="/zh/docs/command/" >}}
+每条顶层命令单独成页：语法、参数、行为、输出与退出码。
+{{< /doc-card >}}
 {{< doc-card title="参考" link="/zh/docs/reference/" >}}
-完整命令行参考、`sow.yml` 配置、包引用文法、退出码、仓库布局与兼容性证据。
+`sow.yml` Schema、包引用文法、退出码、JSON 契约、仓库布局与兼容性证据。
 {{< /doc-card >}}
 {{< /doc-cards >}}
 
@@ -44,4 +47,5 @@ SOW 的工作原理:Plain 与 Managed 双引擎、包池与架构视图、成员
 | 先理解设计与心智模型 | [核心概念](/zh/docs/start/concepts/) |
 | 搭建 Managed YUM / APT 仓库 | [教程](/zh/docs/tutorial/) |
 | 理解所有权与发布模型 | [设计](/zh/docs/design/) |
-| 查命令或配置字段 | [参考](/zh/docs/reference/) |
+| 查命令语法与行为 | [命令手册](/zh/docs/command/) |
+| 查配置字段或数据契约 | [参考](/zh/docs/reference/) |

@@ -1,6 +1,0 @@
-{{- $value := int . -}}
-{{- if ge $value 1000 -}}
-  {{- printf "%.1fk" (div (float $value) 1000) -}}
-{{- else -}}
-  {{- lang.FormatNumber 0 $value -}}
-{{- end -}}

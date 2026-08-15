@@ -156,6 +156,6 @@ sow rm patroni -r pgsql -d el9 -c
 ## 继续阅读
 
 - [`sow.yml` 配置参考](/zh/docs/reference/config/) —— 完整策略 schema
-- [`sow add` 参考](/zh/docs/reference/cli/add/) —— 逐条目状态与部分成功退出码
+- [`sow add` 参考](/zh/docs/command/add/) —— 逐条目状态与部分成功退出码
 - [包池与架构视图](/zh/docs/feature/views/) —— 存活下来的成员被渲染到哪里
-- [CLI:发布、保留、GC 与导出](/zh/docs/reference/cli/publication/) —— 包体生命周期控制
+- [`sow retain`](/zh/docs/command/retain/) 与 [`sow gc`](/zh/docs/command/gc/) —— 包体生命周期控制

@@ -347,5 +347,5 @@ a crash — it usually means your input, not SOW, needs to change.
 ## See also
 
 - [JSON Output](/docs/reference/json/) — the `errors` array and its `class` field
-- [`sow check`](/docs/reference/cli/build/) — the ordered verification layers behind code `5`
+- [`sow check`](/docs/command/check/) — the ordered verification layers behind code `5`
 - [Transactions & Recovery](/docs/feature/transactions/) — what `recovering` and `error` mean

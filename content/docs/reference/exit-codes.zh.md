@@ -334,5 +334,5 @@ sow publish mirror
 ## 延伸阅读
 
 - [JSON 输出](/zh/docs/reference/json/) —— `errors` 数组与它的 `class` 字段
-- [`sow check`](/zh/docs/reference/cli/build/) —— 退出码 `5` 背后的有序分层校验
+- [`sow check`](/zh/docs/command/check/) —— 退出码 `5` 背后的有序分层校验
 - [事务与恢复](/zh/docs/feature/transactions/) —— `recovering` 与 `error` 状态的含义

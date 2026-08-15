@@ -2,8 +2,8 @@
 
 This repository contains the bilingual documentation for **SOW**, the self-contained
 APT / YUM package repository manager by [Pigsty](https://pigsty.io). It uses
-[Hugo](https://gohugo.io/) and [Docsy](https://www.docsy.dev/), with English at `/`
-and Simplified Chinese at `/zh/`.
+[Hugo](https://gohugo.io/) and the [OINK](https://github.com/pgsty/oink) documentation
+theme, with English at `/` and Simplified Chinese at `/zh/`.
 
 - Site: <https://sow.pgsty.com>
 - Project: <https://github.com/pgsty/sow>
@@ -12,31 +12,52 @@ and Simplified Chinese at `/zh/`.
 
 ```
 content/
-  _index.md            # landing page metadata (page rendered by layouts/index.html)
+  _index.md            # landing page metadata
   docs/                # documentation, one .md (en) + one .zh.md (zh) per page
     start/             # getting started
     tutorial/          # task-oriented walkthroughs
     feature/           # explanation: how SOW works
     design/            # maintained architecture, invariants, and compatibility boundaries
-    reference/         # CLI, sow.yml, layouts, exit codes, compatibility
+    command/           # complete command manual
+    reference/         # sow.yml, layouts, exit codes, compatibility
   blog/                # release notes and announcements
-data/docs_nav.json     # generated sidebar tree — do not edit by hand
+data/home/metrics.yaml # repository facts used by the custom landing page
+layouts/index.html     # SOW-specific landing page; docs/blog come from OINK
 ```
 
-The docs sidebar is rendered from `data/docs_nav.json`. Regenerate it after adding,
-removing, or re-weighting any page under `content/docs/`:
+OINK owns the common docs/blog shell, navigation, search, content blocks, and core
+shortcodes. Keep site-level layouts limited to SOW-specific behavior; do not copy common
+OINK or Docsy templates into this repository.
+
+## Theme dependency
+
+OINK is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The site keeps
+its product landing page, homepage search index, and product assets, while ordinary
+documentation and blog pages render directly through the theme.
+
+The intentional site-level template surface is:
+
+- `layouts/index.html` and `layouts/_partials/home/sow-footer.html` for the landing page;
+- `layouts/_default/index.json` and `layouts/_partials/sow/` for landing-page search;
+- `layouts/robots.txt` for the deployment-specific crawler policy.
+
+All docs/blog base templates, navigation, table of contents, search, Markdown/LLMS and
+print outputs, and content shortcodes resolve from OINK.
+
+For local theme development, connect a sibling OINK checkout with an ignored Go
+workspace:
 
 ```bash
-python3 bin/gen_docs_nav.py
+go work init .
+go work edit -replace=github.com/pgsty/oink=../oink
+HUGO_MODULE_WORKSPACE=go.work make dev
 ```
 
 ## Local development
 
-Install Hugo Extended, Go, Node.js, and npm. Install the pinned PostCSS toolchain
-once, then run the local server:
+Install Hugo Extended 0.160.1 or newer, Go, and Git, then run the local server:
 
 ```bash
-npm ci
 make dev
 ```
 
@@ -52,8 +73,8 @@ Run the module verification and warning-strict production build with:
 make check
 ```
 
-Docsy is pinned as a Hugo Module. Project-specific layouts and SCSS extend the theme
-without vendoring its source.
+The build is Hugo-only: OINK ships its styles, scripts, fonts, search, and content
+runtimes with the theme, so this repository has no Node.js or CDN build dependency.
 
 ## Writing conventions
 
