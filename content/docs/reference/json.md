@@ -56,11 +56,10 @@ before it could produce anything — an unknown flag, for example.
 Branch on `class`, not on message text. Messages carry paths and package names and will
 change; the class will not.
 
-{{% alert title="A nonzero exit still returns the result" color="info" %}}
-When a batch partially succeeds, `ok` is `false` *and* `result` lists everything that was
-committed. Never discard the payload because the exit code was nonzero — for `add`, that
-is exactly where you learn which packages landed.
-{{% /alert %}}
+> [!NOTE] A nonzero exit still returns the result
+> When a batch partially succeeds, `ok` is `false` *and* `result` lists everything that was
+> committed. Never discard the payload because the exit code was nonzero — for `add`, that
+> is exactly where you learn which packages landed.
 
 ### Operation IDs are strings
 

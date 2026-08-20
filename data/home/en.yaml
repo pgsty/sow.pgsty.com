@@ -1,6 +1,5 @@
 sections:
   - hero
-  - metrics
   - capabilities
   - principles
   - faq
@@ -11,12 +10,16 @@ hero:
   title_lines:
     - Build Package Repo
     - Ship only what changed
+  title_size: 4rem
   lead: One self-contained binary turns local RPM and DEB packages into usable repositories, then manages snapshots, audit history, and incremental publication when you need more control.
   note: Single binary · Linux + macOS · RPM + DEB · Apache-2.0
   image:
     light: img/sow.svg
     dark: img/sow.svg
     alt: SOW package-and-sprout emblem
+  media:
+    ratio: minmax(0, 1.5fr) minmax(220px, 0.5fr)
+    max_width: 280px
   detail:
     label: SOW 0.3.0 is available — download now
     url: download/
@@ -30,37 +33,6 @@ hero:
       url: download/
       icon: fa-solid fa-download
       style: ghost
-
-metrics:
-  eyebrow: At a glance
-  title: One tool, two paths to a repository
-  desc: Start with a local directory and add managed state only when delivery needs it.
-  columns: 4
-  items:
-    - value: '1'
-      name: Download SOW
-      label: self-contained binary
-      desc: Linux and macOS
-      icon: fa-solid fa-cube
-      url: download/
-    - value: '2'
-      name: Compare repository modes
-      label: repository modes
-      desc: Plain and Managed
-      icon: fa-solid fa-code-branch
-      url: docs/start/concepts/
-    - value: '2'
-      name: Review package compatibility
-      label: package formats
-      desc: RPM and DEB
-      icon: fa-solid fa-boxes-stacked
-      url: docs/reference/compatibility/
-    - value: '2'
-      name: Learn about publication targets
-      label: publication providers
-      desc: filesystem and R2
-      icon: fa-solid fa-cloud-arrow-up
-      url: docs/command/publish/
 
 capabilities:
   eyebrow: Core capabilities
@@ -190,33 +162,3 @@ cta:
       url: docs/
       icon: fa-solid fa-book-open
       style: ghost
-
-footer:
-  brand:
-    name: SOW
-    tagline: '**S**oftware **O**bject **W**arehouse'
-    slogan: Package repository creation, management, and incremental delivery by Pigsty.
-  columns:
-    - title: Product
-      links:
-        - { label: Get Started, url: docs/start/ }
-        - { label: Plain mode, url: docs/feature/plain/ }
-        - { label: Managed mode, url: docs/feature/managed/ }
-        - { label: Download, url: download/ }
-    - title: Docs
-      links:
-        - { label: Docs, url: docs/ }
-        - { label: Commands, url: docs/command/ }
-        - { label: Tutorials, url: docs/tutorial/ }
-        - { label: Reference, url: docs/reference/ }
-    - title: Project
-      links:
-        - { label: Blog, url: blog/ }
-        - { label: Release notes, url: blog/release/ }
-        - { label: GitHub, url: 'https://github.com/pgsty/sow', external: true }
-        - { label: Issues, url: 'https://github.com/pgsty/sow/issues', external: true }
-    - title: Pigsty
-      links:
-        - { label: Pigsty, url: 'https://pigsty.io', external: true }
-        - { label: Package repository, url: 'https://pigsty.io/docs/repo/', external: true }
-        - { label: License, url: 'https://www.apache.org/licenses/LICENSE-2.0', external: true }

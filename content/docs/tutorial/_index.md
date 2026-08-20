@@ -13,28 +13,28 @@ replace uppercase placeholders and package paths for your environment.
 If you have not installed SOW yet, start with [Installation](/docs/start/install/) and
 [Quick Start](/docs/start/quickstart/). The tutorials below cover the managed repository path.
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="Build a YUM Repository" link="/docs/tutorial/yum-repo/" >}}
+{{< cards >}}
+{{< card title="Build a YUM Repository" link="/docs/tutorial/yum-repo/" >}}
 A managed RPM repository with per-architecture views, `noarch` projection, debuginfo filtering,
 version limits, and a working `dnf` client configuration.
-{{< /doc-card >}}
-{{< doc-card title="Build an APT Repository" link="/docs/tutorial/apt-repo/" >}}
+{{< /card >}}
+{{< card title="Build an APT Repository" link="/docs/tutorial/apt-repo/" >}}
 A managed DEB repository with a Debian-style pool, `by-hash` indexes, and a deb822 client
 configuration.
-{{< /doc-card >}}
-{{< doc-card title="Sign Your Repository" link="/docs/tutorial/signing/" >}}
+{{< /card >}}
+{{< card title="Sign Your Repository" link="/docs/tutorial/signing/" >}}
 Generate a dedicated GPG key, sign repository metadata and RPM packages, and configure
 clients to reject anything unsigned.
-{{< /doc-card >}}
-{{< doc-card title="Serve Repositories" link="/docs/tutorial/serving/" >}}
+{{< /card >}}
+{{< card title="Serve Repositories" link="/docs/tutorial/serving/" >}}
 Serve a Repository with Nginx and publish a verified Generation to a configured filesystem
 target without exposing private workspace state.
-{{< /doc-card >}}
-{{< doc-card title="Build the pigsty-infra Repository" link="/docs/tutorial/infra-repo/" >}}
+{{< /card >}}
+{{< card title="Build the pigsty-infra Repository" link="/docs/tutorial/infra-repo/" >}}
 Turn existing dual-architecture infra-pkg RPMs and DEBs into a real repository, then rehearse local
 installation, rolling updates, Stable promotion, and monthly snapshots.
-{{< /doc-card >}}
-{{< /doc-cards >}}
+{{< /card >}}
+{{< /cards >}}
 
 ## Which one first
 

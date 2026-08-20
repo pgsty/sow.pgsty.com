@@ -252,12 +252,11 @@ sow check -r infra
 
 可以重新运行第 6、7 节的客户端，先 `makecache/update`，再安装或升级，完成更新验收。
 
-{{% alert title="删除只用于硬订正" color="warning" %}}
-正常发布不要先 `sow rm`。如果某个错误包必须紧急撤回，先用 `sow ls -r infra -d rpm --json`
-或对应的 `-d deb` 找到精确 SHA-256，
-再依次执行 `sow rm sha256:... -r infra -d rpm --check` 与不带 `--check` 的同一命令。
-`rm` 只删除 Dist Membership，pool 字节仍由保守的 `sow gc` 独立回收；不要用裸包名误删所有版本与架构。
-{{% /alert %}}
+> [!WARNING] 删除只用于硬订正
+> 正常发布不要先 `sow rm`。如果某个错误包必须紧急撤回，先用 `sow ls -r infra -d rpm --json`
+> 或对应的 `-d deb` 找到精确 SHA-256，
+> 再依次执行 `sow rm sha256:... -r infra -d rpm --check` 与不带 `--check` 的同一命令。
+> `rm` 只删除 Dist Membership，pool 字节仍由保守的 `sow gc` 独立回收；不要用裸包名误删所有版本与架构。
 
 ## 9. 两层保留策略：latest 与 stable
 

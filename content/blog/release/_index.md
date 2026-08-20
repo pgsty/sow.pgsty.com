@@ -5,7 +5,8 @@ description: Published SOW release notes covering features, performance, correct
 weight: 20
 icon: fa-solid fa-tag
 sidebar_expanded: true
-default_featured: /images/sow-social-card.png
+cascade:
+  images: [/images/sow-social-card.png]
 ---
 
 Published SOW release notes cover features, performance, correctness, packaging, and

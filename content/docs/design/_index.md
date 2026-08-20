@@ -10,24 +10,24 @@ icon: fa-solid fa-compass-drafting
 This section records SOW's ownership boundaries and the invariants that make a repository
 safe to build, copy, publish, recover, and collect.
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="Design Principles" link="/docs/design/principles/" >}}
+{{< cards >}}
+{{< card title="Design Principles" link="/docs/design/principles/" >}}
 The small set of invariants that decide what SOW owns, what can be rebuilt, and what must
 fail closed.
-{{< /doc-card >}}
-{{< doc-card title="System Model" link="/docs/design/model/" >}}
+{{< /card >}}
+{{< card title="System Model" link="/docs/design/model/" >}}
 Workspace, Repository, Dist, Package Object, Membership, Generation, and publication
 target — and why each has a separate owner.
-{{< /doc-card >}}
-{{< doc-card title="Publication & Recovery" link="/docs/design/publication/" >}}
+{{< /card >}}
+{{< card title="Publication & Recovery" link="/docs/design/publication/" >}}
 Pointer-last publication, commit intent, forward recovery, retained generations, and
 evidence-gated garbage collection.
-{{< /doc-card >}}
-{{< doc-card title="Coordinated Publication Proposal" link="/docs/design/coordinated-publication/" >}}
+{{< /card >}}
+{{< card title="Coordinated Publication Proposal" link="/docs/design/coordinated-publication/" >}}
 The proposed v0.4.0 user workflow and implementation plan for SOW-orchestrated,
 rclone-executed publication and deterministic interruption recovery.
-{{< /doc-card >}}
-{{< /doc-cards >}}
+{{< /card >}}
+{{< /cards >}}
 
 The canonical one-payload layout is documented with the mechanism in
 [Pool & Metadata Views](/docs/feature/views/). Platform and integration requirements live

@@ -155,10 +155,9 @@ APT by-hash 条目让上一组元数据在可变指针最后替换时仍然可�
 `dists`、`sow.yml`、`workspace.lock`、`workspace-ops` 与 `repo-locks` 在相应位置为
 保留名。SOW 会拒绝大小写不敏感的池路径冲突,使产物能在 Linux 与默认 macOS 文件系统间迁移。
 
-{{% alert title="绝不要暴露 .sow" color="warning" %}}
-Web 服务器应指向 `<workspace>/<repo>/`,而不是工作区根目录。公共仓库需要同时包含
-`pool/` 与 `dists/`;私有 `.sow/` 必须隐藏。
-{{% /alert %}}
+> [!WARNING] 绝不要暴露 .sow
+> Web 服务器应指向 `<workspace>/<repo>/`,而不是工作区根目录。公共仓库需要同时包含
+> `pool/` 与 `dists/`;私有 `.sow/` 必须隐藏。
 
 ## 延伸阅读
 

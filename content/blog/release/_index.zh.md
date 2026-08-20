@@ -5,7 +5,8 @@ description: SOW 发布注记，涵盖功能、性能、正确性、打包与验
 weight: 20
 icon: fa-solid fa-tag
 sidebar_expanded: true
-default_featured: /images/sow-social-card.png
+cascade:
+  images: [/images/sow-social-card.png]
 ---
 
 SOW 发布注记涵盖功能、性能、正确性、打包与验证，并按发布时间从新到旧排列。

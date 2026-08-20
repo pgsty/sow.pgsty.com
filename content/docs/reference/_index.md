@@ -14,31 +14,31 @@ exit codes, JSON, platforms, and integrations. CLI syntax and state transitions 
 Output examples show shape; identifiers, paths, hashes, timestamps, and counts vary by
 workspace. The built-in `sow help` remains the exact syntax authority.
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="sow.yml Reference" link="/docs/reference/config/" >}}
+{{< cards >}}
+{{< card title="sow.yml Reference" link="/docs/reference/config/" >}}
 The complete configuration schema: workspace, repository, distribution, membership
 policy, signing, and publication targets.
-{{< /doc-card >}}
-{{< doc-card title="Package References" link="/docs/reference/package-ref/" >}}
+{{< /card >}}
+{{< card title="Package References" link="/docs/reference/package-ref/" >}}
 The five ways to name a package on the command line, how ambiguity is resolved, and
 which forms `rm`, `show`, and `where` accept.
-{{< /doc-card >}}
-{{< doc-card title="Repository Layout" link="/docs/reference/layout/" >}}
+{{< /card >}}
+{{< card title="Repository Layout" link="/docs/reference/layout/" >}}
 Every path SOW creates in plain and managed mode, the pool grouping rule, name
 constraints, and which directories must never be exposed over HTTP.
-{{< /doc-card >}}
-{{< doc-card title="Exit Codes" link="/docs/reference/exit-codes/" >}}
+{{< /card >}}
+{{< card title="Exit Codes" link="/docs/reference/exit-codes/" >}}
 The seven exit codes and what each one means.
-{{< /doc-card >}}
-{{< doc-card title="JSON Output" link="/docs/reference/json/" >}}
+{{< /card >}}
+{{< card title="JSON Output" link="/docs/reference/json/" >}}
 The `sow.cli/v1` envelope, the meaning of each top-level field, and result shapes for the
 primary command families.
-{{< /doc-card >}}
-{{< doc-card title="Platforms & Integrations" link="/docs/reference/compatibility/" >}}
+{{< /card >}}
+{{< card title="Platforms & Integrations" link="/docs/reference/compatibility/" >}}
 Release targets, filesystem requirements, repository-client checks, publication Providers,
 and the exact scope of each automated integration.
-{{< /doc-card >}}
-{{< /doc-cards >}}
+{{< /card >}}
+{{< /cards >}}
 
 ## Conventions
 

@@ -257,13 +257,12 @@ the old membership reappear automatically.
 Rerun the EL9 and Ubuntu clients from sections 6 and 7, refresh metadata, then install or upgrade to complete
 the update acceptance test.
 
-{{% alert title="Removal is only for hard corrections" color="warning" %}}
-Do not begin a normal release with `sow rm`. If a bad package must be withdrawn, use
-`sow ls -r infra -d rpm --json` (or the corresponding `-d deb`) to find its exact SHA-256, run
-`sow rm sha256:... -r infra -d rpm --check`, inspect the plan, then run the same command without
-`--check`. `rm` removes only Dist Membership; conservative `sow gc` handles pool bytes separately. Avoid a bare
-package name that could remove every version and architecture.
-{{% /alert %}}
+> [!WARNING] Removal is only for hard corrections
+> Do not begin a normal release with `sow rm`. If a bad package must be withdrawn, use
+> `sow ls -r infra -d rpm --json` (or the corresponding `-d deb`) to find its exact SHA-256, run
+> `sow rm sha256:... -r infra -d rpm --check`, inspect the plan, then run the same command without
+> `--check`. `rm` removes only Dist Membership; conservative `sow gc` handles pool bytes separately. Avoid a bare
+> package name that could remove every version and architecture.
 
 ## 9. Two retention layers: latest and stable
 

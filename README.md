@@ -33,13 +33,14 @@ OINK or Docsy templates into this repository.
 
 ## Theme dependency
 
-OINK 0.4.1 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
+OINK 0.5.1 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
 composed by OINK from bilingual data. Docs and blog pages also render through the theme;
 the site keeps only product-specific data and templates.
 
 The intentional site-level template surface is:
 
-- `data/home/{en,zh}.yaml` for the OINK landing page and footer;
+- `data/home/{en,zh}.yaml` for the OINK landing page;
+- `data/footer/{en,zh}.yaml` for the shared footer;
 - `layouts/download/single.html` for release assets and installation choices;
 - `layouts/robots.txt` for the deployment-specific crawler policy.
 
@@ -47,8 +48,8 @@ All docs/blog base templates, navigation, table of contents, search, Markdown/LL
 print outputs, and content shortcodes resolve from OINK.
 
 For local theme development, connect the sibling OINK checkout with the debug
-shortcut. It creates or refreshes an ignored Go workspace and lets Hugo select
-an available preview port:
+shortcut. It sets an inline module replacement for that command and lets Hugo
+select an available preview port without creating or changing a Go workspace:
 
 ```bash
 make d
@@ -75,7 +76,7 @@ make c
 ```
 
 The corresponding long targets are `debug`, `serve`, `build`, and `check`;
-`make dev` retains the pinned-theme preview. Do not run `go mod tidy`: OINK is a Hugo
+`make dev` uses the sibling OINK checkout while `make serve` retains the pinned-theme preview. Do not run `go mod tidy`: OINK is a Hugo
 Module rather than an imported Go package, so `tidy` would remove the required theme pin.
 
 The build is Hugo-only: OINK ships its styles, scripts, fonts, search, and content

@@ -1,0 +1,28 @@
+brand:
+  name: SOW
+  tagline: '**S**oftware **O**bject **W**arehouse'
+  slogan: Pigsty 出品的软件仓库创建、管理与增量交付工具。
+columns:
+  - title: 产品
+    links:
+      - { label: 上手, url: docs/start/ }
+      - { label: 平面模式, url: docs/feature/plain/ }
+      - { label: 托管模式, url: docs/feature/managed/ }
+      - { label: 下载, url: download/ }
+  - title: 文档
+    links:
+      - { label: 文档, url: docs/ }
+      - { label: 命令, url: docs/command/ }
+      - { label: 教程, url: docs/tutorial/ }
+      - { label: 参考, url: docs/reference/ }
+  - title: 项目
+    links:
+      - { label: 博客, url: blog/ }
+      - { label: 发行说明, url: blog/release/ }
+      - { label: GitHub, url: 'https://github.com/pgsty/sow', external: true }
+      - { label: 问题反馈, url: 'https://github.com/pgsty/sow/issues', external: true }
+  - title: Pigsty
+    links:
+      - { label: Pigsty, url: 'https://pigsty.cc', external: true }
+      - { label: 软件仓库, url: 'https://pigsty.cc/docs/repo/', external: true }
+      - { label: 开源协议, url: 'https://www.apache.org/licenses/LICENSE-2.0', external: true }

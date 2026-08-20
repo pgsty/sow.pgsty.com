@@ -135,14 +135,13 @@ item input="pkg/libpq5_18.4-1.bookworm_amd64.deb" status=accepted format=deb coo
 
 Convergence is one-directional and it is stated as an invariant: **tightening policy can remove members; loosening policy never restores them.** That asymmetry is what makes `build` safe to run at any time. If it were symmetric, editing `sow.yml` could silently republish a package you deliberately withdrew — which is exactly the failure you do not want in a security update.
 
-{{% alert title="Withdrawing a package for real" color="warning" %}}
-`sow rm` removes membership, not pool bytes. The package disappears from every index, so
-clients can no longer resolve it through the repository. Run `sow gc` only after the
-payload becomes unreachable from every safety root, including current and retained
-Generations, recovery state, publication attempts, and active maintenance operations.
-For published targets, use `sow gc TARGET`; filesystem deletion is conditional and R2 is
-report-only. Do not manually delete canonical pool files behind SOW's state.
-{{% /alert %}}
+> [!WARNING] Withdrawing a package for real
+> `sow rm` removes membership, not pool bytes. The package disappears from every index, so
+> clients can no longer resolve it through the repository. Run `sow gc` only after the
+> payload becomes unreachable from every safety root, including current and retained
+> Generations, recovery state, publication attempts, and active maintenance operations.
+> For published targets, use `sow gc TARGET`; filesystem deletion is conditional and R2 is
+> report-only. Do not manually delete canonical pool files behind SOW's state.
 
 ## Previewing a decision
 

@@ -121,9 +121,8 @@ d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab  epel-release-7
 发布顺序对以 marker 为门禁的调用方很关键：先撤下已有的 `repo_complete`，再切换索引，只在替换
 元数据安装后删除命中包，最后才写入新 marker。调用方必须把 marker 缺失视为尚未完成。
 
-{{% alert title="Marker 语义" color="info" %}}
-把 `repo_complete` 缺失当作"构建进行中"。这正是 `--pigsty` 设计围绕的契约。
-{{% /alert %}}
+> [!NOTE] Marker 语义
+> 把 `repo_complete` 缺失当作"构建进行中"。这正是 `--pigsty` 设计围绕的契约。
 
 ## RPM 包签名
 

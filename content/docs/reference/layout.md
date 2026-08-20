@@ -168,10 +168,9 @@ Repository and distribution names must match `[a-z0-9][a-z0-9._-]*`. `.`, `..`, 
 reserved where applicable. Case-insensitive pool-path collisions are rejected so output
 remains portable between Linux and default macOS filesystems.
 
-{{% alert title="Never expose .sow" color="warning" %}}
-Point your web server at `<workspace>/<repo>/`, not at the workspace root. The public
-repository needs both `pool/` and `dists/`; the private `.sow/` directory must stay hidden.
-{{% /alert %}}
+> [!WARNING] Never expose .sow
+> Point your web server at `<workspace>/<repo>/`, not at the workspace root. The public
+> repository needs both `pool/` and `dists/`; the private `.sow/` directory must stay hidden.
 
 ## See also
 

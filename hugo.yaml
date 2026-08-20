@@ -217,6 +217,7 @@ markup:
     parser:
       attribute:
         block: true
+      wrapStandAloneImageWithinParagraph: false
       autoHeadingID: true
       autoHeadingIDType: github
     renderer:
@@ -285,19 +286,17 @@ params:
   github_branch: main
 
   # 文档、博客与 OINK 首页共用同源离线搜索。
-  offlineSearch: true
-  offlineSearchIndex: content
-  offlineSearchMaxResults: 10
-  prism_syntax_highlighting: false
+  offline_search: true
+  offline_search_index: content
+  offline_search_max_results: 10
 
   ui:
     # OINK applies the shared shell to product-specific content types.
     shell_types: [docs, blog, swagger, download]
     quick_links: [docs, blog, download]
     sidebar_icon_policy: groups
-    typography:
-      preset: technical
-    breadcrumb_disable: false
+    typography: technical
+    breadcrumb: true
     navbar_logo: true
     navbar_translucent_over_cover_disable: false
     navbar_theme: dark
@@ -305,10 +304,9 @@ params:
     sidebar_menu_foldable: true
     sidebar_menu_truncate: 2000
     sidebar_root_enabled: true
-    ul_show: 2
-    showLightDarkModeMenu: true
-    scrollSpy:
-      disable: true
+    sidebar_expand_levels: 2
+    dark_mode: true
+    scroll_spy: false
     sidebar_root_menu: true
     sidebar_width_min: 220
     sidebar_width_max: 480
@@ -320,25 +318,4 @@ params:
       links: []
     feedback:
       enable: false
-    readingtime:
-      enable: false
-
-  links:
-    user:
-      - name: SOW source
-        url: https://github.com/pgsty/sow
-        icon: fab fa-github
-        desc: SOW source repository
-      - name: Pigsty
-        url: https://pigsty.io
-        icon: fa fa-database
-        desc: Pigsty project
-    developer:
-      - name: Releases
-        url: https://github.com/pgsty/sow/releases
-        icon: fa fa-box-archive
-        desc: SOW release artifacts
-      - name: Docs source
-        url: https://github.com/pgsty/sow.pgsty.com
-        icon: fab fa-github
-        desc: SOW docs repository
+    reading_time: false

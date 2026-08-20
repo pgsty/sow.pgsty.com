@@ -54,10 +54,9 @@ sow status --json
 
 请对 `class` 做分支判断,不要匹配 message 文本。message 里含路径和包名,会变;class 不会。
 
-{{% alert title="非零退出仍然返回 result" color="info" %}}
-批次部分成功时,`ok` 是 `false`,**同时** `result` 会完整列出已提交的内容。
-不要因为退出码非零就丢掉载荷 —— 对 `add` 来说,那正是你了解"哪些包落地了"的唯一途径。
-{{% /alert %}}
+> [!NOTE] 非零退出仍然返回 result
+> 批次部分成功时,`ok` 是 `false`,**同时** `result` 会完整列出已提交的内容。
+> 不要因为退出码非零就丢掉载荷 —— 对 `add` 来说,那正是你了解"哪些包落地了"的唯一途径。
 
 ### Operation ID 是字符串
 

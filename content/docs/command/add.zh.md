@@ -108,10 +108,9 @@ item input="/srv/pkg/debs/pg-sample_1.17-1_all.deb" status=reused format=deb coo
 limit 按 `(二进制包名, 原生架构)` 分组，因此 `18.3-1:amd64` 与 `18.3-1:arm64` 在 `limit: 1` 下都能
 留下。同一次运行中，一个包可以被某个 Dist 接受、被另一个 Dist 跳过。
 
-{{% alert title="被策略移除的成员不会复活" color="warning" %}}
-`exclude` 与 `limit` 移除的是真实的期望成员。之后放宽策略不会把它们变回来——`pool/` 里残留的字节
-不构成候选集。请重新执行 `sow add`。
-{{% /alert %}}
+> [!WARNING] 被策略移除的成员不会复活
+> `exclude` 与 `limit` 移除的是真实的期望成员。之后放宽策略不会把它们变回来——`pool/` 里残留的字节
+> 不构成候选集。请重新执行 `sow add`。
 
 ## 部分成功的批次
 

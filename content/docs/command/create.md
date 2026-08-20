@@ -137,10 +137,9 @@ The publication order matters for callers that gate on the marker: the existing 
 withdrawn *before* indexes switch, matched packages are deleted only after replacement metadata is
 installed, and the new marker is written last. A caller must treat a missing marker as incomplete.
 
-{{% alert title="Marker semantics" color="info" %}}
-Treat a missing `repo_complete` as "build in progress". That is the contract `--pigsty` is designed
-around.
-{{% /alert %}}
+> [!NOTE] Marker semantics
+> Treat a missing `repo_complete` as "build in progress". That is the contract `--pigsty` is designed
+> around.
 
 ## Signing RPMs
 

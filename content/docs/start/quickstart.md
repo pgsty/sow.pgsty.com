@@ -75,8 +75,9 @@ Python's server is only a preview. Use a maintained HTTP server for persistent s
 
 Replace `REPO_HOST` with the address clients can reach.
 
-{{< code-group id="quickstart-client" sync="package-manager" persist=true label="Choose a package manager" copy="all" >}}
-  {{< code-tab title="DNF / YUM" value="dnf" lang="ini" >}}
+{{< tabs group="package-manager" default="dnf" label="Choose a package manager" >}}
+{{< tab label="DNF / YUM" value="dnf" >}}
+```ini {copy="all"}
 # /etc/yum.repos.d/sow-quickstart.repo
 [sow-quickstart]
 name=SOW Quick Start
@@ -84,27 +85,34 @@ baseurl=http://REPO_HOST:8080/
 enabled=1
 gpgcheck=0
 repo_gpgcheck=0
-  {{< /code-tab >}}
+```
+{{< /tab >}}
 
-  {{< code-tab title="APT" value="apt" lang="text" >}}
+{{< tab label="APT" value="apt" >}}
+```text {copy="all"}
 # /etc/apt/sources.list.d/sow-quickstart.list
 deb [trusted=yes] http://REPO_HOST:8080/ ./
-  {{< /code-tab >}}
-{{< /code-group >}}
+```
+{{< /tab >}}
+{{< /tabs >}}
 
 Then refresh and install a package:
 
-{{< code-group id="quickstart-install" sync="package-manager" persist=true label="Refresh metadata and install" copy="all" >}}
-  {{< code-tab title="DNF / YUM" value="dnf" lang="bash" >}}
+{{< tabs group="package-manager" default="dnf" label="Refresh metadata and install" >}}
+{{< tab label="DNF / YUM" value="dnf" >}}
+```bash {copy="all"}
 sudo dnf makecache
 sudo dnf install PACKAGE_NAME
-  {{< /code-tab >}}
+```
+{{< /tab >}}
 
-  {{< code-tab title="APT" value="apt" lang="bash" >}}
+{{< tab label="APT" value="apt" >}}
+```bash {copy="all"}
 sudo apt update
 sudo apt install PACKAGE_NAME
-  {{< /code-tab >}}
-{{< /code-group >}}
+```
+{{< /tab >}}
+{{< /tabs >}}
 
 The APT source ends in `./` because this is a flat repository. `[trusted=yes]` and the
 disabled DNF signature checks are appropriate only for this unsigned quick start. Use a

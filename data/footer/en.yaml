@@ -1,0 +1,28 @@
+brand:
+  name: SOW
+  tagline: '**S**oftware **O**bject **W**arehouse'
+  slogan: Package repository creation, management, and incremental delivery by Pigsty.
+columns:
+  - title: Product
+    links:
+      - { label: Get Started, url: docs/start/ }
+      - { label: Plain mode, url: docs/feature/plain/ }
+      - { label: Managed mode, url: docs/feature/managed/ }
+      - { label: Download, url: download/ }
+  - title: Docs
+    links:
+      - { label: Docs, url: docs/ }
+      - { label: Commands, url: docs/command/ }
+      - { label: Tutorials, url: docs/tutorial/ }
+      - { label: Reference, url: docs/reference/ }
+  - title: Project
+    links:
+      - { label: Blog, url: blog/ }
+      - { label: Release notes, url: blog/release/ }
+      - { label: GitHub, url: 'https://github.com/pgsty/sow', external: true }
+      - { label: Issues, url: 'https://github.com/pgsty/sow/issues', external: true }
+  - title: Pigsty
+    links:
+      - { label: Pigsty, url: 'https://pigsty.io', external: true }
+      - { label: Package repository, url: 'https://pigsty.io/docs/repo/', external: true }
+      - { label: License, url: 'https://www.apache.org/licenses/LICENSE-2.0', external: true }

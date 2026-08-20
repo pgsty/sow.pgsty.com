@@ -14,20 +14,11 @@ of two isolated paths:
 - **Managed:** a workspace tracks package membership, Dists, architecture views, policy,
   signing, generations, audit history, and publication targets.
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="Installation" link="/docs/start/install/" >}}
-Choose a release archive, RPM/DEB package, or source build; verify the installed binary.
-{{< /doc-card >}}
-{{< doc-card title="Quick Start" link="/docs/start/quickstart/" >}}
-Create and serve a flat repository from a directory of packages.
-{{< /doc-card >}}
-{{< doc-card title="First Workspace" link="/docs/start/workspace/" >}}
-Initialize Managed mode, create RPM and DEB Dists, add packages, build, and check.
-{{< /doc-card >}}
-{{< doc-card title="Core Concepts" link="/docs/start/concepts/" >}}
-Workspace, Repository, Dist, Package Object, Desired Membership, and Built Generation.
-{{< /doc-card >}}
-{{< /doc-cards >}}
+- [Installation](/docs/start/install/) — Choose a release archive, RPM/DEB package, or source build; verify the installed binary.
+- [Quick Start](/docs/start/quickstart/) — Create and serve a flat repository from a directory of packages.
+- [First Workspace](/docs/start/workspace/) — Initialize Managed mode, create RPM and DEB Dists, add packages, build, and check.
+- [Core Concepts](/docs/start/concepts/) — Workspace, Repository, Dist, Package Object, Desired Membership, and Built Generation.
+{.cards}
 
 Managed workspaces require a local POSIX filesystem with advisory locks, fsync, and atomic
 rename semantics. Metadata generation is in-process; optional RPM package signing needs

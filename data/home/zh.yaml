@@ -1,6 +1,5 @@
 sections:
   - hero
-  - metrics
   - capabilities
   - principles
   - faq
@@ -11,12 +10,16 @@ hero:
   title_lines:
     - 构建软件仓库
     - 同步增量变化
+  title_size: 4rem
   lead: 一个自包含二进制，即可把本地 RPM 与 DEB 软件包变成可用仓库；需要更强控制时，再用托管模式管理快照、审计记录与增量发布。
   note: 单一二进制 · Linux + macOS · RPM + DEB · Apache-2.0
   image:
     light: img/sow.svg
     dark: img/sow.svg
     alt: 由软件包与新芽组成的 SOW 标志
+  media:
+    ratio: minmax(0, 1.5fr) minmax(220px, 0.5fr)
+    max_width: 280px
   detail:
     label: SOW 0.3.0 已发布 — 立即下载
     url: download/
@@ -30,37 +33,6 @@ hero:
       url: download/
       icon: fa-solid fa-download
       style: ghost
-
-metrics:
-  eyebrow: 一览
-  title: 一个工具，两条仓库路径
-  desc: 从本地目录起步，只在交付需要时引入托管状态。
-  columns: 4
-  items:
-    - value: '1'
-      name: 下载 SOW
-      label: 自包含二进制
-      desc: Linux 与 macOS
-      icon: fa-solid fa-cube
-      url: download/
-    - value: '2'
-      name: 对比仓库模式
-      label: 仓库模式
-      desc: Plain 与 Managed
-      icon: fa-solid fa-code-branch
-      url: docs/start/concepts/
-    - value: '2'
-      name: 查看软件包兼容性
-      label: 软件包格式
-      desc: RPM 与 DEB
-      icon: fa-solid fa-boxes-stacked
-      url: docs/reference/compatibility/
-    - value: '2'
-      name: 了解发布目标
-      label: 发布 Provider
-      desc: filesystem 与 R2
-      icon: fa-solid fa-cloud-arrow-up
-      url: docs/command/publish/
 
 capabilities:
   eyebrow: 核心价值
@@ -190,33 +162,3 @@ cta:
       url: docs/
       icon: fa-solid fa-book-open
       style: ghost
-
-footer:
-  brand:
-    name: SOW
-    tagline: '**S**oftware **O**bject **W**arehouse'
-    slogan: Pigsty 出品的软件仓库创建、管理与增量交付工具。
-  columns:
-    - title: 产品
-      links:
-        - { label: 上手, url: docs/start/ }
-        - { label: 平面模式, url: docs/feature/plain/ }
-        - { label: 托管模式, url: docs/feature/managed/ }
-        - { label: 下载, url: download/ }
-    - title: 文档
-      links:
-        - { label: 文档, url: docs/ }
-        - { label: 命令, url: docs/command/ }
-        - { label: 教程, url: docs/tutorial/ }
-        - { label: 参考, url: docs/reference/ }
-    - title: 项目
-      links:
-        - { label: 博客, url: blog/ }
-        - { label: 发行说明, url: blog/release/ }
-        - { label: GitHub, url: 'https://github.com/pgsty/sow', external: true }
-        - { label: 问题反馈, url: 'https://github.com/pgsty/sow/issues', external: true }
-    - title: Pigsty
-      links:
-        - { label: Pigsty, url: 'https://pigsty.cc', external: true }
-        - { label: 软件仓库, url: 'https://pigsty.cc/docs/repo/', external: true }
-        - { label: 开源协议, url: 'https://www.apache.org/licenses/LICENSE-2.0', external: true }

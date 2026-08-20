@@ -22,26 +22,13 @@ Generation、审计历史与发布目标。
 按 {{< kbd "Ctrl" "K" >}}（macOS 上也可用 {{< kbd "⌘" "K" >}}）搜索本站；
 焦点不在输入框时按 {{< kbd "/" >}}，可直接打开命令模式。
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="上手" link="/zh/docs/start/" >}}
-安装 SOW、创建平面仓库，并构建第一个 Managed 工作区。
-{{< /doc-card >}}
-{{< doc-card title="教程" link="/zh/docs/tutorial/" >}}
-完整的 YUM、APT、签名、对外服务与发布实战。
-{{< /doc-card >}}
-{{< doc-card title="功能" link="/zh/docs/feature/" >}}
-Plain/Managed 运行路径、包池投影、策略、签名、事务与审计。
-{{< /doc-card >}}
-{{< doc-card title="设计" link="/zh/docs/design/" >}}
-所有权、状态、发布顺序、恢复与证据边界。
-{{< /doc-card >}}
-{{< doc-card title="命令" link="/zh/docs/command/" >}}
-每条命令的语法、选择规则、输出、状态变化与退出行为。
-{{< /doc-card >}}
-{{< doc-card title="参考" link="/zh/docs/reference/" >}}
-配置、包引用、目录布局、JSON、退出码、平台与集成覆盖。
-{{< /doc-card >}}
-{{< /doc-cards >}}
+- [上手](/zh/docs/start/) — 安装 SOW、创建平面仓库，并构建第一个 Managed 工作区。
+- [教程](/zh/docs/tutorial/) — 完整的 YUM、APT、签名、对外服务与发布实战。
+- [功能](/zh/docs/feature/) — Plain/Managed 运行路径、包池投影、策略、签名、事务与审计。
+- [设计](/zh/docs/design/) — 所有权、状态、发布顺序、恢复与证据边界。
+- [命令](/zh/docs/command/) — 每条命令的语法、选择规则、输出、状态变化与退出行为。
+- [参考](/zh/docs/reference/) — 配置、包引用、目录布局、JSON、退出码、平台与集成覆盖。
+{.cards}
 
 ## 选择路径
 

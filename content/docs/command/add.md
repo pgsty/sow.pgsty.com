@@ -115,10 +115,9 @@ appear as `excluded` in the top-level status, and the `dists=` field distinguish
 Limit groups by `(binary name, native architecture)`, so `18.3-1:amd64` and `18.3-1:arm64` both
 survive a `limit: 1`. A package can be accepted by one Dist and skipped by another in the same run.
 
-{{% alert title="Policy removals do not come back" color="warning" %}}
-`exclude` and `limit` remove real Desired Memberships. Relaxing the policy later does not resurrect
-them — leftover bytes in `pool/` are not a candidate set. Re-run `sow add`.
-{{% /alert %}}
+> [!WARNING] Policy removals do not come back
+> `exclude` and `limit` remove real Desired Memberships. Relaxing the policy later does not resurrect
+> them — leftover bytes in `pool/` are not a candidate set. Re-run `sow add`.
 
 ## Partial batches
 

@@ -72,8 +72,9 @@ Python 服务器只适合预览；长期服务请使用正常维护的 HTTP 服�
 
 把 `REPO_HOST` 换成客户端能访问的地址。
 
-{{< code-group id="quickstart-client" sync="package-manager" persist=true label="选择包管理器" copy="all" >}}
-  {{< code-tab title="DNF / YUM" value="dnf" lang="ini" >}}
+{{< tabs group="package-manager" default="dnf" label="选择包管理器" >}}
+{{< tab label="DNF / YUM" value="dnf" >}}
+```ini {copy="all"}
 # /etc/yum.repos.d/sow-quickstart.repo
 [sow-quickstart]
 name=SOW Quick Start
@@ -81,27 +82,34 @@ baseurl=http://REPO_HOST:8080/
 enabled=1
 gpgcheck=0
 repo_gpgcheck=0
-  {{< /code-tab >}}
+```
+{{< /tab >}}
 
-  {{< code-tab title="APT" value="apt" lang="text" >}}
+{{< tab label="APT" value="apt" >}}
+```text {copy="all"}
 # /etc/apt/sources.list.d/sow-quickstart.list
 deb [trusted=yes] http://REPO_HOST:8080/ ./
-  {{< /code-tab >}}
-{{< /code-group >}}
+```
+{{< /tab >}}
+{{< /tabs >}}
 
 刷新索引并安装软件包：
 
-{{< code-group id="quickstart-install" sync="package-manager" persist=true label="刷新索引并安装" copy="all" >}}
-  {{< code-tab title="DNF / YUM" value="dnf" lang="bash" >}}
+{{< tabs group="package-manager" default="dnf" label="刷新索引并安装" >}}
+{{< tab label="DNF / YUM" value="dnf" >}}
+```bash {copy="all"}
 sudo dnf makecache
 sudo dnf install PACKAGE_NAME
-  {{< /code-tab >}}
+```
+{{< /tab >}}
 
-  {{< code-tab title="APT" value="apt" lang="bash" >}}
+{{< tab label="APT" value="apt" >}}
+```bash {copy="all"}
 sudo apt update
 sudo apt install PACKAGE_NAME
-  {{< /code-tab >}}
-{{< /code-group >}}
+```
+{{< /tab >}}
+{{< /tabs >}}
 
 APT source 末尾的 `./` 表示平面仓库。`[trusted=yes]` 与关闭 DNF 签名检查只适用于这个
 未签名的快速示例；需要真实性保证时应使用已签名 Managed 仓库。
