@@ -119,10 +119,9 @@ withdrawn *before* indexes switch, deleted packages are renamed atomically into 
 recovery trash, and the new marker is written last. A caller polling for `repo_complete` therefore
 never observes an intermediate state, and clients never see an index referencing a deleted package.
 
-{{% alert title="Marker semantics" color="info" %}}
-Treat a missing `repo_complete` as "build in progress". That is the contract `--pigsty` is designed
-around.
-{{% /alert %}}
+> [!NOTE] Marker semantics
+> Treat a missing `repo_complete` as "build in progress". That is the contract `--pigsty` is designed
+> around.
 
 ## Signing RPMs
 

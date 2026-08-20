@@ -18,31 +18,31 @@ Syntax and configuration rules on these pages are checked against the v0.2.0 bin
 its strict parser. Output examples illustrate shape; identifiers, paths, hashes, and
 counts vary with the workspace.
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="sow.yml Reference" link="/docs/reference/config/" >}}
+{{< cards >}}
+{{< card title="sow.yml Reference" link="/docs/reference/config/" >}}
 The complete configuration schema: workspace, repository, distribution, membership
 policy, signing, and publication targets.
-{{< /doc-card >}}
-{{< doc-card title="Package References" link="/docs/reference/package-ref/" >}}
+{{< /card >}}
+{{< card title="Package References" link="/docs/reference/package-ref/" >}}
 The five ways to name a package on the command line, how ambiguity is resolved, and
 which forms `rm`, `show`, and `where` accept.
-{{< /doc-card >}}
-{{< doc-card title="Repository Layout" link="/docs/reference/layout/" >}}
+{{< /card >}}
+{{< card title="Repository Layout" link="/docs/reference/layout/" >}}
 Every path SOW creates in plain and managed mode, the pool grouping rule, name
 constraints, and which directories must never be exposed over HTTP.
-{{< /doc-card >}}
-{{< doc-card title="Exit Codes" link="/docs/reference/exit-codes/" >}}
+{{< /card >}}
+{{< card title="Exit Codes" link="/docs/reference/exit-codes/" >}}
 The seven exit codes and what each one means.
-{{< /doc-card >}}
-{{< doc-card title="JSON Output" link="/docs/reference/json/" >}}
+{{< /card >}}
+{{< card title="JSON Output" link="/docs/reference/json/" >}}
 The `sow.cli/v1` envelope, the meaning of each top-level field, and result shapes for the
 primary command families.
-{{< /doc-card >}}
-{{< doc-card title="Compatibility" link="/docs/reference/compatibility/" >}}
+{{< /card >}}
+{{< card title="Compatibility" link="/docs/reference/compatibility/" >}}
 The exact current build, client, Provider, and filesystem evidence, including what is not
 yet established.
-{{< /doc-card >}}
-{{< /doc-cards >}}
+{{< /card >}}
+{{< /cards >}}
 
 ## Conventions used on these pages
 

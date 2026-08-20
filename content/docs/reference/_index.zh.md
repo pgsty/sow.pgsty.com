@@ -16,27 +16,27 @@ SOW 的工作方式,请从[上手指南](/zh/docs/start/)或[功能](/zh/docs/fe
 本节语法与配置规则已按 v0.2.0 二进制及其严格解析器核对。输出示例用于说明形态；
 标识符、路径、哈希与计数会随工作区变化。
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="配置参考" link="/zh/docs/reference/config/" >}}
+{{< cards >}}
+{{< card title="配置参考" link="/zh/docs/reference/config/" >}}
 完整配置 schema：工作区、仓库、Dist、成员策略、签名与发布目标。
-{{< /doc-card >}}
-{{< doc-card title="包引用" link="/zh/docs/reference/package-ref/" >}}
+{{< /card >}}
+{{< card title="包引用" link="/zh/docs/reference/package-ref/" >}}
 命令行上指代一个软件包的五种写法、歧义如何裁决,以及 `rm` / `show` / `where` 各自接受哪些形态。
-{{< /doc-card >}}
-{{< doc-card title="仓库布局" link="/zh/docs/reference/layout/" >}}
+{{< /card >}}
+{{< card title="仓库布局" link="/zh/docs/reference/layout/" >}}
 Plain 与 Managed 两种模式下 SOW 创建的每一条路径、包池分组规则、名称约束,
 以及绝对不能通过 HTTP 暴露的目录。
-{{< /doc-card >}}
-{{< doc-card title="退出码" link="/zh/docs/reference/exit-codes/" >}}
+{{< /card >}}
+{{< card title="退出码" link="/zh/docs/reference/exit-codes/" >}}
 七个退出码分别代表什么。
-{{< /doc-card >}}
-{{< doc-card title="JSON 输出" link="/zh/docs/reference/json/" >}}
+{{< /card >}}
+{{< card title="JSON 输出" link="/zh/docs/reference/json/" >}}
 `sow.cli/v1` Envelope、各顶层字段含义与主要命令族的 Result 形态。
-{{< /doc-card >}}
-{{< doc-card title="兼容性" link="/zh/docs/reference/compatibility/" >}}
+{{< /card >}}
+{{< card title="兼容性" link="/zh/docs/reference/compatibility/" >}}
 当前构建、客户端、Provider 与文件系统的确切证据，包括尚未成立的结论。
-{{< /doc-card >}}
-{{< /doc-cards >}}
+{{< /card >}}
+{{< /cards >}}
 
 ## 本节的约定
 

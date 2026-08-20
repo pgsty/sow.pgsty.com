@@ -68,8 +68,7 @@ Python 服务器只适合预览；长期服务请使用正常维护的 HTTP 服�
 
 把 `REPO_HOST` 换成客户端能访问的地址。
 
-{{< tabpane persist="header" >}}
-{{< tab header="dnf" lang="ini" >}}
+```ini {tab="dnf" group="dnf-apt" value="dnf"}
 # /etc/yum.repos.d/sow-quickstart.repo
 [sow-quickstart]
 name=SOW Quick Start
@@ -77,12 +76,12 @@ baseurl=http://REPO_HOST:8080/
 enabled=1
 gpgcheck=0
 repo_gpgcheck=0
-{{< /tab >}}
-{{< tab header="apt" lang="text" >}}
+```
+
+```text {tab="apt" value="apt"}
 # /etc/apt/sources.list.d/sow-quickstart.list
 deb [trusted=yes] http://REPO_HOST:8080/ ./
-{{< /tab >}}
-{{< /tabpane >}}
+```
 
 刷新索引并安装软件包：
 

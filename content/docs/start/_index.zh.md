@@ -16,20 +16,11 @@ SOW 是一个用于 RPM/YUM 与 DEB/APT 仓库的自包含二进制。它负责�
 
 下面四页分别介绍安装、两条运行路径和共同的心智模型。
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="安装" link="/zh/docs/start/install/" >}}
-下载预编译二进制或从源码构建，说明 Release 构建目标以及会使用外部工具的可选能力。
-{{< /doc-card >}}
-{{< doc-card title="快速上手" link="/zh/docs/start/quickstart/" >}}
-把一个装包的目录变成平面仓库，用 HTTP 暴露出去，再用 `dnf` / `apt` 装包。
-{{< /doc-card >}}
-{{< doc-card title="第一个工作区" link="/zh/docs/start/workspace/" >}}
-创建工作区，建一个含 RPM 与 DEB 两种 Dist 的仓库，添加软件包，查看包池与发布树。
-{{< /doc-card >}}
-{{< doc-card title="核心概念" link="/zh/docs/start/concepts/" >}}
-心智模型:Workspace、Repository、Dist、架构视图,以及期望成员集与已构建代的区别。
-{{< /doc-card >}}
-{{< /doc-cards >}}
+- [安装](/zh/docs/start/install/) — 下载预编译二进制或从源码构建，说明 Release 构建目标以及会使用外部工具的可选能力。
+- [快速上手](/zh/docs/start/quickstart/) — 把一个装包的目录变成平面仓库，用 HTTP 暴露出去，再用 `dnf` / `apt` 装包。
+- [第一个工作区](/zh/docs/start/workspace/) — 创建工作区，建一个含 RPM 与 DEB 两种 Dist 的仓库，添加软件包，查看包池与发布树。
+- [核心概念](/zh/docs/start/concepts/) — 心智模型:Workspace、Repository、Dist、架构视图,以及期望成员集与已构建代的区别。
+{.cards}
 
 ## 你需要什么
 

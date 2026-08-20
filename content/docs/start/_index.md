@@ -17,24 +17,24 @@ two paths do not share state.
 
 The pages below cover installation, each execution path, and the model behind them.
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="Installation" link="/docs/start/install/" >}}
+{{< cards >}}
+{{< card title="Installation" link="/docs/start/install/" >}}
 Download a prebuilt binary or build from source. Covers the release build targets and
 optional features that use external tools.
-{{< /doc-card >}}
-{{< doc-card title="Quick Start" link="/docs/start/quickstart/" >}}
+{{< /card >}}
+{{< card title="Quick Start" link="/docs/start/quickstart/" >}}
 Turn a directory of packages into a flat repository, serve it over HTTP,
 and install from it with `dnf` or `apt`.
-{{< /doc-card >}}
-{{< doc-card title="First Workspace" link="/docs/start/workspace/" >}}
+{{< /card >}}
+{{< card title="First Workspace" link="/docs/start/workspace/" >}}
 Create a workspace, add a repository with an RPM and a DEB distribution,
 add packages, and inspect the pool and the published tree.
-{{< /doc-card >}}
-{{< doc-card title="Core Concepts" link="/docs/start/concepts/" >}}
+{{< /card >}}
+{{< card title="Core Concepts" link="/docs/start/concepts/" >}}
 The mental model: Workspace, Repository, Dist, Architecture View, and the difference
 between Desired Membership and a Built Generation.
-{{< /doc-card >}}
-{{< /doc-cards >}}
+{{< /card >}}
+{{< /cards >}}
 
 ## What you need
 

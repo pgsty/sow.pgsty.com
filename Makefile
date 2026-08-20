@@ -1,9 +1,12 @@
 HUGO ?= hugo
 
-.PHONY: dev build check
+.PHONY: dev serve build check
 
 dev:
-	$(HUGO) server
+	HUGO_MODULE_REPLACEMENTS='github.com/pgsty/oink -> $(abspath ../oink)' $(HUGO) server --renderToMemory
+
+serve:
+	$(HUGO) server --environment production --minify --disableFastRender --disableLiveReload
 
 build:
 	$(HUGO) build --gc --minify --cleanDestinationDir

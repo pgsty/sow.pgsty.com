@@ -71,8 +71,7 @@ Python's server is only a preview. Use a maintained HTTP server for persistent s
 
 Replace `REPO_HOST` with the address clients can reach.
 
-{{< tabpane persist="header" >}}
-{{< tab header="dnf" lang="ini" >}}
+```ini {tab="dnf" group="dnf-apt" value="dnf"}
 # /etc/yum.repos.d/sow-quickstart.repo
 [sow-quickstart]
 name=SOW Quick Start
@@ -80,12 +79,12 @@ baseurl=http://REPO_HOST:8080/
 enabled=1
 gpgcheck=0
 repo_gpgcheck=0
-{{< /tab >}}
-{{< tab header="apt" lang="text" >}}
+```
+
+```text {tab="apt" value="apt"}
 # /etc/apt/sources.list.d/sow-quickstart.list
 deb [trusted=yes] http://REPO_HOST:8080/ ./
-{{< /tab >}}
-{{< /tabpane >}}
+```
 
 Then refresh and install a package:
 

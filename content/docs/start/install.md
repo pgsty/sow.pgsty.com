@@ -26,11 +26,10 @@ Windows is not supported. SOW relies on POSIX advisory locks and atomic
 `rename`, and it is only tested on local POSIX filesystems — network filesystems such as
 NFS do not provide the locking and durability semantics it depends on.
 
-{{% alert title="Filesystem requirement" color="info" %}}
-Build a [managed workspace](/docs/start/workspace/) on a local POSIX filesystem so locks,
-fsync, and atomic rename retain their contract. The committed public `pool/ + dists/` tree
-uses no view-local hardlink aliases and can be copied or published normally.
-{{% /alert %}}
+> [!NOTE] Filesystem requirement
+> Build a [managed workspace](/docs/start/workspace/) on a local POSIX filesystem so locks,
+> fsync, and atomic rename retain their contract. The committed public `pool/ + dists/` tree
+> uses no view-local hardlink aliases and can be copied or published normally.
 
 ## Download a release
 

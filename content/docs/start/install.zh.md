@@ -23,11 +23,10 @@ Release Pipeline 以 `CGO_ENABLED=0` 构建，不需要另装 cgo 工具链或�
 不支持 Windows。SOW 依赖 POSIX 建议锁与原子 `rename`,且只在本地 POSIX 文件系统上
 验证过 —— NFS 之类的网络文件系统不提供它所需的锁与持久化语义。
 
-{{% alert title="文件系统要求" color="info" %}}
-请在本地 POSIX 文件系统上构建 [Managed 工作区](/zh/docs/start/workspace/),以保证锁、
-fsync 与原子 rename 契约。已提交的公共 `pool/ + dists/` 树没有视图级硬链接 alias,
-可以普通复制或发布。
-{{% /alert %}}
+> [!NOTE] 文件系统要求
+> 请在本地 POSIX 文件系统上构建 [Managed 工作区](/zh/docs/start/workspace/),以保证锁、
+> fsync 与原子 rename 契约。已提交的公共 `pool/ + dists/` 树没有视图级硬链接 alias,
+> 可以普通复制或发布。
 
 ## 下载发行版本
 

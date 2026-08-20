@@ -20,30 +20,30 @@ It operates in two isolated modes:
 - **Managed mode** — a workspace with Debian-style package pools, per-architecture views,
   signing, membership policy, transactional generations, auditing, and publication targets.
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="Getting Started" link="/docs/start/" >}}
+{{< cards >}}
+{{< card title="Getting Started" link="/docs/start/" >}}
 Install SOW, build your first flat repository in five minutes, and learn the core concepts.
-{{< /doc-card >}}
-{{< doc-card title="Tutorials" link="/docs/tutorial/" >}}
+{{< /card >}}
+{{< card title="Tutorials" link="/docs/tutorial/" >}}
 End-to-end walkthroughs: YUM and APT repositories, GPG signing, serving with Nginx, and
 publishing a verified public tree.
-{{< /doc-card >}}
-{{< doc-card title="Features" link="/docs/feature/" >}}
+{{< /card >}}
+{{< card title="Features" link="/docs/feature/" >}}
 How SOW works: the Plain and Managed engines, package pools and architecture views,
 membership policy, signing, transactions, and auditing.
-{{< /doc-card >}}
-{{< doc-card title="Design" link="/docs/design/" >}}
+{{< /card >}}
+{{< card title="Design" link="/docs/design/" >}}
 Architecture and decision records: ownership, the v0.2.0 single-payload model,
 publication, recovery, and compatibility boundaries.
-{{< /doc-card >}}
-{{< doc-card title="Command" link="/docs/command/" >}}
+{{< /card >}}
+{{< card title="Command" link="/docs/command/" >}}
 One page per top-level command: syntax, options, behavior, output, and exit codes.
-{{< /doc-card >}}
-{{< doc-card title="Reference" link="/docs/reference/" >}}
+{{< /card >}}
+{{< card title="Reference" link="/docs/reference/" >}}
 `sow.yml` schema, package reference grammar, exit codes, JSON contracts, repository
 layouts, and compatibility evidence.
-{{< /doc-card >}}
-{{< /doc-cards >}}
+{{< /card >}}
+{{< /cards >}}
 
 ## Where to begin
 

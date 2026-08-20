@@ -47,11 +47,8 @@ print outputs, and content shortcodes resolve from OINK.
 For local theme development, connect a sibling OINK checkout with an ignored Go
 workspace:
 
-```bash
-go work init .
-go work edit -replace=github.com/pgsty/oink=../oink
-HUGO_MODULE_WORKSPACE=go.work make dev
-```
+`make dev` applies a command-scoped replacement for the sibling `../oink`
+checkout; it does not create or require `go.work`.
 
 ## Local development
 

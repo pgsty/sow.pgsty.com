@@ -12,22 +12,22 @@ icon: fa-solid fa-graduation-cap
 如果还没装 SOW，先看[安装](/zh/docs/start/install/)与[快速上手](/zh/docs/start/quickstart/)。
 下面的教程介绍 Managed 仓库路径。
 
-{{< doc-cards cols="2" >}}
-{{< doc-card title="搭建 YUM 仓库" link="/zh/docs/tutorial/yum-repo/" >}}
+{{< cards >}}
+{{< card title="搭建 YUM 仓库" link="/zh/docs/tutorial/yum-repo/" >}}
 托管 RPM 仓库:分架构视图、noarch 中性投影、debuginfo 过滤、版本数量上限,以及可用的
 dnf 客户端配置。
-{{< /doc-card >}}
-{{< doc-card title="搭建 APT 仓库" link="/zh/docs/tutorial/apt-repo/" >}}
+{{< /card >}}
+{{< card title="搭建 APT 仓库" link="/zh/docs/tutorial/apt-repo/" >}}
 托管 DEB 仓库：Debian 风格包池、by-hash 索引与 deb822 客户端配置。
-{{< /doc-card >}}
-{{< doc-card title="仓库签名" link="/zh/docs/tutorial/signing/" >}}
+{{< /card >}}
+{{< card title="仓库签名" link="/zh/docs/tutorial/signing/" >}}
 生成专用 GPG 签名钥,为仓库元数据与 RPM 包签名,并配置客户端拒绝一切未签名内容。
-{{< /doc-card >}}
-{{< doc-card title="对外服务" link="/zh/docs/tutorial/serving/" >}}
+{{< /card >}}
+{{< card title="对外服务" link="/zh/docs/tutorial/serving/" >}}
 用 Nginx 服务 Repository，并把已校验 Generation 发布到配置好的 filesystem target，
 同时避免暴露工作区私有状态。
-{{< /doc-card >}}
-{{< /doc-cards >}}
+{{< /card >}}
+{{< /cards >}}
 
 ## 先看哪篇
 
