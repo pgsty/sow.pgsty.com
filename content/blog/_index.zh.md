@@ -16,6 +16,12 @@ cascade:
   outputs:
     - HTML
     - print
+  # OINK 0.6 page-end share bar, scoped to the blog. Every entry is a plain
+  # intent link carrying only this page's permalink and title -- no SDK, no
+  # iframe, no third-party script, no share counts -- plus a local copy button.
+  share: [x, linkedin, reddit, hackernews, telegram, weibo, email, copy]
+  # An article says how long it takes to read; documentation pages do not.
+  reading_time: true
   params:
     sidebar_menu_foldable: false
     sidebar_menu_compact: false

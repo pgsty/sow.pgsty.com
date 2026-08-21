@@ -2,10 +2,10 @@
 title: "SOW v0.2.0"
 linkTitle: "SOW v0.2.0"
 date: 2026-08-08
-author: "冯若航"
+authors: [Vonng]
 description: "SOW v0.2.0 提供 Plain 与 Managed RPM/DEB 仓库、可验证 Generation、签名、发布、保留、GC 与 RPM Leaf 导出。"
-categories: [发布]
-tags: [发布, sow]
+categories: [Release]
+tags: [release, managed, signing, publish, generation]
 weight: 10
 url: "/zh/blog/release/sow-docs-launch/"
 ---

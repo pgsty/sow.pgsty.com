@@ -2,10 +2,10 @@
 title: "SOW v0.2.0"
 linkTitle: "SOW v0.2.0"
 date: 2026-08-08
-author: "Ruohang Feng"
+authors: [Vonng]
 description: "SOW v0.2.0 provides Plain and Managed RPM/DEB repositories, verified generations, signing, publication, retention, GC, and RPM leaf export."
-categories: [release]
-tags: [Release, sow]
+categories: [Release]
+tags: [release, managed, signing, publish, generation]
 weight: 10
 url: "/blog/release/sow-docs-launch/"
 ---

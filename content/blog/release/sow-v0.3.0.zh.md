@@ -2,10 +2,10 @@
 title: "SOW v0.3.0"
 linkTitle: "SOW v0.3.0"
 date: 2026-08-10
-author: "冯若航"
+authors: [Vonng]
 description: "SOW v0.3.0 减少 Plain 与 Managed 仓库的重复包体工作，引入软件包事实缓存与有界提交，强化持久性，并收敛发布质量门禁。"
-categories: [发布]
-tags: [发布, sow]
+categories: [Release]
+tags: [release, plain, managed, transaction]
 weight: 5
 url: "/zh/blog/release/sow-v0.3.0/"
 draft: false

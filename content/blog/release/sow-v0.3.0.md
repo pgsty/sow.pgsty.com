@@ -2,10 +2,10 @@
 title: "SOW v0.3.0"
 linkTitle: "SOW v0.3.0"
 date: 2026-08-10
-author: "Ruohang Feng"
+authors: [Vonng]
 description: "SOW v0.3.0 reduces package work across Plain and Managed repositories, adds cached package facts and bounded commits, tightens durability, and consolidates release quality gates."
-categories: [release]
-tags: [Release, sow]
+categories: [Release]
+tags: [release, plain, managed, transaction]
 weight: 5
 url: "/blog/release/sow-v0.3.0/"
 draft: false
