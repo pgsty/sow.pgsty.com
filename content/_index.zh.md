@@ -5,5 +5,10 @@ url: "/zh/"
 weight: 1
 type: home
 cascade:
-  type: docs
+  # Scoped to the docs tree on purpose. An unscoped cascade also reaches the
+  # taxonomy and term pages Hugo generates, and `type: docs` there sends them
+  # to the docs list layout instead of OINK's taxonomy.html / term.html.
+  - target:
+      path: '/docs/**'
+    type: docs
 ---
