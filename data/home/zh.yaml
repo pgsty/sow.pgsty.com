@@ -14,16 +14,18 @@ hero:
   lead: 一个自包含二进制，即可把本地 RPM 与 DEB 软件包变成可用仓库；需要更强控制时，再用托管模式管理快照、审计记录与增量发布。
   note: 单一二进制 · Linux + macOS · RPM + DEB · Apache-2.0
   image:
-    light: img/sow.svg
-    dark: img/sow.svg
-    alt: 由软件包与新芽组成的 SOW 标志
+    light: img/sow-architecture-zh-light.svg
+    dark: img/sow-architecture-zh-dark.svg
+    alt: >-
+      SOW 的工作方式：本地 .rpm 与 .deb 文件进入统一包池，每个软件包包体只存一份；
+      包池再投影为只含元数据的 YUM 与 APT 仓库视图；发布时只把发生变化的对象上传到
+      文件系统或 S3 / R2 目标。
   media:
-    ratio: minmax(0, 1.5fr) minmax(220px, 0.5fr)
-    max_width: 280px
-  detail:
-    label: SOW 0.3.0 已发布 — 立即下载
-    url: download/
-    icon: fa-solid fa-circle-check
+    # Hero 放的是架构图而不是图标：媒体列要足够宽才读得清，同时文案列仍能容纳不换行的
+    # 两行产品主张。小于 lg 时图中标注已经看不清，因此直接隐藏而不是继续缩小。
+    ratio: minmax(0, 1.2fr) minmax(300px, 0.8fr)
+    max_width: 440px
+    hide_below: lg
   actions:
     - label: 上手
       url: docs/start/
@@ -46,7 +48,7 @@ capabilities:
       bullets:
         - '`sow create` 就地索引目录顶层的 RPM 与 DEB 文件'
         - 同时生成可直接使用的平面 YUM/APT 仓库
-        - 可替代 `createrepo_c`、`dpkg-scanpackages` 与简单 `reprepro` 索引流程
+        - 可替代 `createrepo_c`、`dpkg-scanpackages` 与 `reprepro`
       value: 不需要守护进程或元数据工具链，从软件包直接得到仓库索引。
       visual:
         type: code
@@ -84,7 +86,7 @@ capabilities:
       bullets:
         - 为 `amd64` 与 `arm64` 提供自包含 `CGO_ENABLED=0` 归档
         - Release Pipeline 为 Linux 生成 RPM 与 DEB 安装包
-        - 内置安全路径、有界并发、fsync、原子发布与严格校验
+        - 内置安全路径、有界并发、fsync 与原子发布
       value: 不需要运营仓库守护进程，也不需要额外语言运行时。
       visual:
         type: components
@@ -102,7 +104,7 @@ capabilities:
       bullets:
         - '`sow changes` 列出包体、元数据、指针与删除记录'
         - Operation Log 保留谁在何时修改了什么
-        - 发布复用已记录的 target 状态，只上传差异，而不是所有仓库对象
+        - 发布只上传差异，而不是所有仓库对象
       value: 无论同步到文件系统还是云端，小改动都只产生小批量传输。
       visual:
         type: code

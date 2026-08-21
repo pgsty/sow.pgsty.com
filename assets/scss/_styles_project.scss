@@ -1,152 +1,20 @@
-.sow-download__hero .td-site-container {
-  grid-template-columns: minmax(0, 860px);
-}
-
-// Keep the product emblem quieter than OINK's square hero default. The wider
-// copy track preserves SOW's two-line product promise on desktop; the emblem
-// is hidden at narrower widths where it would compete with that promise.
-.td-landing-hero--with-media > .td-site-container {
-  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
-  gap: clamp(24px, 3vw, 36px);
-}
-
-.td-landing-hero__copy {
-  max-width: none;
-}
-
-.td-landing-hero__media {
-  max-width: 220px;
-  transform: none;
-}
-
-@media (max-width: 960px) {
-  .td-landing-hero--with-media > .td-site-container {
-    display: block;
-  }
-
+// SOW's only theme overrides.
+//
+// The hero's grid ratio, media width, and hide-below breakpoint are data, not
+// CSS: they live in `data/home/<lang>.yaml` under `hero.media`, which the theme
+// turns into --td-hero-columns / --td-hero-media-max. Nothing here repeats them.
+.td-landing-hero--with-media {
+  // The media slot holds an architecture diagram rather than a product emblem.
+  // The theme's 1.1x bleed is tuned for a logo that may overrun its box; a
+  // diagram has to stay inside the column so its edge boxes are never clipped
+  // and never eat into the gap beside the copy.
   .td-landing-hero__media {
-    display: none;
+    transform: none;
   }
 }
 
 @media (max-width: 420px) {
   .td-landing-hero__title {
     font-size: clamp(1.72rem, 7.8vw, 2.3rem);
-  }
-}
-
-.sow-release-state {
-  max-width: 850px;
-}
-
-.sow-release-state .fa-clock {
-  color: var(--bs-warning);
-}
-
-.td-landing-status-dot.is-pending {
-  background: var(--bs-warning);
-  box-shadow: 0 0 0 0.3rem color-mix(in srgb, var(--bs-warning) 18%, transparent);
-}
-
-.sow-download-grid {
-  margin-top: 2rem;
-}
-
-.sow-asset-card {
-  gap: 0.35rem;
-}
-
-.sow-asset-name,
-.sow-install-command {
-  display: block;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  color: var(--td-soft);
-  font-size: 0.75rem;
-}
-
-.sow-install-command {
-  margin-top: 0.65rem;
-  padding: 0.65rem;
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--td-blue) 7%, transparent);
-}
-
-.sow-asset-action {
-  margin-top: auto;
-}
-
-.sow-asset-action.is-disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-.sow-detail-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.sow-detail-actions .is-disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-.sow-install-snippet,
-.sow-release-note {
-  margin-top: 1.5rem;
-  padding: 1.25rem 1.5rem;
-  border: 1px solid var(--td-line);
-  border-radius: var(--td-radius-md);
-  background: var(--td-paper);
-}
-
-.sow-download-band {
-  background: color-mix(in srgb, var(--bs-secondary-bg) 38%, transparent);
-}
-
-.sow-download-details {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(2rem, 6vw, 5rem);
-}
-
-.sow-download-details pre {
-  margin-top: 1.25rem;
-}
-
-.sow-detail-eyebrow {
-  margin: 0 0 0.75rem;
-  color: var(--td-brand-silk);
-  font-family: var(--td-meta-font-family);
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.sow-release-note {
-  display: grid;
-  grid-template-columns: minmax(180px, 0.35fr) minmax(0, 1fr);
-  gap: 2rem;
-  align-items: center;
-}
-
-.sow-release-note h2,
-.sow-release-note p {
-  margin-bottom: 0;
-}
-
-@media (max-width: 991.98px) {
-  .sow-download-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 575.98px) {
-  .sow-download-grid,
-  .sow-download-details,
-  .sow-release-note {
-    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -9,21 +9,26 @@ hero:
   eyebrow: Software Object Warehouse
   title_lines:
     - Build Package Repo
-    - Ship only what changed
+    - Ship What Changed
   title_size: 4rem
   lead: One self-contained binary turns local RPM and DEB packages into usable repositories, then manages snapshots, audit history, and incremental publication when you need more control.
   note: Single binary · Linux + macOS · RPM + DEB · Apache-2.0
   image:
-    light: img/sow.svg
-    dark: img/sow.svg
-    alt: SOW package-and-sprout emblem
+    light: img/sow-architecture-light.svg
+    dark: img/sow-architecture-dark.svg
+    alt: >-
+      How SOW works: local .rpm and .deb files enter one package pool that
+      stores each package body once, the pool is projected as YUM and APT
+      repository views that hold metadata only, and publication uploads the
+      changed objects alone to a filesystem or S3 / R2 target.
   media:
-    ratio: minmax(0, 1.5fr) minmax(220px, 0.5fr)
-    max_width: 280px
-  detail:
-    label: SOW 0.3.0 is available — download now
-    url: download/
-    icon: fa-solid fa-circle-check
+    # The hero carries an architecture diagram rather than an emblem, so the
+    # media column is wide enough to read and the copy column still holds the
+    # two-line product promise without wrapping. Below lg the diagram's labels
+    # get too small to read, so it leaves rather than shrinks.
+    ratio: minmax(0, 1.2fr) minmax(300px, 0.8fr)
+    max_width: 440px
+    hide_below: lg
   actions:
     - label: Get Started
       url: docs/start/
@@ -37,7 +42,7 @@ hero:
 capabilities:
   eyebrow: Core capabilities
   title: Flat or Managed
-  text: Use the one-command path for a local repository, or keep package membership, immutable generations, and publication history in a Managed workspace.
+  text: One command builds a local repository; a Managed workspace keeps membership, generations, and publication history.
   items:
     - ref: 01 / CREATE
       title: Create repo in one command
@@ -46,8 +51,8 @@ capabilities:
       bullets:
         - '`sow create` indexes top-level RPM and DEB files in place'
         - Produces a directly usable flat YUM/APT repository
-        - Replaces basic `createrepo_c`, `dpkg-scanpackages`, or simple `reprepro` indexing flows
-      value: From package files to repository metadata without a daemon or toolchain.
+        - 'Replaces `createrepo_c`, `dpkg-scanpackages`, and `reprepro`'
+      value: From package files to repository metadata, no daemon or toolchain.
       visual:
         type: code
         aria_label: Create a flat RPM and DEB repository
@@ -62,10 +67,10 @@ capabilities:
       url: docs/feature/managed/
       motto: Curate Enterprise Linux, Debian, and Ubuntu repositories
       bullets:
-        - Stores each live package once per Repository and projects metadata-only Dists
+        - Stores each live package once, then projects metadata-only Dists
         - Avoids duplicate object keys and redundant uploads on object storage
-        - Records immutable Built Generation manifests for retained snapshots and repository variants
-      value: Desired membership, policies, signing, and snapshots remain explicit and auditable.
+        - Immutable Built Generation manifests retain snapshots and variants
+      value: Membership, policy, signing, and snapshots stay explicit and auditable.
       visual:
         type: components
         aria_label: Managed repository model
@@ -83,9 +88,9 @@ capabilities:
       motto: The same executable on macOS and Linux
       bullets:
         - Self-contained `CGO_ENABLED=0` archives for `amd64` and `arm64`
-        - The release pipeline produces RPM and DEB installation packages for Linux
-        - Safe paths, bounded concurrency, fsync, atomic publication, and strict checks
-      value: No repository daemon and no runtime language environment to operate.
+        - The release pipeline builds RPM and DEB packages for Linux
+        - Safe paths, bounded concurrency, fsync, and atomic publication
+      value: No repository daemon and no language runtime to operate.
       visual:
         type: components
         aria_label: Supported release targets
@@ -102,8 +107,8 @@ capabilities:
       bullets:
         - '`sow changes` reports payload, metadata, pointer, and removal records'
         - The operation log preserves who changed what and when
-        - Publication uses recorded target state to upload the delta instead of every repository object
-      value: Small repository changes stay small when synchronized to filesystem or cloud targets.
+        - Publication uploads the delta, not every repository object
+      value: Small repository changes stay small on filesystem and cloud targets.
       visual:
         type: code
         aria_label: Inspect and publish an incremental change set

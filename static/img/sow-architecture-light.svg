@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="436"
+     viewBox="0 0 440 436" role="img" aria-labelledby="sow-arch-title"
+     shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
+  <title id="sow-arch-title">SOW pipeline: local RPM and DEB files enter one deduplicated package pool, which is projected as YUM and APT repository views and published as a delta</title>
+  <text x="220" y="14" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10" font-weight="600" fill="#5d7189" letter-spacing="1.7">LOCAL PACKAGE FILES</text>
+  <rect x="78" y="24" width="126" height="36" rx="10" fill="rgba(180,118,46,0.16)" stroke="rgba(180,118,46,0.48)" stroke-width="1.25"/>
+  <rect x="236" y="24" width="126" height="36" rx="10" fill="rgba(36,95,148,0.13)" stroke="rgba(36,95,148,0.42)" stroke-width="1.25"/>
+  <text x="141" y="48" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700" fill="#a96c26">.rpm</text>
+  <text x="299" y="48" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700" fill="#245f94">.deb</text>
+  <path d="M 141.0 60.0 L 141.0 70.0 L 220.0 70.0" fill="none" stroke="rgba(48,74,105,0.46)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 299.0 60.0 L 299.0 70.0 L 220.0 70.0" fill="none" stroke="rgba(48,74,105,0.46)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 220.0 70.0 L 220.0 84.0" fill="none" stroke="rgba(48,74,105,0.46)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M 220.0 84.0 L 216.2 77.0 L 223.8 77.0 Z" fill="rgba(48,74,105,0.46)"/>
+  <rect x="32" y="86" width="376" height="88" rx="14" fill="#ffffff" stroke="rgba(48,74,105,0.22)" stroke-width="1.25"/>
+  <text x="52" y="110" text-anchor="start" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10" font-weight="600" fill="#0d7f77" letter-spacing="1.7">PACKAGE POOL</text>
+  <text x="388" y="110" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="500" fill="#7d8ea3">stored once</text>
+  <rect x="68.0" y="126" width="24" height="24" rx="5" fill="rgba(20,184,166,0.16)" stroke="rgba(13,127,119,0.45)" stroke-width="1.15"/>
+  <rect x="103.0" y="126" width="24" height="24" rx="5" fill="rgba(180,118,46,0.16)" stroke="rgba(180,118,46,0.48)" stroke-width="1.15"/>
+  <rect x="138.0" y="126" width="24" height="24" rx="5" fill="rgba(20,184,166,0.16)" stroke="rgba(13,127,119,0.45)" stroke-width="1.15"/>
+  <rect x="173.0" y="126" width="24" height="24" rx="5" fill="rgba(20,184,166,0.16)" stroke="rgba(13,127,119,0.45)" stroke-width="1.15"/>
+  <rect x="208.0" y="126" width="24" height="24" rx="5" fill="rgba(180,118,46,0.16)" stroke="rgba(180,118,46,0.48)" stroke-width="1.15"/>
+  <rect x="243.0" y="126" width="24" height="24" rx="5" fill="rgba(20,184,166,0.16)" stroke="rgba(13,127,119,0.45)" stroke-width="1.15"/>
+  <rect x="278.0" y="126" width="24" height="24" rx="5" fill="rgba(180,118,46,0.16)" stroke="rgba(180,118,46,0.48)" stroke-width="1.15"/>
+  <rect x="313.0" y="126" width="24" height="24" rx="5" fill="rgba(20,184,166,0.16)" stroke="rgba(13,127,119,0.45)" stroke-width="1.15"/>
+  <rect x="348.0" y="126" width="24" height="24" rx="5" fill="rgba(20,184,166,0.16)" stroke="rgba(13,127,119,0.45)" stroke-width="1.15"/>
+  <text x="220" y="165" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#5d7189">one object per package · no duplicate keys</text>
+  <path d="M 220.0 174.0 L 220.0 196.0" fill="none" stroke="rgba(48,74,105,0.46)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M 220.0 196.0 L 216.2 189.0 L 223.8 189.0 Z" fill="rgba(48,74,105,0.46)"/>
+  <rect x="24" y="198" width="392" height="116" rx="14" fill="#ffffff" stroke="rgba(48,74,105,0.22)" stroke-width="1.25"/>
+  <text x="44" y="222" text-anchor="start" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10" font-weight="600" fill="#0d7f77" letter-spacing="1.7">REPOSITORY VIEWS</text>
+  <text x="396" y="222" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="500" fill="#7d8ea3">metadata only</text>
+  <rect x="45" y="236" width="106" height="62" rx="11" fill="rgba(180,118,46,0.16)" stroke="rgba(180,118,46,0.48)" stroke-width="1.25"/>
+  <text x="98" y="264" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" font-weight="700" fill="#a96c26">YUM</text>
+  <text x="98" y="285" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#5d7189">EL 8 / 9 / 10</text>
+  <rect x="167" y="236" width="106" height="62" rx="11" fill="rgba(36,95,148,0.13)" stroke="rgba(36,95,148,0.42)" stroke-width="1.25"/>
+  <text x="220" y="264" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" font-weight="700" fill="#245f94">APT</text>
+  <text x="220" y="285" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#5d7189">Debian</text>
+  <rect x="289" y="236" width="106" height="62" rx="11" fill="rgba(36,95,148,0.13)" stroke="rgba(36,95,148,0.42)" stroke-width="1.25"/>
+  <text x="342" y="264" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" font-weight="700" fill="#245f94">APT</text>
+  <text x="342" y="285" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#5d7189">Ubuntu</text>
+  <path d="M 220.0 314.0 L 220.0 336.0" fill="none" stroke="rgba(48,74,105,0.46)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M 220.0 336.0 L 216.2 329.0 L 223.8 329.0 Z" fill="rgba(48,74,105,0.46)"/>
+  <rect x="32" y="338" width="376" height="86" rx="14" fill="#f6f9fc" stroke="rgba(48,74,105,0.22)" stroke-width="1.25"/>
+  <text x="52" y="362" text-anchor="start" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10" font-weight="600" fill="#0d7f77" letter-spacing="1.7">INCREMENTAL PUBLISH</text>
+  <text x="388" y="362" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="500" fill="#7d8ea3">verified</text>
+  <text x="220" y="393" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" font-weight="700" fill="#0d161f"><tspan fill="#0d7f77">Δ</tspan> changed objects only</text>
+  <text x="220" y="413" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#5d7189">filesystem · S3 / R2</text>
+</svg>
