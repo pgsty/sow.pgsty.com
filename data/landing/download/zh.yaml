@@ -1,0 +1,90 @@
+# /zh/download/ 页面：Hero、安装矩阵与后续入口。
+# 安装矩阵本身不在这里描述 —— `download` 小节读取 data/download/sow.yaml，
+# 因此与版本绑定的命令、链接与制品摘要只有一个来源，不会与它们指向的制品脱节。
+#
+# 本页唯一与版本相关的字符串是 Hero 的 note；发布新版时随 hugo.yaml 的
+# params.version 一起更新。
+sections:
+  - hero
+  # 用主题自身的 content 作用域包一层，安装命令才能保留代码块的边框样式；
+  # 见 layouts/_partials/sow/content-section.html。
+  - type: download
+    partial: sow/content-section
+  - type: cards
+    key: next
+  - cta
+
+hero:
+  eyebrow: 下载矩阵
+  title: 下载 SOW
+  desc: '**一个自包含二进制，五条获取路径。** 每条路径安装的都是同一个可执行文件、同一套仓库语义；选择依据是这台主机由谁负责生命周期，而不是功能差异。'
+  note: SOW 0.3.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
+  note_icon: fa-solid fa-box-archive
+  align: center
+  title_size: 3.4rem
+  actions:
+    - label: 最新 GitHub Release
+      url: 'https://github.com/pgsty/sow/releases/latest'
+      icon: fa-brands fa-github
+      style: primary
+      external: true
+    - label: 安装说明
+      url: docs/start/install/
+      icon: fa-solid fa-cloud-arrow-down
+      style: ghost
+
+download:
+  eyebrow: 安装矩阵
+  title: 选择与主机相匹配的安装路径
+  desc: '命令、链接与摘要全部来自同一份 Release 记录，不会与它们指向的制品脱节。Pigsty 软件源跟随滚动渠道，其余每条路径都固定在当前 Tag。'
+  keys: [sow]
+
+next:
+  eyebrow: 接下来
+  title: 装好之后去哪里
+  columns: 3
+  link_label: 阅读
+  items:
+    - title: 快速上手
+      meta: 上手
+      icon: fa-solid fa-bolt
+      desc: 五步把装有 RPM 与 DEB 文件的目录变成可直接使用的平面仓库。
+      url: docs/start/quickstart/
+    - title: 第一个工作区
+      meta: 上手
+      icon: fa-solid fa-folder-tree
+      desc: 从 Plain 目录进入 Managed 工作区，管理成员关系、筛选策略与 Generation。
+      url: docs/start/workspace/
+    - title: CLI 命令参考
+      meta: 参考
+      icon: fa-solid fa-terminal
+      desc: 每条命令的语法、选择规则、输出、状态迁移与退出行为。
+      url: docs/command/
+    - title: 对外提供仓库
+      meta: 教程
+      icon: fa-solid fa-server
+      desc: 用你已经在运维的 HTTP 服务器，对外提供生成好的公共交付树。
+      url: docs/tutorial/serving/
+    - title: 兼容性
+      meta: 参考
+      icon: fa-solid fa-table-list
+      desc: 覆盖了哪些发行版、包管理客户端与对象存储目标。
+      url: docs/reference/compatibility/
+    - title: 发布说明
+      meta: 历史
+      icon: fa-solid fa-clock-rotate-left
+      desc: 每个 Tag 改了什么，中英双语，附带制品与升级说明。
+      url: blog/release/
+
+cta:
+  title: 装好了？现在构建第一个仓库。
+  actions:
+    - label: 上手
+      url: docs/start/
+      icon: fa-solid fa-arrow-right
+      style: primary
+    - label: pgsty/sow
+      url: 'https://github.com/pgsty/sow'
+      icon: fa-brands fa-github
+      style: ghost
+      external: true

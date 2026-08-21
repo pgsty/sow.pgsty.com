@@ -1,0 +1,24 @@
+{{/* Render an OINK landing section inside the theme's own content scope.
+
+     OINK styles its content components -- the enhanced code block above all,
+     plus inline code chips and prose tables -- under `.td-content`, which the
+     landing shell does not establish. A landing section that carries real
+     authored content therefore renders those components unframed: on
+     /download/ the install commands lost their card, border, radius, and
+     padding, and the copy button lost its header bar.
+
+     This wrapper adds nothing of its own: it emits the content scope and then
+     calls the theme's stock section partial, so the components are styled by
+     the theme's rules rather than by a local copy of them. Select it per
+     section with `partial: sow/content-section` in the landing data.
+
+     `.td-content`'s block-flow properties (font family, overflow-wrap) are
+     inherited by the section either way, and its `order` is a flex property
+     with no effect here, so the wrapper changes no layout. */}}
+{{- $type := printf "%v" (.type | default "") -}}
+{{- $scoped := slice "markdown" "download" "faq" -}}
+{{- if in $scoped $type -}}
+<div class="td-content td-content--landing">{{ partial (printf "landing/sections/%s.html" $type) . }}</div>
+{{- else -}}
+  {{- warnf "%s: sow/content-section does not wrap section type %q; render it with the stock partial instead" .page.Path $type -}}
+{{- end -}}

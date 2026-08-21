@@ -1,0 +1,183 @@
+# SOW install channels, consumed by the download landing section and by the
+# `download` shortcode. `version` is deliberately absent so the record follows
+# params.version in hugo.yaml, and `tag` defaults to v{version} -- one place to
+# bump at release time.
+#
+# Only pinned channels may interpolate ${version} and ${tag}. The Pigsty
+# repository channel is rolling on purpose: it tracks whatever the infra
+# repository currently serves, which is not necessarily this tag.
+repo: pgsty/sow
+published: true
+channels:
+  - id: pigsty
+    kind: rolling
+    title: Pigsty Repo
+    title_zh: Pigsty 软件源
+    icon: fa-solid fa-cloud-arrow-down
+    note: >-
+      The shortest route on a Linux host: SOW ships in the Pigsty infra
+      repository, so `sow` installs and upgrades with everything else the box
+      already gets from APT or YUM. Mainland China is served by the
+      `repo.pigsty.cc` mirror.
+    note_zh: >-
+      Linux 主机上最省事的一条路径：SOW 已收录进 Pigsty infra 软件源，`sow`
+      与主机上其它软件包一起用 APT / YUM 安装和升级。中国大陆可使用
+      `repo.pigsty.cc` 镜像。
+    steps:
+      - title: APT · Debian / Ubuntu
+        title_zh: APT · Debian / Ubuntu
+        lang: bash
+        code: |
+          sudo tee /etc/apt/sources.list.d/pigsty-infra.list > /dev/null <<'EOF'
+          deb [trusted=yes] https://repo.pigsty.io/apt/infra generic main
+          EOF
+
+          sudo apt update
+          sudo apt install -y sow
+      - title: YUM · RHEL / Rocky / Alma / Anolis
+        title_zh: YUM · RHEL / Rocky / Alma / Anolis
+        lang: bash
+        code: |
+          sudo tee /etc/yum.repos.d/pigsty-infra.repo > /dev/null <<'EOF'
+          [pigsty-infra]
+          name=Pigsty Infra for $basearch
+          baseurl=https://repo.pigsty.io/yum/infra/$basearch
+          enabled=1
+          gpgcheck=0
+          module_hotfixes=1
+          EOF
+
+          sudo dnf makecache
+          sudo dnf install -y sow
+      - title: Mainland China mirror
+        title_zh: 中国大陆镜像
+        lang: bash
+        code: |
+          # Same paths, different host: repo.pigsty.io -> repo.pigsty.cc
+
+          # APT
+          sudo sed -i 's|repo.pigsty.io|repo.pigsty.cc|' /etc/apt/sources.list.d/pigsty-infra.list
+          sudo apt update
+
+          # YUM
+          sudo sed -i 's|repo.pigsty.io|repo.pigsty.cc|' /etc/yum.repos.d/pigsty-infra.repo
+          sudo dnf makecache
+
+  - id: packages
+    kind: pinned
+    title: RPM / DEB
+    title_zh: RPM / DEB
+    icon: fa-solid fa-box-archive
+    url: https://github.com/pgsty/sow/releases/tag/${tag}
+    note: >-
+      Pinned native packages for an offline or promotion-gated pipeline. They
+      carry the `1PGSTY` release suffix, install the executable at
+      `/usr/bin/sow`, and ship the Apache-2.0 licence with it.
+    note_zh: >-
+      适用于离线交付或需要逐级晋级的流水线。安装包带 `1PGSTY` 发布后缀，把可执行文件
+      装到 `/usr/bin/sow`，并随包安装 Apache-2.0 许可证。
+    steps:
+      - title: RPM · x86_64 / aarch64
+        title_zh: RPM · x86_64 / aarch64
+        lang: bash
+        code: |
+          ARCH=$(uname -m)
+          curl -fLO "https://github.com/pgsty/sow/releases/download/${tag}/sow-${version}-1PGSTY.$ARCH.rpm"
+          sudo rpm -Uvh "sow-${version}-1PGSTY.$ARCH.rpm"
+      - title: DEB · amd64 / arm64
+        title_zh: DEB · amd64 / arm64
+        lang: bash
+        code: |
+          ARCH=$(dpkg --print-architecture)
+          curl -fLO "https://github.com/pgsty/sow/releases/download/${tag}/sow_${version}-1PGSTY_$ARCH.deb"
+          sudo apt install "./sow_${version}-1PGSTY_$ARCH.deb"
+
+  - id: archive
+    kind: pinned
+    title: Archive
+    title_zh: 二进制归档
+    icon: fa-solid fa-box-open
+    note: >-
+      Installer-free binaries for Linux and macOS on `amd64` and `arm64`, for
+      CI, for macOS workstations, and for hosts where you own the install path.
+      Each archive holds the `sow` executable, `README.md`, `CHANGELOG.md`, and
+      the Apache-2.0 `LICENSE`. Windows is not a release target.
+    note_zh: >-
+      面向 Linux 与 macOS 的免安装器二进制，覆盖 `amd64` 与 `arm64`，适合 CI、macOS
+      工作站，以及由你自己决定安装路径的主机。每个归档包含 `sow` 可执行文件、
+      `README.md`、`CHANGELOG.md` 与 Apache-2.0 `LICENSE`。不提供 Windows 构建。
+    steps:
+      - title: Linux · amd64
+        title_zh: Linux · amd64
+        lang: bash
+        code: |
+          # Swap linux_amd64 for linux_arm64, darwin_amd64, or darwin_arm64.
+          curl -fLO https://github.com/pgsty/sow/releases/download/${tag}/sow_${version}_linux_amd64.tar.gz
+          tar -xzf sow_${version}_linux_amd64.tar.gz
+          sudo install -m 0755 sow /usr/local/bin/sow
+
+          sow version
+      - title: macOS · Apple Silicon
+        title_zh: macOS · Apple Silicon
+        lang: bash
+        code: |
+          curl -fLO https://github.com/pgsty/sow/releases/download/${tag}/sow_${version}_darwin_arm64.tar.gz
+          tar -xzf sow_${version}_darwin_arm64.tar.gz
+          mkdir -p ~/.local/bin
+          install -m 0755 sow ~/.local/bin/sow
+
+          sow help
+
+  - id: source
+    kind: pinned
+    title: Source
+    title_zh: 源码构建
+    icon: fa-solid fa-code-branch
+    url: https://github.com/pgsty/sow/tree/${tag}
+    note: >-
+      Build the tag yourself. The module declares Go 1.26.5, metadata generation
+      needs no C toolchain, and these are the flags the release pipeline uses,
+      so a source build reports the same product version as the published one.
+    note_zh: >-
+      自行构建对应 Tag。模块声明 Go 1.26.5，生成元数据不需要 C 工具链；下面就是
+      Release Pipeline 使用的构建参数，因此源码构建与官方发布报告相同的产品版本。
+    steps:
+      - title: Clone, check out, build
+        title_zh: 克隆、检出、构建
+        lang: bash
+        code: |
+          git clone https://github.com/pgsty/sow.git
+          cd sow
+          git checkout ${tag}
+
+          CGO_ENABLED=0 go build -trimpath \
+            -ldflags="-s -w -X github.com/pgsty/sow/internal/v2cli.Version=${version}" \
+            -o sow ./cmd/sow
+          sudo install -m 0755 sow /usr/local/bin/sow
+
+  - id: assets
+    kind: pinned
+    title: Release assets
+    title_zh: 发布制品
+    icon: fa-solid fa-shield-halved
+    url: https://github.com/pgsty/sow/releases/tag/${tag}
+    note: >-
+      Every artifact this release publishes, with its SHA-256 digest. Download
+      `SHA256SUMS` from the same release and verify the one line that names your
+      file before you install it.
+    note_zh: >-
+      本次 Release 发布的全部制品及其 SHA-256 摘要。安装前请从同一个 Release 下载
+      `SHA256SUMS`，并只校验与所下载文件对应的那一行。
+    steps:
+      - title: Verify one artifact
+        title_zh: 校验单个制品
+        lang: bash
+        code: |
+          ASSET=sow_${version}_linux_amd64.tar.gz
+          curl -fLO https://github.com/pgsty/sow/releases/download/${tag}/SHA256SUMS
+
+          # Linux
+          grep "  $ASSET$" SHA256SUMS | sha256sum -c -
+          # macOS
+          grep "  $ASSET$" SHA256SUMS | shasum -a 256 -c -
+    checksums_src: release/sow-checksums.txt

@@ -1,0 +1,91 @@
+# The /download/ page: a hero, the install matrix, and where to go next. The
+# matrix itself is not described here -- the `download` section reads
+# data/download/sow.yaml, so version-bound commands, links, and asset digests
+# have exactly one source and cannot drift from the artifacts they name.
+#
+# The one version-derived string on this page is the hero note; bump it with
+# params.version in hugo.yaml.
+sections:
+  - hero
+  # Wrapped in the theme's content scope so the install commands keep the
+  # framed code-block treatment; see layouts/_partials/sow/content-section.html.
+  - type: download
+    partial: sow/content-section
+  - type: cards
+    key: next
+  - cta
+
+hero:
+  eyebrow: Download matrix
+  title: Download SOW
+  desc: '**One self-contained binary, five ways to get it.** Every route installs the same executable and the same repository semantics, so choose by who owns the lifecycle on that host — not by feature set.'
+  note: SOW 0.3.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
+  note_icon: fa-solid fa-box-archive
+  align: center
+  title_size: 3.4rem
+  actions:
+    - label: Latest GitHub release
+      url: 'https://github.com/pgsty/sow/releases/latest'
+      icon: fa-brands fa-github
+      style: primary
+      external: true
+    - label: Installation guide
+      url: docs/start/install/
+      icon: fa-solid fa-cloud-arrow-down
+      style: ghost
+
+download:
+  eyebrow: Install matrix
+  title: Pick the route that matches the host
+  desc: 'Commands, links, and digests all come from the release record, so they cannot drift from the artifacts they name. The Pigsty repository tracks a rolling channel; every other route pins this exact tag.'
+  keys: [sow]
+
+next:
+  eyebrow: Then what
+  title: Where to go from here
+  columns: 3
+  link_label: Read
+  items:
+    - title: Quick Start
+      meta: Start
+      icon: fa-solid fa-bolt
+      desc: Turn a directory of RPM and DEB files into a usable flat repository in five steps.
+      url: docs/start/quickstart/
+    - title: First Workspace
+      meta: Start
+      icon: fa-solid fa-folder-tree
+      desc: Move from a Plain directory to a Managed workspace with membership, policy, and generations.
+      url: docs/start/workspace/
+    - title: CLI Reference
+      meta: Reference
+      icon: fa-solid fa-terminal
+      desc: Syntax, selection rules, output, state transitions, and exit behavior for every command.
+      url: docs/command/
+    - title: Serve a repository
+      meta: Tutorial
+      icon: fa-solid fa-server
+      desc: Publish the generated public tree with the HTTP server you already operate.
+      url: docs/tutorial/serving/
+    - title: Compatibility
+      meta: Reference
+      icon: fa-solid fa-table-list
+      desc: Which distributions, package clients, and object-storage targets are covered.
+      url: docs/reference/compatibility/
+    - title: Release notes
+      meta: History
+      icon: fa-solid fa-clock-rotate-left
+      desc: What changed in each tag, in both languages, with its artifacts and upgrade notes.
+      url: blog/release/
+
+cta:
+  title: Installed? Build the first repository.
+  actions:
+    - label: Get Started
+      url: docs/start/
+      icon: fa-solid fa-arrow-right
+      style: primary
+    - label: pgsty/sow
+      url: 'https://github.com/pgsty/sow'
+      icon: fa-brands fa-github
+      style: ghost
+      external: true
