@@ -205,6 +205,10 @@ languages:
 taxonomies:
   categories: categories
   tags: tags
+  # OINK 0.6: declaring the author taxonomy is the whole switch. The term page
+  # under content/authors/<name>/ becomes the profile, the blog article head
+  # renders portrait + linked name + bio, and the feed emits <dc:creator>.
+  author: authors
 
 permalinks:
   blog: '/:sections/:contentbasename/'
@@ -290,9 +294,34 @@ params:
   offline_search_index: content
   offline_search_max_results: 10
 
+  # Comments come from GitHub Discussions in this documentation repository via
+  # giscus. Every reading layout renders them, so a reader can ask about a
+  # documentation page where the page is, not only about a release note.
+  # https://giscus.app/ derives repoId / categoryId from the repository.
+  comments:
+    enable: true
+    type: giscus
+    giscus:
+      repo: "pgsty/sow.pgsty.com"
+      repoId: "R_kgDOTxwxpg"
+      category: "Announcements"
+      categoryId: "DIC_kwDOTxwxps4DDDvy"
+      # pathname without strict matching keeps the discussion titles
+      # readable in the repository, and matches the other Pigsty sites.
+      mapping: pathname
+      strict: 0
+      reactionsEnabled: 1
+      emitMetadata: 0
+      inputPosition: top
+      # lightTheme / darkTheme default to OINK's own giscus palettes, which are
+      # published only on pages that actually render comments.
+      theme: auto
+      loading: lazy
+
   ui:
     # OINK applies the shared shell to product-specific content types.
-    shell_types: [docs, blog, swagger, download]
+    # /download/ is an OINK landing page, so it is not a shell type.
+    shell_types: [docs, blog, swagger]
     quick_links: [docs, blog, download]
     sidebar_icon_policy: groups
     typography: technical
@@ -318,4 +347,12 @@ params:
       links: []
     feedback:
       enable: false
+    # Reading time is a blog affordance here; the blog cascade turns it on.
     reading_time: false
+    # Blog index: a card grid whose 16:9 crop shows each post's release banner,
+    # with the toolbar toggle keeping the row list and the compact table one
+    # click away.
+    blog_index: cards
+    blog_index_columns: 3
+    blog_index_toggle: true
+    blog_index_size: 12
