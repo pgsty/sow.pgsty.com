@@ -2,6 +2,8 @@
 title: "Core Concepts"
 linkTitle: "Core Concepts"
 description: "The SOW model: Plain and Managed execution, pools and views, Desired Membership, and Built Generations."
+categories: [Start]
+tags: [plain, managed, repository, dist]
 url: "/docs/start/concepts/"
 weight: 400
 icon: fa-solid fa-diagram-project

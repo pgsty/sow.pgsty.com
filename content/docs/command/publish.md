@@ -2,6 +2,8 @@
 title: "sow publish"
 linkTitle: "publish"
 description: "Publish the current verified Generation to a configured filesystem or R2 target."
+categories: [Command]
+tags: [cli, publish, object-storage, filesystem]
 url: "/docs/command/publish/"
 weight: 1500
 icon: fa-solid fa-cloud-arrow-up

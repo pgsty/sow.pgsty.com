@@ -2,6 +2,8 @@
 title: "事务与恢复"
 linkTitle: "事务与恢复"
 description: "Managed 模式的操作日志、两级锁模型、固定提交顺序与证据驱动崩溃恢复。"
+categories: [Feature]
+tags: [transaction, generation, audit]
 url: "/zh/docs/feature/transactions/"
 weight: 700
 icon: fa-solid fa-shield-halved

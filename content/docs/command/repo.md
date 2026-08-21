@@ -2,6 +2,8 @@
 title: "sow repo"
 linkTitle: "repo"
 description: "List, create, inspect and remove Repositories — the lock, transaction and Generation boundary."
+categories: [Command]
+tags: [cli, repository, managed]
 url: "/docs/command/repo/"
 aliases: ["/docs/reference/cli/repo/"]
 weight: 400

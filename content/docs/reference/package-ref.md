@@ -2,6 +2,8 @@
 title: "Package References"
 linkTitle: "Package References"
 description: "The five ways to name a package on the command line, and how ambiguity is resolved."
+categories: [Reference]
+tags: [cli, rpm, deb]
 url: "/docs/reference/package-ref/"
 weight: 300
 icon: fa-solid fa-fingerprint

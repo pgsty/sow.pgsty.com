@@ -2,6 +2,8 @@
 title: "退出码"
 linkTitle: "退出码"
 description: "七个退出码分别代表什么,以及每个码一条可复现的触发命令。"
+categories: [Reference]
+tags: [cli, output]
 url: "/zh/docs/reference/exit-codes/"
 weight: 500
 icon: fa-solid fa-triangle-exclamation

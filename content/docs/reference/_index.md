@@ -2,6 +2,8 @@
 title: "Reference"
 linkTitle: "Reference"
 description: "Configuration schema, package references, on-disk layout, exit codes, JSON output, platforms, and integrations."
+categories: [Reference]
+tags: [config, cli]
 url: "/docs/reference/"
 weight: 400
 icon: fa-solid fa-book-open

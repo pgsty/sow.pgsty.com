@@ -2,6 +2,8 @@
 title: "签名模型"
 linkTitle: "签名模型"
 description: "两条独立信任链、四种密钥引用形态、进程内与外部签名的分工，以及安全换钥方式。"
+categories: [Feature]
+tags: [signing, rpm, apt]
 url: "/zh/docs/feature/signing/"
 weight: 600
 icon: fa-solid fa-key

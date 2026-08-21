@@ -2,6 +2,8 @@
 title: "Membership Policy"
 linkTitle: "Membership Policy"
 description: "How exclude and limit decide which packages stay in a Dist: rule fields, glob matching, version ordering, and why loosening a policy never resurrects a removed member."
+categories: [Feature]
+tags: [policy, managed]
 url: "/docs/feature/policy/"
 weight: 500
 icon: fa-solid fa-filter

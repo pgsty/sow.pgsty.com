@@ -2,6 +2,8 @@
 title: "sow changes"
 linkTitle: "changes"
 description: "将 Built Generation 差异输出为确定性的 Repository 相对文件交付计划。"
+categories: [Command]
+tags: [cli, publish, generation]
 url: "/zh/docs/command/changes/"
 weight: 1400
 icon: fa-solid fa-code-compare

@@ -2,6 +2,8 @@
 title: "sow dist"
 linkTitle: "dist"
 description: "列出、创建、查看与删除 Dist —— 客户端真正消费的、单一格式的具名成员集。"
+categories: [Command]
+tags: [cli, dist, managed]
 url: "/zh/docs/command/dist/"
 aliases: ["/docs/reference/cli/dist/"]
 weight: 500

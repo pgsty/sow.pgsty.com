@@ -2,6 +2,8 @@
 title: "Build an APT Repository"
 linkTitle: "Build an APT Repository"
 description: "Create a managed DEB repository with by-hash indexes and configure an APT client."
+categories: [Tutorial]
+tags: [apt, deb, managed, dist]
 url: "/docs/tutorial/apt-repo/"
 weight: 200
 icon: fa-solid fa-cube

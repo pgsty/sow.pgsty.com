@@ -2,6 +2,8 @@
 title: "设计原则"
 linkTitle: "设计原则"
 description: "SOW 用来约束所有权、派生状态、发布与证据的一组不变式。"
+categories: [Design]
+tags: [plain, managed, repository]
 url: "/zh/docs/design/principles/"
 weight: 100
 icon: fa-solid fa-ruler-combined

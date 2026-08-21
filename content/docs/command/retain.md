@@ -2,6 +2,8 @@
 title: "sow retain"
 linkTitle: "retain"
 description: "Add, list, and remove explicit retained-Generation roots for local garbage collection."
+categories: [Command]
+tags: [cli, retention, generation]
 url: "/docs/command/retain/"
 weight: 1600
 icon: fa-solid fa-box-archive

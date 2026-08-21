@@ -2,6 +2,8 @@
 title: "System Model"
 linkTitle: "System Model"
 description: "The objects and state transitions that connect packages, distributions, generations, and publication targets."
+categories: [Design]
+tags: [repository, dist, pool, generation]
 url: "/docs/design/model/"
 weight: 200
 icon: fa-solid fa-diagram-project

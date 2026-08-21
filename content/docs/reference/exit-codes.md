@@ -2,6 +2,8 @@
 title: "Exit Codes"
 linkTitle: "Exit Codes"
 description: "The seven exit codes, what each means, and a command that reproduces it."
+categories: [Reference]
+tags: [cli, output]
 url: "/docs/reference/exit-codes/"
 weight: 500
 icon: fa-solid fa-triangle-exclamation

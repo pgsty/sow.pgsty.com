@@ -2,6 +2,8 @@
 title: "服务与发布仓库"
 linkTitle: "对外服务"
 description: "用 Nginx 服务公共 Repository，并把已校验 Generation 发布到 filesystem target。"
+categories: [Tutorial]
+tags: [publish, filesystem, managed]
 url: "/zh/docs/tutorial/serving/"
 weight: 400
 icon: fa-solid fa-server

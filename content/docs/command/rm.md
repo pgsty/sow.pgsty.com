@@ -2,6 +2,8 @@
 title: "sow rm"
 linkTitle: "rm"
 description: "Remove Desired Membership from selected Dists, with a no-write preview mode."
+categories: [Command]
+tags: [cli, managed, policy]
 url: "/docs/command/rm/"
 aliases: ["/docs/reference/cli/rm/"]
 weight: 700

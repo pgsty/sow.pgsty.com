@@ -2,6 +2,8 @@
 title: "包引用"
 linkTitle: "包引用"
 description: "命令行上指代一个软件包的五种写法,以及歧义如何裁决。"
+categories: [Reference]
+tags: [cli, rpm, deb]
 url: "/zh/docs/reference/package-ref/"
 weight: 300
 icon: fa-solid fa-fingerprint

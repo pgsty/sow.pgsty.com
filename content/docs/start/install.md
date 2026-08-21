@@ -2,6 +2,8 @@
 title: "Installation"
 linkTitle: "Installation"
 description: "Install SOW from an archive, RPM/DEB package, or source, then verify the binary and filesystem requirements."
+categories: [Start]
+tags: [install, rpm, deb]
 url: "/docs/start/install/"
 weight: 100
 icon: fa-solid fa-download

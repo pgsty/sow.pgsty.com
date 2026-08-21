@@ -2,6 +2,8 @@
 title: "搭建 YUM 仓库"
 linkTitle: "搭建 YUM 仓库"
 description: "创建托管 RPM 仓库，配置成员策略，对外服务并接入 dnf。"
+categories: [Tutorial]
+tags: [yum, rpm, managed, dist]
 url: "/zh/docs/tutorial/yum-repo/"
 weight: 100
 icon: fa-solid fa-box-open

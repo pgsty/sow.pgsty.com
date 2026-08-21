@@ -2,6 +2,8 @@
 title: "参考"
 linkTitle: "参考"
 description: "配置 Schema、包引用、磁盘布局、退出码、JSON 输出、平台与集成。"
+categories: [Reference]
+tags: [config, cli]
 url: "/zh/docs/reference/"
 weight: 400
 icon: fa-solid fa-book-open

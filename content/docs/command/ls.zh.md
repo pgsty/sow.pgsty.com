@@ -2,6 +2,8 @@
 title: "sow ls"
 linkTitle: "ls"
 description: "列出所选 Dist 的期望成员与已构建成员。"
+categories: [Command]
+tags: [cli, managed]
 url: "/zh/docs/command/ls/"
 weight: 800
 icon: fa-solid fa-list

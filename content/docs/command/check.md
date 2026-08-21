@@ -2,6 +2,8 @@
 title: "sow check"
 linkTitle: "check"
 description: "Run the full read-only integrity and delivery-readiness verification pipeline."
+categories: [Command]
+tags: [cli, audit, signing]
 url: "/docs/command/check/"
 weight: 1300
 icon: fa-solid fa-list-check

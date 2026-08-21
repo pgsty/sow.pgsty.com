@@ -2,6 +2,8 @@
 title: "sow log"
 linkTitle: "log"
 description: "Read the Operation audit ledger, export it as JSONL, and prune eligible terminal records."
+categories: [Command]
+tags: [cli, audit]
 url: "/docs/command/log/"
 aliases: ["/docs/reference/cli/log/"]
 weight: 1900

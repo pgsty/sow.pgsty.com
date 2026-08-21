@@ -2,6 +2,8 @@
 title: "sow build"
 linkTitle: "build"
 description: "Converge Desired Membership and renderer configuration into a complete Built Generation."
+categories: [Command]
+tags: [cli, managed, generation]
 url: "/docs/command/build/"
 weight: 1200
 icon: fa-solid fa-hammer

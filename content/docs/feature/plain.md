@@ -2,6 +2,8 @@
 title: "Plain Flat Repositories"
 linkTitle: "Plain Flat Repositories"
 description: "The one-pass, overwrite-rebuild contract behind sow create, including deterministic output and the Pigsty completion marker."
+categories: [Feature]
+tags: [plain, rpm, deb]
 url: "/docs/feature/plain/"
 weight: 200
 icon: fa-solid fa-folder-open

@@ -2,6 +2,8 @@
 title: "Tutorials"
 linkTitle: "Tutorials"
 description: "End-to-end walkthroughs that take a pile of packages all the way to a signed repository your clients can install from."
+categories: [Tutorial]
+tags: [yum, apt, signing, publish]
 url: "/docs/tutorial/"
 weight: 200
 icon: fa-solid fa-graduation-cap

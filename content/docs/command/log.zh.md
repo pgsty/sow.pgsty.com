@@ -2,6 +2,8 @@
 title: "sow log"
 linkTitle: "log"
 description: "读取操作审计账本、导出为 JSONL，并清理符合条件的终态记录。"
+categories: [Command]
+tags: [cli, audit]
 url: "/zh/docs/command/log/"
 aliases: ["/docs/reference/cli/log/"]
 weight: 1900

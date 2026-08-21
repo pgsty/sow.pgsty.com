@@ -2,6 +2,8 @@
 title: "sow repo"
 linkTitle: "repo"
 description: "列出、创建、查看与删除仓库 —— 锁、事务与 Generation 的边界。"
+categories: [Command]
+tags: [cli, repository, managed]
 url: "/zh/docs/command/repo/"
 aliases: ["/docs/reference/cli/repo/"]
 weight: 400

@@ -2,6 +2,8 @@
 title: "Build the pigsty-infra Repository"
 linkTitle: "Build pigsty-infra"
 description: "Turn an existing dual-architecture RPM and DEB package pool into an infra repository, then validate installs, roll updates, promote to Stable, and take monthly snapshots."
+categories: [Tutorial]
+tags: [yum, rpm, managed, publish]
 url: "/docs/tutorial/infra-repo/"
 weight: 500
 icon: fa-solid fa-hammer

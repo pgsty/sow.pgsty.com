@@ -2,6 +2,8 @@
 title: "包池与元数据视图"
 linkTitle: "包池与视图"
 description: "一份软件包、一个属主、纯元数据 APT/RPM 视图：正典包池寻址、中性包、搬迁与显式 reposync 导出。"
+categories: [Feature]
+tags: [pool, dist, rpm, deb]
 url: "/zh/docs/feature/views/"
 aliases:
   - "/docs/design/single-payload/"

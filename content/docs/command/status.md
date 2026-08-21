@@ -2,6 +2,8 @@
 title: "sow status"
 linkTitle: "status"
 description: "Read Repository convergence, readiness, pending payload, recent Operation, and lock state without deep verification."
+categories: [Command]
+tags: [cli, managed, audit]
 url: "/docs/command/status/"
 weight: 1100
 icon: fa-solid fa-gauge-high

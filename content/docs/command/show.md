@@ -2,6 +2,8 @@
 title: "sow show"
 linkTitle: "show"
 description: "Inspect one Package Object, including identity, normalized facts, storage, signature, and membership."
+categories: [Command]
+tags: [cli, managed, signing]
 url: "/docs/command/show/"
 weight: 900
 icon: fa-solid fa-file-lines

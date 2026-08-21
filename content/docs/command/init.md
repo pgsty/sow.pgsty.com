@@ -2,6 +2,8 @@
 title: "sow init"
 linkTitle: "init"
 description: "Create a Workspace, and converge whatever Repositories and Dists sow.yml already declares."
+categories: [Command]
+tags: [cli, managed, config]
 url: "/docs/command/init/"
 aliases: ["/docs/reference/cli/init/"]
 weight: 200

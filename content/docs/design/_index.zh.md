@@ -2,6 +2,8 @@
 title: "设计"
 linkTitle: "设计"
 description: "SOW 的长期架构决策：所有权、状态、发布顺序、恢复与证据。"
+categories: [Design]
+tags: [managed, publish, transaction]
 url: "/zh/docs/design/"
 weight: 350
 icon: fa-solid fa-compass-drafting

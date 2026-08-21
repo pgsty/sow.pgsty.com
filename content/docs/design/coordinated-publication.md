@@ -2,6 +2,8 @@
 title: "Coordinated Publication Proposal"
 linkTitle: "Coordinated Publication"
 description: "Proposed SOW v0.4.0 workflow for plan-driven, rclone-executed publication with deterministic Ctrl+C recovery."
+categories: [Design]
+tags: [publish, transaction, object-storage]
 url: "/docs/design/coordinated-publication/"
 weight: 450
 icon: fa-solid fa-cloud-arrow-up

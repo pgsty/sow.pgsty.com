@@ -2,6 +2,8 @@
 title: "sow config"
 linkTitle: "config"
 description: "只读校验 sow.yml，并打印任意作用域的有效配置。"
+categories: [Command]
+tags: [cli, config]
 url: "/zh/docs/command/config/"
 aliases: ["/docs/reference/cli/config/"]
 weight: 300

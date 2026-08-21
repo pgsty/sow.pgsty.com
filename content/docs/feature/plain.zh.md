@@ -2,6 +2,8 @@
 title: "Plain 平面仓库"
 linkTitle: "Plain 平面仓库"
 description: "sow create 的单遍扫描、覆盖重建契约，以及确定性输出与 Pigsty 完成标记。"
+categories: [Feature]
+tags: [plain, rpm, deb]
 url: "/zh/docs/feature/plain/"
 weight: 200
 icon: fa-solid fa-folder-open

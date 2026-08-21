@@ -2,6 +2,8 @@
 title: "第一个工作区"
 linkTitle: "第一个工作区"
 description: "创建工作区，建立 RPM/DEB Dist，添加软件包并校验公共树。"
+categories: [Start]
+tags: [managed, repository, dist, generation]
 url: "/zh/docs/start/workspace/"
 weight: 300
 icon: fa-solid fa-layer-group

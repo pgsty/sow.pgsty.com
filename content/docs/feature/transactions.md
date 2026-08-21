@@ -2,6 +2,8 @@
 title: "Transactions & Recovery"
 linkTitle: "Transactions & Recovery"
 description: "Managed-mode journals, the two-level lock model, fixed commit order, and evidence-driven crash recovery."
+categories: [Feature]
+tags: [transaction, generation, audit]
 url: "/docs/feature/transactions/"
 weight: 700
 icon: fa-solid fa-shield-halved

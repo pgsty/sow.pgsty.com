@@ -2,6 +2,8 @@
 title: "Design Principles"
 linkTitle: "Principles"
 description: "The invariants SOW uses to keep ownership, generated state, publication, and evidence understandable."
+categories: [Design]
+tags: [plain, managed, repository]
 url: "/docs/design/principles/"
 weight: 100
 icon: fa-solid fa-ruler-combined

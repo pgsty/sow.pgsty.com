@@ -2,6 +2,8 @@
 title: "JSON 输出"
 linkTitle: "JSON 输出"
 description: "sow.cli/v1 Envelope、字段含义与主要命令族的 Result 形态。"
+categories: [Reference]
+tags: [cli, output, json]
 url: "/zh/docs/reference/json/"
 weight: 600
 icon: fa-solid fa-code

@@ -2,6 +2,8 @@
 title: "可观测与审计"
 linkTitle: "可观测与审计"
 description: "正确使用 status、check、changes、retention 与操作日志，不混淆状态和证明。"
+categories: [Feature]
+tags: [audit, transaction]
 url: "/zh/docs/feature/audit/"
 weight: 800
 icon: fa-solid fa-magnifying-glass-chart

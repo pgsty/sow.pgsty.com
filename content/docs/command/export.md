@@ -2,6 +2,8 @@
 title: "sow export"
 linkTitle: "export"
 description: "Export one built RPM Dist architecture as a standalone compatibility repository."
+categories: [Command]
+tags: [cli, rpm, dist]
 url: "/docs/command/export/"
 weight: 1800
 icon: fa-solid fa-file-export

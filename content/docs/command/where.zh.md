@@ -2,6 +2,8 @@
 title: "sow where"
 linkTitle: "where"
 description: "在工作区的 Repository 与 Dist 中定位一个 Package Object。"
+categories: [Command]
+tags: [cli, managed]
 url: "/zh/docs/command/where/"
 weight: 1000
 icon: fa-solid fa-location-dot

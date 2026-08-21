@@ -2,6 +2,8 @@
 title: "命令"
 linkTitle: "命令"
 description: "SOW CLI 的完整语法、参数、行为、输出与退出码。"
+categories: [Command]
+tags: [cli]
 url: "/zh/docs/command/"
 aliases:
   - "/docs/reference/cli/"

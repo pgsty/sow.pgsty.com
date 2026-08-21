@@ -2,6 +2,8 @@
 title: "sow init"
 linkTitle: "init"
 description: "创建工作区，并收敛 sow.yml 中已声明的 Repository 与 Dist。"
+categories: [Command]
+tags: [cli, managed, config]
 url: "/zh/docs/command/init/"
 aliases: ["/docs/reference/cli/init/"]
 weight: 200

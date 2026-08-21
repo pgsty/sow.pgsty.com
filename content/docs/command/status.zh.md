@@ -2,6 +2,8 @@
 title: "sow status"
 linkTitle: "status"
 description: "快速读取 Repository 的收敛、可交付、待处理包体、最近 Operation 与锁状态。"
+categories: [Command]
+tags: [cli, managed, audit]
 url: "/zh/docs/command/status/"
 weight: 1100
 icon: fa-solid fa-gauge-high

@@ -2,6 +2,8 @@
 title: "协同发布设计提案"
 linkTitle: "协同发布"
 description: "SOW v0.4.0 提议采用计划驱动、rclone 执行、可确定恢复 Ctrl+C 中断的发布流程。"
+categories: [Design]
+tags: [publish, transaction, object-storage]
 url: "/zh/docs/design/coordinated-publication/"
 weight: 450
 icon: fa-solid fa-cloud-arrow-up

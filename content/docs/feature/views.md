@@ -2,6 +2,8 @@
 title: "Pool & Metadata Views"
 linkTitle: "Pool & Views"
 description: "One package, one owner, metadata-only APT/RPM views: canonical pool addressing, neutral packages, relocation, and the explicit reposync export."
+categories: [Feature]
+tags: [pool, dist, rpm, deb]
 url: "/docs/feature/views/"
 aliases:
   - "/docs/design/single-payload/"

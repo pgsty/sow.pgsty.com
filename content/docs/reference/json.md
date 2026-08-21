@@ -2,6 +2,8 @@
 title: "JSON Output"
 linkTitle: "JSON Output"
 description: "The sow.cli/v1 envelope, its fields, and result shapes for the primary command families."
+categories: [Reference]
+tags: [cli, output, json]
 url: "/docs/reference/json/"
 weight: 600
 icon: fa-solid fa-code

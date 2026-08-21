@@ -2,6 +2,8 @@
 title: "sow check"
 linkTitle: "check"
 description: "执行完整的只读完整性与可交付校验流水线。"
+categories: [Command]
+tags: [cli, audit, signing]
 url: "/zh/docs/command/check/"
 weight: 1300
 icon: fa-solid fa-list-check

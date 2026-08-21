@@ -2,6 +2,8 @@
 title: "发布与恢复"
 linkTitle: "发布与恢复"
 description: "发布、恢复、保留与安全删除仓库对象的 target-scoped 状态机。"
+categories: [Design]
+tags: [publish, transaction, object-storage]
 url: "/zh/docs/design/publication/"
 weight: 400
 icon: fa-solid fa-arrows-rotate

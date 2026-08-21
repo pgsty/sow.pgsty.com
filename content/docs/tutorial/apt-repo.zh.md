@@ -2,6 +2,8 @@
 title: "搭建 APT 仓库"
 linkTitle: "搭建 APT 仓库"
 description: "创建带 by-hash 索引的托管 DEB 仓库，并配置 APT 客户端。"
+categories: [Tutorial]
+tags: [apt, deb, managed, dist]
 url: "/zh/docs/tutorial/apt-repo/"
 weight: 200
 icon: fa-solid fa-cube

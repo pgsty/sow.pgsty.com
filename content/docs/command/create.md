@@ -2,6 +2,8 @@
 title: "sow create"
 linkTitle: "create"
 description: "Generate a flat RPM/DEB repository in an ordinary directory — the Plain mode entry point."
+categories: [Command]
+tags: [cli, plain, rpm, deb]
 url: "/docs/command/create/"
 aliases: ["/docs/reference/cli/create/"]
 weight: 100

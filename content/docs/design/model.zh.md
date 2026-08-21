@@ -2,6 +2,8 @@
 title: "系统模型"
 linkTitle: "系统模型"
 description: "连接软件包、Dist、Generation 与发布目标的对象模型和状态迁移。"
+categories: [Design]
+tags: [repository, dist, pool, generation]
 url: "/zh/docs/design/model/"
 weight: 200
 icon: fa-solid fa-diagram-project

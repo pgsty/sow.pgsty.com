@@ -2,6 +2,8 @@
 title: "sow ls"
 linkTitle: "ls"
 description: "List Desired and Built package membership for the selected Dists."
+categories: [Command]
+tags: [cli, managed]
 url: "/docs/command/ls/"
 weight: 800
 icon: fa-solid fa-list

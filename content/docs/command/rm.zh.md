@@ -2,6 +2,8 @@
 title: "sow rm"
 linkTitle: "rm"
 description: "从选定 Dist 中移除期望成员，并提供不写盘的预览模式。"
+categories: [Command]
+tags: [cli, managed, policy]
 url: "/zh/docs/command/rm/"
 aliases: ["/docs/reference/cli/rm/"]
 weight: 700

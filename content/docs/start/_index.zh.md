@@ -2,6 +2,8 @@
 title: "上手"
 linkTitle: "上手"
 description: "安装 SOW、创建平面仓库，并理解 Managed 工作区模型。"
+categories: [Start]
+tags: [install, plain, managed]
 url: "/zh/docs/start/"
 weight: 100
 icon: fa-solid fa-rocket

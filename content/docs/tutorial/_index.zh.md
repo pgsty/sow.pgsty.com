@@ -2,6 +2,8 @@
 title: "教程"
 linkTitle: "教程"
 description: "端到端实操：从一组软件包文件开始，构建客户端可直接使用的已签名软件仓库。"
+categories: [Tutorial]
+tags: [yum, apt, signing, publish]
 url: "/zh/docs/tutorial/"
 weight: 200
 icon: fa-solid fa-graduation-cap

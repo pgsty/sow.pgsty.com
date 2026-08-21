@@ -2,6 +2,8 @@
 title: "sow show"
 linkTitle: "show"
 description: "查看一个 Package Object 的身份、标准化事实、存储、签名与成员关系。"
+categories: [Command]
+tags: [cli, managed, signing]
 url: "/zh/docs/command/show/"
 weight: 900
 icon: fa-solid fa-file-lines

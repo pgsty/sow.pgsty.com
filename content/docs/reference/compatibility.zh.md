@@ -2,6 +2,8 @@
 title: "平台与集成"
 linkTitle: "平台"
 description: "Release 目标、文件系统要求、仓库客户端、发布 Provider 与自动化集成覆盖。"
+categories: [Reference]
+tags: [rpm, deb, yum, apt, object-storage]
 url: "/zh/docs/reference/compatibility/"
 aliases:
   - "/docs/design/compatibility/"

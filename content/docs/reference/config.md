@@ -2,6 +2,8 @@
 title: "sow.yml Reference"
 linkTitle: "Configuration"
 description: "Every field of the workspace configuration file, with validation rules and a complete worked example."
+categories: [Reference]
+tags: [config, managed]
 url: "/docs/reference/config/"
 weight: 200
 icon: fa-solid fa-file-code

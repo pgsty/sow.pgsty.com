@@ -2,6 +2,8 @@
 title: "sow.yml 配置参考"
 linkTitle: "配置参考"
 description: "工作区配置文件的全部字段、校验规则,以及一份完整可用的示例。"
+categories: [Reference]
+tags: [config, managed]
 url: "/zh/docs/reference/config/"
 weight: 200
 icon: fa-solid fa-file-code

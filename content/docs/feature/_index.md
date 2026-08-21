@@ -2,6 +2,8 @@
 title: "Features"
 linkTitle: "Features"
 description: "Plain and Managed repository generation, package pools, policy, signing, transactions, publication, and audit."
+categories: [Feature]
+tags: [plain, managed, policy, signing]
 url: "/docs/feature/"
 aliases:
   - "/docs/feature/overview/"

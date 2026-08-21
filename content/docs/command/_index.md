@@ -2,6 +2,8 @@
 title: "Commands"
 linkTitle: "Commands"
 description: "Complete SOW CLI syntax, options, behavior, output, and exit codes."
+categories: [Command]
+tags: [cli]
 url: "/docs/command/"
 aliases:
   - "/docs/reference/cli/"

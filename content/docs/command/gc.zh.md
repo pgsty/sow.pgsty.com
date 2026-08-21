@@ -2,6 +2,8 @@
 title: "sow gc"
 linkTitle: "gc"
 description: "回收本地不可达包体，或对一个发布目标执行保守维护。"
+categories: [Command]
+tags: [cli, gc, retention, publish]
 url: "/zh/docs/command/gc/"
 weight: 1700
 icon: fa-solid fa-recycle

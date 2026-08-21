@@ -2,6 +2,8 @@
 title: "功能"
 linkTitle: "功能"
 description: "Plain/Managed 仓库生成、包池、策略、签名、事务、发布与审计。"
+categories: [Feature]
+tags: [plain, managed, policy, signing]
 url: "/zh/docs/feature/"
 aliases:
   - "/docs/feature/overview/"

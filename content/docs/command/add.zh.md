@@ -2,6 +2,8 @@
 title: "sow add"
 linkTitle: "add"
 description: "把包加入期望成员集，执行成员策略，并重建受影响的索引。"
+categories: [Command]
+tags: [cli, managed, policy]
 url: "/zh/docs/command/add/"
 aliases: ["/docs/reference/cli/add/"]
 weight: 600

@@ -2,6 +2,8 @@
 title: "sow retain"
 linkTitle: "retain"
 description: "添加、列出与移除供本地垃圾回收使用的显式 Generation 保留根。"
+categories: [Command]
+tags: [cli, retention, generation]
 url: "/zh/docs/command/retain/"
 weight: 1600
 icon: fa-solid fa-box-archive

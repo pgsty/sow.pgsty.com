@@ -2,6 +2,8 @@
 title: "Sign Your Repository"
 linkTitle: "Sign Your Repository"
 description: "Sign RPM and APT metadata, optionally sign RPM packages, and enable client verification."
+categories: [Tutorial]
+tags: [signing, apt, yum]
 url: "/docs/tutorial/signing/"
 weight: 300
 icon: fa-solid fa-key

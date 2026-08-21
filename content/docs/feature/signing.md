@@ -2,6 +2,8 @@
 title: "Signing Model"
 linkTitle: "Signing Model"
 description: "Two independent trust chains, four key-reference forms, in-process versus external signing, and safe key changes."
+categories: [Feature]
+tags: [signing, rpm, apt]
 url: "/docs/feature/signing/"
 weight: 600
 icon: fa-solid fa-key

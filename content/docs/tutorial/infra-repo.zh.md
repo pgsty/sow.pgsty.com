@@ -2,6 +2,8 @@
 title: "演练构建 pigsty-infra 仓库"
 linkTitle: "构建 pigsty-infra"
 description: "把既有的双架构 RPM 与 DEB 包池组织成 infra 仓库，完成本地安装验收、滚动更新、Stable 晋升与月度快照。"
+categories: [Tutorial]
+tags: [yum, rpm, managed, publish]
 url: "/zh/docs/tutorial/infra-repo/"
 weight: 500
 icon: fa-solid fa-hammer

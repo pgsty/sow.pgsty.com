@@ -2,6 +2,8 @@
 title: "成员策略"
 linkTitle: "成员策略"
 description: "exclude 与 limit 如何决定哪些包留在 Dist 里:规则字段、glob 匹配、版本排序,以及放宽策略为什么永远不会复活已移出的成员。"
+categories: [Feature]
+tags: [policy, managed]
 url: "/zh/docs/feature/policy/"
 weight: 500
 icon: fa-solid fa-filter

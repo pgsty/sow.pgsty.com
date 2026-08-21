@@ -2,6 +2,8 @@
 title: "Your First Workspace"
 linkTitle: "First Workspace"
 description: "Create a workspace with RPM and DEB Dists, add packages, and verify the public tree."
+categories: [Start]
+tags: [managed, repository, dist, generation]
 url: "/docs/start/workspace/"
 weight: 300
 icon: fa-solid fa-layer-group

@@ -2,6 +2,8 @@
 title: "仓库签名"
 linkTitle: "仓库签名"
 description: "签署 RPM 与 APT 元数据，可选签署 RPM 包体，并启用客户端验签。"
+categories: [Tutorial]
+tags: [signing, apt, yum]
 url: "/zh/docs/tutorial/signing/"
 weight: 300
 icon: fa-solid fa-key

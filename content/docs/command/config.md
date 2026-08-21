@@ -2,6 +2,8 @@
 title: "sow config"
 linkTitle: "config"
 description: "Validate sow.yml without touching anything, and print the effective configuration for any scope."
+categories: [Command]
+tags: [cli, config]
 url: "/docs/command/config/"
 aliases: ["/docs/reference/cli/config/"]
 weight: 300

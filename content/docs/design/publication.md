@@ -2,6 +2,8 @@
 title: "Publication & Recovery"
 linkTitle: "Publication & Recovery"
 description: "The target-scoped state machine for publishing, recovering, retaining, and safely deleting repository objects."
+categories: [Design]
+tags: [publish, transaction, object-storage]
 url: "/docs/design/publication/"
 weight: 400
 icon: fa-solid fa-arrows-rotate

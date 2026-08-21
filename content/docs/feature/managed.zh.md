@@ -2,6 +2,8 @@
 title: "Managed 工作区"
 linkTitle: "Managed 工作区"
 description: "工作区 → 仓库 → Dist 三层模型、固定磁盘布局、sow.yml 如何驱动一切,以及发现与选择规则。"
+categories: [Feature]
+tags: [managed, repository, dist, generation]
 url: "/zh/docs/feature/managed/"
 weight: 300
 icon: fa-solid fa-sitemap

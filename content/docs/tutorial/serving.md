@@ -2,6 +2,8 @@
 title: "Serve and Publish Repositories"
 linkTitle: "Serve Repositories"
 description: "Serve a public Repository with Nginx and publish verified Generations to a filesystem target."
+categories: [Tutorial]
+tags: [publish, filesystem, managed]
 url: "/docs/tutorial/serving/"
 weight: 400
 icon: fa-solid fa-server

@@ -2,6 +2,8 @@
 title: "安装"
 linkTitle: "安装"
 description: "通过归档、RPM/DEB 安装包或源码安装 SOW，并核对二进制与文件系统要求。"
+categories: [Start]
+tags: [install, rpm, deb]
 url: "/zh/docs/start/install/"
 weight: 100
 icon: fa-solid fa-download

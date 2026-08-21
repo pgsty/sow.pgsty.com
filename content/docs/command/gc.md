@@ -2,6 +2,8 @@
 title: "sow gc"
 linkTitle: "gc"
 description: "Collect unreachable local payloads or perform conservative maintenance for one publication target."
+categories: [Command]
+tags: [cli, gc, retention, publish]
 url: "/docs/command/gc/"
 weight: 1700
 icon: fa-solid fa-recycle

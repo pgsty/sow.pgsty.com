@@ -2,6 +2,8 @@
 title: "sow changes"
 linkTitle: "changes"
 description: "Diff Built Generations as a deterministic Repository-relative file delivery plan."
+categories: [Command]
+tags: [cli, publish, generation]
 url: "/docs/command/changes/"
 weight: 1400
 icon: fa-solid fa-code-compare

@@ -2,6 +2,8 @@
 title: "Quick Start"
 linkTitle: "Quick Start"
 description: "Index a directory of RPM and DEB packages, serve it, and configure a client."
+categories: [Start]
+tags: [plain, rpm, deb, cli]
 url: "/docs/start/quickstart/"
 weight: 200
 icon: fa-solid fa-bolt

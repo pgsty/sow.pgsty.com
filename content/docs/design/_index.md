@@ -2,6 +2,8 @@
 title: "Design"
 linkTitle: "Design"
 description: "The durable decisions behind SOW: ownership, state, publication ordering, recovery, and evidence."
+categories: [Design]
+tags: [managed, publish, transaction]
 url: "/docs/design/"
 weight: 350
 icon: fa-solid fa-compass-drafting

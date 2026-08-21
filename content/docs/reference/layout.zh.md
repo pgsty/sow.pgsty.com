@@ -2,6 +2,8 @@
 title: "仓库布局"
 linkTitle: "仓库布局"
 description: "SOW 的公共与私有路径，包括唯一规范包池与纯元数据视图。"
+categories: [Reference]
+tags: [repository, pool, dist]
 url: "/zh/docs/reference/layout/"
 weight: 400
 icon: fa-solid fa-folder-tree

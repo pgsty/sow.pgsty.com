@@ -2,6 +2,8 @@
 title: "sow export"
 linkTitle: "export"
 description: "将一个已构建 RPM Dist 架构导出为独立兼容仓库。"
+categories: [Command]
+tags: [cli, rpm, dist]
 url: "/zh/docs/command/export/"
 weight: 1800
 icon: fa-solid fa-file-export

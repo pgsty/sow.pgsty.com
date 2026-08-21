@@ -2,6 +2,8 @@
 title: "sow publish"
 linkTitle: "publish"
 description: "将当前已验证 Generation 发布到配置的 filesystem 或 R2 目标。"
+categories: [Command]
+tags: [cli, publish, object-storage, filesystem]
 url: "/zh/docs/command/publish/"
 weight: 1500
 icon: fa-solid fa-cloud-arrow-up

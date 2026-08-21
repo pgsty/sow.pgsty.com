@@ -2,6 +2,8 @@
 title: "Managed Workspaces"
 linkTitle: "Managed Workspaces"
 description: "The Workspace to Repository to Dist model, the fixed on-disk layout, how sow.yml drives everything, and the discovery and selection rules."
+categories: [Feature]
+tags: [managed, repository, dist, generation]
 url: "/docs/feature/managed/"
 weight: 300
 icon: fa-solid fa-sitemap

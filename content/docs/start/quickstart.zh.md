@@ -2,6 +2,8 @@
 title: "快速上手"
 linkTitle: "快速上手"
 description: "索引一个 RPM/DEB 软件包目录，对外服务，并配置客户端。"
+categories: [Start]
+tags: [plain, rpm, deb, cli]
 url: "/zh/docs/start/quickstart/"
 weight: 200
 icon: fa-solid fa-bolt

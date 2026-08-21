@@ -2,6 +2,8 @@
 title: "sow add"
 linkTitle: "add"
 description: "Add packages to Desired Membership, apply policy, and rebuild the affected indexes."
+categories: [Command]
+tags: [cli, managed, policy]
 url: "/docs/command/add/"
 aliases: ["/docs/reference/cli/add/"]
 weight: 600

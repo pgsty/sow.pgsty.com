@@ -2,6 +2,8 @@
 title: "sow build"
 linkTitle: "build"
 description: "将 Desired Membership 与渲染配置收敛为完整 Built Generation。"
+categories: [Command]
+tags: [cli, managed, generation]
 url: "/zh/docs/command/build/"
 weight: 1200
 icon: fa-solid fa-hammer

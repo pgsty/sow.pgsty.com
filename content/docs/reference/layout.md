@@ -2,6 +2,8 @@
 title: "Repository Layout"
 linkTitle: "Layout"
 description: "Public and private paths, including the canonical pool and metadata-only views."
+categories: [Reference]
+tags: [repository, pool, dist]
 url: "/docs/reference/layout/"
 weight: 400
 icon: fa-solid fa-folder-tree

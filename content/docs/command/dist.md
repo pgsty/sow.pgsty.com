@@ -2,6 +2,8 @@
 title: "sow dist"
 linkTitle: "dist"
 description: "List, create, inspect and remove Dists — the named single-format member set clients actually consume."
+categories: [Command]
+tags: [cli, dist, managed]
 url: "/docs/command/dist/"
 aliases: ["/docs/reference/cli/dist/"]
 weight: 500

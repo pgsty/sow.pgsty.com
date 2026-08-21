@@ -2,6 +2,8 @@
 title: "sow create"
 linkTitle: "create"
 description: "在普通目录中就地生成平面 RPM/DEB 仓库 —— Plain 平面模式的唯一入口。"
+categories: [Command]
+tags: [cli, plain, rpm, deb]
 url: "/zh/docs/command/create/"
 aliases: ["/docs/reference/cli/create/"]
 weight: 100

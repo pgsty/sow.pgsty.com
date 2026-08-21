@@ -2,6 +2,8 @@
 title: "Observability & Audit"
 linkTitle: "Observability & Audit"
 description: "Use status, check, changes, retention, and the operation log without confusing state with proof."
+categories: [Feature]
+tags: [audit, transaction]
 url: "/docs/feature/audit/"
 weight: 800
 icon: fa-solid fa-magnifying-glass-chart

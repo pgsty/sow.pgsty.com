@@ -2,6 +2,8 @@
 title: "sow where"
 linkTitle: "where"
 description: "Locate one Package Object across Repositories and Dists in a Workspace."
+categories: [Command]
+tags: [cli, managed]
 url: "/docs/command/where/"
 weight: 1000
 icon: fa-solid fa-location-dot

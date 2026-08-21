@@ -2,6 +2,8 @@
 title: "Get Started"
 linkTitle: "Get Started"
 description: "Install SOW, create a flat repository, and learn the Managed workspace model."
+categories: [Start]
+tags: [install, plain, managed]
 url: "/docs/start/"
 weight: 100
 icon: fa-solid fa-rocket

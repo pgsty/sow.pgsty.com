@@ -2,6 +2,8 @@
 title: "Platforms & Integrations"
 linkTitle: "Platforms"
 description: "Release targets, filesystem requirements, repository clients, publication Providers, and automated integration coverage."
+categories: [Reference]
+tags: [rpm, deb, yum, apt, object-storage]
 url: "/docs/reference/compatibility/"
 aliases:
   - "/docs/design/compatibility/"

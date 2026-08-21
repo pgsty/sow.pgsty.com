@@ -2,6 +2,8 @@
 title: "Build a YUM Repository"
 linkTitle: "Build a YUM Repository"
 description: "Create a managed RPM repository, apply membership policy, serve it, and configure dnf."
+categories: [Tutorial]
+tags: [yum, rpm, managed, dist]
 url: "/docs/tutorial/yum-repo/"
 weight: 100
 icon: fa-solid fa-box-open
