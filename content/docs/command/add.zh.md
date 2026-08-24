@@ -63,7 +63,9 @@ item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=accepted format=rpm coo
 | `excluded` | 策略把它从所有目标 Dist 中移除——看 `dists=` 区分是 `excluded` 还是 `limited` |
 | `failed` | 该包被拒绝，`error=` 字段说明原因 |
 
-`reused` 就是幂等的样子。同一个文件加两次不会产生第二个对象，也不会推进 Generation：
+`reused` 表示内容幂等：同一个文件加两次绝不会产生第二个对象或重复 Membership。默认重复执行
+`add` 时还会收敛所选 Dist；Dist 已经最新时 Generation 不变，先前 `--skip` 或配置变更留下
+dirty 状态时，则会补做构建并可能推进 Generation：
 
 ```console
 sow add /srv/pkg/epel-release-7-5.noarch.rpm -r pigsty -d el9
@@ -72,6 +74,7 @@ item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=reused format=rpm coord
 ```
 
 把同一个对象加进第二个 Dist 同样是 `reused`——包池只保留一份，只是多了一条 Membership。
+如果仍想保留 dirty 批次，应再次显式使用 `--skip`。
 
 ## 架构是读出来的，不是猜的
 

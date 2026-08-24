@@ -89,6 +89,17 @@ signing:
 
 `trusted_keys` 自动包含配置 `key` 的公钥部分。没有 key 时只能用 `never`;有 key 时默认 `fill`。
 
+### 信任环彼此独立验证
+
+对于带签名 RPM，SOW 会分别评估每个 Retained 单 Key Ring、当前 Policy Ring 与组合
+`trusted_keys` Ring。所有可识别 OpenPGP Signature Packet 必须在同一个候选 Ring 内验证通过，
+且至少一条通过的路径必须认证 Payload。SOW 绝不会把一个 Key 接受的 Packet 与另一个单 Key
+Ring 接受的 Packet 拼在一起，虚构出 Retained Signer。
+
+这条区别在有意双签过渡时尤其重要：组合 Trusted Ring 可以接受该包，但任一单独 Retained Key
+都不能宣称自己独立证明了它。历史 CentOS OpenPGP v3/v4 签名继续受支持。所有候选 Ring 共享
+同一遍 Signed-byte Stream，因此增加 Trusted Key 只改变授权结论，不会放大包体读取。
+
 包体签名总是对私有 staged 副本调用环境中的 `rpm --addsign` 或 `rpm --resign`，不会就地
 修改输入文件。签完后 SOW 会重新解析结果，要求嵌入签名存在、signature-neutral digest 与
 NEVRA 不变，并且签名身份与配置完全一致。`fill` 与 `always` 必须有 `rpm`、`gpg`，且匹配私钥

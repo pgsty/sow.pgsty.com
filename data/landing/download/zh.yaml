@@ -18,7 +18,7 @@ hero:
   eyebrow: 下载矩阵
   title: 下载 SOW
   desc: '**一个自包含二进制，五条获取路径。** 每条路径安装的都是同一个可执行文件、同一套仓库语义；选择依据是这台主机由谁负责生命周期，而不是功能差异。'
-  note: SOW 0.3.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
+  note: SOW 0.4.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
   title_size: 3.4rem

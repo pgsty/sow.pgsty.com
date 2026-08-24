@@ -72,12 +72,19 @@ operation rejected: managed: operation rejected: package reference not found: pa
 `-c/--check` 精确算出会移除什么、策略随后会怎么判定、以及立即构建会触碰哪些文件——并且什么都不写。
 
 ```console
-sow rm centos-release -r pigsty -d el9 -c
-{"repository":"pigsty","desired_revision":6,"built_generation":"00000000000000000006","dirty":false,"check":true,"removed":[{"dist":"el9","sha256":"ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16","coordinate":"rpm:centos-release-0:6-0.el6.centos.5.x86_64","name":"centos-release"},{"dist":"el9","sha256":"b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead","coordinate":"rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64","name":"centos-release"}],"dists":["el9"],"changes":[{"op":"add","path":"dists/el9/x86_64/repodata/29eb03d70470cb4ed836017414d6039482e6ee8e4cdfbafe9cc78ba052c8d2dc-filelists.xml.gz","phase":"metadata","size":374,"sha256":"29eb03d70470cb4ed836017414d6039482e6ee8e4cdfbafe9cc78ba052c8d2dc"},{"op":"update","path":"dists/el9/x86_64/repodata/repomd.xml","phase":"pointer","size":1511,"sha256":"ef071821e06c9e86ab4f6d2a56906d82bb66df251e79d1086cfd44dc8395513e"},{"op":"delete","path":"dists/el9/x86_64/repodata/85de802ed1249f8693c973ae44d704e3cc5047da571b52c1ddebc8de35a46b60-primary.xml.gz","phase":"delete"}]}
+sow rm centos-release -r demo -d el9 -c
+preview repository=demo operation= dists=el9 memberships=2 revision=2 generation=00000000000000000003 dirty=false changes=2
+membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
+membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64" sha256:b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead
+change op=update phase=pointer path="dists/el9/aarch64/repodata/repomd.xml" size=1509 sha256:1cfe38698967d11384f1a985618d75f5e690d1284accf951262fc663fa9afc81
+change op=update phase=pointer path="dists/el9/x86_64/repodata/repomd.xml" size=1509 sha256:1cfe38698967d11384f1a985618d75f5e690d1284accf951262fc663fa9afc81
 ```
 
-注意两个 `centos-release` 版本都被裸名命中了。`changes` 数组是一份真实的交付计划，按
-`payload → metadata → pointer → delete` 的阶段顺序排列。
+注意两个 `centos-release` 版本都被裸名命中了。`change` 行是一份真实交付计划，按
+`payload → metadata → pointer → delete` 排列。其他程序需要对应的 `removed[]` 与 `changes[]`
+数组时应使用 `--json`。
+
+预览与写操作使用同一套候选配置和完整性预检；预览未通过门禁时，不能据此认为实际写入会成功。
 
 `--check` 有意不取写锁。把它与锁参数一起用是用法错误，免得有人以为预览会排队等待写事务：
 
@@ -92,12 +99,13 @@ usage error: rm --check does not accept --timeout or --no-wait
 留在磁盘上。
 
 ```console
-sow rm 'rpm:centos-release-0:6-0.el6.centos.5.x86_64' -r pigsty -d el9
-{"operation":"1811402670494469758","repository":"pigsty","desired_revision":6,"built_generation":"00000000000000000006","dirty":false,"check":false,"removed":[{"dist":"el9","sha256":"ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16","coordinate":"rpm:centos-release-0:6-0.el6.centos.5.x86_64","name":"centos-release"}],"dists":["el9"],"changes":[...]}
+sow rm 'rpm:centos-release-0:6-0.el6.centos.5.x86_64' -r demo -d el9
+removed repository=demo operation=2283442100870457321 dists=el9 memberships=1 revision=2 generation=00000000000000000003 dirty=false changes=8
+membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
 ```
 
-和 `sow build`、`sow show` 一样，`rm` 即使不加 `--json` 也在 stdout 打印结构化 JSON；加上 `--json`
-则套上标准 envelope。
+汇总之后会为每个受影响文件输出一行 `change`（本次运行共八行）。加上 `--json` 后，同一结果
+以稳定的标准 Envelope 返回。
 
 移除一个 Dist 的最后一个成员是允许的。SOW 仍会渲染合法的空索引（配了 key 就带签名）——空的
 `Packages` 配可验签的 `InRelease`，或每架构的空 `repodata/`。
@@ -108,8 +116,9 @@ sow rm 'rpm:centos-release-0:6-0.el6.centos.5.x86_64' -r pigsty -d el9
 自洽。
 
 ```console
-sow rm 'rpm:centos-release-0:6-0.el6.centos.5.x86_64' -r pigsty -d el9 --skip
-{"operation":"1811402670494469758","repository":"pigsty","desired_revision":6,"built_generation":"00000000000000000005","dirty":true,"check":false,"removed":[...],"dists":["el9"],"changes":[]}
+sow rm 'rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64' --skip -r demo -d el9
+removed repository=demo operation=314678479940914827 dists=el9 memberships=1 revision=4 generation=00000000000000000004 dirty=true changes=0
+membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64" sha256:b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead
 ```
 
 ```console

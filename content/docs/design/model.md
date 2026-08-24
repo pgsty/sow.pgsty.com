@@ -68,6 +68,10 @@ A target binds one Repository to a provider endpoint and prefix. Publication att
 applied checkpoints, remote inventory, grace, and delete evidence are target-scoped.
 Building a Repository is target-neutral; publishing it is not.
 
+Storage identity (provider/endpoint/region/bucket), target identity (storage plus prefix), and
+Repository identity are durable. Only target name, public endpoint, and cache TTL may change through
+operator-confirmed rebind, and every accepted change appends an immutable binding revision.
+
 ## State flow
 
 ```text

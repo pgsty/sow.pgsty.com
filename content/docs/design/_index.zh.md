@@ -14,7 +14,7 @@ icon: fa-solid fa-compass-drafting
 - [设计原则](/zh/docs/design/principles/) — 决定 SOW 拥有什么、哪些状态可重建、哪些异常必须失败关闭的一组核心不变式。
 - [系统模型](/zh/docs/design/model/) — 工作区、仓库、Dist、Package Object、Membership、Generation 与发布目标，以及为何它们各有其主。
 - [发布与恢复](/zh/docs/design/publication/) — 指针最后写入、提交意图、前向恢复、保留代与证据门禁垃圾回收。
-- [协同发布设计提案](/zh/docs/design/coordinated-publication/) — 面向 v0.4.0 的用户流程与实现计划：由 SOW 编排、rclone 执行，并确定性恢复中断。
+- [协同发布决策记录](/zh/docs/design/coordinated-publication/) — v0.4.0 为何保留 SOW 原生 Provider、实际交付了哪些强化，以及哪些早期 rclone 提案表面并不是产品命令。
 {.cards}
 
 规范单包体布局与其实现机制统一写在[包池与元数据视图](/zh/docs/feature/views/)；平台与集成要求

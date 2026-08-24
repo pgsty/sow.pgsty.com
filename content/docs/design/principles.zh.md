@@ -21,6 +21,7 @@ APT 与 RPM 仓库。下面这些原则让整套系统保持可推理。
 | 包体与软件包身份 | Repository |
 | Desired 成员关系与 Built 状态 | Repository |
 | Generation 与 Changeset | Repository |
+| 发布目标绑定与 Revision | Repository + Target Storage/Prefix |
 | 发布尝试与已应用 Checkpoint | Repository + target prefix |
 | 远端 inventory、grace 与删除证据 | Repository + target prefix |
 

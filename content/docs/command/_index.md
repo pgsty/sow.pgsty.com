@@ -144,9 +144,9 @@ Commands with `--json` emit one versioned envelope on stdout; diagnostics remain
 `ok` is false for every non-zero exit. A partial batch still returns its committed and failed items.
 See [JSON Output](/docs/reference/json/) for complete result shapes.
 
-Some commands print command-specific structured JSON without `--json` when a compact representation
-would lose useful detail. The individual command page states that behavior; `--json` always selects
-the standard envelope.
+Without `--json`, every Managed command has a stable human-readable renderer. Use it for
+interactive work, not as a machine protocol. `--json` always selects the standard envelope and is
+the only supported interface for scripts that need structured fields.
 
 ## Exit codes
 

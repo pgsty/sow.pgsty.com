@@ -90,6 +90,19 @@ Three modes:
 
 `trusted_keys` automatically includes the public half of the configured `key`. Without a key, `never` is the only legal mode. `fill` is the default when a key is present.
 
+### Trust rings are verified independently
+
+For a signed RPM, SOW evaluates each retained single-key ring, the current policy ring, and the
+combined `trusted_keys` ring independently. Every recognized OpenPGP signature packet must verify
+inside the same candidate ring, and at least one verified path must authenticate the payload. SOW
+never combines a packet accepted by one key with another packet accepted by a different single-key
+ring to invent a retained signer.
+
+This distinction matters during a deliberate dual-signing transition: the combined trusted ring may
+accept the package, while neither individual retained key is allowed to claim it alone. Historical
+CentOS OpenPGP v3/v4 signatures remain supported. All candidate rings share one signed-byte stream,
+so adding trusted keys changes authorization but does not multiply package reads.
+
 Package signing always runs `rpm --addsign` or `rpm --resign` from your environment, on a
 private staged copy. Your input file is never modified in place. After signing, SOW
 re-parses the result and requires an embedded signature, unchanged signature-neutral

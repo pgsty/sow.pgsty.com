@@ -62,6 +62,12 @@ The current checker reports nine ordered layers:
 even if its last committed tree remains readable. Put `check` in the release pipeline and
 stop on any nonzero exit.
 
+Every unique physical package payload receives one authoritative SHA-256 pass per check,
+regardless of cached fingerprints. Descriptor-bound evidence is then shared across retained
+records, indexes, signatures, the final Generation manifest, and `changes`. Signed RPM verification
+uses one additional shared stream for all signature packets and trust rings; it is not multiplied by
+the number of Dists, keys, or retained Generations.
+
 ## `changes`: Generation difference
 
 ```bash

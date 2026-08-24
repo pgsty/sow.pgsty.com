@@ -43,14 +43,16 @@ operation rejected: managed: operation rejected: package reference "libpq5" is a
 
 ## 输出
 
-对象不适合压缩成表格，因此即使不带 `--json`，命令专用结果也是 JSON：
+不带 `--json` 时，`show` 以紧凑的人类可读格式输出身份、存储路径与 Desired/Built 位置：
 
 ```console
-sow show 'rpm:epel-release-0:7-5.noarch' -r pigsty -d el9
-{"repository":"pigsty","package":{"sha256":"d6f332ed...","format":"rpm","coordinate":"epel-release-0:7-5.noarch","architecture":"noarch","canonical_arch":"neutral","pool_path":"pool/e/epel-release/epel-release-7-5.noarch.rpm","name":"epel-release","source":"epel-release","version":"7","epoch":"0","release":"5","kind":"main","signature_key":"24C6A8A7F4A80EB5","storage":"pool","created_revision":3,"dists":["el9"],"built_dists":["el9"]}}
+sow show centos-release-6-0.el6.centos.5.x86_64.rpm -r demo -d el9
+package repository=demo coordinate="centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16 format=rpm architecture=x86_64 size=19776 storage=pool
+pool=pool/c/centos-release/centos-release-6-0.el6.centos.5.x86_64.rpm
+dists=el9 built_dists=el9
 ```
 
-加上 `--json` 后，该对象位于标准 Envelope 的 `result` 下。
+加上 `--json` 后，标准 Envelope 的 `result` 会返回完整 Package Object，包括下列规范化字段。
 
 | 字段 | 含义 |
 |---|---|

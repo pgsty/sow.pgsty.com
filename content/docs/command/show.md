@@ -44,15 +44,18 @@ Copy an exact coordinate or SHA-256 from the error or from [`sow ls`](/docs/comm
 
 ## Output
 
-The command-specific result is JSON even without `--json`, because the object has no useful compact
-table form:
+Without `--json`, `show` prints the identity, storage path, and Desired/Built locations in a compact
+human-readable form:
 
 ```console
-sow show 'rpm:epel-release-0:7-5.noarch' -r pigsty -d el9
-{"repository":"pigsty","package":{"sha256":"d6f332ed...","format":"rpm","coordinate":"epel-release-0:7-5.noarch","architecture":"noarch","canonical_arch":"neutral","pool_path":"pool/e/epel-release/epel-release-7-5.noarch.rpm","name":"epel-release","source":"epel-release","version":"7","epoch":"0","release":"5","kind":"main","signature_key":"24C6A8A7F4A80EB5","storage":"pool","created_revision":3,"dists":["el9"],"built_dists":["el9"]}}
+sow show centos-release-6-0.el6.centos.5.x86_64.rpm -r demo -d el9
+package repository=demo coordinate="centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16 format=rpm architecture=x86_64 size=19776 storage=pool
+pool=pool/c/centos-release/centos-release-6-0.el6.centos.5.x86_64.rpm
+dists=el9 built_dists=el9
 ```
 
-Adding `--json` places that result under `result` in the standard envelope.
+Adding `--json` returns the complete Package Object under `result` in the standard envelope,
+including the normalized fields below.
 
 | Field | Meaning |
 |---|---|

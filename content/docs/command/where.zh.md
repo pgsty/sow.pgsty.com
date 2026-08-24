@@ -35,11 +35,12 @@ Repository，也会产生歧义。使用 `-r`/`-d` 收窄范围，或提供精�
 
 ## 输出
 
-不带 `--json` 时，`where` 输出命令专用 JSON：
+不带 `--json` 时，`where` 先输出摘要，再为每个位置输出一行：
 
 ```console
-sow where epel-release
-{"reference":"epel-release","locations":[{"repository":"pigsty","dists":["el9"],"built_dists":["el9"],"sha256":"d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab","coordinate":"rpm:epel-release-0:7-5.noarch"}]}
+sow where 'rpm:centos-release-0:6-0.el6.centos.5.x86_64'
+reference="rpm:centos-release-0:6-0.el6.centos.5.x86_64" locations=1
+repository=demo coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16 dists=el9 built_dists=el9
 ```
 
 每个位置同时给出 Desired `dists` 与当前 `built_dists`，可用于确认已移除或已替换版本是否仍对

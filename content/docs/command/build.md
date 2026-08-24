@@ -34,14 +34,14 @@ Dists converge; unselected changes remain dirty.
 
 ## Result
 
-The command-specific result is JSON even without `--json`:
+Without `--json`, `build` prints one human-readable summary:
 
 ```console
-sow build -r pgsql -d el9
-{"operation":"4262183287563704350","repository":"pgsql","dists":["el9"],"desired_revision":6,"built_generation":"00000000000000000006","noop":false,"dirty":false}
+sow build -r demo -d el9
+built repository=demo operation=2769214987359113555 dists=el9 revision=4 generation=00000000000000000005 dirty=false
 ```
 
-Adding `--json` wraps it in the standard envelope.
+Use `--json` for the command-specific object inside the standard envelope.
 
 ## No-op builds
 
@@ -49,8 +49,8 @@ When membership, relevant policy, renderer settings, and signing configuration a
 Built Generation, `build` is an idempotent no-op and does not increment the Generation:
 
 ```console
-sow build
-{"operation":"6295064788473690577","repository":"pigsty","dists":["el9","trixie"],"desired_revision":5,"built_generation":"00000000000000000005","noop":true,"dirty":false}
+sow build -r demo -d el9
+build repository=demo dists=el9 already current (noop) revision=4 generation=00000000000000000005 dirty=false
 ```
 
 ## Policy convergence

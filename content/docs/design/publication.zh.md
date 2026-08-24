@@ -23,6 +23,22 @@ icon: fa-solid fa-arrows-rotate
 
 这项拆分避免把 filesystem 发布成功当成 R2 的证据，也避免一个 target 的半完成尝试污染另一个。
 
+## 持久 Target Identity 与 Rebind
+
+Target 有两层嵌套身份：Storage Identity 覆盖 Provider、Endpoint、Region 与 Bucket；Target
+Identity 再加入公共树 Prefix。首次绑定后，Repository Identity、两层 Target Identity 与三个
+Authority Acknowledgement 都不可变。这样配置文件变化时，Attempt、Checkpoint、Grace 与
+Maintenance 才不会被错误解释成另一命名空间的证据。
+
+Target Name、`public_endpoint` 与 `max_cache_ttl` 只能通过显式
+[`publish --rebind`](/zh/docs/command/publish/#重绑定可变目标配置) 修改。首次绑定、迁移回填与
+每次接受的 Rebind 都追加不可变 Binding Revision。Rebind 与 Publish 使用同一组独占锁，并在
+事务内重查不可变字段；Storage 或 Prefix 变化必须使用新 Target。
+
+Target Maintenance 未完成时，TTL 无论增加还是减少都被冻结；Filesystem Conditional-delete
+Workflow 还会冻结 `public_endpoint`。改变当前 TTL 不会重写历史 Grace：删除资格时间取已存
+Deadline 与 Applied Checkpoint 加当前 Grace Minimum 中更晚的一个。
+
 ## 发布阶段
 
 ```text
@@ -31,6 +47,7 @@ plan
   -> 校验和命名的元数据
   -> 持久 commit intent
   -> 按视图逐一写协议指针
+  -> Provider 与 Canonical Public Verification
   -> applied checkpoint
   -> grace
   -> 证据门禁删除
@@ -54,6 +71,20 @@ APT: by-hash/direct indexes -> Release.gpg -> InRelease/Release
 ```
 
 因此客户端一旦看到新指针，就一定能取到它声明的全部对象与签名。
+
+## 公共验证
+
+日常发布验证精确 Changed Closure 与所有受影响的最终 Pointer，不会从公网重新下载每个未变化
+Package。Provider Receipt 与 Public Visibility 是两种独立证明。Filesystem 与 R2 HTTP(S)
+目标共用 Canonical-GET Verifier：响应 Header 与 Body Idle 分别计时；Size+1 防止超长响应；
+408/425/429/5xx 使用短有界重试；陈旧内容或缺失对象按 Cache TTL 重试。
+
+No-cache 请求只是 Revalidation Hint；只有之后的普通 Canonical GET 看到期望字节，发布才能写入
+Checkpoint。Filesystem 条件删除以 HTTP 404/410 证明公共缺失；陈旧 200 会重试至 TTL。
+`file://` 则使用精确、基于描述符的缺失证明。R2 Public Absence 与远端删除仍保持禁用。
+
+Filesystem 别名会在持久绑定前按 Prospective Canonical Path 检查，包括大小写不敏感卷上的大小写
+别名。Backend/Path Preflight 失败不会创建 Binding Row，也不会创建 Target Prefix。
 
 ## 已发布指针栅栏
 

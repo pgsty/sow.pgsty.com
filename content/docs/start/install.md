@@ -47,7 +47,7 @@ Choose only the command and architecture that match the host. RPM installs the l
 
 ## Build from source
 
-The module declares Go 1.26.5. Metadata generation needs no C toolchain. Replace
+The module declares Go 1.27.0. Metadata generation needs no C toolchain. Replace
 `vX.Y.Z` with the source tag linked from the Download page:
 
 ```bash
@@ -75,6 +75,24 @@ sow help
 `sow version` reports product version, target OS/architecture, and build Go toolchain.
 `sow help` lists the command tree. Each archive also contains `README.md`, `CHANGELOG.md`,
 and the Apache-2.0 `LICENSE`.
+
+## Upgrade a 0.3 Managed Workspace
+
+SOW 0.4 introduces internal database schemas v11 and v12. The public layout and
+`schema: sow/v3` configuration identifier stay the same, but each existing v0.3 Repository must be
+migrated explicitly before ordinary reads or writes. Stop Workspace writers before taking the
+backup:
+
+```bash
+cp -a /srv/sow /srv/sow.backup-before-0.4.0
+sow repo migrate REPOSITORY -C /srv/sow
+sow check -r REPOSITORY -C /srv/sow
+```
+
+Repeat the last two commands for every Repository named in `sow.yml`. The database transition is
+one-way; do not reopen a migrated Workspace with SOW 0.3. See
+[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) for the repaired status, signer, and
+publication evidence.
 
 ## Permissions and optional tools
 

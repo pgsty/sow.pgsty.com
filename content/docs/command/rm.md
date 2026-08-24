@@ -76,12 +76,20 @@ There is no `--allow-empty`, no `--all`, no `--yes` and no `--source-list`.
 an immediate build would touch — and writes nothing at all.
 
 ```console
-sow rm centos-release -r pigsty -d el9 -c
-{"repository":"pigsty","desired_revision":6,"built_generation":"00000000000000000006","dirty":false,"check":true,"removed":[{"dist":"el9","sha256":"ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16","coordinate":"rpm:centos-release-0:6-0.el6.centos.5.x86_64","name":"centos-release"},{"dist":"el9","sha256":"b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead","coordinate":"rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64","name":"centos-release"}],"dists":["el9"],"changes":[{"op":"add","path":"dists/el9/x86_64/repodata/29eb03d70470cb4ed836017414d6039482e6ee8e4cdfbafe9cc78ba052c8d2dc-filelists.xml.gz","phase":"metadata","size":374,"sha256":"29eb03d70470cb4ed836017414d6039482e6ee8e4cdfbafe9cc78ba052c8d2dc"},{"op":"update","path":"dists/el9/x86_64/repodata/repomd.xml","phase":"pointer","size":1511,"sha256":"ef071821e06c9e86ab4f6d2a56906d82bb66df251e79d1086cfd44dc8395513e"},{"op":"delete","path":"dists/el9/x86_64/repodata/85de802ed1249f8693c973ae44d704e3cc5047da571b52c1ddebc8de35a46b60-primary.xml.gz","phase":"delete"}]}
+sow rm centos-release -r demo -d el9 -c
+preview repository=demo operation= dists=el9 memberships=2 revision=2 generation=00000000000000000003 dirty=false changes=2
+membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
+membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64" sha256:b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead
+change op=update phase=pointer path="dists/el9/aarch64/repodata/repomd.xml" size=1509 sha256:1cfe38698967d11384f1a985618d75f5e690d1284accf951262fc663fa9afc81
+change op=update phase=pointer path="dists/el9/x86_64/repodata/repomd.xml" size=1509 sha256:1cfe38698967d11384f1a985618d75f5e690d1284accf951262fc663fa9afc81
 ```
 
-Note both `centos-release` versions matched the bare name. The `changes` array is a real delivery
-plan in `payload → metadata → pointer → delete` phase order.
+Note both `centos-release` versions matched the bare name. The `change` lines are a real delivery
+plan in `payload → metadata → pointer → delete` phase order. Use `--json` when another program needs
+the corresponding `removed[]` and `changes[]` arrays.
+
+Preview uses the same candidate-configuration and integrity preflight as the mutation. A preview
+that fails that guard is not evidence that the write would succeed.
 
 `--check` deliberately does not take the write lock. Combining it with lock flags is a usage error,
 so nobody can believe a preview is queueing behind a writer:
@@ -97,12 +105,13 @@ Without `--check` or `--skip`, `rm` commits the Desired change and rebuilds ever
 before returning. Pool objects stay on disk.
 
 ```console
-sow rm 'rpm:centos-release-0:6-0.el6.centos.5.x86_64' -r pigsty -d el9
-{"operation":"1811402670494469758","repository":"pigsty","desired_revision":6,"built_generation":"00000000000000000006","dirty":false,"check":false,"removed":[{"dist":"el9","sha256":"ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16","coordinate":"rpm:centos-release-0:6-0.el6.centos.5.x86_64","name":"centos-release"}],"dists":["el9"],"changes":[...]}
+sow rm 'rpm:centos-release-0:6-0.el6.centos.5.x86_64' -r demo -d el9
+removed repository=demo operation=2283442100870457321 dists=el9 memberships=1 revision=2 generation=00000000000000000003 dirty=false changes=8
+membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
 ```
 
-Like `sow build` and `sow show`, `rm` prints structured JSON on stdout even without `--json`; adding
-`--json` wraps it in the standard envelope.
+The summary is followed by one `change` line per affected file (eight in this run). Add `--json` to
+receive the same result as a stable standard envelope.
 
 Removing the last member of a Dist is fine. SOW still renders a valid, signed-if-configured empty
 index — an empty `Packages` with a verifiable `InRelease`, or empty per-architecture `repodata/`.
@@ -113,8 +122,9 @@ index — an empty `Packages` with a verifiable `InRelease`, or empty per-archit
 The old Built Generation stays completely self-consistent for clients.
 
 ```console
-sow rm 'rpm:centos-release-0:6-0.el6.centos.5.x86_64' -r pigsty -d el9 --skip
-{"operation":"1811402670494469758","repository":"pigsty","desired_revision":6,"built_generation":"00000000000000000005","dirty":true,"check":false,"removed":[...],"dists":["el9"],"changes":[]}
+sow rm 'rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64' --skip -r demo -d el9
+removed repository=demo operation=314678479940914827 dists=el9 memberships=1 revision=4 generation=00000000000000000004 dirty=true changes=0
+membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64" sha256:b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead
 ```
 
 ```console

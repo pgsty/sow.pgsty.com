@@ -273,7 +273,7 @@ params:
   images:
     - images/sow-social-card.png
   # Current released version.
-  version: 0.3.0
+  version: 0.4.0
   copyright:
     authors: '[PIGSTY & SOW Contributors](https://pgsty.com) · [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)'
     from_year: 2026

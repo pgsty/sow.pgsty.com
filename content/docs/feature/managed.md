@@ -84,18 +84,21 @@ Names must match `[a-z0-9][a-z0-9._-]*`, and `.`, `..`, `.sow`, `pool`, `dists` 
 The private SQLite database indexes Desired and Built Membership by `package_sha256`, so
 queries and builds expand a complete membership projection in bulk instead of issuing one
 query per package. It also keeps a rebuildable package-facts cache keyed by immutable
-package SHA-256. Ingest authenticates and parses a new package once; builds bulk-load those
-facts and lazily rebuild a missing or corrupt cache row from authenticated package bytes.
+package SHA-256. Ingest authenticates and parses a new package once; production builds load only
+the selected digest rows in bounded, deterministic batches and lazily rebuild a missing or corrupt
+row from authenticated package bytes. Unrelated or oversized facts rows are not read.
 
 For unchanged Pool files, warm builds use device, inode, size, mtime, and ctime
-fingerprints to avoid rereading payload bodies. Fingerprint drift triggers an authoritative
-SHA-256 pass and self-heals; [`sow check`](/docs/command/check/) remains the explicit full
-cryptographic audit.
+fingerprints to avoid rereading payload bodies. Fingerprint drift and a missing facts row share one
+authoritative SHA-256 pass and self-heal; [`sow check`](/docs/command/check/) remains the explicit
+full cryptographic audit and hashes every unique physical payload once regardless of fingerprints.
 
 The cache and its fingerprints are private implementation state; they do not change the
 public `pool/ + dists/` layout. Never edit the database or its `PRAGMA user_version` by
-hand. If a Repository needs explicit layout maintenance, `status` reports it and
-[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) performs the closed transition.
+hand. A v0.3 Repository must be backed up and explicitly upgraded with
+[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) before ordinary 0.4 reads or writes.
+Fresh 0.4 Repositories already use the current schema; other maintenance is performed only when a
+SOW diagnostic names it.
 
 ## `sow.yml` drives everything
 

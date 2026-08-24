@@ -292,7 +292,7 @@ accumulating versions that you explicitly promote from this point forward.
 
 ## 10. Promote latest into stable
 
-SOW 0.3.0 does not yet expose a dedicated `promote` command. The reliable current procedure is to freeze writers,
+SOW does not expose a dedicated `promote` command. The reliable current procedure is to freeze writers,
 export the exact source Dist Membership, and add those objects to the target Dist. Inputs come directly from
 `infra/pool`; SOW verifies and reuses each existing Package Object without repackaging it or storing a second copy.
 
@@ -380,7 +380,7 @@ sow retain ls -r infra
 ```
 
 `retain` protects a whole Repository Generation for recovery and GC; the fixed client-visible URLs are still
-provided by the `rpm-202608` and `deb-202608` Dists. SOW 0.3.0 does not enforce Dist immutability, so never running
+provided by the `rpm-202608` and `deb-202608` Dists. SOW does not enforce Dist immutability, so never running
 `add` or `rm` against snapshot Dists after creation is part of the operating contract.
 
 ## 12. Client address map

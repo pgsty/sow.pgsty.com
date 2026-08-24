@@ -22,8 +22,9 @@ icon: fa-solid fa-circle-check
 | macOS | 是 | 是 | 归档 |
 | Windows | 否 | 否 | 不支持 |
 
-Release 二进制使用 `CGO_ENABLED=0`，不需要语言运行时；项目使用 Go 1.26.5 构建。归档包含
-`README.md`、`CHANGELOG.md` 与 Apache-2.0 `LICENSE`，Linux 软件包会随二进制安装同一份
+Release 二进制使用 `CGO_ENABLED=0`，不需要语言运行时。0.4.0 制品使用 Go 1.27.0 构建；
+源码 Module 要求 Go 1.27.0 或更新版本。归档包含 `README.md`、`CHANGELOG.md` 与 Apache-2.0
+`LICENSE`，Linux 软件包会随二进制安装同一份
 协议文件。使用 [`sow version`](/zh/docs/command/) 查看产品版本、目标 OS/架构与构建工具链。
 
 ## 工作区文件系统
@@ -46,7 +47,7 @@ SOW 会拒绝符号链接控制路径、不安全普通文件、重叠 filesyste
 | 生产 CLI 干净环境 | Linux CI | 构建交付二进制；生成混合 Plain RPM/DEB 元数据；初始化 `sow/v3`；创建 RPM/DEB Dist；加入 Fixture；执行查询、build、check、changes、config 与 log 命令 |
 | Plain APT 客户端 | Ubuntu 22.04 容器 | 通过 HTTP 服务 `sow create` 输出；在显式信任未签名源时执行 `apt-get update`、包发现、精确版本选择、下载与安装 |
 | RPM 分离签名切换 | AlmaLinux 8、9、10 容器 | 使用真实 DNF 客户端遍历 `repomd.xml` / `repomd.xml.asc` 串行切换状态，并固定各组合的成功/失败行为 |
-| S3 兼容传输 | 固定 MinIO 容器 | 验证 Bucket 列表、HEAD、GET、仅创建 PUT、CAS PUT、重放、对象元数据与 Prefix 约束 |
+| S3 兼容传输 | 固定 MinIO 容器 | 验证 Bucket 列表、HEAD、GET、仅创建/CAS 写入、重放、条件式 Multipart Upload、对象元数据、重试与 Prefix 约束 |
 | Release 打包 | Linux CI | 构建四个归档、两个 RPM、两个 DEB 与 `SHA256SUMS`；检查包内路径、Apache-2.0 元数据与协议文件字节 |
 
 DNF 签名切换是协议测试，不是完整 Managed RPM 安装；APT 作业覆盖未签名 Plain 仓库，不覆盖
@@ -79,6 +80,11 @@ Managed 客户端必须消费完整 Repository Root：
 两种 Provider 都在配置 Prefix 下发布同一棵完整 `pool/ + dists/` 树。`public_endpoint` 属于
 Target 校验的一部分；SOW 不创建 HTTP 服务、DNS 记录、Bucket Policy、CDN 或凭据。启用生产
 发布前，应先在非生产 Prefix 验证这些由部署方负责的表面。
+
+Filesystem 与 R2 的 HTTP(S) 端点共用 canonical-GET 内容 verifier；Filesystem 还可使用基于
+描述符的 `file://` 校验，R2 公共端点则必须为 HTTP(S)。Target Name、`public_endpoint` 与
+`max_cache_ttl` 只能通过显式 [`publish --rebind`](/zh/docs/command/publish/#重绑定可变目标配置)
+修改；Storage Identity 与 Prefix 不可变。
 
 ## 部署门禁
 

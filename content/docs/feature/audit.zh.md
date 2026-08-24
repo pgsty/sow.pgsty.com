@@ -60,6 +60,11 @@ sow check -r local
 `check` 不写入也不修复。dirty 或 recovering Repository 不可交付，即使上一份已提交树仍可读取。
 在发布流水线中执行 `check`，任何非零退出都应停止。
 
+每次 Check 都会对每个唯一物理包体执行一次权威 SHA-256，不会因缓存指纹匹配而省略；随后在
+Retained Record、Index、Signature、最终 Generation Manifest 与 `changes` 之间共享基于描述符
+的证据。带签名 RPM 只额外使用一遍所有 Signature Packet 与 Trust Ring 共用的签名流，不会随
+Dist、Key 或 Retained Generation 数量放大。
+
 ## `changes`：Generation 差异
 
 ```bash

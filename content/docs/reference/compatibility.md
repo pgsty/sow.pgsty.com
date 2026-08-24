@@ -23,8 +23,9 @@ SOW binary; a real package manager remains the final check for a deployed reposi
 | macOS | yes | yes | archive |
 | Windows | no | no | not supported |
 
-Release binaries use `CGO_ENABLED=0` and require no language runtime. The project builds
-with Go 1.26.5. Archives include `README.md`, `CHANGELOG.md`, and the Apache-2.0 `LICENSE`;
+Release binaries use `CGO_ENABLED=0` and require no language runtime. The 0.4.0 artifacts were
+built with Go 1.27.0; the source module requires Go 1.27.0 or newer. Archives include `README.md`,
+`CHANGELOG.md`, and the Apache-2.0 `LICENSE`;
 Linux packages install the same license with the binary. Use [`sow version`](/docs/command/)
 to print the product version, target OS/architecture, and build toolchain.
 
@@ -50,7 +51,7 @@ case-sensitive Linux filesystems and the default case-insensitive macOS setup.
 | Production CLI clean room | Linux CI | Builds the shipping binary; creates mixed Plain RPM/DEB metadata; initializes `sow/v3`; creates RPM and DEB Dists; adds fixtures; runs query, build, check, changes, config, and log commands |
 | Plain APT client | Ubuntu 22.04 container | Serves `sow create` output over HTTP; runs `apt-get update`, package discovery, exact-version selection, download, and install with an explicitly trusted unsigned source |
 | RPM detached-signature transition | AlmaLinux 8, 9, and 10 containers | Runs real DNF clients against serial `repomd.xml` / `repomd.xml.asc` transition states and pins which combinations succeed or fail |
-| S3-compatible transport | Pinned MinIO container | Exercises bucket listing, HEAD, GET, create-only PUT, compare-and-swap PUT, replay, object metadata, and prefix confinement |
+| S3-compatible transport | Pinned MinIO container | Exercises bucket listing, HEAD, GET, create-only/CAS writes, replay, conditional multipart upload, object metadata, retries, and prefix confinement |
 | Release packaging | Linux CI | Builds four archives, two RPMs, two DEBs, and `SHA256SUMS`; checks package paths, Apache-2.0 metadata, and packaged license bytes |
 
 The DNF signature-transition probe is a protocol test, not a complete Managed RPM install.
@@ -89,6 +90,12 @@ Both Providers publish the same complete `pool/ + dists/` namespace beneath the 
 prefix. `public_endpoint` is part of target verification; SOW does not create an HTTP
 server, DNS record, bucket policy, CDN, or credentials. Validate those deployment-owned
 surfaces on a nonproduction prefix before enabling production publication.
+
+Filesystem and R2 HTTP(S) endpoints share the same canonical-GET content verifier. Filesystem
+targets may also use descriptor-bound `file://` verification. R2 public endpoints must be HTTP(S).
+Target name, `public_endpoint`, and `max_cache_ttl` may be changed only through explicit
+[`publish --rebind`](/docs/command/publish/#rebind-mutable-target-settings); storage identity and
+prefix are immutable.
 
 ## Deployment gate
 

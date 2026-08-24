@@ -40,8 +40,10 @@ sow status --json
 | `result` | object or null | Command-specific payload, described below. |
 | `errors` | array | Zero or more `{code, class, message}` objects. |
 
-All seven fields are always present. `result` is `null` only when the command failed
-before it could produce anything — an unknown flag, for example.
+All seven fields are always present. `result` is `null` when the command failed before meaningful
+work — an unknown flag, discovery failure, or invalid configuration before a Repository was
+selected, for example. Committed partial results and diagnostic results from `check` or
+`rm --check` are preserved even when the command exits nonzero.
 
 ### errors
 
@@ -52,7 +54,7 @@ before it could produce anything — an unknown flag, for example.
 | Field | Meaning |
 |---|---|
 | `code` | The process [exit code](/docs/reference/exit-codes/) — `1` through `6`. |
-| `class` | `runtime`, `usage`, `partial`, `lock`, `integrity`, or `rejected`. |
+| `class` | `runtime`, `usage`, `discovery`, `config`, `partial`, `lock`, `integrity`, or `rejected`. `discovery` and `config` are stable specializations of exit code `2`. |
 | `message` | The same text written to stderr. |
 
 Branch on `class`, not on message text. Messages carry paths and package names and will
@@ -387,6 +389,7 @@ JSON strings:
 |---|---|
 | `publish` | `repository`, `target`, `provider`, `generation`, `attempt`, `checkpoint`, `phase`, `objects`, `noop` |
 | `publish --abort` | `repository`, `target`, `provider`, `attempt`, `phase`, `objects` |
+| `publish --rebind` | Same result as `publish`; the binding revision is durable private audit state, not an extra wire field |
 | `retain add` / `retain rm` | `repository`, `record`, `record_identity`, `path` |
 | `retain ls` | `repository`, `generations[]` with the same retained record shape |
 | local `gc` | `operation`, `repository`, `base_generation`, `generation`, `objects`, `bytes`, `noop` |

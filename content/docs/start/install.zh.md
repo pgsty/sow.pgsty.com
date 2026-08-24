@@ -44,7 +44,7 @@ sudo apt install ./sow_*-1PGSTY_amd64.deb
 
 ## 从源码构建
 
-Go Module 声明使用 Go 1.26.5，元数据生成不需要 C 工具链。请把 `vX.Y.Z` 替换为下载页
+Go Module 声明使用 Go 1.27.0，元数据生成不需要 C 工具链。请把 `vX.Y.Z` 替换为下载页
 链接的源码 Tag：
 
 ```bash
@@ -71,6 +71,21 @@ sow help
 
 `sow version` 输出产品版本、目标 OS/架构与构建 Go 工具链；`sow help` 列出命令树。
 归档中还包含 `README.md`、`CHANGELOG.md` 与 Apache-2.0 `LICENSE`。
+
+## 升级 0.3 Managed Workspace
+
+SOW 0.4 引入内部数据库 Schema v11 与 v12。公共布局和 `schema: sow/v3` 配置标识均不改变，
+但每个既有 v0.3 Repository 都必须在普通读写前显式迁移。备份前先停止 Workspace 全部写入：
+
+```bash
+cp -a /srv/sow /srv/sow.backup-before-0.4.0
+sow repo migrate REPOSITORY -C /srv/sow
+sow check -r REPOSITORY -C /srv/sow
+```
+
+对 `sow.yml` 中的每个 Repository 重复最后两条命令。数据库 Transition 是单向的；迁移完成后
+不要再用 SOW 0.3 打开 Workspace。状态、Signer 与 Publication Evidence 的修复范围见
+[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。
 
 ## 权限与可选工具
 

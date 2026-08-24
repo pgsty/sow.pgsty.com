@@ -63,6 +63,10 @@ Desired 与 Built 分离后，中断状态可以被诚实描述：意图可能�
 target 把一个 Repository 绑定到供应商 endpoint 与 prefix。发布尝试、已应用 checkpoint、
 远端 inventory、grace 与删除证据都属于 target。构建 Repository 与目标无关，发布则不是。
 
+Storage Identity（Provider/Endpoint/Region/Bucket）、Target Identity（Storage 加 Prefix）与
+Repository Identity 都是持久身份。只有 Target Name、Public Endpoint 与 Cache TTL 可通过操作者
+确认的 Rebind 修改；每次接受的变化都会追加不可变 Binding Revision。
+
 ## 状态流
 
 ```text

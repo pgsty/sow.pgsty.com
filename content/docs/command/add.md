@@ -67,8 +67,10 @@ Each `item` line carries an overall `status` plus a per-Dist verdict in `dists=`
 | `excluded` | Policy removed it from every target Dist — see the `dists=` field for `excluded` vs `limited` |
 | `failed` | The package was rejected; the `error=` field says why |
 
-`reused` is what idempotence looks like. Adding the same file twice does not create a second object
-and does not bump the Generation:
+`reused` is content idempotence: adding the same file twice never creates a second object or a
+duplicate Membership. A default repeated `add` also converges the selected Dist. If it is already
+current, the Generation stays put; if an earlier `--skip` or configuration change left it dirty,
+the reused input triggers the missing build and may advance the Generation:
 
 ```console
 sow add /srv/pkg/epel-release-7-5.noarch.rpm -r pigsty -d el9
@@ -77,7 +79,7 @@ item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=reused format=rpm coord
 ```
 
 The same object added to a second Dist is also `reused` — the pool keeps one copy and gains a second
-Membership.
+Membership. Use `--skip` again when the intent is to retain a dirty batch instead of converging it.
 
 ## Architecture is read, never guessed
 

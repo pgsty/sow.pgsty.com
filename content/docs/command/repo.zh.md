@@ -113,8 +113,26 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-这是专用维护命令，不属于全新 Managed 工作流。由 `sow init` 与 `sow repo new` 创建的 Repository
-已经使用规范单包体布局，不应试探性执行迁移。只有 SOW 明确诊断需要该维护路径时才使用，并先做备份。
+这是专用维护命令，不属于全新的 0.4 Managed 工作流。由 SOW 0.4 创建的 Repository 已经使用
+当前单包体布局与 Schema。
+
+但从既有 v0.3 Workspace 升级时，迁移是强制步骤：先停止全部 Workspace 写入并完成备份，再在
+执行普通读写之前逐个迁移所有已配置 Repository。
+
+```bash
+cp -a /srv/sow /srv/sow.backup-before-0.4.0
+sow repo migrate pigsty -C /srv/sow
+sow repo migrate pgsql -C /srv/sow
+```
+
+0.4 Transition 会安装 Schema v11 与 v12：按全部 Dist 重新派生 Repository 状态；在不猜测缺失
+历史签名者的前提下修复 Publication 与 Generation Signer Projection；移除陈旧 abandoned-object
+evidence；并回填 append-only publication-target binding ledger 的 Revision 1。v0.3 未记录的历史
+Signer 保持显式未验证，不能进入 Current Head，也不能成为 retained trust assertion。
+
+Schema Transition 完成后不可逆，不要再用 SOW 0.3 打开数据库，也不要手工修改
+`PRAGMA user_version`。`--abort` 只适用于诊断出的 pre-commit layout-maintenance attempt，不能
+撤销已经完成的 Schema Migration。除升级或 SOW 明确诊断外，不要试探性执行 migrate。
 
 | 参数 | 含义 | 默认值 |
 |---|---|---|
@@ -206,7 +224,7 @@ sow repo ls --json | jq -r '.result.repositories[] | "\(.name)\t\(.status)\tgen=
 
 | 码 | 触发条件 |
 |---|---|
-| `0` | 列出、创建、显示或删除成功；或 `repo new` 收敛了已存在的仓库 |
+| `0` | 列出、创建、显示、迁移、放弃 pre-commit transition 或删除成功；或 `repo new` 收敛了已存在的仓库 |
 | `1` | 创建或删除目录树时的运行时 I/O 错误 |
 | `2` | 用法错误、工作区未找到，或仓库选择有歧义 |
 | `4` | 工作区锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |

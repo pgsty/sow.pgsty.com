@@ -284,7 +284,7 @@ sow config show --all -r infra -d rpm-stable -d deb-stable
 
 ## 10. 把 latest 晋升到 stable
 
-SOW 0.3.0 还没有独立的 `promote` 命令。当前可靠做法是先冻结写入并导出源 Dist 的精确 Membership，
+SOW 没有独立的 `promote` 命令。当前可靠做法是先冻结写入并导出源 Dist 的精确 Membership，
 再把这些对象加入目标 Dist。输入直接取自 `infra/pool`；SOW 会校验并复用已有 Package Object，
 不会重新打包，也不会在 pool 中复制第二份包体。
 
@@ -371,7 +371,7 @@ sow retain ls -r infra
 ```
 
 `retain` 保留的是整个 Repository Generation，用于恢复与 GC 安全根；客户端可见的固定 URL 仍由
-`rpm-202608` 与 `deb-202608` 两个 Dist 提供。SOW 0.3.0 尚不强制快照 Dist 只读，因而创建后不再对它们
+`rpm-202608` 与 `deb-202608` 两个 Dist 提供。SOW 尚不强制快照 Dist 只读，因而创建后不再对它们
 执行 `add` 或 `rm` 是维护规约的一部分。
 
 ## 12. 客户端地址总表

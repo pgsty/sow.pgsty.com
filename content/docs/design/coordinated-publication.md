@@ -1,378 +1,112 @@
 ---
-title: "Coordinated Publication Proposal"
-linkTitle: "Coordinated Publication"
-description: "Proposed SOW v0.4.0 workflow for plan-driven, rclone-executed publication with deterministic Ctrl+C recovery."
+title: "Coordinated Publication Decision"
+linkTitle: "Publication Decision"
+description: "The v0.4.0 decision to keep SOW's native publication providers, and the earlier rclone proposal that did not ship."
 categories: [Design]
-tags: [publish, transaction, object-storage]
+tags: [publish, transaction, object-storage, decision]
 url: "/docs/design/coordinated-publication/"
 weight: 450
 icon: fa-solid fa-cloud-arrow-up
 ---
 
-> **Status: proposed for SOW v0.4.0.** This page is a product and implementation
-> plan, not documentation of behavior available in SOW v0.3.x. Current commands
-> remain documented in [`sow publish`](/docs/command/publish/).
+> [!IMPORTANT] Decision finalized for SOW 0.4.0
+> An earlier draft at this URL proposed an rclone executor, `publish --dry-run`, and a
+> separate `sow audit` command. None of those surfaces shipped in 0.4.0. SOW has no
+> rclone dependency, `publish` has no `--dry-run`, and `sow audit` is not a command.
 
-## Executive decision
+This page preserves the decision boundary so a historical proposal cannot be mistaken for the
+current product. The normative behavior is documented in
+[`sow publish`](/docs/command/publish/) and
+[Publication & Recovery](/docs/design/publication/).
 
-SOW v0.4.0 should coordinate publication rather than implement another bulk object-store
-client:
+## Decision
 
-- **SOW owns meaning:** the frozen Generation, exact change set, publication waves,
-  protocol order, recovery state, and verification result.
-- **rclone owns transport:** retries, parallel payload transfer, S3 multipart upload, and
-  transfer-level integrity checks.
-- **the serving layer owns cache behavior:** immutable payload may be cached; mutable
-  repository metadata must not serve an older generation after commit.
+SOW 0.4.0 keeps its native `filesystem` and `r2` publication providers. SOW owns both the
+Repository meaning and the transport operations needed to preserve it:
 
-The primary failure model is one operator pressing **Ctrl+C** during publication. The
-design therefore optimizes for deterministic rerun and forward convergence, not for
-distributed writers or a multi-key transaction that object storage cannot provide.
+- the frozen Generation and exact change plan;
+- create-only immutable objects and conditional mutable writes;
+- durable commit intent and deterministic pointer order;
+- attempt, checkpoint, inventory, grace, and recovery evidence;
+- provider verification and canonical public visibility checks.
 
-The public promise is deliberately precise:
+The public guarantee remains deliberately narrow: publication is ordered, restartable, and
+eventually converges to one frozen Generation. It is not an atomic transaction across all object
+keys, and it does not create DNS, bucket policy, CDN configuration, or client trust policy.
 
-> Publication is ordered, restartable, additive, and eventually converges to exactly one
-> frozen Generation. It is not an atomic transaction across every object key.
+## Why the executor proposal was not adopted
 
-## User stories
+A generic bulk-copy executor would introduce another versioned dependency while weakening the
+one-to-one relationship between a planned object and its conditional-write receipt. It would also
+require a second checkpoint identity model for providers whose bulk tool cannot preserve SOW's
+per-object SHA-256 metadata.
 
-### Story 1: inspect exactly what will be published
+The 0.4 work instead hardened the existing, smaller transport boundary: bounded conditional
+multipart upload, phase-specific header and idle-progress deadlines, retryable replay-safe
+operations, exact changed-closure verification, and a shared public HTTP verifier. This preserved
+the existing checkpoint model and avoided a transport migration disguised as a routine upgrade.
 
-As the repository maintainer, I want to see the target Generation and every publication
-wave before SOW writes the remote, so an accidental build or unexpectedly large change is
-visible before delivery.
+## What 0.4.0 shipped
 
-```console
-sow check --repo pgsql
-sow publish prod --dry-run
-```
+### Native incremental publication
 
-The proposed dry run prints, without credentials:
+`publish` computes the exact Generation delta, writes payload and checksum-addressed metadata
+before pointers, persists commit intent, advances views in deterministic order, verifies provider
+and public evidence, and records an Applied Checkpoint. A current target is an idempotent no-op.
 
-- target name, repository, base checkpoint, and target Generation;
-- plan SHA-256;
-- object and byte counts for prepare and commit;
-- every APT/RPM view in commit order;
-- delete candidates, explicitly marked **not deleted**.
+### Operator-confirmed rebind
 
-`--json` returns the same closed plan as machine-readable output. A dry run has no remote
-side effects and creates no active attempt.
+`publish TARGET --rebind` can revise the target name, `public_endpoint`, or `max_cache_ttl` while
+preserving stable storage and target identities. Storage endpoint, provider, region, bucket,
+Repository, and prefix require a new target. Every accepted rebind appends an immutable audit
+revision and retains forward recovery for an active commit-intent attempt.
 
-### Story 2: publish one verified Generation
+### Hardened public visibility
 
-As the maintainer, I want one command to publish the current Built Generation without
-manually splitting rclone commands or remembering APT/RPM pointer order.
+Filesystem and R2 HTTP(S) targets share canonical-GET verification, cache-TTL handling for stale
+content, short bounded transient retries, independent header/body-idle deadlines, and an oversize
+guard. Filesystem conditional deletion additionally waits for canonical public 404/410 evidence.
+R2 deletion remains disabled and report-only.
 
-```console
+## Operator workflow
+
+```bash
+sow build -r pgsql
+sow check -r pgsql
+sow changes -r pgsql
 sow publish prod
 ```
 
-SOW freezes the current Built Generation, persists a plan, invokes rclone for the prepare
-wave, commits views in deterministic order, verifies the result, and records an Applied
-Checkpoint. A later run publishes only the next exact Generation delta. If the target is
-already current, the command is a no-op.
+`changes` is the read-only local Generation delta; it is not a remote dry run. `publish` accepts
+only a configured target and owns the remote preflight. Use `--json` for machine-readable results.
 
-The operator never runs `rclone sync` against this prefix. SOW may invoke `rclone copy`
-and `rclone copyto`, but publication never deletes a remote object.
+If configuration drift is reported, inspect the fields first. Use `--rebind` only for a permitted
+mutable correction; create a new target for any storage or prefix change.
 
-### Story 3: stop safely before public commit
-
-As the maintainer, I want Ctrl+C during the long payload transfer to stop quickly without
-damaging the currently published repository.
-
-If Ctrl+C arrives during prepare, SOW cancels rclone and exits with a clear message:
+## Recovery decision
 
 ```text
-publication stopped before commit; rerun `sow publish prod` to continue,
-or run `sow publish prod --abort` to abandon the attempt
+Was durable commit intent recorded?
+├── no  -> rerun publish, or reconcile and publish --abort
+└── yes -> rerun publish; forward recovery is the only legal direction
 ```
 
-Only add-only payload and immutable metadata can have reached the target at this point.
-The old repository pointers remain valid. A rerun uses the same frozen plan and reuses
-matching objects; `--abort` is legal because no commit intent exists.
-
-### Story 4: stop during pointer commit
-
-As the maintainer, I want SOW to avoid abandoning half of one APT/RPM view when I press
-Ctrl+C during the short commit phase.
-
-After durable commit intent, the first Ctrl+C does not start another view. If a view is
-already being committed, SOW finishes that small ordered commit unit, records its
-progress, then exits. A second Ctrl+C forces immediate termination if the operator really
-needs it.
-
-```text
-interrupt received; finishing view dists/noble before stopping
-publication has commit intent; rerun `sow publish prod` to roll forward
-```
-
-After commit intent, `--abort` is rejected. Rerunning the same command revalidates the
-frozen plan and rewrites the incomplete view from the beginning before proceeding. This
-also recovers from `kill -9`, a lost terminal, or a network failure between two pointer
-writes.
-
-### Story 5: audit the complete remote explicitly
-
-As the maintainer, I want normal incremental publication to stay proportional to the
-change, while retaining a deliberate full-integrity operation before migration or when I
-suspect drift.
-
-```console
-sow audit prod
-```
-
-The proposed audit:
-
-- enumerates the complete configured prefix;
-- compares it with the Applied Checkpoint and Generation manifest;
-- downloads and hashes content where the provider cannot return the required digest;
-- checks the public commit pointers through `public_endpoint`;
-- reports missing, changed, and unknown objects without deleting them.
-
-`publish` verifies its changed closure and all affected final pointers. `audit` is the
-expensive, complete proof. A first v0.4 publication over a prefix last managed by v0.3
-requires a successful audit to establish the transport migration baseline.
-
-### Story 6: operate Cloudflare R2 without cache surprises
-
-As an R2 operator, I want a client that reads a new repository pointer to see the objects
-that pointer names, rather than an older edge-cached copy.
-
-Before production cutover, configure the serving domain so that:
-
-- `<prefix>/pool/**` may use a long cache TTL;
-- `<prefix>/dists/**` bypasses cache in the initial v0.4 contract;
-- a legacy YUM layout outside `dists/`, if any, also bypasses
-  `**/repodata/repomd.xml*`;
-- 404 responses for mutable metadata paths are not retained across publication.
-
-R2 API operations are strongly consistent, but a cached custom domain can continue to
-serve an old overwritten object. SOW can verify the configured public endpoint, but it
-does not create DNS, bucket policy, or Cloudflare Cache Rules.
-
-## User workflow
-
-### Configure once
-
-The v0.4 proposal keeps the current target identity and credential model. `r2` remains
-the provider; rclone becomes its default transfer engine rather than a new provider type.
-
-```yaml
-targets:
-  prod:
-    repository: pgsql
-    provider: r2
-    endpoint: https://0123456789abcdef.r2.cloudflarestorage.com
-    region: auto
-    bucket: packages
-    prefix: repo/pgsql
-    credential: env://SOW_R2_CREDENTIAL
-    public_endpoint: https://repo.example.com/repo/pgsql/
-    max_cache_ttl: 24h0m0s
-    authoritative_workspace: true
-    single_writer: true
-    exclusive_write_authority: true
-```
-
-SOW resolves the existing credential reference and passes credentials to a temporary,
-private rclone configuration or child-process environment. Secrets never appear in argv,
-logs, dry-run output, or the public tree. Startup performs capability checks against a
-tested rclone version range rather than merely accepting any executable named `rclone`.
-
-### Routine operation
-
-```console
-sow add ./packages/*.rpm --repo pgsql --dist el9
-sow build --repo pgsql
-sow check --repo pgsql
-sow publish prod --dry-run
-sow publish prod
-```
-
-The workflow deliberately keeps `build` and `publish` separate. Unbuilt Desired changes
-are not silently delivered.
-
-### Recovery decision
-
-```text
-Was commit intent persisted?
-├── no  -> rerun publish, or publish --abort
-└── yes -> rerun publish; forward recovery is the only legal path
-```
-
-No `--resume` flag is needed. The target has at most one active attempt, so repeating the
-original command is the resume operation.
-
-## Publication protocol
-
-### Plan
-
-The `sow/publication-plan/v2` plan is target-scoped, deterministic, and side-effect
-free. It binds:
-
-- Repository and target identity;
-- base checkpoint and frozen target Generation;
-- target manifest digest and plan digest;
-- every operation's path, size, SHA-256, and expected old digest for updates;
-- prepare waves, ordered view commit units, and delete candidates.
-
-While an attempt is active, normal SOW mutations remain blocked by the existing
-Repository lock and active-publication fence. Recovery always reconstructs and compares
-the same plan digest; after commit intent, a mismatch fails closed.
-
-### Wave 1: immutable prepare
-
-Payload and checksum-addressed metadata are copied first from an exact generated file
-list. The conceptual command is:
-
-```text
-rclone copy <repository-root> <remote-prefix> \
-  --files-from-raw <prepare-list> \
-  --immutable --checksum --no-traverse
-```
-
-The concrete flags and minimum supported rclone version are established by integration
-tests before release. The executor must preserve transfer integrity and must never turn a
-prepare operation into deletion. If the destination already contains different bytes at
-an immutable path, publication fails closed.
-
-SOW v0.3 stores an explicit `sow-sha256` object metadata value on R2. A batched rclone
-copy cannot be assumed to reproduce a different SHA-256 metadata value for every input
-without a per-file mapper. v0.4 therefore adopts a transport-neutral checkpoint identity:
-
-- the Generation manifest remains authoritative SHA-256 content identity;
-- the checkpoint records size, opaque provider identity, transfer engine/version, and
-  the successful transfer receipt without pretending that an ETag is SHA-256;
-- recovery validates the changed closure with rclone's common checksum when available;
-- `sow audit` downloads and hashes an object when the provider cannot return SHA-256.
-
-This keeps rclone a transport rather than embedding SOW's state model in a metadata-mapper
-subprocess. It requires a one-time v0.3-to-v0.4 audit and checkpoint migration; old
-`sow-sha256` remains valid migration evidence but is never silently reinterpreted as a new
-receipt. An object with only a size match is insufficient evidence for checkpoint
-migration.
-
-### Wave 2: ordered view commit
-
-Commit intent is persisted before the first mutable name is overwritten. Each view owns
-its stable aliases and pointers; views are committed serially.
-
-```text
-APT view:
-  stable Packages/Sources aliases and compressed forms
-  -> Release.gpg, when signed
-  -> Release
-  -> InRelease, when signed
-
-RPM view:
-  repomd.xml.asc, when signed
-  -> repomd.xml
-```
-
-Every mutable file is transferred with a separate forced `rclone copyto
---no-check-dest --retries 1`, using bounded I/O timeouts. SOW checks the exit status and
-reconciles target state before advancing. A resumed incomplete view is rewritten from its
-first mutable operation. This is intentional idempotence, not a claim of multi-object
-atomicity.
-
-APT stable aliases belong inside their view's commit unit. Publishing every repository
-alias globally before the first view pointer would enlarge the inconsistent window and
-couple otherwise independent views.
-
-### Wave 3: verify and checkpoint
-
-Normal publication verifies:
-
-- every object changed by the plan through provider evidence appropriate to that object;
-- every affected final APT/RPM pointer through the public endpoint;
-- each affected view's referenced closure and signatures;
-- the final plan and target Generation identities.
-
-It then records the Applied Checkpoint. It does not list and publicly download every
-unchanged package on every run. Full-prefix proof belongs to `sow audit`.
-
-### Deletion policy
-
-`DeleteCandidates` remain plan evidence only. Neither `rclone sync` nor `rclone delete`
-is part of publication. Remote physical deletion and lifecycle garbage collection are a
-separate future design, after an observation period has demonstrated that the new
-checkpoint and audit evidence is sufficient.
-
-## State and signals
-
-| Durable state | Ctrl+C behavior | Next legal action |
-|---|---|---|
-| plan not persisted | stop | start again |
-| planned / preparing | cancel rclone immediately | rerun or `--abort` |
-| commit intent, between views | stop before next view | rerun |
-| commit intent, inside view | first signal finishes current view; second forces exit | rerun |
-| all views committed, not checkpointed | stop or failure leaves recoverable evidence | rerun verification/checkpoint |
-| Applied Checkpoint | complete | next publish or audit |
-
-The command always prints the plan/attempt identity and the exact legal next command.
-Machine-readable progress emits phase and view boundaries without exposing secrets or raw
-rclone configuration.
-
-## Verification and acceptance
-
-The implementation is accepted only after the following matrix passes with both APT and
-RPM views:
-
-| Scenario | Required result |
-|---|---|
-| initial publish to empty prefix | package manager installs successfully |
-| incremental package add/update | transfer is bounded to the plan; clients see new metadata |
-| no-op publish | no object mutation and same checkpoint |
-| Ctrl+C during prepare | old clients remain valid; rerun converges |
-| failure before/after every mutable write | rerun rewrites the view and clients converge |
-| failure after final pointer but before local receipt | reconciliation recognizes the installed bytes |
-| immutable-path conflict | fail closed; never overwrite it |
-| stale/missing public cache rule | public verification fails before checkpoint |
-| v0.3 prefix migration | full audit succeeds before first v0.4 commit |
-| full audit after publication | manifest, checkpoint, remote, and public pointers agree |
-
-Test layers proceed in this order:
-
-1. pure plan and pointer-order contract tests;
-2. fake-rclone argv, exit-code, and signal tests;
-3. real rclone against local filesystem remotes;
-4. S3-compatible integration with fault injection;
-5. Cloudflare R2 shadow prefix and real `apt`/`dnf` clients;
-6. production cutover only after the shadow prefix passes repeated interruption tests.
-
-## Delivery roadmap
-
-| Milestone | Deliverable | Exit gate |
-|---|---|---|
-| M0 — protocol | ADR, plan schema, user-visible dry run | ordered APT/RPM contract tests |
-| M1 — prepare | thin rclone runner and immutable file-list copy | initial/incremental/no-op and pre-commit interruption tests |
-| M2 — commit | view-owned aliases, serial `copyto`, signal boundary | fault after every mutable write converges on rerun |
-| M3 — evidence | incremental verification, `sow audit`, v0.3 migration | audit agrees with the former full verification path |
-| M4 — provider | S3/R2 integration and cache deployment contract | real APT/DNF clients pass through a shadow domain |
-| M5 — cutover | replace production whole-tree sync entry points | no managed repository publish path invokes `rclone sync` |
-
-Expected scope is approximately 15–20 focused development days followed by an observation
-period. Correctness gates, not the calendar, decide promotion from alpha to beta and GA.
-
-## Explicit non-goals for v0.4.0
-
-- multiple concurrent writers or distributed locking;
-- a generic publication-executor plugin framework;
-- parallel commit of independent views;
-- remote object deletion or automatic garbage collection;
-- automatic Cloudflare purge, DNS, or Cache Rule management;
-- Worker-based indirection or generation-prefix switching;
-- bucket-versioning transactions;
-- immediate removal of the native R2 transport or existing inventory/grace records.
-
-Keeping these out makes v0.4.0 one controlled change: retain SOW's publication semantics,
-replace the bulk transfer mechanism, and make interruption recovery observable and usable.
+Repeating the original command is the resume operation. There is no `--resume` flag. Contradictory
+attempt, checkpoint, provider, or public evidence fails closed rather than selecting a convenient
+history.
+
+## Explicit boundaries
+
+- There is no full-prefix remote `sow audit` command. `sow check` proves the local Repository;
+  normal publication proves its exact changed closure and affected public pointers.
+- R2 target GC records exact report-only candidates and never deletes remote objects.
+- Multiple independent writers, distributed locking, automatic cache purge, DNS management, and
+  arbitrary executor plugins are outside the current contract.
+- A successful provider write is not package-manager acceptance. Run the deployed dnf/APT client
+  and signing policy as a separate release gate.
 
 ## References
 
 - [Current Publication & Recovery model](/docs/design/publication/)
 - [Current `sow publish` command](/docs/command/publish/)
-- [Cloudflare R2 consistency model](https://developers.cloudflare.com/r2/reference/consistency/)
-- [Cloudflare R2 custom-domain caching](https://developers.cloudflare.com/cache/interaction-cloudflare-products/r2/)
-- [rclone copy](https://rclone.org/commands/rclone_copy/)
-- [rclone global flags and metadata behavior](https://rclone.org/docs/)
+- [Platforms & Integrations](/docs/reference/compatibility/)

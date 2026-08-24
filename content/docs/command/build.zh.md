@@ -33,22 +33,22 @@ sow build [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 
 ## 结果
 
-即使不带 `--json`，命令专用结果也是 JSON：
+不带 `--json` 时，`build` 输出一行人类可读摘要：
 
 ```console
-sow build -r pgsql -d el9
-{"operation":"4262183287563704350","repository":"pgsql","dists":["el9"],"desired_revision":6,"built_generation":"00000000000000000006","noop":false,"dirty":false}
+sow build -r demo -d el9
+built repository=demo operation=2769214987359113555 dists=el9 revision=4 generation=00000000000000000005 dirty=false
 ```
 
-加上 `--json` 后，该结果包装进标准 Envelope。
+需要标准 Envelope 中的命令专属对象时使用 `--json`。
 
 ## 空操作构建
 
 成员关系、相关策略、渲染设置与签名配置均未变化时，`build` 是幂等空操作，不增加 Generation：
 
 ```console
-sow build
-{"operation":"6295064788473690577","repository":"pigsty","dists":["el9","trixie"],"desired_revision":5,"built_generation":"00000000000000000005","noop":true,"dirty":false}
+sow build -r demo -d el9
+build repository=demo dists=el9 already current (noop) revision=4 generation=00000000000000000005 dirty=false
 ```
 
 ## 策略收敛

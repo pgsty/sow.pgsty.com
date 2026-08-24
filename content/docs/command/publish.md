@@ -16,18 +16,20 @@ icon: fa-solid fa-cloud-arrow-up
 ## Synopsis
 
 ```text
-sow publish TARGET [--abort] [-C|--workdir DIR] [-T|--timeout DUR | -N|--no-wait] [--json]
+sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -N|--no-wait] [--json]
 ```
 
 | Flag | Meaning | Default |
 |---|---|---|
 | `--abort` | Abandon a reconciled attempt that has not reached durable commit intent | false |
+| `--rebind` | Confirm and record permitted target name/public endpoint/cache-TTL changes | false |
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-T, --timeout DUR` | Maximum Repository-lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--json` | Emit the `sow.cli/v1` envelope | false |
 
-`TARGET` must name a configured `filesystem` or `r2` publication target.
+`TARGET` must name a configured `filesystem` or `r2` publication target. `--abort` and
+`--rebind` are mutually exclusive.
 
 ## Publication protocol
 
@@ -43,9 +45,36 @@ The exact object set, receipts, phase, and commit intent are recorded so an inte
 can be reconciled. Repeating a publication already at the current Generation is an idempotent no-op.
 
 ```console
-sow publish prod
-published pgsql generation=00000000000000000012 to prod (filesystem): phase=done objects=184
+sow publish local
+published demo generation=00000000000000000005 to local (filesystem): phase=grace objects=14
+sow publish local
+publication demo generation=00000000000000000005 to local is already current (noop)
 ```
+
+## Rebind mutable target settings
+
+The first successful publish durably binds a Repository, storage namespace, and target identity.
+Later configuration drift is rejected rather than silently adopted. When the diagnostic explicitly
+points to `--rebind`, review the edit and confirm it with:
+
+```bash
+sow publish prod --rebind
+```
+
+If the map key itself was renamed, invoke the new target name. Rebind preserves active attempt and
+checkpoint identities and appends an immutable operator-confirmed binding revision.
+
+| May change | Immutable; configure a new target |
+|---|---|
+| target name | Repository identity |
+| `public_endpoint` | provider, storage `endpoint`, or region |
+| `max_cache_ttl` | bucket or `prefix` |
+
+Rebind takes the same Workspace and Repository locks as publication and rechecks the immutable
+fields inside the database transaction. It may resume an active commit-intent attempt forward.
+It refuses a TTL change while target maintenance is pending, and refuses a filesystem
+`public_endpoint` change during conditional-delete maintenance. A first bind must use ordinary
+`publish`, not `--rebind`.
 
 ## Abort and recovery
 
@@ -54,6 +83,19 @@ the evidence required for later safety decisions, and abandons the attempt witho
 deleting more remote objects.
 
 After commit intent, recovery is forward-only. Rerun `sow publish TARGET`; do not use `--abort`.
+
+## Public visibility checks
+
+Provider storage success is not enough: publication verifies the canonical `public_endpoint` before
+recording its checkpoint. HTTP(S) targets use ordinary GET as the final authority. A no-cache probe
+may accelerate revalidation, but only a later ordinary GET can pass. Stale content and missing
+objects are retried up to `max_cache_ttl`; 408, 425, 429, and 5xx failures get a short bounded retry
+window. Header wait and body idle progress have separate deadlines, and an oversized body fails
+closed.
+
+Filesystem targets may use `file://` or HTTP(S). Their conditional-deletion absence check requires
+the exact file identity for `file://`, or canonical 404/410 visibility for HTTP(S). R2 requires an
+HTTP(S) public endpoint; R2 target GC remains report-only and does not perform remote deletion.
 
 ## Safety boundaries
 
@@ -71,11 +113,11 @@ After commit intent, recovery is forward-only. Rerun `sow publish TARGET`; do no
 | Code | Trigger |
 |---|---|
 | `0` | Publication completed or target was already current |
-| `1` | Filesystem, provider, network, or verification runtime failure |
+| `1` | Filesystem, provider, network, verification, or binding conflict (including required rebind) |
 | `2` | Usage, Workspace discovery, or invalid `sow.yml` error |
 | `4` | Repository write lock unavailable |
 | `5` | Local or publication recovery evidence is inconsistent, or source is not deliverable |
-| `6` | Target is missing/mismatched/unsafe, or another safety precondition rejects publish/abort |
+| `6` | Target is missing/unsafe, or another safety precondition rejects publish/abort/rebind |
 
 ## See also
 

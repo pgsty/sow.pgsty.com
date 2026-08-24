@@ -115,10 +115,29 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-This is a specialized maintenance command, not part of the fresh Managed workflow. A
-Repository created by `sow init` and `sow repo new` already uses the canonical
-single-payload layout and must not be migrated speculatively. Use this command only when
-SOW explicitly diagnoses that maintenance path, and take a backup first.
+This is a specialized maintenance command, not part of a fresh 0.4 Managed workflow. A Repository
+created by SOW 0.4 already has the current single-payload layout and schema.
+
+After upgrading an existing v0.3 Workspace, however, migration is mandatory: stop all Workspace
+writers, take a backup, and run the command once for every configured Repository before ordinary
+reads or writes.
+
+```bash
+cp -a /srv/sow /srv/sow.backup-before-0.4.0
+sow repo migrate pigsty -C /srv/sow
+sow repo migrate pgsql -C /srv/sow
+```
+
+The 0.4 transition installs schema v11 and v12. It recomputes Repository status from every Dist,
+repairs publication and Generation signer projections without guessing a missing historical
+signer, removes stale abandoned-object evidence, and backfills revision 1 of the append-only
+publication-target binding ledger. An unrecorded v0.3 historical signer remains explicitly
+unverified; it cannot reach the current head or become a retained trust assertion.
+
+The completed schema transition is one-way. Do not reopen the database with SOW 0.3, and do not edit
+`PRAGMA user_version`. `--abort` applies only to a diagnosed pre-commit layout-maintenance attempt;
+it does not undo a completed schema migration. Outside an upgrade or an explicit SOW diagnostic,
+do not run migration speculatively.
 
 | Flag | Description | Default |
 |---|---|---|
@@ -212,7 +231,7 @@ sow repo ls --json | jq -r '.result.repositories[] | "\(.name)\t\(.status)\tgen=
 
 | Code | Trigger |
 |---|---|
-| `0` | Listed, created, shown or removed; or `repo new` converged an existing Repository |
+| `0` | Listed, created, shown, migrated, abandoned a pre-commit transition, or removed; or `repo new` converged an existing Repository |
 | `1` | Runtime I/O error creating or removing the tree |
 | `2` | Usage error, Workspace not found, or an ambiguous Repository selection |
 | `4` | Workspace lock held and `--no-wait` given or `--timeout` expired |

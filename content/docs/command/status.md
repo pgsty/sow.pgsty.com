@@ -77,7 +77,9 @@ run [`sow check`](/docs/command/check/) before delivery.
 ## Read-only contract
 
 `status` never migrates or repairs state. If the Repository database cannot be read safely,
-the command exits `5`; run the maintenance command named by the diagnostic before retrying.
+the command exits `5`; run the maintenance command named by the diagnostic before retrying. In
+particular, back up and run [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) for every
+v0.3 Repository before using the 0.4 read surface.
 
 ## Exit behavior
 

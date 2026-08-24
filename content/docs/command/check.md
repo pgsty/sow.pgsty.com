@@ -43,9 +43,22 @@ The current checker reports nine ordered layers:
 | `signature` | Every declared metadata and package signature verifies | signatures |
 | `generation-manifest` | Built Generation manifest matches files on disk | one manifest |
 
+### Physical evidence and I/O contract
+
+`package-bytes` never trusts a cached fingerprint as a substitute for authenticity. Each run hashes
+every unique physical payload exactly once, using descriptor-bound evidence keyed by device, inode,
+size, mtime, and ctime. Hard links to the same inode share that proof; retained Generations, final
+manifest traversal, and `changes` reuse it without another payload scan. The `checked` column counts
+logical objects, not the number of full-file streams.
+
+A DEB or unsigned RPM needs one complete payload stream. A signed RPM uses at most one additional
+main-header-to-EOF stream to verify every signature packet against all candidate trust rings; the
+cost does not grow with Dist, retained Generation, or trust-ring count. A forged or concurrently
+replaced file invalidates the descriptor evidence and fails closed.
+
 ```console
 sow check
-repository=pigsty status=clean ready_to_copy=true revision=5 generation=5
+repository=pigsty status=clean ready_to_copy=true revision=5 generation=00000000000000000005
 config	ok=true	checked=5
 retained	ok=true	checked=0
 state	ok=true	checked=1
@@ -64,7 +77,7 @@ the new Desired state is valid. It still fails the delivery gate because the two
 
 ```console
 sow check
-repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5
+repository=pigsty status=dirty ready_to_copy=false revision=6 generation=00000000000000000005
 ...
 integrity or recovery error: managed: repository is not ready to copy: repository status is dirty
 ```

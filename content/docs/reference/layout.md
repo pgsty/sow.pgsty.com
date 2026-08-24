@@ -64,6 +64,11 @@ credentials-derived state, and recovery data.
 `<repo>.db` and its rebuildable package-facts cache are private. Neither changes the public
 repository layout or the `sow/v3` configuration identifier.
 
+SOW 0.4 uses internal database schema v12. Its append-only publication-target binding revisions,
+package facts, signer projections, and recovery evidence all remain inside `<repo>.db`. A v0.3
+database must be backed up and upgraded with `sow repo migrate`; never edit `PRAGMA user_version`
+or copy the database without its matching public/private Repository state.
+
 ## Canonical pool
 
 Each package payload has one canonical path:

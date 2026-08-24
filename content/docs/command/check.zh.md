@@ -42,9 +42,20 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 | `signature` | 所有已声明元数据/软件包签名是否有效 | 签名 |
 | `generation-manifest` | Built Generation Manifest 是否与磁盘文件一致 | 一个 Manifest |
 
+### 物理证据与 I/O 契约
+
+`package-bytes` 绝不会把缓存指纹当作真实性证明。每次运行都会对每个唯一物理包体执行恰好一次
+哈希；证据绑定设备号、inode、size、mtime、ctime 与真正读取的文件描述符。同 inode 的硬链接
+共享证明；Retained Generation、最终 Manifest 遍历与 `changes` 复用它，不再扫描包体。
+`checked` 列统计逻辑对象，不代表全文流数量。
+
+DEB 或无签名 RPM 只需一遍完整包体流。带签名 RPM 最多再用一遍从主 Header 到 EOF 的流，
+对全部签名 Packet 与候选 Trust Ring 验证；成本不会随 Dist、Retained Generation 或 Trust Ring
+数量增加。伪造或并发替换文件会让描述符证据失效并失败关闭。
+
 ```console
 sow check
-repository=pigsty status=clean ready_to_copy=true revision=5 generation=5
+repository=pigsty status=clean ready_to_copy=true revision=5 generation=00000000000000000005
 config	ok=true	checked=5
 retained	ok=true	checked=0
 state	ok=true	checked=1
@@ -63,7 +74,7 @@ dirty Repository 的九层校验可以分别成立：旧 Built Generation 完整
 
 ```console
 sow check
-repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5
+repository=pigsty status=dirty ready_to_copy=false revision=6 generation=00000000000000000005
 ...
 integrity or recovery error: managed: repository is not ready to copy: repository status is dirty
 ```

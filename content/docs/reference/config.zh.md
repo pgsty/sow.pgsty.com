@@ -430,8 +430,8 @@ targets:
 | `bucket` | R2 | 小写规范 bucket 名;filesystem 禁用。 |
 | `prefix` | 是 | 相对公共树前缀;空串表示存储命名空间根。 |
 | `credential` | R2 | `env://NAME` 或 `file:///absolute/path`;禁止内联秘密。 |
-| `public_endpoint` | 是 | 以 `/` 结尾的规范 `https://`、`http://` 或 `file://` URL,用于公共缺失证据。 |
-| `max_cache_ttl` | 是 | 规范的非负 Go duration,包括显式 `0s`。 |
+| `public_endpoint` | 是 | 以 `/` 结尾、用于公共内容/缺失校验的规范 URL。Filesystem 接受 `https://`、`http://` 或 `file://`；R2 必须为 HTTP(S)。 |
+| `max_cache_ttl` | 是 | 有界、规范的非负 Go Duration，包括显式 `0s`；溢出会被拒绝。 |
 | `authoritative_workspace` | 是 | 必须为 `true`。 |
 | `single_writer` | 是 | 必须为 `true`。 |
 | `exclusive_write_authority` | 是 | 必须为 `true`。 |
@@ -442,6 +442,13 @@ filesystem 目标也不能解析到重叠的有效路径。这些规则防止并
 对 `provider: filesystem`，配置校验只检查 URL 形态与重叠关系。真正发布时，endpoint 目录
 必须已经存在、不能是 symlink，并且必须解析为唯一规范真实目录。SOW 会在 endpoint 下创建
 配置的 prefix，但不会创建 endpoint 本身。
+
+首次 publish 会持久绑定 Repository、Provider Storage Identity 与 Prefix。之后修改 Target Name、
+`public_endpoint` 或 `max_cache_ttl`，必须通过
+[`sow publish TARGET --rebind`](/zh/docs/command/publish/#重绑定可变目标配置) 得到操作者显式确认。
+Provider、Storage Endpoint、Region、Bucket、Prefix 与 Repository Identity 均不能 rebind；应配置
+新目标。每次接受的 rebind 都会追加不可变 Binding Revision。Pending Maintenance 会阻止 TTL
+变化；Filesystem Conditional-delete Maintenance 还会阻止公共端点变化。
 
 R2 凭据是私有引用。环境变量值或被引用文件必须包含一份严格 JSON 文档，不能写路径或 Shell
 赋值：

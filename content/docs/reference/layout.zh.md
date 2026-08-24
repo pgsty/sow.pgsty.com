@@ -60,6 +60,11 @@ create 会丢弃保留命名空间里的陈旧临时路径并重建。不得服�
 `<repo>.db` 与可重建的软件包事实缓存都属于私有状态，不改变公共仓库布局或
 `sow/v3` 配置标识。
 
+SOW 0.4 使用内部数据库 Schema v12。Append-only Publication-target Binding Revision、Package
+Facts、Signer Projection 与 Recovery Evidence 均只存在于 `<repo>.db`。v0.3 数据库必须先备份，
+再通过 `sow repo migrate` 升级；绝不要手工修改 `PRAGMA user_version`，也不要脱离匹配的公共/私有
+Repository 状态单独复制数据库。
+
 ## 规范包池
 
 每个包体只有一条规范路径：

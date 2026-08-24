@@ -39,8 +39,9 @@ sow status --json
 | `result` | object 或 null | 命令专属载荷,详见下文。 |
 | `errors` | array | 零个或多个 `{code, class, message}` 对象。 |
 
-七个字段 **永远存在**。只有命令在产出任何东西之前就失败时(比如未知参数),
-`result` 才是 `null`。
+七个字段 **永远存在**。命令在有意义工作之前失败时（例如未知参数、发现失败，或尚未选中
+Repository 就遇到无效配置），`result` 为 `null`。已提交的部分结果，以及 `check`、
+`rm --check` 的诊断结果，即使命令非零退出也会保留。
 
 ### errors
 
@@ -51,7 +52,7 @@ sow status --json
 | 字段 | 含义 |
 |---|---|
 | `code` | 进程[退出码](/zh/docs/reference/exit-codes/) —— `1` 到 `6`。 |
-| `class` | `runtime`、`usage`、`partial`、`lock`、`integrity`、`rejected` 之一。 |
+| `class` | `runtime`、`usage`、`discovery`、`config`、`partial`、`lock`、`integrity`、`rejected` 之一。`discovery` 与 `config` 是退出码 `2` 的稳定细分类。 |
 | `message` | 与写到 stderr 的文本相同。 |
 
 请对 `class` 做分支判断,不要匹配 message 文本。message 里含路径和包名,会变;class 不会。
@@ -371,6 +372,7 @@ Managed 生命周期命令使用同一 envelope，数字 Generation 仍序列化
 |---|---|
 | `publish` | `repository`、`target`、`provider`、`generation`、`attempt`、`checkpoint`、`phase`、`objects`、`noop` |
 | `publish --abort` | `repository`、`target`、`provider`、`attempt`、`phase`、`objects` |
+| `publish --rebind` | 与 `publish` 相同；Binding Revision 属于持久私有审计状态，不新增 Wire Field |
 | `retain add` / `retain rm` | `repository`、`record`、`record_identity`、`path` |
 | `retain ls` | `repository`、`generations[]`,元素使用同一 retained record 形态 |
 | 本地 `gc` | `operation`、`repository`、`base_generation`、`generation`、`objects`、`bytes`、`noop` |

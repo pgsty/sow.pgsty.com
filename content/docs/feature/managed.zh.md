@@ -81,16 +81,19 @@ $ find .sow | sort
 
 私有 SQLite 数据库按 `package_sha256` 索引 Desired/Built Membership，因此查询与构建可以
 一次批量展开完整成员投影，而不是为每个软件包单独查询。数据库还保存以不可变包体 SHA-256
-为键、可重建的软件包事实缓存。Ingest 只需完整认证并解析每个新软件包一次；构建时批量载入
-这些事实，遇到缺失或损坏的缓存记录，再从已认证包体惰性重建。
+为键、可重建的软件包事实缓存。Ingest 只需完整认证并解析每个新软件包一次；生产构建只按本次
+选中的 Digest，以有界、确定性批次读取 Facts Row，遇到缺失或损坏记录时再从已认证包体惰性
+重建。无关或超大的 Facts Row 不会被读取。
 
 对于未改变的 Pool 文件，暖构建使用设备号、inode、size、mtime 与 ctime 指纹避免重新读取
-包体。指纹漂移时会执行一次权威 SHA-256 校验并自动修复；[`sow check`](/zh/docs/command/check/)
-仍是显式的完整密码学审计。
+包体。指纹漂移与 Facts 缺失共享一次权威 SHA-256 校验并自动修复；
+[`sow check`](/zh/docs/command/check/) 仍是显式的完整密码学审计，并且无论指纹是否匹配，都会
+对每个唯一物理包体哈希一次。
 
 缓存与指纹只属于私有实现状态，不改变公共 `pool/ + dists/` 布局。不要手工编辑数据库或
-`PRAGMA user_version`。Repository 需要显式布局维护时，`status` 会报告原因，由
-[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 执行封闭转换。
+`PRAGMA user_version`。v0.3 Repository 必须先备份，再通过
+[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 显式升级，之后才能执行普通 0.4
+读写。全新 0.4 Repository 已使用当前 Schema；其他维护只在 SOW 诊断明确指出时执行。
 
 ## `sow.yml` 驱动一切
 

@@ -461,8 +461,8 @@ targets:
 | `bucket` | R2 | Lower-case canonical bucket name; forbidden for filesystem. |
 | `prefix` | yes | Relative public-tree prefix; empty means the storage namespace root. |
 | `credential` | R2 | `env://NAME` or `file:///absolute/path`; inline secrets are forbidden. |
-| `public_endpoint` | yes | Canonical `https://`, `http://`, or `file://` URL ending in `/`, used for public-absence evidence. |
-| `max_cache_ttl` | yes | Canonical non-negative Go duration, including explicit `0s`. |
+| `public_endpoint` | yes | Canonical URL ending in `/`, used for public content/absence verification. Filesystem accepts `https://`, `http://`, or `file://`; R2 requires HTTP(S). |
+| `max_cache_ttl` | yes | Canonical bounded non-negative Go duration, including explicit `0s`; overflow is rejected. |
 | `authoritative_workspace` | yes | Must be `true`. |
 | `single_writer` | yes | Must be `true`. |
 | `exclusive_write_authority` | yes | Must be `true`. |
@@ -476,6 +476,14 @@ For `provider: filesystem`, configuration validation checks URL shape and overla
 publication time the endpoint directory itself must already exist, must not be a symlink,
 and must resolve to one canonical real directory. SOW creates the configured prefix below
 that endpoint, not the endpoint itself.
+
+The first publish durably binds the Repository, provider storage identity, and prefix. Later edits
+to the target name, `public_endpoint`, or `max_cache_ttl` require explicit operator confirmation with
+[`sow publish TARGET --rebind`](/docs/command/publish/#rebind-mutable-target-settings). Provider,
+storage endpoint, region, bucket, prefix, and Repository identity cannot be rebound; configure a new
+target instead. Every accepted rebind appends an immutable binding revision. Pending maintenance
+blocks TTL changes, and filesystem conditional-delete maintenance also blocks a public-endpoint
+change.
 
 R2 credentials are private references. The environment variable value or referenced file
 must contain one strict JSON document, not a path or shell assignment:

@@ -25,9 +25,9 @@ target — and why each has a separate owner.
 Pointer-last publication, commit intent, forward recovery, retained generations, and
 evidence-gated garbage collection.
 {{< /card >}}
-{{< card title="Coordinated Publication Proposal" link="/docs/design/coordinated-publication/" >}}
-The proposed v0.4.0 user workflow and implementation plan for SOW-orchestrated,
-rclone-executed publication and deterministic interruption recovery.
+{{< card title="Coordinated Publication Decision" link="/docs/design/coordinated-publication/" >}}
+Why v0.4.0 kept SOW's native providers, which hardening shipped, and which earlier rclone
+proposal surfaces are not product commands.
 {{< /card >}}
 {{< /cards >}}
 

@@ -25,6 +25,25 @@ evidence to recover without guessing.
 The split prevents a successful filesystem publication from being treated as proof about
 R2, and prevents one target's partial attempt from contaminating another target.
 
+## Durable target identity and rebind
+
+A target has two nested identities. Storage identity covers provider, endpoint, region, and bucket;
+target identity adds the public-tree prefix. Repository identity, both target identities, and the
+three authority acknowledgements are immutable after the first bind. This is what lets attempts,
+checkpoints, grace, and maintenance survive a configuration-file edit without being reinterpreted
+as evidence for another namespace.
+
+Target name, `public_endpoint`, and `max_cache_ttl` are mutable only through explicit
+[`publish --rebind`](/docs/command/publish/#rebind-mutable-target-settings). Initial bind, migration
+backfill, and every accepted rebind append an immutable binding revision. Rebind holds the same
+exclusive locks as publish and rechecks immutable fields inside the transaction; changing storage
+or prefix requires a new target.
+
+Pending target maintenance freezes TTL in both directions. A filesystem conditional-delete
+workflow also freezes `public_endpoint`. Changing the current TTL never rewrites historical grace:
+deletion eligibility is the later of the stored deadline and the applied checkpoint plus the
+current grace minimum.
+
 ## Publication phases
 
 ```text
@@ -33,6 +52,7 @@ plan
   -> checksum-addressed metadata
   -> durable commit intent
   -> protocol pointers, one view at a time
+  -> provider and canonical public verification
   -> applied checkpoint
   -> grace
   -> evidence-gated deletion
@@ -59,6 +79,23 @@ APT: by-hash/direct indexes -> Release.gpg -> InRelease/Release
 ```
 
 A client that sees a new pointer can therefore reach every object and signature it names.
+
+## Public verification
+
+Routine publication verifies the exact changed closure and every affected final pointer; it does
+not publicly download every unchanged package. Provider receipts and public visibility are separate
+proofs. Filesystem and R2 HTTP(S) targets share a canonical-GET verifier with independent response
+header and body-idle deadlines, a size-plus-one oversize guard, short bounded retries for transient
+408/425/429/5xx responses, and cache-TTL retries for stale content or missing objects.
+
+No-cache requests are revalidation hints only. A later ordinary canonical GET must observe the
+expected bytes before publication can checkpoint. For filesystem conditional deletion, HTTP 404 or
+410 proves public absence; a stale 200 is retried through the TTL. `file://` instead uses exact,
+descriptor-bound absence. R2 public absence and remote deletion remain disabled.
+
+Filesystem aliases are checked on prospective canonical paths before durable bind, including case
+aliases on case-insensitive volumes. A failed backend/path preflight creates no binding row and no
+target prefix.
 
 ## Published-pointer fence
 

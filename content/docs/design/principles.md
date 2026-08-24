@@ -22,6 +22,7 @@ Every durable fact has one scope and one authority:
 | Package bytes and package identity | Repository |
 | Desired memberships and Built state | Repository |
 | Generation and Changeset | Repository |
+| Publication target binding and revisions | Repository + target storage/prefix |
 | Publication attempt and applied checkpoint | Repository + target prefix |
 | Remote inventory, grace, and delete evidence | Repository + target prefix |
 

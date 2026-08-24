@@ -36,11 +36,12 @@ Repositories. Use `-r`/`-d`, or supply an exact coordinate or SHA-256.
 
 ## Output
 
-Without `--json`, `where` prints a command-specific JSON object:
+Without `--json`, `where` prints a summary followed by one line per location:
 
 ```console
-sow where epel-release
-{"reference":"epel-release","locations":[{"repository":"pigsty","dists":["el9"],"built_dists":["el9"],"sha256":"d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab","coordinate":"rpm:epel-release-0:7-5.noarch"}]}
+sow where 'rpm:centos-release-0:6-0.el6.centos.5.x86_64'
+reference="rpm:centos-release-0:6-0.el6.centos.5.x86_64" locations=1
+repository=demo coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16 dists=el9 built_dists=el9
 ```
 
 Each location reports both Desired `dists` and current `built_dists`. This makes the command useful

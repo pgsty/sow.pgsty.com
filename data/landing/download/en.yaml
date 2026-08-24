@@ -19,7 +19,7 @@ hero:
   eyebrow: Download matrix
   title: Download SOW
   desc: '**One self-contained binary, five ways to get it.** Every route installs the same executable and the same repository semantics, so choose by who owns the lifecycle on that host — not by feature set.'
-  note: SOW 0.3.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
+  note: SOW 0.4.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
   title_size: 3.4rem
