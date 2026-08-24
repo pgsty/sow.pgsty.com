@@ -22,9 +22,10 @@ content/
     reference/         # sow.yml, layouts, exit codes, compatibility
   blog/                # release notes and announcements
 data/home/{en,zh}.yaml # OINK landing-page structure and bilingual copy
-data/releases/sow.yaml # release blueprint and publication switch
-layouts/download/     # SOW-specific download content inside the OINK shell
-assets/scss/          # minimal SOW download-page styles
+data/download/sow.yaml            # install channels, assets, and release switch
+data/landing/download/{en,zh}.yaml # bilingual download-page composition
+layouts/_partials/                # narrow SOW-specific theme extensions
+assets/scss/                      # minimal SOW download-page styles
 ```
 
 OINK owns the common docs/blog shell, navigation, search, content blocks, and core
@@ -33,7 +34,7 @@ OINK or Docsy templates into this repository.
 
 ## Theme dependency
 
-OINK 0.5.1 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
+OINK 0.6.1 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
 composed by OINK from bilingual data. Docs and blog pages also render through the theme;
 the site keeps only product-specific data and templates.
 
@@ -41,7 +42,10 @@ The intentional site-level template surface is:
 
 - `data/home/{en,zh}.yaml` for the OINK landing page;
 - `data/footer/{en,zh}.yaml` for the shared footer;
-- `layouts/download/single.html` for release assets and installation choices;
+- `data/download/sow.yaml` and `data/landing/download/{en,zh}.yaml` for release
+  assets and installation choices;
+- `layouts/_partials/sow/content-section.html` and
+  `layouts/_partials/page-meta-lastmod.html` for the two site-specific rendering hooks;
 - `layouts/robots.txt` for the deployment-specific crawler policy.
 
 All docs/blog base templates, navigation, table of contents, search, Markdown/LLMS and
