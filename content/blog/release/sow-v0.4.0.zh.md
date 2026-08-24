@@ -1,7 +1,7 @@
 ---
 title: "SOW v0.4.0"
 linkTitle: "SOW v0.4.0"
-date: 2026-08-24T00:00:00+08:00
+date: 2026-08-24
 authors: [Vonng]
 description: "SOW v0.4.0 让 Managed 校验严格收敛为单遍认证，引入独立 RPM 信任环校验与安全发布目标重绑定，并强化迁移、恢复与公共交付验证。"
 categories: [Release]
@@ -109,7 +109,9 @@ Filesystem 目标还会在持久绑定之前按 prospective physical path 检查
 
 Release 门禁覆盖完整 Go 测试、vet、staticcheck、dead-code reachability、漏洞与 RPM Fork
 Provenance 检查、Race Test、Linux amd64/arm64 构建，以及上述确定性包体/facts I/O 契约。
-Release 二进制使用 Go 1.27.0 从 `v0.4.0` 源码 Tag 构建；Module 接受 Go 1.27.0 或更新版本。
+Release 二进制使用 Go 1.27.0 从 `v0.4.0` 源码 Tag 构建。从源码构建现在要求 Go 1.27.0 或更新
+版本（0.3 为 1.26.5）；AWS SDK、SQLite、压缩与加密依赖同步刷新，质量门禁固定 staticcheck
+v0.8.1、deadcode v0.49.0 与 govulncheck v1.7.0。
 
 本次制品包含四个 Linux/macOS 归档、两个 RPM、两个 DEB 与 `SHA256SUMS`。每个归档包含
 `sow`、`README.md`、`CHANGELOG.md` 与 `LICENSE`；Linux 原生包随二进制安装 Apache-2.0

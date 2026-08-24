@@ -1,7 +1,7 @@
 ---
 title: "SOW v0.4.0"
 linkTitle: "SOW v0.4.0"
-date: 2026-08-24T00:00:00+08:00
+date: 2026-08-24
 authors: [Vonng]
 description: "SOW v0.4.0 makes Managed verification single-pass, adds independently verified RPM trust rings and safe publication-target rebinding, and hardens migration, recovery, and public delivery checks."
 categories: [Release]
@@ -132,7 +132,10 @@ row and creates no target prefix.
 The release gates cover the full Go test suite, vet, staticcheck, dead-code reachability,
 vulnerability and RPM-fork provenance checks, race tests, Linux amd64/arm64 builds, and
 the deterministic payload/facts I/O contracts above. The release binaries were built
-with Go 1.27.0 from source tag `v0.4.0`; the module accepts Go 1.27.0 or newer.
+with Go 1.27.0 from source tag `v0.4.0`. Building from source now requires Go 1.27.0 or
+newer, up from 1.26.5 in 0.3. The AWS SDK, SQLite, compression, and cryptography
+dependencies were refreshed alongside it, and the quality gates pin staticcheck v0.8.1,
+deadcode v0.49.0, and govulncheck v1.7.0.
 
 The release set contains four Linux/macOS archives, two RPMs, two DEBs, and
 `SHA256SUMS`. Every archive contains `sow`, `README.md`, `CHANGELOG.md`, and `LICENSE`;
