@@ -301,18 +301,20 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
 "result":{"repository":"pigsty","status":"clean","ready_to_copy":true,
  "built_generation":"00000000000000000004","desired_revision":4,
  "layers":[{"name":"config","ok":true,"checked":5,"issues":[]},
-  {"name":"retained","ok":true,"checked":0,"issues":[]},
   {"name":"state","ok":true,"checked":1,"issues":[]},
   {"name":"public-modes","ok":true,"checked":72,"issues":[]},
+  {"name":"retained","ok":true,"checked":0,"issues":[]},
   {"name":"package-bytes","ok":true,"checked":7,"issues":[]},
   {"name":"desired-membership","ok":true,"checked":7,"issues":[]},
   {"name":"index","ok":true,"checked":2,"issues":[]},
   {"name":"signature","ok":true,"checked":11,"issues":[]},
-  {"name":"generation-manifest","ok":true,"checked":4,"issues":[]}]}
+  {"name":"generation-manifest","ok":true,"checked":1,"issues":[]}]}
 ```
 
-Nine terminal layers, in this order, each with a count of what it examined and any issues
-found. A dirty repository can report every layer `ok: true` and still fail with exit `5`,
+Steady-state checks return nine layers in this order, each with a count of what it examined and any
+issues found. A non-terminal layout transition instead returns `config`, `state`, `public-modes`,
+and `layout-transition`, then stops with a not-ready result. A dirty repository can report every steady-state
+layer `ok: true` and still fail with exit `5`,
 because the layers verify consistency while `ready_to_copy` reports currency:
 
 ```json

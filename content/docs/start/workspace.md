@@ -97,7 +97,7 @@ sow check
 ```
 
 `status` is a cheap state read. `check` is the delivery gate: it verifies configuration,
-retained roots, state, public modes, package bytes, Desired Membership, indexes,
+state, public modes, retained roots, package bytes, Desired Membership, indexes,
 signatures, and the Generation manifest. It writes nothing. Only a clean Repository that
 passes all layers returns success.
 

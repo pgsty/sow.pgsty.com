@@ -29,19 +29,24 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 
 ## Verification layers
 
-The current checker reports nine ordered layers:
+In steady state, the checker reports nine ordered layers:
 
 | Layer | Verification | `checked` counts |
 |---|---|---|
 | `config` | `sow.yml` parses and validates for the Repository | configuration objects |
-| `retained` | Explicit retained records and frozen Generation manifests | retained records |
 | `state` | SQLite `quick_check`, foreign keys, journal, and recovery evidence | one state database |
 | `public-modes` | File and directory permissions across the served tree | inspected paths |
+| `retained` | Explicit retained records and frozen Generation manifests | retained records |
 | `package-bytes` | SHA-256 of pool and private pending payloads | Package Objects |
 | `desired-membership` | Membership rows resolve under current policy | memberships |
 | `index` | Rendered indexes match the membership they claim | Dists |
 | `signature` | Every declared metadata and package signature verifies | signatures |
 | `generation-manifest` | Built Generation manifest matches files on disk | one manifest |
+
+During a non-terminal Repository layout transition, `check` instead reports `config`, `state`,
+`public-modes`, then a conditional `layout-transition` layer and stops. It returns not-ready until
+the diagnosed [`repo migrate`](/docs/command/repo/#sow-repo-migrate) operation completes or is
+aborted before commit.
 
 ### Physical evidence and I/O contract
 
@@ -58,11 +63,11 @@ replaced file invalidates the descriptor evidence and fails closed.
 
 ```console
 sow check
-repository=pigsty status=clean ready_to_copy=true revision=5 generation=00000000000000000005
+repository=pigsty status=clean ready_to_copy=true revision=5 generation=5
 config	ok=true	checked=5
-retained	ok=true	checked=0
 state	ok=true	checked=1
 public-modes	ok=true	checked=67
+retained	ok=true	checked=0
 package-bytes	ok=true	checked=8
 desired-membership	ok=true	checked=8
 index	ok=true	checked=2
@@ -77,7 +82,7 @@ the new Desired state is valid. It still fails the delivery gate because the two
 
 ```console
 sow check
-repository=pigsty status=dirty ready_to_copy=false revision=6 generation=00000000000000000005
+repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5
 ...
 integrity or recovery error: managed: repository is not ready to copy: repository status is dirty
 ```

@@ -91,7 +91,7 @@ sow ls -d bookworm
 sow check
 ```
 
-`status` 是低成本状态读取。`check` 是交付门禁：它校验配置、保留根、状态、公共文件权限、
+`status` 是低成本状态读取。`check` 是交付门禁：它校验配置、状态、公共文件权限、保留根、
 包字节、Desired Membership、索引、签名与 Generation manifest，且不写入任何内容。
 只有 clean 且所有层都通过的 Repository 才返回成功。
 

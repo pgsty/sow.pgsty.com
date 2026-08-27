@@ -17,12 +17,13 @@ channels:
     note: >-
       The shortest route on a Linux host: SOW ships in the Pigsty infra
       repository, so `sow` installs and upgrades with everything else the box
-      already gets from APT or YUM. Mainland China is served by the
-      `repo.pigsty.cc` mirror.
+      already gets from APT or YUM. This rolling channel may lag the latest
+      GitHub release; use a pinned route below when the exact version matters.
+      Mainland China is served by the `repo.pigsty.cc` mirror.
     note_zh: >-
       Linux 主机上最省事的一条路径：SOW 已收录进 Pigsty infra 软件源，`sow`
-      与主机上其它软件包一起用 APT / YUM 安装和升级。中国大陆可使用
-      `repo.pigsty.cc` 镜像。
+      与主机上其它软件包一起用 APT / YUM 安装和升级。该滚动渠道可能晚于最新 GitHub
+      Release；需要精确版本时，请使用下方固定版本渠道。中国大陆可使用 `repo.pigsty.cc` 镜像。
     steps:
       - title: APT · Debian / Ubuntu
         title_zh: APT · Debian / Ubuntu
@@ -135,11 +136,11 @@ channels:
     icon: fa-solid fa-code-branch
     url: https://github.com/pgsty/sow/tree/${tag}
     note: >-
-      Build the tag yourself. The module declares Go 1.26.5, metadata generation
+      Build the tag yourself. The module declares Go 1.27.0, metadata generation
       needs no C toolchain, and these are the flags the release pipeline uses,
       so a source build reports the same product version as the published one.
     note_zh: >-
-      自行构建对应 Tag。模块声明 Go 1.26.5，生成元数据不需要 C 工具链；下面就是
+      自行构建对应 Tag。模块声明 Go 1.27.0，生成元数据不需要 C 工具链；下面就是
       Release Pipeline 使用的构建参数，因此源码构建与官方发布报告相同的产品版本。
     steps:
       - title: Clone, check out, build

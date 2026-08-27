@@ -287,18 +287,19 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
 "result":{"repository":"pigsty","status":"clean","ready_to_copy":true,
  "built_generation":"00000000000000000004","desired_revision":4,
  "layers":[{"name":"config","ok":true,"checked":5,"issues":[]},
-  {"name":"retained","ok":true,"checked":0,"issues":[]},
   {"name":"state","ok":true,"checked":1,"issues":[]},
   {"name":"public-modes","ok":true,"checked":72,"issues":[]},
+  {"name":"retained","ok":true,"checked":0,"issues":[]},
   {"name":"package-bytes","ok":true,"checked":7,"issues":[]},
   {"name":"desired-membership","ok":true,"checked":7,"issues":[]},
   {"name":"index","ok":true,"checked":2,"issues":[]},
   {"name":"signature","ok":true,"checked":11,"issues":[]},
-  {"name":"generation-manifest","ok":true,"checked":4,"issues":[]}]}
+  {"name":"generation-manifest","ok":true,"checked":1,"issues":[]}]}
 ```
 
-终态九层按固定顺序报告,每层给出检查了多少项以及发现的问题。dirty 仓库可以各层全部
-`ok: true`,但仍以退出码 `5` 失败 —— 因为层校验的是 **自洽性**,
+稳态 Check 按固定顺序返回九层，每层给出检查项数与问题。未完成布局迁移则只返回 `config`、
+`state`、`public-modes` 与 `layout-transition`，随后停止并返回不可交付。dirty 仓库可以让全部稳态层
+`ok: true`，但仍以退出码 `5` 失败 —— 因为层校验的是 **自洽性**，
 而 `ready_to_copy` 报告的是 **时效性**:
 
 ```json

@@ -215,11 +215,12 @@ repository=pigsty status=dirty ready_to_copy=false revision=7 generation=6
 config	ok=true	checked=5
 state	ok=true	checked=1
 public-modes	ok=true	checked=69
+retained	ok=true	checked=0
 package-bytes	ok=true	checked=7
 desired-membership	ok=true	checked=6
 index	ok=true	checked=2
 signature	ok=true	checked=11
-generation-manifest	ok=true	checked=6
+generation-manifest	ok=true	checked=1
 integrity or recovery error: managed: repository is not ready to copy: repository status is dirty
 ```
 

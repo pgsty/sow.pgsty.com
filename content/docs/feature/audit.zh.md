@@ -43,19 +43,22 @@ sow status -r local
 sow check -r local
 ```
 
-当前 checker 按顺序报告九层：
+稳态下，checker 按顺序报告九层：
 
 | 层 | 校验内容 |
 |---|---|
 | `config` | 严格配置与有效 Dist 输入 |
-| `retained` | 显式保留 Generation 记录与冻结元数据 |
 | `state` | SQLite schema 与关系状态 |
 | `public-modes` | 公共文件/目录权限 |
+| `retained` | 显式保留 Generation 记录与冻结元数据 |
 | `package-bytes` | pool/pending object 与已记录 SHA-256 |
 | `desired-membership` | 包身份、成员关系与架构一致性 |
 | `index` | 渲染元数据与引用 closure |
 | `signature` | 声明的元数据与 RPM 包信任要求 |
 | `generation-manifest` | 已记录 Built manifest 与公共树 |
+
+未完成布局迁移使用更短的诊断表面：依次报告 `config`、`state`、`public-modes` 与
+`layout-transition`，随后停止，并在诊断指定的维护操作完成或在 commit 前安全中止前返回不可交付。
 
 `check` 不写入也不修复。dirty 或 recovering Repository 不可交付，即使上一份已提交树仍可读取。
 在发布流水线中执行 `check`，任何非零退出都应停止。

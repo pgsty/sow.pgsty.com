@@ -44,19 +44,23 @@ Use `status` to diagnose. Do not use it as a substitute for `check`.
 sow check -r local
 ```
 
-The current checker reports nine ordered layers:
+In steady state, the checker reports nine ordered layers:
 
 | Layer | Verifies |
 |---|---|
 | `config` | strict configuration and effective Dist inputs |
-| `retained` | explicit retained Generation records and frozen metadata |
 | `state` | SQLite schema and relational state |
 | `public-modes` | expected public file and directory modes |
+| `retained` | explicit retained Generation records and frozen metadata |
 | `package-bytes` | pool/pending objects against recorded SHA-256 |
 | `desired-membership` | package identity, membership, and architecture consistency |
 | `index` | rendered metadata and reference closure |
 | `signature` | declared metadata and RPM package trust requirements |
 | `generation-manifest` | recorded Built manifest against the public tree |
+
+A non-terminal layout transition has a shorter diagnostic surface: `config`, `state`,
+`public-modes`, then `layout-transition`. The check stops there and returns not-ready until the
+diagnosed maintenance operation completes or is safely aborted before commit.
 
 `check` writes and repairs nothing. A dirty or recovering Repository is not deliverable
 even if its last committed tree remains readable. Put `check` in the release pipeline and

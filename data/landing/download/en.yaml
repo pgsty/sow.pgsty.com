@@ -18,7 +18,7 @@ sections:
 hero:
   eyebrow: Download matrix
   title: Download SOW
-  desc: '**One self-contained binary, five ways to get it.** Every route installs the same executable and the same repository semantics, so choose by who owns the lifecycle on that host — not by feature set.'
+  desc: '**One self-contained program, five ways to get it.** Pinned routes install this release; the Pigsty repository follows its rolling channel and may lag. Choose by the version and lifecycle policy the host requires.'
   note: SOW 0.4.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
@@ -37,7 +37,7 @@ hero:
 download:
   eyebrow: Install matrix
   title: Pick the route that matches the host
-  desc: 'Commands, links, and digests all come from the release record, so they cannot drift from the artifacts they name. The Pigsty repository tracks a rolling channel; every other route pins this exact tag.'
+  desc: 'Commands, links, and digests all come from the release record, so they cannot drift from the artifacts they name. The Pigsty repository is rolling and may lag; every other route pins this exact tag.'
   keys: [sow]
 
 next:

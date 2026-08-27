@@ -28,19 +28,23 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 
 ## 校验层
 
-当前 checker 按顺序报告九层校验：
+稳态下，checker 按顺序报告九层校验：
 
 | 层 | 校验内容 | `checked` 计数 |
 |---|---|---|
 | `config` | `sow.yml` 能否针对该 Repository 解析并通过校验 | 配置对象 |
-| `retained` | 显式保留记录与冻结 Generation Manifest | 保留记录 |
 | `state` | SQLite `quick_check`、外键、日志与恢复证据 | 一个状态库 |
 | `public-modes` | 服务目录中所有文件与目录权限 | 已检查路径 |
+| `retained` | 显式保留记录与冻结 Generation Manifest | 保留记录 |
 | `package-bytes` | 包池与私有 pending 包体的 SHA-256 | Package Object |
 | `desired-membership` | Membership 能否在当前策略下解析到真实对象 | 成员关系 |
 | `index` | 渲染索引是否与其声明的成员关系一致 | Dist |
 | `signature` | 所有已声明元数据/软件包签名是否有效 | 签名 |
 | `generation-manifest` | Built Generation Manifest 是否与磁盘文件一致 | 一个 Manifest |
+
+Repository 处于未完成布局迁移时，`check` 改为依次报告 `config`、`state`、`public-modes` 与条件
+层 `layout-transition`，随后停止，并在诊断指定的
+[`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 完成或在 commit 前中止前返回不可交付。
 
 ### 物理证据与 I/O 契约
 
@@ -55,11 +59,11 @@ DEB 或无签名 RPM 只需一遍完整包体流。带签名 RPM 最多再用一
 
 ```console
 sow check
-repository=pigsty status=clean ready_to_copy=true revision=5 generation=00000000000000000005
+repository=pigsty status=clean ready_to_copy=true revision=5 generation=5
 config	ok=true	checked=5
-retained	ok=true	checked=0
 state	ok=true	checked=1
 public-modes	ok=true	checked=67
+retained	ok=true	checked=0
 package-bytes	ok=true	checked=8
 desired-membership	ok=true	checked=8
 index	ok=true	checked=2
@@ -74,7 +78,7 @@ dirty Repository 的九层校验可以分别成立：旧 Built Generation 完整
 
 ```console
 sow check
-repository=pigsty status=dirty ready_to_copy=false revision=6 generation=00000000000000000005
+repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5
 ...
 integrity or recovery error: managed: repository is not ready to copy: repository status is dirty
 ```
