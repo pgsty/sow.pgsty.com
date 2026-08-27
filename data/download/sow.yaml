@@ -17,13 +17,12 @@ channels:
     note: >-
       The shortest route on a Linux host: SOW ships in the Pigsty infra
       repository, so `sow` installs and upgrades with everything else the box
-      already gets from APT or YUM. This rolling channel may lag the latest
-      GitHub release; use a pinned route below when the exact version matters.
-      Mainland China is served by the `repo.pigsty.cc` mirror.
+      already gets from APT or YUM. Mainland China is served by the
+      `repo.pigsty.cc` mirror.
     note_zh: >-
       Linux 主机上最省事的一条路径：SOW 已收录进 Pigsty infra 软件源，`sow`
-      与主机上其它软件包一起用 APT / YUM 安装和升级。该滚动渠道可能晚于最新 GitHub
-      Release；需要精确版本时，请使用下方固定版本渠道。中国大陆可使用 `repo.pigsty.cc` 镜像。
+      与主机上其它软件包一起用 APT / YUM 安装和升级。中国大陆可使用
+      `repo.pigsty.cc` 镜像。
     steps:
       - title: APT · Debian / Ubuntu
         title_zh: APT · Debian / Ubuntu
