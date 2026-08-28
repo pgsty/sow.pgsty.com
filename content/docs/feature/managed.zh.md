@@ -252,7 +252,7 @@ repos:
 ## 继续阅读
 
 - [包池与元数据视图](/zh/docs/feature/views/) —— `build` 到底写了什么
-- [发布模型](/zh/docs/design/publication/) —— Generation 如何抵达目标
+- [发布模型](/zh/blog/design/publication/) —— Generation 如何抵达目标
 - [成员策略](/zh/docs/feature/policy/) —— `exclude` 与 `limit` 如何决定谁留下
 - [第一个工作区](/zh/docs/start/workspace/) —— 本页的十分钟动手版
 - [`sow.yml` 配置参考](/zh/docs/reference/config/) —— 完整 schema

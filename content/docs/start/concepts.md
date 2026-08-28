@@ -107,4 +107,4 @@ Use `status` to diagnose and `check` as the release gate. Do not publish a Repos
 - [Managed Workspaces](/docs/feature/managed/)
 - [Pool & Architecture Views](/docs/feature/views/)
 - [Transactions & Recovery](/docs/feature/transactions/)
-- [Publication & Recovery](/docs/design/publication/)
+- [Publication & Recovery](/blog/design/publication/)

@@ -1,22 +1,28 @@
 ---
 title: "协同发布决策记录"
 linkTitle: "发布决策"
+date: 2026-08-14
+lastmod: 2026-08-24
+authors: [Vonng]
 description: "SOW v0.4.0 保留原生发布 Provider 的最终决策，以及未交付的早期 rclone 提案边界。"
 categories: [Design]
 tags: [publish, transaction, object-storage, decision]
-url: "/zh/docs/design/coordinated-publication/"
-weight: 450
+url: "/zh/blog/design/coordinated-publication/"
+aliases:
+  - "/docs/design/coordinated-publication/"
+weight: 10
 icon: fa-solid fa-cloud-arrow-up
+draft: false
 ---
 
 > [!IMPORTANT] SOW 0.4.0 已完成最终决策
-> 本 URL 上的早期草案曾提议采用 rclone Executor、`publish --dry-run` 与独立
+> 本记录的早期版本曾提议采用 rclone Executor、`publish --dry-run` 与独立
 > `sow audit` 命令。这些表面均未进入 0.4.0：SOW 不依赖 rclone，`publish` 没有
 > `--dry-run`，`sow audit` 也不是有效命令。
 
 本页保留决策边界，避免历史提案被误解为当前产品。规范行为以
 [`sow publish`](/zh/docs/command/publish/)与
-[发布与恢复](/zh/docs/design/publication/)为准。
+[发布与恢复](/zh/blog/design/publication/)为准。
 
 ## 最终决策
 
@@ -99,6 +105,6 @@ sow publish prod
 
 ## 参考资料
 
-- [当前发布与恢复模型](/zh/docs/design/publication/)
+- [当前发布与恢复模型](/zh/blog/design/publication/)
 - [当前 `sow publish` 命令](/zh/docs/command/publish/)
 - [平台与集成](/zh/docs/reference/compatibility/)

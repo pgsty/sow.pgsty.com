@@ -80,4 +80,4 @@ A no-op means no maintenance is due, not that the target was exhaustively revali
 
 - [`sow retain`](/docs/command/retain/) — create and remove explicit local roots
 - [`sow publish`](/docs/command/publish/) — create target checkpoints and receipts
-- [Publication Model](/docs/design/publication/) — provider guarantees and cache grace
+- [Publication Model](/blog/design/publication/) — provider guarantees and cache grace

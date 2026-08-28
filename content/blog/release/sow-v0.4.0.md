@@ -150,4 +150,4 @@ After installation, run `sow version`, migrate each v0.3 Repository, and finish 
 
 The maintained contracts are documented in [Managed Workspaces](/docs/feature/managed/),
 [Signing Model](/docs/feature/signing/), and
-[Publication & Recovery](/docs/design/publication/).
+[Publication & Recovery](/blog/design/publication/).

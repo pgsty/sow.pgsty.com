@@ -111,4 +111,4 @@ manager. A local build, a Provider write, HTTP reachability, and a client instal
 separate checks.
 
 See [Repository Layout](/docs/reference/layout/), [Signing](/docs/feature/signing/), and
-[Publication & Recovery](/docs/design/publication/) for the corresponding contracts.
+[Publication & Recovery](/blog/design/publication/) for the corresponding contracts.

@@ -124,4 +124,4 @@ HTTP(S) public endpoint; R2 target GC remains report-only and does not perform r
 - [`sow status`](/docs/command/status/) and [`sow check`](/docs/command/check/) — decide whether the Built Generation is the one you intend to deliver
 - [`sow gc`](/docs/command/gc/) — conservative target maintenance
 - [`sow.yml` targets](/docs/reference/config/#publication-targets) — provider configuration
-- [Publication Model](/docs/design/publication/) — phases, receipts, recovery, and cache grace
+- [Publication Model](/blog/design/publication/) — phases, receipts, recovery, and cache grace

@@ -77,4 +77,4 @@ target gc pgsql/prod (filesystem): phase=done candidates=14 deleted=8 retained=6
 
 - [`sow retain`](/zh/docs/command/retain/) —— 创建与移除显式本地根
 - [`sow publish`](/zh/docs/command/publish/) —— 创建目标 Checkpoint 与 Receipt
-- [发布模型](/zh/docs/design/publication/) —— Provider 保证与 Cache Grace
+- [发布模型](/zh/blog/design/publication/) —— Provider 保证与 Cache Grace

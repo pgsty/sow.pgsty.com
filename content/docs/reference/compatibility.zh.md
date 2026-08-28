@@ -99,4 +99,4 @@ sow changes 0 -r REPOSITORY
 写入、HTTP 可达与客户端安装是四个独立检查。
 
 相关契约见[仓库布局](/zh/docs/reference/layout/)、[签名模型](/zh/docs/feature/signing/)与
-[发布与恢复](/zh/docs/design/publication/)。
+[发布与恢复](/zh/blog/design/publication/)。

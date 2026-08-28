@@ -5,8 +5,6 @@ description: "One package, one owner, metadata-only APT/RPM views: canonical poo
 categories: [Feature]
 tags: [pool, dist, rpm, deb]
 url: "/docs/feature/views/"
-aliases:
-  - "/docs/design/single-payload/"
 weight: 400
 icon: fa-solid fa-layer-group
 ---

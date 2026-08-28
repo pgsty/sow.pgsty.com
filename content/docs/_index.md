@@ -13,6 +13,7 @@ search_keywords: [sow, documentation, package repository, rpm, yum, deb, apt]
 search_boost: 1.5
 cascade:
   search_boost: 1.15
+  sidebar_expanded: true
 ---
 
 SOW is Pigsty's self-contained package repository manager. `sow create` turns the RPM and
@@ -25,7 +26,7 @@ site. Press {{< kbd "/" >}} outside an input to open command mode directly.
 - [Get Started](/docs/start/) — Install SOW, create a flat repository, and build the first Managed workspace.
 - [Tutorials](/docs/tutorial/) — Complete YUM, APT, signing, serving, and publication walkthroughs.
 - [Features](/docs/feature/) — Plain and Managed execution, pool projections, policy, signing, transactions, and audit.
-- [Design](/docs/design/) — Ownership, state, publication ordering, recovery, and evidence boundaries.
+- [Design Records](/blog/design/) — Dated ownership, layout, publication, recovery, and compatibility decisions.
 - [Commands](/docs/command/) — Syntax, selection rules, output, state transitions, and exit behavior for every command.
 - [Reference](/docs/reference/) — Configuration, package references, layouts, JSON, exit codes, platforms, and integration coverage.
 {.cards}
@@ -39,3 +40,4 @@ site. Press {{< kbd "/" >}} outside an input to open command mode directly.
 | Build a complete YUM or APT repository | [Tutorials](/docs/tutorial/) |
 | Look up exact CLI behavior | [Commands](/docs/command/) |
 | Check a field, path, or compatibility claim | [Reference](/docs/reference/) |
+| Understand an architecture decision | [Design Records](/blog/design/) |

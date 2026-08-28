@@ -182,5 +182,5 @@ remains portable between Linux and default macOS filesystems.
 ## See also
 
 - [Views and One-Copy Storage](/docs/feature/views/)
-- [Publication Model](/docs/design/publication/)
+- [Publication Model](/blog/design/publication/)
 - [Serve Repositories](/docs/tutorial/serving/)

@@ -124,4 +124,4 @@ v0.8.1、deadcode v0.49.0 与 govulncheck v1.7.0。
 逐个迁移 v0.3 Repository，再以 `sow check` 作为发布前门禁。
 
 长期维护的契约见 [Managed 工作区](/zh/docs/feature/managed/)、
-[签名模型](/zh/docs/feature/signing/)与[发布与恢复](/zh/docs/design/publication/)。
+[签名模型](/zh/docs/feature/signing/)与[发布与恢复](/zh/blog/design/publication/)。

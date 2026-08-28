@@ -145,5 +145,5 @@ policy、公共 endpoint、缓存行为、重放与恢复。详见[平台与集�
 ## 下一步
 
 - [`sow publish`](/zh/docs/command/publish/) 与 [`sow gc`](/zh/docs/command/gc/)
-- [发布设计](/zh/docs/design/publication/)
+- [发布设计](/zh/blog/design/publication/)
 - [签名教程](/zh/docs/tutorial/signing/)

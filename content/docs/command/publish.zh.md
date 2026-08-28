@@ -116,4 +116,4 @@ Filesystem 可使用 `file://` 或 HTTP(S) 公共端点。执行条件删除时�
 - [`sow status`](/zh/docs/command/status/) 与 [`sow check`](/zh/docs/command/check/) —— 判断当前 Built Generation 是否正是准备交付的版本
 - [`sow gc`](/zh/docs/command/gc/) —— 保守的目标维护
 - [`sow.yml` 发布目标](/zh/docs/reference/config/#publication-targets) —— Provider 配置
-- [发布模型](/zh/docs/design/publication/) —— 阶段、Receipt、恢复与 Cache Grace
+- [发布模型](/zh/blog/design/publication/) —— 阶段、Receipt、恢复与 Cache Grace

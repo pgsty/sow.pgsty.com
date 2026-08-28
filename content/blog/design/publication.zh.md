@@ -1,12 +1,18 @@
 ---
 title: "发布与恢复"
 linkTitle: "发布与恢复"
+date: 2026-08-08
+lastmod: 2026-08-24
+authors: [Vonng]
 description: "发布、恢复、保留与安全删除仓库对象的 target-scoped 状态机。"
 categories: [Design]
 tags: [publish, transaction, object-storage]
-url: "/zh/docs/design/publication/"
-weight: 400
+url: "/zh/blog/design/publication/"
+aliases:
+  - "/docs/design/publication/"
+weight: 40
 icon: fa-solid fa-arrows-rotate
+draft: false
 ---
 
 构建与发布是两个独立状态迁移。构建产生与 target 无关的 Generation；发布把该 Generation

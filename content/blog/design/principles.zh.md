@@ -1,12 +1,18 @@
 ---
 title: "设计原则"
 linkTitle: "设计原则"
+date: 2026-08-08
+lastmod: 2026-08-24
+authors: [Vonng]
 description: "SOW 用来约束所有权、派生状态、发布与证据的一组不变式。"
 categories: [Design]
 tags: [plain, managed, repository]
-url: "/zh/docs/design/principles/"
-weight: 100
+url: "/zh/blog/design/principles/"
+aliases:
+  - "/docs/design/principles/"
+weight: 60
 icon: fa-solid fa-ruler-combined
+draft: false
 ---
 
 SOW 首先不是一个“元数据生成器”，而是一个所有权与状态迁移系统，只是它的输出恰好是

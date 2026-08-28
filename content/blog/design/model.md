@@ -1,12 +1,18 @@
 ---
 title: "System Model"
 linkTitle: "System Model"
+date: 2026-08-08
+lastmod: 2026-08-24
+authors: [Vonng]
 description: "The objects and state transitions that connect packages, distributions, generations, and publication targets."
 categories: [Design]
 tags: [repository, dist, pool, generation]
-url: "/docs/design/model/"
-weight: 200
+url: "/blog/design/model/"
+aliases:
+  - "/docs/design/model/"
+weight: 50
 icon: fa-solid fa-diagram-project
+draft: false
 ---
 
 The model is deliberately layered. Configuration expresses intent, the database records

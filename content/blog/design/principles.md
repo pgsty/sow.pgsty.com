@@ -1,12 +1,18 @@
 ---
 title: "Design Principles"
 linkTitle: "Principles"
+date: 2026-08-08
+lastmod: 2026-08-24
+authors: [Vonng]
 description: "The invariants SOW uses to keep ownership, generated state, publication, and evidence understandable."
 categories: [Design]
 tags: [plain, managed, repository]
-url: "/docs/design/principles/"
-weight: 100
+url: "/blog/design/principles/"
+aliases:
+  - "/docs/design/principles/"
+weight: 60
 icon: fa-solid fa-ruler-combined
+draft: false
 ---
 
 SOW is not primarily a metadata generator. It is an ownership and state-transition system

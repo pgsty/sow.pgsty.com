@@ -13,6 +13,7 @@ search_keywords: [SOW 文档, 软件仓库, RPM, YUM, DEB, APT]
 search_boost: 1.5
 cascade:
   search_boost: 1.15
+  sidebar_expanded: true
 ---
 
 SOW 是 Pigsty 出品的自包含软件仓库管理器。`sow create` 能把目录中的 RPM 与 DEB
@@ -25,7 +26,7 @@ Generation、审计历史与发布目标。
 - [上手](/zh/docs/start/) — 安装 SOW、创建平面仓库，并构建第一个 Managed 工作区。
 - [教程](/zh/docs/tutorial/) — 完整的 YUM、APT、签名、对外服务与发布实战。
 - [功能](/zh/docs/feature/) — Plain/Managed 运行路径、包池投影、策略、签名、事务与审计。
-- [设计](/zh/docs/design/) — 所有权、状态、发布顺序、恢复与证据边界。
+- [设计归档](/zh/blog/design/) — 按日期记录所有权、布局、发布、恢复与兼容性决策。
 - [命令](/zh/docs/command/) — 每条命令的语法、选择规则、输出、状态变化与退出行为。
 - [参考](/zh/docs/reference/) — 配置、包引用、目录布局、JSON、退出码、平台与集成覆盖。
 {.cards}
@@ -39,3 +40,4 @@ Generation、审计历史与发布目标。
 | 搭建完整 YUM 或 APT 仓库 | [教程](/zh/docs/tutorial/) |
 | 查询精确 CLI 行为 | [命令](/zh/docs/command/) |
 | 核对字段、路径或兼容性结论 | [参考](/zh/docs/reference/) |
+| 理解一项架构决策 | [设计归档](/zh/blog/design/) |

@@ -155,5 +155,5 @@ recovery on a nonproduction prefix before enabling a production target. See
 ## Next
 
 - [`sow publish`](/docs/command/publish/) and [`sow gc`](/docs/command/gc/)
-- [Publication design](/docs/design/publication/)
+- [Publication design](/blog/design/publication/)
 - [Signing tutorial](/docs/tutorial/signing/)

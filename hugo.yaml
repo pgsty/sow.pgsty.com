@@ -11,6 +11,16 @@ hasCJKLanguage: true
 # 标签等列表页标题保留作者原始大小写。
 capitalizeListTitles: false
 
+# Design records keep their original decision date while an explicit lastmod
+# records later editorial or implementation-alignment updates. Fall back to
+# Git history for pages that do not set lastmod themselves.
+frontmatter:
+  lastmod:
+    - lastmod
+    - ":git"
+    - date
+    - publishDate
+
 #=======================================#
 # Hugo Module
 #=======================================#
@@ -95,6 +105,22 @@ languages:
           weight: 20
           params:
             icon: fa-solid fa-blog
+        - identifier: design-records
+          parent: blog
+          name: Design
+          pageRef: /blog/design
+          weight: 10
+          params:
+            icon: fa-solid fa-compass-drafting
+            description: Dated architecture decisions and their evidence boundaries
+        - identifier: release-notes
+          parent: blog
+          name: Release Notes
+          pageRef: /blog/release
+          weight: 20
+          params:
+            icon: fa-solid fa-tag
+            description: Version changes, upgrade notes, and delivery evidence
         - identifier: download
           name: Download
           pageRef: /download
@@ -180,6 +206,22 @@ languages:
           weight: 20
           params:
             icon: fa-solid fa-blog
+        - identifier: design-records
+          parent: blog
+          name: 设计归档
+          pageRef: /blog/design
+          weight: 10
+          params:
+            icon: fa-solid fa-compass-drafting
+            description: 按日期记录架构决策及其证据边界
+        - identifier: release-notes
+          parent: blog
+          name: 发布注记
+          pageRef: /blog/release
+          weight: 20
+          params:
+            icon: fa-solid fa-tag
+            description: 版本变化、升级说明与交付证据
         - identifier: download
           name: 下载
           pageRef: /download

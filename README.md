@@ -17,10 +17,11 @@ content/
     start/             # Get Started
     tutorial/          # task-oriented walkthroughs
     feature/           # explanation: how SOW works
-    design/            # maintained architecture, invariants, and compatibility boundaries
     command/           # complete command reference
     reference/         # sow.yml, layouts, exit codes, compatibility
-  blog/                # release notes and announcements
+  blog/
+    design/            # dated architecture decisions and rationale
+    release/           # release notes and announcements
 data/home/{en,zh}.yaml # OINK landing-page structure and bilingual copy
 data/download/sow.yaml            # install channels, assets, and release switch
 data/landing/download/{en,zh}.yaml # bilingual download-page composition

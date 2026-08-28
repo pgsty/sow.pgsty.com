@@ -1,23 +1,29 @@
 ---
 title: "Coordinated Publication Decision"
 linkTitle: "Publication Decision"
+date: 2026-08-14
+lastmod: 2026-08-24
+authors: [Vonng]
 description: "The v0.4.0 decision to keep SOW's native publication providers, and the earlier rclone proposal that did not ship."
 categories: [Design]
 tags: [publish, transaction, object-storage, decision]
-url: "/docs/design/coordinated-publication/"
-weight: 450
+url: "/blog/design/coordinated-publication/"
+aliases:
+  - "/docs/design/coordinated-publication/"
+weight: 10
 icon: fa-solid fa-cloud-arrow-up
+draft: false
 ---
 
 > [!IMPORTANT] Decision finalized for SOW 0.4.0
-> An earlier draft at this URL proposed an rclone executor, `publish --dry-run`, and a
+> An earlier version of this record proposed an rclone executor, `publish --dry-run`, and a
 > separate `sow audit` command. None of those surfaces shipped in 0.4.0. SOW has no
 > rclone dependency, `publish` has no `--dry-run`, and `sow audit` is not a command.
 
 This page preserves the decision boundary so a historical proposal cannot be mistaken for the
 current product. The normative behavior is documented in
 [`sow publish`](/docs/command/publish/) and
-[Publication & Recovery](/docs/design/publication/).
+[Publication & Recovery](/blog/design/publication/).
 
 ## Decision
 
@@ -107,6 +113,6 @@ history.
 
 ## References
 
-- [Current Publication & Recovery model](/docs/design/publication/)
+- [Current Publication & Recovery model](/blog/design/publication/)
 - [Current `sow publish` command](/docs/command/publish/)
 - [Platforms & Integrations](/docs/reference/compatibility/)

@@ -5,8 +5,6 @@ description: "一份软件包、一个属主、纯元数据 APT/RPM 视图：正
 categories: [Feature]
 tags: [pool, dist, rpm, deb]
 url: "/zh/docs/feature/views/"
-aliases:
-  - "/docs/design/single-payload/"
 weight: 400
 icon: fa-solid fa-layer-group
 ---

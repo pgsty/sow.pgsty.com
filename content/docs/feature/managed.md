@@ -259,7 +259,7 @@ repos:
 ## Next
 
 - [Pool & Metadata Views](/docs/feature/views/) — what `build` actually writes
-- [Publication Model](/docs/design/publication/) — how a generation reaches a target
+- [Publication Model](/blog/design/publication/) — how a generation reaches a target
 - [Membership Policy](/docs/feature/policy/) — how `exclude` and `limit` decide what stays
 - [First Workspace](/docs/start/workspace/) — a ten-minute hands-on version of this page
 - [`sow.yml` reference](/docs/reference/config/) — the complete schema

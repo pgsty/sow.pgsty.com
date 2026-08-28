@@ -1,12 +1,18 @@
 ---
 title: "系统模型"
 linkTitle: "系统模型"
+date: 2026-08-08
+lastmod: 2026-08-24
+authors: [Vonng]
 description: "连接软件包、Dist、Generation 与发布目标的对象模型和状态迁移。"
 categories: [Design]
 tags: [repository, dist, pool, generation]
-url: "/zh/docs/design/model/"
-weight: 200
+url: "/zh/blog/design/model/"
+aliases:
+  - "/docs/design/model/"
+weight: 50
 icon: fa-solid fa-diagram-project
+draft: false
 ---
 
 SOW 刻意把模型分层：配置表达意图，数据库记录有主状态，公共树是确定性投影。

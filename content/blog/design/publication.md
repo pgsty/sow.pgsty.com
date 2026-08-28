@@ -1,12 +1,18 @@
 ---
 title: "Publication & Recovery"
 linkTitle: "Publication & Recovery"
+date: 2026-08-08
+lastmod: 2026-08-24
+authors: [Vonng]
 description: "The target-scoped state machine for publishing, recovering, retaining, and safely deleting repository objects."
 categories: [Design]
 tags: [publish, transaction, object-storage]
-url: "/docs/design/publication/"
-weight: 400
+url: "/blog/design/publication/"
+aliases:
+  - "/docs/design/publication/"
+weight: 40
 icon: fa-solid fa-arrows-rotate
+draft: false
 ---
 
 Building and publishing are separate state transitions. A build produces a target-neutral

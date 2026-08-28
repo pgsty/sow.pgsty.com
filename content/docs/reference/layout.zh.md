@@ -169,5 +169,5 @@ APT by-hash 条目让上一组元数据在可变指针最后替换时仍然可�
 ## 延伸阅读
 
 - [视图与单副本存储](/zh/docs/feature/views/)
-- [发布模型](/zh/docs/design/publication/)
+- [发布模型](/zh/blog/design/publication/)
 - [对外服务](/zh/docs/tutorial/serving/)
