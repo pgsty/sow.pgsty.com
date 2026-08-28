@@ -34,7 +34,7 @@ OINK or Docsy templates into this repository.
 
 ## Theme dependency
 
-OINK 0.6.1 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
+OINK 0.8.0 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
 composed by OINK from bilingual data. Docs and blog pages also render through the theme;
 the site keeps only product-specific data and templates.
 
@@ -61,7 +61,7 @@ make d
 
 ## Local development
 
-Install Hugo Extended 0.160.1 or newer, Go, and Git, then run the local server:
+Install Hugo Extended 0.160.1 or newer, Go 1.27.0 or newer, and Git, then run the local server:
 
 ```bash
 make s

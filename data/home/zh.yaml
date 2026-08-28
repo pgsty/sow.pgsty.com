@@ -23,7 +23,7 @@ hero:
   media:
     # Hero 放的是架构图而不是图标：媒体列要足够宽才读得清，同时文案列仍能容纳不换行的
     # 两行产品主张。小于 lg 时图中标注已经看不清，因此直接隐藏而不是继续缩小。
-    ratio: minmax(0, 1.2fr) minmax(300px, 0.8fr)
+    ratio: 1.2fr 0.8fr
     max_width: 440px
     hide_below: lg
   actions:
