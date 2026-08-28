@@ -11,8 +11,10 @@ weight: 10
 icon: fa-solid fa-compass-drafting
 sidebar_expanded: true
 blog_index: list
+images: [/images/blog/sow-design.webp]
+featured_image: wash
 cascade:
-  images: [/images/blog/sow-blog.webp]
+  images: [/images/blog/sow-design.webp]
   featured_image: wash
 ---
 

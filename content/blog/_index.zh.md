@@ -6,6 +6,8 @@ weight: 40
 type: blog
 sidebar_root_for: self
 sidebar_root_link_self: true
+images: [/images/blog/sow.webp]
+featured_image: wash
 
 outputs:
   - HTML
@@ -16,6 +18,8 @@ cascade:
   outputs:
     - HTML
     - print
+  images: [/images/blog/sow.webp]
+  featured_image: wash
   # OINK 0.6 page-end share bar, scoped to the blog. Every entry is a plain
   # intent link carrying only this page's permalink and title -- no SDK, no
   # iframe, no third-party script, no share counts -- plus a local copy button.
