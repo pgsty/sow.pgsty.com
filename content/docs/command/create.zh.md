@@ -17,7 +17,7 @@ icon: fa-solid fa-folder-tree
 ## 语法
 
 ```text
-sow create [DIR] [-j N] [--pigsty] [-S KEY [--overwrite]] [-T DUR | -N] [--json]
+sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite]] [-T DUR | -N] [--json]
 ```
 
 `DIR` 默认为当前目录。
@@ -39,6 +39,7 @@ sow create [DIR] [-j N] [--pigsty] [-S KEY [--overwrite]] [-T DUR | -N] [--json]
 | 参数 | 说明 | 默认 |
 |---|---|---|
 | `-j, --jobs N` | 唯一一次包哈希/解析扫描的并发 worker 数 | 逻辑 CPU 数 |
+| `--metadata-timestamp SECONDS` | RPM repomd 的 data 时间戳，非负 Unix 秒；不影响 DEB、包时间或 gzip 头 | `0` |
 | `--pigsty` | 启用 Pigsty 兼容清理与完成 marker | 关闭 |
 | `-S, --sign-with KEY` | 用 16/40/64 位十六进制 GPG key ID 给未签名 RPM 补签 | 关闭 |
 | `--overwrite` | 重签全部 RPM；必须与 `--sign-with` 同用 | 关闭 |
@@ -73,8 +74,7 @@ header/control，并保留完整解析结果。RPM XML 与 DEB `Packages` 都从
 
 ## 确定性输出与幂等
 
-对给定输入集，渲染出的元数据是字节稳定的：gzip 输出确定，`repomd.xml` 写 `<revision>0</revision>`
-与 timestamp `0`。对未变化的目录重跑 `create` 不写任何字节，报告 `noop=true`：
+对给定输入集和显式时间参数，渲染出的元数据是字节稳定的：gzip 输出确定，`repomd.xml` 写 `<revision>0</revision>`，data timestamp 默认为 `0`，可用 `--metadata-timestamp` 显式指定。使用相同参数重跑未变化的目录不会改写文件，报告 `noop=true`：
 
 ```console
 sow create /srv/flat
@@ -83,6 +83,20 @@ created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=false recove
 sow create /srv/flat
 created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=true recovered=false
 ```
+
+## 已有 YUM 仓库的发布时间
+
+EL7 的 YUM 会拒收 data 最大时间比缓存更早的 repomd。因此迁移已有在线仓库时，不要使用默认的 `0`；给本次发布指定一个不低于历史最大值的时间，真实内容更新建议严格递增：
+
+```bash
+sow create /srv/flat --metadata-timestamp 1790049000
+```
+
+这里的数字是示例，生产值由维护流程选择并记录。只修改 revision 或文件 mtime 无效。参数仅控制 RPM repomd 的 data 时间，不改包字节、三份 XML.gz 或 DEB 索引；不能代替 repomd 的 GPG 签名。改动 repomd 后，调用者应重新签署 `.asc`，SOW create 不负责仓库入口签名。
+
+SOW 不自动读取当前时钟、历史备份或远端缓存；维护包装应比较真实索引内容，无变化时复用原 repomd 与有效签名，真实更新时使用 `max(当前秒, 历史高水位+1)`。第一次从 timestamp=0 修复时，要把可信旧备份的时间纳入下限。恢复旧包集合也属于新发布，不应把索引时间倒退。
+
+该参数仅用于 plain `create`，不改变 managed build 或 RPM leaf export 的时间语义。
 
 ## repo_complete 门禁
 

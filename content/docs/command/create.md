@@ -18,7 +18,7 @@ and RPM signing with `--sign-with`.
 ## Synopsis
 
 ```text
-sow create [DIR] [-j N] [--pigsty] [-S KEY [--overwrite]] [-T DUR | -N] [--json]
+sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite]] [-T DUR | -N] [--json]
 ```
 
 `DIR` defaults to the current directory.
@@ -42,6 +42,7 @@ replaces index paths it owns; unknown files are left alone.
 | Flag | Description | Default |
 |---|---|---|
 | `-j, --jobs N` | Parallel workers for the single package hash/parse pass | logical CPU count |
+| `--metadata-timestamp SECONDS` | Nonnegative Unix seconds for RPM repomd data timestamps; leaves DEB, package times and gzip headers unchanged | `0` |
 | `--pigsty` | Enable Pigsty compatibility cleanup and completion marker | off |
 | `-S, --sign-with KEY` | Sign unsigned RPMs with a 16/40/64-hex GPG key ID | off |
 | `--overwrite` | Re-sign every RPM; requires `--sign-with` | off |
@@ -83,8 +84,9 @@ signed RPM necessarily add reads for packages that are modified.
 
 ## Deterministic output and idempotence
 
-The rendered metadata is byte-stable for a given input set: gzip output is deterministic, `repomd.xml`
-carries `<revision>0</revision>` and timestamp `0`. Running `create` twice on an unchanged directory
+The rendered metadata is byte-stable for a given input set and timestamp: gzip output is deterministic.
+`repomd.xml` carries `<revision>0</revision>` and data timestamps defaulting to `0`;
+`--metadata-timestamp` overrides the latter. Repeating the same options on an unchanged directory
 rewrites nothing and reports `noop=true`:
 
 ```console
@@ -107,6 +109,20 @@ plain: marker gate /srv/pigsty/repo_complete: repo_complete exists; use --pigsty
 
 Either re-run with `--pigsty` (which withdraws and republishes the marker in its documented order)
 or remove the marker yourself.
+
+## Publication time for existing YUM repositories
+
+The default remains a deterministic zero data timestamp. Pass `--metadata-timestamp SECONDS` to set an explicit publication time for RPM metadata. The same packages and time produce the same output; changing only the time changes repomd, leaving its compressed XML streams and RPM bytes unchanged. DEB output is unaffected.
+
+EL7 YUM rejects a repomd whose maximum data timestamp is older than its cached copy. When migrating an existing repository, the publisher must choose a time at least as large as every historical value clients may have seen. Updating revision or filesystem mtime alone does not fix this check.
+
+```bash
+sow create /srv/flat --metadata-timestamp 1790049000
+```
+
+The number is an example, not a universal migration value. A maintenance wrapper should preserve the existing repomd and valid signature when metadata content is unchanged, and advance the time for actual updates. Retain a publication high-water mark outside the upload tree; include trusted pre-migration backups when repairing a repository already reset to zero. Rolling back package content is a new publication and must not roll the clock back.
+
+After changing repomd, the caller must regenerate its detached GPG signature. `create` does not sign repomd. This option does not change managed build or RPM leaf export timestamp semantics.
 
 ## --pigsty
 
