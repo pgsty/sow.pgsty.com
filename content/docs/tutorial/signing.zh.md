@@ -185,9 +185,16 @@ key 必须是恰好 16、40 或 64 位十六进制字符，不能带 `0x` 前缀
 `rpm`/GPG 使用。不带 `--overwrite` 时，已有签名的 RPM 保持字节不变；带上该参数则显式重签
 所有 RPM。SOW 先签署私有 staged 副本，再替换包体与元数据。
 
+已有签名并不等于由 `--sign-with` 指定的密钥签署。如果要求全部 RPM 都使用自己的密钥，
+应逐包验证，在候选副本上选择性重签不匹配的包；也可以明确使用 `--overwrite` 重签全部包。
+
+已有在线 YUM 仓库还应保留发布时间。SOW 0.5.0 新增 `--metadata-timestamp`；最后一次
+`create` 完成后，发布前应单独签署并验证新的 `repomd.xml`。包签名与索引签名是两项独立
+检查。完整顺序及带缓存客户端验收见 [YUM 迁移指南](/zh/docs/tutorial/yum-migration/)。
+
 ## 更换密钥
 
-改变 key 引用或解析出的指纹会让相关 Dist 变为 dirty。元数据 key 可以先分发新公钥，再重建、
+在 Managed 模式中，改变 key 引用或解析出的指纹会让相关 Dist 变为 dirty。元数据 key 可以先分发新公钥，再重建、
 校验并切换客户端。RPM 包 key 必须分阶段轮换：Package Object 不可变，`build` 遇到不满足新策略的
 既有 RPM 会拒绝，而不是原地重签。旧软件包坐标尚未下架或由新 Release 替代前，应使用 `fill`
 并把旧公钥保留在 `trusted_keys`。最后在目标环境做真实客户端验收。

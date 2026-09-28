@@ -1,6 +1,6 @@
 ---
 title: "SOW：Software Object Warehouse"
-description: "一份入仓，处处交付。SOW 是 Pigsty 出品的自包含 APT / YUM 软件仓库管理器。"
+description: "SOW 0.5.0 从本地软件包生成 YUM 与 APT 索引。可直接创建平面仓库，也可托管软件包策略、签名、快照与增量发布。"
 url: "/zh/"
 weight: 1
 type: home

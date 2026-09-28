@@ -9,13 +9,18 @@ weight: 200
 icon: fa-solid fa-graduation-cap
 ---
 
-Each tutorial starts from a new workspace. Commands are intended to be run in order;
+The tutorials cover new Managed workspaces and migration of existing Plain repositories.
+Commands are intended to be run in order;
 replace uppercase placeholders and package paths for your environment.
 
 If you have not installed SOW yet, start with [Installation](/docs/start/install/) and
-[Quick Start](/docs/start/quickstart/). The tutorials below cover the managed repository path.
+[Quick Start](/docs/start/quickstart/).
 
 {{< cards >}}
+{{< card title="Migrate an Existing YUM Repository" link="/docs/tutorial/yum-migration/" >}}
+Replace a flat repository's metadata generator while preserving publication time, signatures,
+and compatibility with clients that already have cached metadata.
+{{< /card >}}
 {{< card title="Build a YUM Repository" link="/docs/tutorial/yum-repo/" >}}
 A managed RPM repository with per-architecture views, `noarch` projection, debuginfo filtering,
 version limits, and a working `dnf` client configuration.
@@ -42,6 +47,7 @@ installation, rolling updates, Stable promotion, and monthly snapshots.
 
 | Your situation | Start here |
 |---|---|
+| You already maintain a flat RPM directory with createrepo_c | [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/) |
 | You ship RPMs to dnf clients | [Build a YUM Repository](/docs/tutorial/yum-repo/) |
 | You ship DEBs for Debian or Ubuntu | [Build an APT Repository](/docs/tutorial/apt-repo/) |
 | You need signed metadata or signed RPM payloads | [Sign Your Repository](/docs/tutorial/signing/) |
@@ -57,6 +63,7 @@ Shell blocks contain commands without a `$` prefix so you can copy a whole block
 Output appears in a separate block below the command, or as a comment when it is one line.
 Where a command needs a value you must substitute, it appears in `UPPERCASE`.
 
-Every tutorial ends with a verification step. `sow check` returning `0` proves the selected
-Repository is complete and matches the recorded Generation. A nonzero result is not a release
-artifact.
+Every tutorial includes verification. For Managed mode, `sow check` returning `0` confirms
+that the selected Repository is complete and matches the recorded Generation. Plain mode
+uses metadata and signature checks plus real client acceptance, as described in the
+migration guide; `sow check` does not audit a flat directory.

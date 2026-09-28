@@ -9,12 +9,15 @@ weight: 200
 icon: fa-solid fa-graduation-cap
 ---
 
-这里的教程都从全新工作区开始。请按顺序执行命令，并按你的环境替换大写占位符与包路径。
+这里的教程涵盖新建 Managed 工作区与迁移已有 Plain 仓库。请按顺序执行命令，并按你的环境
+替换大写占位符与包路径。
 
 如果还没装 SOW，先看[安装](/zh/docs/start/install/)与[快速上手](/zh/docs/start/quickstart/)。
-下面的教程介绍 Managed 仓库路径。
 
 {{< cards >}}
+{{< card title="迁移现有 YUM 仓库" link="/zh/docs/tutorial/yum-migration/" >}}
+替换平面仓库的元数据生成工具，同时保留发布时间、签名，以及与已有元数据缓存客户端的兼容性。
+{{< /card >}}
 {{< card title="搭建 YUM 仓库" link="/zh/docs/tutorial/yum-repo/" >}}
 托管 RPM 仓库：分架构视图、noarch 中性投影、debuginfo 过滤、版本数量上限，以及可用的
 dnf 客户端配置。
@@ -39,6 +42,7 @@ Stable 晋升与月度快照。
 
 | 你的处境 | 从这里开始 |
 |---|---|
+| 已使用 createrepo_c 维护平面 RPM 目录 | [迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/) |
 | 你要向 dnf 客户端分发 RPM | [搭建 YUM 仓库](/zh/docs/tutorial/yum-repo/) |
 | 你要为 Debian 或 Ubuntu 分发 DEB | [搭建 APT 仓库](/zh/docs/tutorial/apt-repo/) |
 | 需要已签名元数据或已签名 RPM 包体 | [仓库签名](/zh/docs/tutorial/signing/) |
@@ -53,5 +57,6 @@ YUM 与 APT 两篇是彼此独立的全新 Workspace 路径。实际使用中，
 Shell 代码块里的命令不带 `$` 提示符，方便整块复制。输出单独成块放在命令下方，只有一行时用注释
 标注。需要你自行替换的值一律写成 `大写`。
 
-每篇教程结尾都有验证步骤。`sow check` 返回 `0`，才证明所选 Repository 完整且与记录的
-Generation 一致；非零结果不应作为交付物。
+每篇教程都有验证步骤。Managed 模式通过 `sow check` 返回 `0`，确认所选 Repository 完整且
+与记录的 Generation 一致。Plain 模式按迁移指南验证元数据、签名和真实客户端行为；
+`sow check` 不用于检查平面目录。

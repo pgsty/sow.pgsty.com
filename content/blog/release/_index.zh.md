@@ -19,4 +19,7 @@ cascade:
   featured_image: wash
 ---
 
-SOW 发布注记涵盖功能、性能、正确性、打包与验证，并按发布时间从新到旧排列。
+SOW 发布注记涵盖功能、性能、正确性、打包与验证，并按版本从新到旧排列。
+
+[v0.5.0](/zh/blog/release/sow-v0.5.0/) 为已有 Plain YUM 仓库新增显式发布时间；
+此前 Managed 校验与迁移方面的改进见 [v0.4.0](/zh/blog/release/sow-v0.4.0/)。

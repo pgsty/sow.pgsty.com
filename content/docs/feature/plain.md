@@ -22,7 +22,8 @@ Four rules define Plain mode:
 3. **One cheap final check.** Immediately before publication, SOW relists the top-level package set and compares `stat` facts with the scan snapshot. It does not compute a second package SHA-256.
 4. **Failure means rebuild.** There is no Plain transaction journal, pre-image, roll-forward, or rollback. A failure may leave partially replaced derived metadata. The next `sow create` discards owned temporary residue and rebuilds from the package directory.
 
-For identical input bytes, output remains deterministic and a repeat reports `noop=true`.
+For identical input bytes and options, including the metadata timestamp, output remains
+deterministic and a repeat reports `noop=true`.
 
 ## The one-pass pipeline
 
@@ -85,7 +86,18 @@ When one format disappears, SOW removes its known derived outputs. A rerun also 
 
 ## Determinism and no-op
 
-`repomd.xml` always uses revision and timestamps `0`; gzip headers are fixed; ordering is canonical. A given package set therefore produces byte-identical metadata. Before publication SOW compares the staged metadata with live metadata. If package cleanup/signing is unnecessary and every output already matches, it removes the private stage without replacing public inodes and returns `noop=true`.
+`repomd.xml` uses revision `0` and defaults to zero data timestamps. Starting with 0.5,
+`--metadata-timestamp SECONDS` can set an explicit data timestamp. Gzip headers stay fixed
+and ordering stays canonical, so the same package set and options produce byte-identical
+metadata. Before publication SOW compares the staged metadata with live metadata. If
+package cleanup/signing is unnecessary and every output already matches, it removes the
+private stage without replacing public inodes and returns `noop=true`.
+
+Changing only the timestamp changes `repomd.xml`, not RPM bytes, compressed XML, package
+timestamps, or DEB output. The caller manages publication history and detached index
+signatures. For an existing online YUM repository, follow the
+[migration guide](/docs/tutorial/yum-migration/) to avoid regressing the timestamp seen by
+cached EL7 clients; the default `0` is not a suitable replacement for a positive timestamp.
 
 The JSON field `recovered` is always `false` because Plain create never performs journal recovery.
 

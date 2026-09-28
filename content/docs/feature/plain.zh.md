@@ -22,7 +22,7 @@ Plain 模式由四条规则定义：
 3. **收尾只做一次便宜校验。** 发布前重新列出顶层包集合，把 `stat` 事实与扫描快照比较，不再计算第二遍包 SHA-256。
 4. **失败就重建。** Plain 没有事务 journal、pre-image、前滚或回滚。失败可能留下部分已替换的派生元数据；下一次 `sow create` 丢弃自有临时残留，按当前包目录完整重建。
 
-输入字节不变时，输出仍然确定，重复运行报告 `noop=true`。
+输入字节与参数（包括元数据时间戳）均不变时，输出仍然确定，重复运行报告 `noop=true`。
 
 ## 单遍流水线
 
@@ -85,7 +85,15 @@ worker 完成先后不会影响结果：解析事实始终按规范 basename / �
 
 ## 确定性与 no-op
 
-`repomd.xml` 的 revision 与 timestamp 固定为 `0`，gzip header 固定，排序规范化。因此同一包集合生成逐字节一致的元数据。发布前 SOW 会比较 stage 与 live 元数据；如果无需清理/签名且所有输出已经相同，就只删私有 stage，不替换公开 inode，并返回 `noop=true`。
+`repomd.xml` 的 revision 固定为 `0`，data 时间戳默认为 `0`。从 0.5 开始，可以用
+`--metadata-timestamp SECONDS` 显式指定 data 时间。gzip header 仍固定，排序仍规范化，因此
+同一包集合与参数生成逐字节一致的元数据。发布前 SOW 会比较 stage 与 live 元数据；如果无需
+清理/签名且所有输出已经相同，就只删私有 stage，不替换公开 inode，并返回 `noop=true`。
+
+只改变时间戳时，变化仅在 `repomd.xml`，不影响 RPM 字节、压缩 XML、包时间或 DEB 输出。
+调用者负责保存发布历史和签署索引。迁移已有在线 YUM 仓库时，请按
+[迁移指南](/zh/docs/tutorial/yum-migration/)处理，避免时间倒退导致带缓存的 EL7 客户端拒收；
+已有正数时间戳的索引不适合直接替换成默认的 `0`。
 
 Plain create 不做 journal 恢复，因此 JSON 字段 `recovered` 始终为 `false`。
 

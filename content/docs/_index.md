@@ -20,6 +20,10 @@ SOW is Pigsty's self-contained package repository manager. `sow create` turns th
 DEB files in a directory into a usable flat repository. Managed workspaces add package
 membership, policy, signing, immutable generations, audit history, and publication targets.
 
+These docs cover **SOW 0.5.0**. See the [release notes](/blog/release/sow-v0.5.0/) for
+the new publication-time option and the [upgrade guide](/docs/start/install/#upgrade-from-04-to-05)
+for an existing Managed workspace.
+
 Press {{< kbd "Ctrl" "K" >}} (or {{< kbd "⌘" "K" >}} on macOS) to search this
 site. Press {{< kbd "/" >}} outside an input to open command mode directly.
 
@@ -36,6 +40,7 @@ site. Press {{< kbd "/" >}} outside an input to open command mode directly.
 | Goal | Start here |
 |---|---|
 | Index a package directory now | [Quick Start](/docs/start/quickstart/) |
+| Replace an existing createrepo_c workflow | [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/) |
 | Maintain a curated long-lived repository | [First Workspace](/docs/start/workspace/) |
 | Build a complete YUM or APT repository | [Tutorials](/docs/tutorial/) |
 | Look up exact CLI behavior | [Commands](/docs/command/) |

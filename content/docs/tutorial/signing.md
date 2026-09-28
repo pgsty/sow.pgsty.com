@@ -193,9 +193,19 @@ matching private key must be usable by the ambient `rpm`/GPG setup. Without `--o
 already signed RPMs keep their bytes; adding `--overwrite` explicitly re-signs every RPM.
 SOW signs private staged copies before replacing package bytes and metadata.
 
+An existing signature does not mean the RPM is signed by the key passed to `--sign-with`.
+If every package must use your key, verify all RPMs against that key and selectively re-sign
+mismatches in a candidate copy, or deliberately use `--overwrite` for the whole set.
+
+For an existing online YUM repository, also preserve publication time. SOW 0.5.0
+adds `--metadata-timestamp`; after the final `create`, sign and verify the new
+`repomd.xml` separately before exposing it. Package signing and index signing are independent
+checks. The [YUM migration guide](/docs/tutorial/yum-migration/) gives the full sequence,
+including acceptance with cached clients.
+
 ## Key changes
 
-Changing a key reference or resolved fingerprint marks affected Dists dirty. A metadata
+In Managed mode, changing a key reference or resolved fingerprint marks affected Dists dirty. A metadata
 key can be changed by distributing the new public key, rebuilding, checking, and then
 switching client enforcement. RPM package keys need a staged rollover: Package Objects
 are immutable, and `build` rejects stored RPMs that do not satisfy the new policy instead

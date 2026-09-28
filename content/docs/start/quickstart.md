@@ -128,8 +128,14 @@ Change the package files and run the same command again:
 sow create /srv/repo
 ```
 
-The directory contents are the complete Plain-mode state. With unchanged package bytes,
-the generated metadata is deterministic and a repeat run reports `noop=true`.
+The directory contents are the complete Plain-mode state. With unchanged package bytes
+and options, including any explicit metadata timestamp, the generated metadata is
+deterministic and a repeat run reports `noop=true`.
+
+For a YUM repository already used by clients, preserve its publication history when
+switching generators. SOW 0.5.0 adds `--metadata-timestamp` for that purpose;
+the default remains `0`. Follow [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/)
+for backup, signing, and acceptance with cached clients.
 
 For automation, request the versioned JSON envelope:
 

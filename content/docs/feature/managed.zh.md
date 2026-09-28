@@ -93,7 +93,8 @@ $ find .sow | sort
 缓存与指纹只属于私有实现状态，不改变公共 `pool/ + dists/` 布局。不要手工编辑数据库或
 `PRAGMA user_version`。v0.3 Repository 必须先备份，再通过
 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 显式升级，之后才能执行普通 0.4
-读写。全新 0.4 Repository 已使用当前 Schema；其他维护只在 SOW 诊断明确指出时执行。
+或 0.5 读写。由 0.4 或 0.5 创建的 Repository 已使用 Schema v12，从 0.4 升级到 0.5 不需要
+新增迁移。其他维护只在 SOW 诊断明确指出时执行。
 
 ## `sow.yml` 驱动一切
 

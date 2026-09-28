@@ -21,8 +21,8 @@ macOS 的 `amd64`、`arm64`；Linux 另外提供 RPM 与 DEB 安装包。不支�
 
 ```bash
 # Linux amd64
-grep 'sow_.*_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
-tar -xzf sow_*_linux_amd64.tar.gz
+grep '  sow_0.5.0_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
+tar -xzf sow_0.5.0_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
@@ -35,8 +35,8 @@ macOS 选择 `darwin_amd64` 或 `darwin_arm64`，并把 `sha256sum -c -` 换成
 Linux 软件包使用 `1PGSTY` Release 后缀：
 
 ```bash
-sudo rpm -Uvh ./sow-*-1PGSTY.x86_64.rpm
-sudo apt install ./sow_*-1PGSTY_amd64.deb
+sudo rpm -Uvh ./sow-0.5.0-1PGSTY.x86_64.rpm
+sudo apt install ./sow_0.5.0-1PGSTY_amd64.deb
 ```
 
 只执行符合本机发行版与架构的那条命令。RPM 把 License 安装到
@@ -44,14 +44,14 @@ sudo apt install ./sow_*-1PGSTY_amd64.deb
 
 ## 从源码构建
 
-Go Module 声明使用 Go 1.27.0，元数据生成不需要 C 工具链。请把 `vX.Y.Z` 替换为下载页
-链接的源码 Tag：
+Go Module 声明使用 Go 1.27.0，元数据生成不需要 C 工具链。使用与固定版本下载一致的
+`v0.5.0` 源码 Tag：
 
 ```bash
 git clone https://github.com/pgsty/sow.git
 cd sow
 set -euo pipefail
-SOW_TAG=vX.Y.Z
+SOW_TAG=v0.5.0
 git checkout "$SOW_TAG"
 SOW_VERSION="${SOW_TAG#v}"
 CGO_ENABLED=0 go build -trimpath \
@@ -72,13 +72,25 @@ sow help
 `sow version` 输出产品版本、目标 OS/架构与构建 Go 工具链；`sow help` 列出命令树。
 归档中还包含 `README.md`、`CHANGELOG.md` 与 Apache-2.0 `LICENSE`。
 
+## 从 0.4 升级到 0.5
+
+通过[下载页](/zh/download/)安装 SOW 0.5.0，本次变更见
+[0.5.0 发布注记](/zh/blog/release/sow-v0.5.0/)。
+
+已有 0.4 Managed 工作区继续使用 Schema v12、`sow/v3` 配置与原有公共布局。替换二进制前
+照常备份工作区；本次升级不需要额外执行 `sow repo migrate`。
+
+Plain 仓库新增 `create --metadata-timestamp`，请检查实际二进制的 `create --help` 是否包含
+该参数。默认值仍为 `0`，因此仅升级二进制不会修复已发布 YUM 仓库的时间戳。替换已有维护
+流程前，请按 [YUM 迁移指南](/zh/docs/tutorial/yum-migration/)操作。
+
 ## 升级 0.3 Managed Workspace
 
-SOW 0.4 引入内部数据库 Schema v11 与 v12。公共布局和 `schema: sow/v3` 配置标识均不改变，
+SOW 0.4 引入了内部数据库 Schema v11 与 v12，0.5 继续使用 v12。公共布局和 `schema: sow/v3` 配置标识均不改变，
 但每个既有 v0.3 Repository 都必须在普通读写前显式迁移。备份前先停止 Workspace 全部写入：
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-0.4.0
+cp -a /srv/sow /srv/sow.backup-before-upgrade
 sow repo migrate REPOSITORY -C /srv/sow
 sow check -r REPOSITORY -C /srv/sow
 ```

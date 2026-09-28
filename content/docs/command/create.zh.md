@@ -12,7 +12,11 @@ icon: fa-solid fa-folder-tree
 
 `sow create` 把一个已经放着 `.rpm` / `.deb` 的目录变成平面仓库（flat repository）：在包旁边写出索引
 文件。它就是 Plain 平面模式的全部——没有 `sow.yml`、没有 SQLite、不做工作区发现。本页讲清单遍扫描
-契约、`--pigsty` 完成门禁，以及 `--sign-with` 的 RPM 包签名。
+契约、RPM 发布时间、`--pigsty` 完成门禁，以及 `--sign-with` 的 RPM 包签名。
+
+> [!NOTE] 版本要求
+> `--metadata-timestamp` 要求 [SOW 0.5.0](/zh/blog/release/sow-v0.5.0/) 或更新版本。
+> 切换已有维护脚本前，请检查实际二进制的 `create --help`。
 
 ## 语法
 
@@ -39,7 +43,7 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 | 参数 | 说明 | 默认 |
 |---|---|---|
 | `-j, --jobs N` | 唯一一次包哈希/解析扫描的并发 worker 数 | 逻辑 CPU 数 |
-| `--metadata-timestamp SECONDS` | RPM repomd 的 data 时间戳，非负 Unix 秒；不影响 DEB、包时间或 gzip 头 | `0` |
+| `--metadata-timestamp SECONDS` | RPM repomd 的 data 时间戳，取值 `0` 至 `9223372036854775807` 的 Unix 秒；不影响 DEB、包时间或 gzip 头 | `0` |
 | `--pigsty` | 启用 Pigsty 兼容清理与完成 marker | 关闭 |
 | `-S, --sign-with KEY` | 用 16/40/64 位十六进制 GPG key ID 给未签名 RPM 补签 | 关闭 |
 | `--overwrite` | 重签全部 RPM；必须与 `--sign-with` 同用 | 关闭 |
@@ -74,7 +78,7 @@ header/control，并保留完整解析结果。RPM XML 与 DEB `Packages` 都从
 
 ## 确定性输出与幂等
 
-对给定输入集和显式时间参数，渲染出的元数据是字节稳定的：gzip 输出确定，`repomd.xml` 写 `<revision>0</revision>`，data timestamp 默认为 `0`，可用 `--metadata-timestamp` 显式指定。使用相同参数重跑未变化的目录不会改写文件，报告 `noop=true`：
+不强制重签软件包时，对给定输入集和显式时间参数，渲染出的元数据是字节稳定的：gzip 输出确定，`repomd.xml` 写 `<revision>0</revision>`，data timestamp 默认为 `0`，可用 `--metadata-timestamp` 显式指定。使用相同参数重跑未变化的目录不会改写文件，报告 `noop=true`：
 
 ```console
 sow create /srv/flat
@@ -97,6 +101,8 @@ sow create /srv/flat --metadata-timestamp 1790049000
 SOW 不自动读取当前时钟、历史备份或远端缓存；维护包装应比较真实索引内容，无变化时复用原 repomd 与有效签名，真实更新时使用 `max(当前秒, 历史高水位+1)`。第一次从 timestamp=0 修复时，要把可信旧备份的时间纳入下限。恢复旧包集合也属于新发布，不应把索引时间倒退。
 
 该参数仅用于 plain `create`，不改变 managed build 或 RPM leaf export 的时间语义。
+
+备份、发布时间记录、签名与带缓存客户端验收的完整流程，见[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)。
 
 ## repo_complete 门禁
 
@@ -212,11 +218,13 @@ sow create /srv/flat --json
 {"schema":"sow.cli/v1","command":"create","ok":true,"repository":null,"operation":null,"result":{"dir":"/srv/flat","rpm":3,"deb":1,"kept":["centos-release-6-0.el6.centos.5.x86_64.rpm","centos-release-7-2.1511.el7.centos.2.10.x86_64.rpm","epel-release-7-5.noarch.rpm","libpq5_18.3-1_amd64.deb"],"removed":[],"marker":false,"noop":true,"recovered":false},"errors":[]}
 ```
 
-用八个 worker 替换 Pigsty 现有的平面构建：
+用八个 worker 构建 Pigsty 平面仓库，并使用根据发布历史选定的时间：
 
 ```bash
-sow create /www/pigsty -j 8 --pigsty
+sow create /www/pigsty -j 8 --pigsty --metadata-timestamp "${PUBLISH_TIME:?Set the verified publication time}"
 ```
+
+调用者负责记录该时间，并在客户端要求时为生成的 `repomd.xml` 签名。
 
 失败时的 envelope：
 
@@ -231,7 +239,7 @@ sow create /srv/empty --json
 |---|---|
 | `0` | 索引写出成功，或输入未变化产生 no-op |
 | `1` | 目录不可读或不存在、包解析失败、渲染失败、签名工具失败 |
-| `2` | 用法错误——`--overwrite` 未配 `--sign-with`、key 格式非法、`--no-wait` 与非零 `--timeout` 同用 |
+| `2` | 用法错误——时间戳非法或重复指定、`--overwrite` 未配 `--sign-with`、key 格式非法、`--no-wait` 与非零 `--timeout` 同用 |
 | `4` | 目录写锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 发布前输入集合/stat 变化，或受控输出路径未通过完整性检查 |
 | `6` | 未找到受支持的包、撞上 `repo_complete` 门禁、对 DEB-only 目录用 `--sign-with`、坐标冲突 |
@@ -242,3 +250,4 @@ sow create /srv/empty --json
 - [快速上手](/zh/docs/start/quickstart/) —— 五分钟平面仓库演练
 - [仓库布局](/zh/docs/reference/layout/) —— 平面目录树长什么样
 - [仓库签名](/zh/docs/tutorial/signing/) —— 生成与使用签名钥
+- [迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/) —— 替换已有的元数据生成流程

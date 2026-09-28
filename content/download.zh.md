@@ -20,6 +20,7 @@ search_boost: 1.5
 
 可以用 `apt install sow` 或 `dnf install sow` 从 Pigsty infra 软件源安装 SOW，也可以使用
 固定版本的 RPM / DEB 安装包、面向 Linux 与 macOS（`amd64` 与 `arm64`）的 `tar.gz` 归档，
-或者从某个 Tag 的源码自行构建。每条路径安装的都是同一个自包含可执行文件；每个已发布制品
+或者从某个 Tag 的源码自行构建。固定路径使用 SOW 0.5.0，Pigsty 软件源属于滚动渠道。
+不同目标平台的构建提供一致的命令接口；每个已发布制品
 都在 `SHA256SUMS` 中列出 SHA-256 摘要。安装完成后执行 `sow version` 与 `sow help`，
 然后把 `sow create` 指向一个存放软件包的目录。

@@ -18,14 +18,14 @@ sections:
 hero:
   eyebrow: Download matrix
   title: Download SOW
-  desc: '**One self-contained binary, five ways to get it.** Every route installs the same executable and the same repository semantics, so choose by who owns the lifecycle on that host — not by feature set.'
-  note: SOW 0.4.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
+  desc: '**One self-contained CLI, five installation paths.** Choose a package or archive for your operating system and architecture, or build from source. Pinned downloads use SOW 0.5.0; the Pigsty repository follows its own update schedule.'
+  note: SOW 0.5.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
   title_size: 3.4rem
   actions:
-    - label: Latest GitHub release
-      url: 'https://github.com/pgsty/sow/releases/latest'
+    - label: SOW 0.5.0 on GitHub
+      url: 'https://github.com/pgsty/sow/releases/tag/v0.5.0'
       icon: fa-brands fa-github
       style: primary
       external: true
@@ -37,7 +37,7 @@ hero:
 download:
   eyebrow: Install matrix
   title: Pick the route that matches the host
-  desc: 'Commands, links, and digests all come from the release record, so they cannot drift from the artifacts they name. The Pigsty repository tracks a rolling channel; every other route pins this exact tag.'
+  desc: 'Commands and links use the selected release version. Verify downloaded files against SHA256SUMS from that same release. The Pigsty repository is a rolling channel; the other paths pin the version shown above.'
   keys: [sow]
 
 next:

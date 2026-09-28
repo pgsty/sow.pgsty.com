@@ -113,8 +113,8 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-这是专用维护命令，不属于全新的 0.4 Managed 工作流。由 SOW 0.4 创建的 Repository 已经使用
-当前单包体布局与 Schema。
+这是专用维护命令，不属于全新的 0.5 Managed 工作流。由 SOW 0.4 或 0.5 创建的 Repository
+已经使用当前单包体布局与 Schema v12，从 0.4 升级到 0.5 无需再次迁移。
 
 但从既有 v0.3 Workspace 升级时，迁移是强制步骤：先停止全部 Workspace 写入并完成备份，再在
 执行普通读写之前逐个迁移所有已配置 Repository。

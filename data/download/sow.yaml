@@ -157,17 +157,17 @@ channels:
 
   - id: assets
     kind: pinned
-    title: Release assets
-    title_zh: 发布制品
+    title: SHA256SUMS
+    title_zh: SHA256SUMS
     icon: fa-solid fa-shield-halved
-    url: https://github.com/pgsty/sow/releases/tag/${tag}
+    url: https://github.com/pgsty/sow/releases/download/${tag}/SHA256SUMS
     note: >-
-      Every artifact this release publishes, with its SHA-256 digest. Download
-      `SHA256SUMS` from the same release and verify the one line that names your
-      file before you install it.
+      The release's `SHA256SUMS` lists the exact SHA-256 digest of each archive,
+      RPM, and DEB. Download it alongside your artifact and verify the matching
+      entry before installation. Keep the file name and release version together.
     note_zh: >-
-      本次 Release 发布的全部制品及其 SHA-256 摘要。安装前请从同一个 Release 下载
-      `SHA256SUMS`，并只校验与所下载文件对应的那一行。
+      每个归档、RPM 与 DEB 的准确 SHA-256 摘要都记录在该 Release 的 `SHA256SUMS` 中。
+      安装前随制品下载此文件，并校验对应条目，确保文件名与 Release 版本一致。
     steps:
       - title: Verify one artifact
         title_zh: 校验单个制品
@@ -180,4 +180,4 @@ channels:
           grep "  $ASSET$" SHA256SUMS | sha256sum -c -
           # macOS
           grep "  $ASSET$" SHA256SUMS | shasum -a 256 -c -
-    checksums_src: release/sow-checksums.txt
+    # Use the matching release's SHA256SUMS; never reuse a previous release's digests.

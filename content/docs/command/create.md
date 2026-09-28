@@ -12,8 +12,12 @@ icon: fa-solid fa-folder-tree
 
 `sow create` turns a directory that already contains `.rpm` and `.deb` files into a flat repository
 by writing indexes next to the packages. It is the whole of Plain mode: no `sow.yml`, no SQLite, no
-Workspace discovery. This page covers the one-pass scan contract, the `--pigsty` completion gate,
-and RPM signing with `--sign-with`.
+Workspace discovery. This page covers the one-pass scan contract, explicit RPM publication time,
+the `--pigsty` completion gate, and RPM signing with `--sign-with`.
+
+> [!NOTE] Version availability
+> `--metadata-timestamp` requires [SOW 0.5.0](/blog/release/sow-v0.5.0/) or later.
+> Check the exact binary's `create --help` before switching an existing maintenance script.
 
 ## Synopsis
 
@@ -42,7 +46,7 @@ replaces index paths it owns; unknown files are left alone.
 | Flag | Description | Default |
 |---|---|---|
 | `-j, --jobs N` | Parallel workers for the single package hash/parse pass | logical CPU count |
-| `--metadata-timestamp SECONDS` | Nonnegative Unix seconds for RPM repomd data timestamps; leaves DEB, package times and gzip headers unchanged | `0` |
+| `--metadata-timestamp SECONDS` | Unix seconds from `0` to `9223372036854775807` for RPM repomd data timestamps; leaves DEB, package times and gzip headers unchanged | `0` |
 | `--pigsty` | Enable Pigsty compatibility cleanup and completion marker | off |
 | `-S, --sign-with KEY` | Sign unsigned RPMs with a 16/40/64-hex GPG key ID | off |
 | `--overwrite` | Re-sign every RPM; requires `--sign-with` | off |
@@ -84,7 +88,8 @@ signed RPM necessarily add reads for packages that are modified.
 
 ## Deterministic output and idempotence
 
-The rendered metadata is byte-stable for a given input set and timestamp: gzip output is deterministic.
+Without forced package re-signing, the rendered metadata is byte-stable for a given input set
+and timestamp: gzip output is deterministic.
 `repomd.xml` carries `<revision>0</revision>` and data timestamps defaulting to `0`;
 `--metadata-timestamp` overrides the latter. Repeating the same options on an unchanged directory
 rewrites nothing and reports `noop=true`:
@@ -123,6 +128,9 @@ sow create /srv/flat --metadata-timestamp 1790049000
 The number is an example, not a universal migration value. A maintenance wrapper should preserve the existing repomd and valid signature when metadata content is unchanged, and advance the time for actual updates. Retain a publication high-water mark outside the upload tree; include trusted pre-migration backups when repairing a repository already reset to zero. Rolling back package content is a new publication and must not roll the clock back.
 
 After changing repomd, the caller must regenerate its detached GPG signature. `create` does not sign repomd. This option does not change managed build or RPM leaf export timestamp semantics.
+
+See [Migrating an Existing YUM Repository](/docs/tutorial/yum-migration/) for backup,
+publication-clock, signing, and cached-client acceptance steps.
 
 ## --pigsty
 
@@ -238,11 +246,13 @@ sow create /srv/flat --json
 {"schema":"sow.cli/v1","command":"create","ok":true,"repository":null,"operation":null,"result":{"dir":"/srv/flat","rpm":3,"deb":1,"kept":["centos-release-6-0.el6.centos.5.x86_64.rpm","centos-release-7-2.1511.el7.centos.2.10.x86_64.rpm","epel-release-7-5.noarch.rpm","libpq5_18.3-1_amd64.deb"],"removed":[],"marker":false,"noop":true,"recovered":false},"errors":[]}
 ```
 
-Replace a Pigsty plain build with eight workers:
+Build a Pigsty flat repository with eight workers and a publication time chosen from its history:
 
 ```bash
-sow create /www/pigsty -j 8 --pigsty
+sow create /www/pigsty -j 8 --pigsty --metadata-timestamp "${PUBLISH_TIME:?Set the verified publication time}"
 ```
+
+The caller records this time and signs the resulting `repomd.xml` when clients require it.
 
 Failure envelope:
 
@@ -257,7 +267,7 @@ sow create /srv/empty --json
 |---|---|
 | `0` | Indexes written, or unchanged input produced a no-op |
 | `1` | Directory unreadable or missing, package parse failure, renderer failure, signing tool failure |
-| `2` | Usage error — `--overwrite` without `--sign-with`, malformed key, `--no-wait` with a non-zero `--timeout` |
+| `2` | Usage error — invalid or repeated timestamp, `--overwrite` without `--sign-with`, malformed key, `--no-wait` with a non-zero `--timeout` |
 | `4` | Directory write lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Input set/stat changed before publication, or a controlled output path failed an integrity check |
 | `6` | No supported package found, `repo_complete` gate hit, `--sign-with` on a DEB-only directory, coordinate conflict |
@@ -268,3 +278,4 @@ sow create /srv/empty --json
 - [Quick Start](/docs/start/quickstart/) — five-minute flat repository walkthrough
 - [Repository Layout](/docs/reference/layout/) — what the flat tree looks like
 - [Sign Your Repository](/docs/tutorial/signing/) — generating and using a signing key
+- [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/) — replacing an existing metadata generator

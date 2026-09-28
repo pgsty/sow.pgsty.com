@@ -22,8 +22,8 @@ icon: fa-solid fa-circle-check
 | macOS | 是 | 是 | 归档 |
 | Windows | 否 | 否 | 不支持 |
 
-Release 二进制使用 `CGO_ENABLED=0`，不需要语言运行时。0.4.0 制品使用 Go 1.27.0 构建；
-源码 Module 要求 Go 1.27.0 或更新版本。归档包含 `README.md`、`CHANGELOG.md` 与 Apache-2.0
+Release 二进制使用 `CGO_ENABLED=0`，不需要语言运行时。源码 Module 要求 Go 1.27.0 或更新版本，
+0.5 没有提高该下限。归档包含 `README.md`、`CHANGELOG.md` 与 Apache-2.0
 `LICENSE`，Linux 软件包会随二进制安装同一份
 协议文件。使用 [`sow version`](/zh/docs/command/) 查看产品版本、目标 OS/架构与构建工具链。
 
@@ -69,6 +69,23 @@ Managed 客户端必须消费完整 Repository Root：
 默认 `dnf reposync` 会拒绝规范 Managed RPM 的父级相对包路径。该工作流应使用
 [`sow export rpm-leaf`](/zh/docs/command/export/) 生成自包含副本。导出使用本地包路径并带有
 完成清单，但不是第二个规范 Repository。
+
+## 迁移已有 Plain YUM 仓库
+
+Plain 生成 primary、filelists、other 三份 XML，不生成旧式 SQLite 元数据或模块流。
+普通 RPM 可以配合适当的 `module_hotfixes=1` 策略使用；模块 profile 与 `dnf module install`
+需要另一套工作流。
+
+EL7 YUM 会把 `repomd.xml` 中最大的 data 时间与缓存比较。SOW 0.5.0 新增
+`create --metadata-timestamp SECONDS`，但默认仍为 `0`。已有在线仓库应使用不低于历史最大值
+的时间，真实更新应继续递增；仅改变 revision 或文件 mtime 无效。调用者负责保存历史时间并
+单独签署 `repomd.xml`。验收应保留原仓库 URL、ID、缓存和目标 GPG 检查策略。完整步骤见
+[迁移指南](/zh/docs/tutorial/yum-migration/)。
+
+RPM 依赖投影遵循现代 createrepo_c 对 `%pretrans`、`%posttrans` 依赖的处理方式。0.5 新增的
+回归测试巩固了这一契约，没有修改解析器。旧版 createrepo_c 可能输出不同数量的依赖行或
+`pre="1"` 属性；应比较依赖含义和真实客户端行为，不能只比行数。对应上游变更见
+[PR #427](https://github.com/rpm-software-management/createrepo_c/pull/427)。
 
 ## 发布 Provider
 

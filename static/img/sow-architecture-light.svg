@@ -41,5 +41,5 @@
   <text x="52" y="362" text-anchor="start" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10" font-weight="600" fill="#0d7f77" letter-spacing="1.7">INCREMENTAL PUBLISH</text>
   <text x="388" y="362" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="500" fill="#7d8ea3">verified</text>
   <text x="220" y="393" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" font-weight="700" fill="#0d161f"><tspan fill="#0d7f77">Δ</tspan> changed objects only</text>
-  <text x="220" y="413" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#5d7189">filesystem · S3 / R2</text>
+  <text x="220" y="413" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#5d7189">filesystem · Cloudflare R2</text>
 </svg>

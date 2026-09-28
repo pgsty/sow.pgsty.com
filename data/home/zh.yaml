@@ -11,15 +11,15 @@ hero:
     - 构建软件仓库
     - 同步增量变化
   title_size: 4rem
-  lead: 一个自包含二进制，即可把本地 RPM 与 DEB 软件包变成可用仓库；需要更强控制时，再用托管模式管理快照、审计记录与增量发布。
-  note: 单一二进制 · Linux + macOS · RPM + DEB · Apache-2.0
+  lead: 从本地 RPM 与 DEB 软件包生成 YUM、APT 索引。已有软件包目录可直接使用 Plain 模式；需要管理软件包策略、快照、签名与增量发布时，使用 Managed 模式。
+  note: SOW 0.5.0 · Linux + macOS · RPM + DEB · Apache-2.0
   image:
     light: img/sow-architecture-zh-light.svg
     dark: img/sow-architecture-zh-dark.svg
     alt: >-
-      SOW 的工作方式：本地 .rpm 与 .deb 文件进入统一包池，每个软件包包体只存一份；
+      SOW Managed 模式：本地 .rpm 与 .deb 文件进入统一包池，每个软件包包体只存一份；
       包池再投影为只含元数据的 YUM 与 APT 仓库视图；发布时只把发生变化的对象上传到
-      文件系统或 S3 / R2 目标。
+      文件系统或 Cloudflare R2 目标。
   media:
     # Hero 放的是架构图而不是图标：媒体列要足够宽才读得清，同时文案列仍能容纳不换行的
     # 两行产品主张。小于 lg 时图中标注已经看不清，因此直接隐藏而不是继续缩小。
@@ -35,6 +35,10 @@ hero:
       url: download/
       icon: fa-solid fa-download
       style: ghost
+    - label: 0.5 版本新特性
+      url: blog/release/sow-v0.5.0/
+      icon: fa-solid fa-tag
+      style: ghost
 
 capabilities:
   eyebrow: 核心价值
@@ -47,8 +51,8 @@ capabilities:
       motto: 直接把装有软件包的目录交给 SOW
       bullets:
         - '`sow create` 就地索引目录顶层的 RPM 与 DEB 文件'
-        - 同时生成可直接使用的平面 YUM/APT 仓库
-        - 可替代 `createrepo_c`、`dpkg-scanpackages` 与 `reprepro`
+        - 生成 rpm-md 元数据与 APT Packages 索引
+        - 显式发布时间参数兼容已有 YUM 客户端
       value: 不需要守护进程或元数据工具链，从软件包直接得到仓库索引。
       visual:
         type: code
@@ -80,13 +84,13 @@ capabilities:
           - { icon: fa-solid fa-camera, title: Generation, detail: 不可变 manifest, url: docs/feature/transactions/ }
           - { icon: fa-solid fa-code-branch, title: 仓库变体, detail: Dist 与 target, url: docs/reference/config/ }
     - ref: 03 / 开箱即用
-      title: 一个二进制，内置生产实践
+      title: 自包含构建，校验后交付
       url: download/
-      motto: macOS 与 Linux 使用同一个可执行程序
+      motto: macOS 与 Linux 使用一致的命令接口
       bullets:
         - 为 `amd64` 与 `arm64` 提供自包含 `CGO_ENABLED=0` 归档
         - Release Pipeline 为 Linux 生成 RPM 与 DEB 安装包
-        - 内置安全路径、有界并发、fsync 与原子发布
+        - 校验生成的元数据；Managed 模式支持中断后的写入恢复
       value: 不需要运营仓库守护进程，也不需要额外语言运行时。
       visual:
         type: components
@@ -125,13 +129,13 @@ principles:
   items:
     - icon: fa-solid fa-rotate
       title: 重建派生状态
-      desc: Plain 模式把仓库元数据视为软件包目录的确定性结果；修改输入后，重新执行 `sow create` 即可。
+      desc: Plain 模式根据软件包目录重建索引。包字节与参数相同，元数据输出就相同，显式指定的发布时间也属于参数。
     - icon: fa-solid fa-list-check
       title: 显式管理意图
       desc: Managed 模式分离 Desired Membership 与不可变 Built Generation，避免策略和发布沦为隐式副作用。
     - icon: fa-solid fa-shield-halved
       title: 交付前先验证
-      desc: 校验、签名、操作历史与原子发布，把一次仓库构建变成可审计的发布边界。
+      desc: 对外服务前校验软件包与元数据完整性；Managed 模式还会记录操作，并恢复中断的写入。
 
 faq:
   eyebrow: 常见问题
@@ -142,6 +146,12 @@ faq:
       answer: |
         如果目录已经恰好包含需要对外服务的全部内容，从 [Plain 模式](docs/start/quickstart/) 开始。需要由 SOW 管理成员关系、策略、已签名元数据、不可变 Generation、审计历史或发布目标时，使用 [Managed 工作区](docs/start/workspace/)。
       open: true
+    - question: 可以替换现有的 createrepo_c 工作流吗？
+      answer: |
+        平面 RPM 目录可以使用 `sow create`，并通过 0.5 新增参数指定发布时间。维护脚本继续负责保存发布历史与签署索引，再用保留旧缓存的客户端验收。完整步骤见 [YUM 迁移指南](docs/tutorial/yum-migration/)；Plain 不生成旧式 SQLite 元数据或模块流。
+    - question: 签署 RPM 包时，也会签署仓库索引吗？
+      answer: |
+        `--sign-with` 为未签名 RPM 包补签。Plain 模式需要在最后一次建库后单独签署 `repomd.xml`；Managed 模式通过配置管理元数据签名策略。两种流程见[仓库签名](docs/tutorial/signing/)。
     - question: SOW 能同时处理 RPM 与 DEB 软件包吗？
       answer: |
         可以。Plain 目录可同时放置 RPM 与 DEB 软件包。在 Managed 模式中，每个 Dist 只有一种格式，但同一个 Repository 可从公共交付树中对外提供多个 RPM 与 DEB Dist。

@@ -20,6 +20,9 @@ SOW 是 Pigsty 出品的自包含软件仓库管理器。`sow create` 能把目�
 文件直接变成可用平面仓库；Managed 工作区则进一步提供成员关系、筛选策略、签名、不可变
 Generation、审计历史与发布目标。
 
+本文档对应 **SOW 0.5.0**。新增发布时间参数见[发布注记](/zh/blog/release/sow-v0.5.0/)，
+已有 Managed 工作区请参考[升级说明](/zh/docs/start/install/#从-04-升级到-05)。
+
 按 {{< kbd "Ctrl" "K" >}}（macOS 上也可用 {{< kbd "⌘" "K" >}}）搜索本站；
 焦点不在输入框时按 {{< kbd "/" >}}，可直接打开命令模式。
 
@@ -36,6 +39,7 @@ Generation、审计历史与发布目标。
 | 目标 | 从这里开始 |
 |---|---|
 | 立即索引一个软件包目录 | [快速上手](/zh/docs/start/quickstart/) |
+| 替换已有 createrepo_c 工作流 | [迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/) |
 | 长期维护精选仓库 | [第一个工作区](/zh/docs/start/workspace/) |
 | 搭建完整 YUM 或 APT 仓库 | [教程](/zh/docs/tutorial/) |
 | 查询精确 CLI 行为 | [命令](/zh/docs/command/) |

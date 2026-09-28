@@ -23,8 +23,8 @@ SOW binary; a real package manager remains the final check for a deployed reposi
 | macOS | yes | yes | archive |
 | Windows | no | no | not supported |
 
-Release binaries use `CGO_ENABLED=0` and require no language runtime. The 0.4.0 artifacts were
-built with Go 1.27.0; the source module requires Go 1.27.0 or newer. Archives include `README.md`,
+Release binaries use `CGO_ENABLED=0` and require no language runtime. The source module requires
+Go 1.27.0 or newer; 0.5 does not raise that minimum. Archives include `README.md`,
 `CHANGELOG.md`, and the Apache-2.0 `LICENSE`;
 Linux packages install the same license with the binary. Use [`sow version`](/docs/command/)
 to print the product version, target OS/architecture, and build toolchain.
@@ -78,6 +78,26 @@ Default `dnf reposync` rejects the canonical Managed RPM parent-relative package
 For that workflow, generate a self-contained copy with
 [`sow export rpm-leaf`](/docs/command/export/). The export has local package paths and a
 completion manifest; it is not a second canonical Repository.
+
+## Migrating an existing Plain YUM repository
+
+Plain emits the primary, filelists, and other XML streams. It does not generate legacy
+SQLite metadata or module streams. Ordinary RPMs can be served with an appropriate
+`module_hotfixes=1` policy; module profiles and `dnf module install` require a different workflow.
+
+EL7 YUM compares the largest `repomd.xml` data timestamp with its cached copy. SOW 0.5.0
+adds `create --metadata-timestamp SECONDS`, but its default is still `0`.
+An existing online repository needs a timestamp at least as large as its historical
+maximum; actual updates should advance it. Updating revision or file mtime is insufficient.
+The caller maintains this history and signs `repomd.xml` separately. Test with the same
+repository URL and ID, retaining the old cache and the intended GPG checks. Follow the
+[migration guide](/docs/tutorial/yum-migration/) for the complete procedure.
+
+RPM dependency projection follows modern createrepo_c semantics for `%pretrans` and
+`%posttrans` requirements. The 0.5 regression tests strengthen that contract without changing
+the parser. Older createrepo_c versions can emit different dependency rows or `pre="1"`
+attributes; compare dependency meaning and real client behavior rather than raw row counts.
+See [upstream PR #427](https://github.com/rpm-software-management/createrepo_c/pull/427).
 
 ## Publication Providers
 

@@ -23,8 +23,8 @@ Download one archive plus `SHA256SUMS`, then verify the matching line before ext
 
 ```bash
 # Linux amd64
-grep 'sow_.*_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
-tar -xzf sow_*_linux_amd64.tar.gz
+grep '  sow_0.5.0_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
+tar -xzf sow_0.5.0_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
@@ -37,8 +37,8 @@ as `~/.local/bin`.
 Linux packages use the `1PGSTY` release suffix:
 
 ```bash
-sudo rpm -Uvh ./sow-*-1PGSTY.x86_64.rpm
-sudo apt install ./sow_*-1PGSTY_amd64.deb
+sudo rpm -Uvh ./sow-0.5.0-1PGSTY.x86_64.rpm
+sudo apt install ./sow_0.5.0-1PGSTY_amd64.deb
 ```
 
 Choose only the command and architecture that match the host. RPM installs the license at
@@ -47,14 +47,14 @@ Choose only the command and architecture that match the host. RPM installs the l
 
 ## Build from source
 
-The module declares Go 1.27.0. Metadata generation needs no C toolchain. Replace
-`vX.Y.Z` with the source tag linked from the Download page:
+The module declares Go 1.27.0. Metadata generation needs no C toolchain. Build the
+same `v0.5.0` tag used by the pinned downloads:
 
 ```bash
 git clone https://github.com/pgsty/sow.git
 cd sow
 set -euo pipefail
-SOW_TAG=vX.Y.Z
+SOW_TAG=v0.5.0
 git checkout "$SOW_TAG"
 SOW_VERSION="${SOW_TAG#v}"
 CGO_ENABLED=0 go build -trimpath \
@@ -76,15 +76,29 @@ sow help
 `sow help` lists the command tree. Each archive also contains `README.md`, `CHANGELOG.md`,
 and the Apache-2.0 `LICENSE`.
 
+## Upgrade from 0.4 to 0.5
+
+Install SOW 0.5.0 using the [download page](/download/). See the
+[0.5.0 release notes](/blog/release/sow-v0.5.0/) for the changes in this version.
+
+An existing 0.4 Managed workspace keeps schema v12, `sow/v3` configuration, and the same
+public layout. Back up the workspace as usual before replacing the binary; this upgrade
+requires no additional `sow repo migrate` step.
+
+For Plain repositories, 0.5 adds `create --metadata-timestamp`; check that the actual
+binary's `create --help` lists it. The default remains `0`, so replacing the binary alone
+does not repair a published YUM repository's timestamp. Follow the
+[YUM migration guide](/docs/tutorial/yum-migration/) before switching an existing workflow.
+
 ## Upgrade a 0.3 Managed Workspace
 
-SOW 0.4 introduces internal database schemas v11 and v12. The public layout and
+SOW 0.4 introduced internal database schemas v11 and v12; 0.5 retains schema v12. The public layout and
 `schema: sow/v3` configuration identifier stay the same, but each existing v0.3 Repository must be
 migrated explicitly before ordinary reads or writes. Stop Workspace writers before taking the
 backup:
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-0.4.0
+cp -a /srv/sow /srv/sow.backup-before-upgrade
 sow repo migrate REPOSITORY -C /srv/sow
 sow check -r REPOSITORY -C /srv/sow
 ```

@@ -8,19 +8,19 @@ sections:
 hero:
   eyebrow: Software Object Warehouse
   title_lines:
-    - Build Package Repo
+    - Build Package Repos
     - Ship What Changed
   title_size: 4rem
-  lead: One self-contained binary turns local RPM and DEB packages into usable repositories, then manages snapshots, audit history, and incremental publication when you need more control.
-  note: Single binary · Linux + macOS · RPM + DEB · Apache-2.0
+  lead: Create YUM and APT indexes from local RPM and DEB packages. Use Plain mode for an existing package directory, or Managed mode for package policy, snapshots, signing, and incremental publication.
+  note: SOW 0.5.0 · Linux + macOS · RPM + DEB · Apache-2.0
   image:
     light: img/sow-architecture-light.svg
     dark: img/sow-architecture-dark.svg
     alt: >-
-      How SOW works: local .rpm and .deb files enter one package pool that
+      SOW Managed mode: local .rpm and .deb files enter one package pool that
       stores each package body once, the pool is projected as YUM and APT
       repository views that hold metadata only, and publication uploads the
-      changed objects alone to a filesystem or S3 / R2 target.
+      changed objects alone to a filesystem or Cloudflare R2 target.
   media:
     # The hero carries an architecture diagram rather than an emblem, so the
     # media column is wide enough to read and the copy column still holds the
@@ -38,6 +38,10 @@ hero:
       url: download/
       icon: fa-solid fa-download
       style: ghost
+    - label: What's new in 0.5
+      url: blog/release/sow-v0.5.0/
+      icon: fa-solid fa-tag
+      style: ghost
 
 capabilities:
   eyebrow: Core capabilities
@@ -50,8 +54,8 @@ capabilities:
       motto: Point SOW at a directory of packages
       bullets:
         - '`sow create` indexes top-level RPM and DEB files in place'
-        - Produces a directly usable flat YUM/APT repository
-        - 'Replaces `createrepo_c`, `dpkg-scanpackages`, and `reprepro`'
+        - Produces rpm-md metadata and APT Packages indexes
+        - Explicit publication timestamps support existing YUM clients
       value: From package files to repository metadata, no daemon or toolchain.
       visual:
         type: code
@@ -83,13 +87,13 @@ capabilities:
           - { icon: fa-solid fa-camera, title: Generations, detail: immutable manifests, url: docs/feature/transactions/ }
           - { icon: fa-solid fa-code-branch, title: Variants, detail: Dists and targets, url: docs/reference/config/ }
     - ref: 03 / READY TO RUN
-      title: One binary, production ready
+      title: Self-contained builds, checked output
       url: download/
-      motto: The same executable on macOS and Linux
+      motto: The same CLI on macOS and Linux
       bullets:
         - Self-contained `CGO_ENABLED=0` archives for `amd64` and `arm64`
         - The release pipeline builds RPM and DEB packages for Linux
-        - Safe paths, bounded concurrency, fsync, and atomic publication
+        - Validates generated metadata; Managed mode adds recoverable writes
       value: No repository daemon and no language runtime to operate.
       visual:
         type: components
@@ -128,13 +132,13 @@ principles:
   items:
     - icon: fa-solid fa-rotate
       title: Rebuild derived state
-      desc: Plain mode treats repository metadata as a deterministic result of the package directory. Change the inputs, then run `sow create` again.
+      desc: Plain mode rebuilds indexes from the package directory. The same package bytes and options produce the same metadata, including any explicit publication timestamp.
     - icon: fa-solid fa-list-check
       title: Own managed intent
       desc: Managed mode separates Desired Membership from immutable Built Generations, so policy and publication never become hidden side effects.
     - icon: fa-solid fa-shield-halved
       title: Verify before delivery
-      desc: Checks, signatures, operation history, and atomic publication turn a repository build into an auditable release boundary.
+      desc: Verify package and metadata integrity before serving clients. Managed mode also records operations and recovers interrupted writes.
 
 faq:
   eyebrow: Common questions
@@ -145,6 +149,12 @@ faq:
       answer: |
         Start with [Plain mode](docs/start/quickstart/) when the directory already contains exactly what you want to serve. Use a [Managed workspace](docs/start/workspace/) when SOW must own membership, policy, signed metadata, immutable generations, audit history, or publication targets.
       open: true
+    - question: Can I replace an existing createrepo_c workflow?
+      answer: |
+        For a flat RPM directory, use `sow create` with the publication-time option added in 0.5. Keep the publication history and index-signing steps in your maintenance script, then test with clients that retain their old metadata cache. Follow the [YUM migration guide](docs/tutorial/yum-migration/); Plain does not generate legacy SQLite metadata or module streams.
+    - question: Does RPM signing also sign the repository index?
+      answer: |
+        `--sign-with` signs unsigned RPM packages. In Plain mode, sign `repomd.xml` separately after the final metadata build. Managed mode provides configured metadata-signing policies. See [Signing](docs/tutorial/signing/) for both workflows.
     - question: Can SOW handle RPM and DEB packages together?
       answer: |
         Yes. A Plain directory can contain both RPM and DEB packages. In Managed mode, each Dist has one format, while one Repository can expose multiple RPM and DEB Dists from its shared public tree.

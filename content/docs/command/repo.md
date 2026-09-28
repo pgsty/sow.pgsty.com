@@ -115,8 +115,9 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-This is a specialized maintenance command, not part of a fresh 0.4 Managed workflow. A Repository
-created by SOW 0.4 already has the current single-payload layout and schema.
+This is a specialized maintenance command, not part of a fresh 0.5 Managed workflow. A Repository
+created by SOW 0.4 or 0.5 already has the current single-payload layout and schema v12. Upgrading
+from 0.4 to 0.5 does not require another migration.
 
 After upgrading an existing v0.3 Workspace, however, migration is mandatory: stop all Workspace
 writers, take a backup, and run the command once for every configured Repository before ordinary

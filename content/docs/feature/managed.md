@@ -96,8 +96,9 @@ full cryptographic audit and hashes every unique physical payload once regardles
 The cache and its fingerprints are private implementation state; they do not change the
 public `pool/ + dists/` layout. Never edit the database or its `PRAGMA user_version` by
 hand. A v0.3 Repository must be backed up and explicitly upgraded with
-[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) before ordinary 0.4 reads or writes.
-Fresh 0.4 Repositories already use the current schema; other maintenance is performed only when a
+[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) before ordinary 0.4 or 0.5 reads or writes.
+Repositories created by 0.4 or 0.5 already use schema v12, so the 0.4-to-0.5 upgrade requires no
+new migration. Other maintenance is performed only when a
 SOW diagnostic names it.
 
 ## `sow.yml` drives everything

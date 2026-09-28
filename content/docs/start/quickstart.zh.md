@@ -124,8 +124,12 @@ APT source 末尾的 `./` 表示平面仓库。`[trusted=yes]` 与关闭 DNF 签
 sow create /srv/repo
 ```
 
-目录内容就是 Plain 模式的全部状态。包字节不变时，生成的元数据具有确定性，重复运行会报告
-`noop=true`。
+目录内容就是 Plain 模式的全部状态。包字节与参数（包括显式指定的元数据时间戳）均不变时，
+生成的元数据具有确定性，重复运行会报告 `noop=true`。
+
+对于已有客户端使用的 YUM 仓库，切换生成工具时应保留发布历史。SOW 0.5.0 新增
+`--metadata-timestamp` 参数用于指定发布时间，默认仍为 `0`。备份、签名与带缓存客户端
+验收的步骤见[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)。
 
 自动化场景可使用带版本的 JSON 信封：
 

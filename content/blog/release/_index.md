@@ -1,7 +1,7 @@
 ---
 title: Release Notes
 linkTitle: Release
-description: Published SOW release notes covering features, performance, correctness, packaging, and verification.
+description: SOW release notes covering features, performance, correctness, packaging, and verification.
 weight: 20
 icon: fa-solid fa-tag
 sidebar_expanded: true
@@ -19,5 +19,9 @@ cascade:
   featured_image: wash
 ---
 
-Published SOW release notes cover features, performance, correctness, packaging, and
-verification, with the newest release first.
+SOW release notes cover features, performance, correctness, packaging, and verification,
+with the newest version first.
+
+[v0.5.0](/blog/release/sow-v0.5.0/) adds publication timestamps for existing Plain YUM
+repositories. For the earlier Managed verification and migration changes, see
+[v0.4.0](/blog/release/sow-v0.4.0/).

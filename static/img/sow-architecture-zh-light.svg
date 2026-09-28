@@ -41,5 +41,5 @@
   <text x="52" y="362" text-anchor="start" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="700" fill="#0d7f77" letter-spacing="1.2">增量发布</text>
   <text x="388" y="362" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="500" fill="#7d8ea3">已校验</text>
   <text x="220" y="393" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="17" font-weight="700" fill="#0d161f"><tspan fill="#0d7f77">Δ</tspan> 只上传变更对象</text>
-  <text x="220" y="413" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#5d7189">文件系统 · S3 / R2</text>
+  <text x="220" y="413" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#5d7189">文件系统 · Cloudflare R2</text>
 </svg>

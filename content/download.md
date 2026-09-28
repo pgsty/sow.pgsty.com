@@ -21,7 +21,8 @@ search_boost: 1.5
 
 Install SOW from the Pigsty infra repository with `apt install sow` or `dnf install sow`,
 from a pinned RPM or DEB package, from a `tar.gz` archive for Linux or macOS on `amd64`
-and `arm64`, or from a source build of a tagged release. Every route installs the same
-self-contained executable, and every published artifact carries a SHA-256 digest listed
+and `arm64`, or from a source build of a tagged release. Pinned paths use SOW 0.5.0;
+the Pigsty repository is a rolling channel. Each build provides the same CLI for its target
+platform, and every published artifact carries a SHA-256 digest listed
 against `SHA256SUMS`. After installing, run `sow version` and `sow help`, then point
 `sow create` at a directory of packages.
