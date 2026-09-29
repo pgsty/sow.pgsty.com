@@ -23,7 +23,7 @@ nonzero code.
 | `4` | Write lock unavailable — held and `--no-wait`, or the timeout expired |
 | `5` | Integrity or recovery error, or `check` judged the result not deliverable |
 | `6` | Expected rejection: conflict, protected, no match, incompatible architecture |
-| `130` | Command interrupted, including Ctrl-C or a cancelled command context |
+| `130` | Command interrupted by Ctrl-C (SIGINT) or SIGTERM |
 
 Human-readable results go to stdout; warnings and diagnostics go to stderr. Each code has
 a stable message prefix on stderr, and a matching `class` in
@@ -41,18 +41,23 @@ a stable message prefix on stderr, and a matching `class` in
 
 `sow create` is the exception to the prefix column: being outside the managed layer, it
 prints its raw domain error on stderr (`plain: scan …`, `plain: marker gate …`) without the
-`operation rejected:` prefix. The prefix is still present in its JSON `errors[].message`.
+CLI class prefix, such as `operation rejected:` or `lock unavailable:`. The prefix is still
+present in its JSON `errors[].message`.
 
 ---
 
 ## 130 — Interrupted
 
-Ctrl-C cancels the command and returns `130`; ordinary lock-wait timeout remains `4`.
+Ctrl-C (SIGINT) or SIGTERM cancels the command and returns `130`; ordinary lock-wait
+timeout remains `4`. Only the command's own interruption returns `130`: an internal timeout,
+such as an R2 upload that makes no progress, is an ordinary runtime error (`1`).
 SOW returns a numeric exit status; it does not re-send SIGINT to itself. A parent shell may
 therefore continue to the next command unless the script checks the status, uses `set -e`,
 or handles signals itself. Cancellation is not reported as a signing-policy failure. For an add cancelled before
 Desired commits, no input is reported as accepted and the failure state is durable before
-temporary package bytes are removed. An already committed change remains committed;
+temporary package bytes are removed. If that cleanup does not finish within its 5-second
+budget, the next write command (for example `sow build`) removes the rest, and `sow check`
+reports `recovering` until then. An already committed change remains committed;
 rerun the command to recover or converge it. Keep the original input packages until the
 operation completes.
 
@@ -147,7 +152,10 @@ workspace discovery error: managed: workspace discovery error: discover workspac
 
 A symlink to a directory is accepted as a discovery start, including `/tmp` on macOS.
 Discovery still walks the literal path's ancestors and falls back to `SOW_DIR`
-when no workspace is found. Repository-internal symlinks retain their existing checks.
+when no workspace is found. Implicit Repository and Dist selection from the start path is
+stricter: any symlink component between the start directory and the workspace root prevents
+that inference, so pass `-r`. If the symlink is inside the Repository, a command that infers the
+Dist still fails with `-r` alone; pass `-d` too.
 
 A malformed configuration file — note that the offending line is named:
 

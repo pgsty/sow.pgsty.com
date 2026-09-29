@@ -36,7 +36,7 @@ In steady state, the checker reports nine ordered layers:
 | `config` | `sow.yml` parses and validates for the Repository | configuration objects |
 | `state` | SQLite `quick_check`, foreign keys, journal, and recovery evidence | one state database |
 | `public-modes` | File and directory permissions across the served tree | inspected paths |
-| `retained` | Explicit retained records and frozen Generation manifests | retained records |
+| `retained` | Explicit retained records and frozen Generation manifests (a damaged retained root fails this layer; see [`retain rm`](/docs/command/retain/#retain-rm)) | retained records |
 | `package-bytes` | SHA-256 of pool and private pending payloads | Package Objects |
 | `desired-membership` | Membership rows resolve under current policy | memberships |
 | `index` | Rendered indexes match the membership they claim | Dists |

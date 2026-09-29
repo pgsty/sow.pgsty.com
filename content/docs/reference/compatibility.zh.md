@@ -30,15 +30,20 @@ Linux 软件包也随二进制包含同一份协议与第三方许可声明。
 ## 工作区文件系统
 
 Managed 工作区应放在本地 POSIX 文件系统上。正确性依赖建议锁、`fsync`、基于描述符的路径
-校验与同文件系统原子 rename；NFS 等网络文件系统不属于受支持的工作区位置。
+校验与同文件系统原子 rename；NFS 等网络文件系统不属于受支持的工作区位置。macOS 上请使用
+APFS：HFS+ 不支持原子目录交换，SOW 会拒绝构建。
 
 公共 `<workspace>/<repo>/` 树是另一条边界：它是闭合的 `pool/ + dists/` 命名空间，可整根
 复制或发布，不依赖 SQLite、私有 journal 或 view-local hardlink identity。必须保持完整
 Repository，不得暴露 `.sow/`。
 
-SOW 会拒绝符号链接控制路径、不安全普通文件、重叠 filesystem target，以及大小写折叠后冲突
-的 Pool 路径，使同一个 Repository 可以在大小写敏感的 Linux 与默认大小写不敏感的 macOS
-文件系统间移动。
+SOW 会拒绝符号链接控制路径、不安全普通文件、重叠 filesystem target，以及与已有或已发布
+路径在大小写折叠后冲突的新 Pool 路径；这也包括以仅大小写不同的文件名加入完全相同的字节
+（请使用原文件名加入）。在大小写不敏感的工作区文件系统上（例如 macOS 默认配置），SOW 还会
+拒绝源目录与已有包仅大小写不同的新包（例如 `CaseDemo` 与 `casedemo`）；向位于大小写不敏感
+卷上的 filesystem target 执行 `publish` 时，也会在创建 attempt 之前拒绝这类别名。在大小写
+敏感的文件系统（Linux）上，这样的两个源目录彼此独立，因此同时包含两者的 Repository 不能
+迁移到大小写不敏感的文件系统。
 
 ## 自动化集成矩阵
 
@@ -47,7 +52,7 @@ SOW 会拒绝符号链接控制路径、不安全普通文件、重叠 filesyste
 | 生产 CLI 干净环境 | Linux CI | 构建交付二进制；生成混合 Plain RPM/DEB 元数据；初始化 `sow/v3`；创建 RPM/DEB Dist；加入 Fixture；执行查询、build、check、changes、config 与 log 命令 |
 | Plain APT 客户端 | Ubuntu 22.04 容器 | 通过 HTTP 服务 `sow create` 输出；在显式信任未签名源时执行 `apt-get update`、包发现、精确版本选择、下载与安装 |
 | RPM 分离签名切换 | AlmaLinux 8、9、10 容器 | 使用真实 DNF 客户端遍历 `repomd.xml` / `repomd.xml.asc` 串行切换状态，并固定各组合的成功/失败行为 |
-| S3 兼容传输 | 固定 MinIO 容器 | 验证 Bucket 列表、HEAD、GET、单段仅创建/CAS PUT、重放、对象元数据、重试与 Prefix 约束 |
+| S3 兼容传输 | 固定 MinIO 容器 | 验证 Bucket 列表、HEAD、GET、单段仅创建/CAS PUT、重放与对象 SHA-256 元数据；重试与 Prefix 约束由本地协议测试覆盖 |
 | Release 打包 | Linux CI | 构建四个归档、两个 RPM、两个 DEB 与 `SHA256SUMS`；检查包内路径、Apache-2.0 元数据与协议文件字节 |
 
 DNF 签名切换是协议测试，不是完整 Managed RPM 安装；APT 作业覆盖未签名 Plain 仓库，不覆盖

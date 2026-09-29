@@ -51,7 +51,7 @@ selected, for example. Committed partial results and diagnostic results from `ch
 | Local `gc` | Journal ID when collection runs; `null` for a no-op |
 | `publish`, `publish --abort` | Publication attempt ID when available; otherwise `null` |
 | `log ID` | The requested journal ID, even though the command is read-only |
-| `init`, `repo`/`dist`/`retain` commands, `export`, target `gc`, `rm --check`, `log prune`, other queries | `null`; `log prune` places its journal ID in `result.operation` |
+| `init`, `repo`/`dist`/`retain` commands, `export`, target `gc`, `rm --check`, `log prune`, Plain `create`, other queries | `null`; `log prune` places its journal ID in `result.operation` |
 
 ### errors
 
@@ -62,7 +62,7 @@ selected, for example. Committed partial results and diagnostic results from `ch
 | Field | Meaning |
 |---|---|
 | `code` | The process [exit code](/docs/reference/exit-codes/) — `1` through `6`, or `130` for interruption. |
-| `class` | `runtime`, `usage`, `discovery`, `config`, `partial`, `lock`, `integrity`, `rejected`, or `interrupted`. `discovery` and `config` specialize exit code `2`; `interrupted` corresponds to `130`. |
+| `class` | `runtime`, `usage`, `discovery`, `config`, `partial`, `lock`, `integrity`, `rejected`, or `interrupted`. `discovery` and `config` specialize exit code `2`; `interrupted` corresponds to `130` and is used only when the command itself receives SIGINT or SIGTERM. |
 | `message` | The classified error text. It matches stderr except that Plain `create` prints its raw domain error to stderr, without the additional CLI category prefix. |
 
 Branch on `class`, not on message text. Messages carry paths and package names and will
@@ -459,7 +459,7 @@ Passing an operation ID returns the full detail — state transitions, structure
 
 ```json
 "result":{"operation":"7140280533435786353","repository":"demo",
- "before":"2026-01-01T00:00:00+08:00","pruned":0}
+ "before":"2026-01-01T00:00:00+08:00","pruned":0,"compaction_deferred":false}
 ```
 
 Note that `before` echoes the absolute timestamp a bare date resolved to in your local

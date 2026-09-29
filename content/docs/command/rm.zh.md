@@ -70,6 +70,8 @@ operation rejected: managed: operation rejected: package reference not found: pa
 ## 用 --check 预览
 
 `-c/--check` 精确算出会移除什么、策略随后会怎么判定、以及立即构建会触碰哪些文件——并且什么都不写。
+`removed` 只列出引用匹配到的成员。因策略重新求值而连带移除的成员不会被列出：预览只体现它
+改动的索引文件，写入之后 `sow log` 会把它计入该操作的成员数。
 
 ```console
 sow rm centos-release -r demo -d el9 -c

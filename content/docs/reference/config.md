@@ -248,7 +248,8 @@ Five fields are allowed:
 | `kind` | The classification below |
 | `format` | `rpm` or `deb` |
 
-`kind` is derived from the binary package name by its most specific suffix:
+`kind` is derived from the binary package name by its most specific suffix. A configured `kind`
+outside this enumeration passes validation but matches nothing:
 
 | Format | Name suffix | `kind` |
 |---|---|---|
@@ -497,6 +498,8 @@ must contain one strict JSON document, not a path or shell assignment:
 
 An optional temporary credential may add `"session_token":"..."`. Unknown fields,
 trailing data, missing access/secret values, and documents larger than 64 KiB are rejected.
+A `file://` credential must be a regular file; symlinks to one, such as mounted Kubernetes
+Secrets, are fine, while FIFOs, devices, and directories are rejected without blocking.
 `config show`, JSON output, and the public tree never contain the credential material.
 
 ## Complete example

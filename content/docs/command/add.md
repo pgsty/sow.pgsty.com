@@ -154,7 +154,11 @@ input files and rerun it. Committed membership changes are preserved during reco
 A pool path cannot identify different package bytes, including paths retained in historical
 publication or abandoned-upload records after local GC. A collision rejects that input;
 unrelated valid inputs can still commit. Use a new package version and filename for changed
-content instead of reusing a previously published URL.
+content instead of reusing a previously published URL. Paths are compared case-insensitively:
+identical bytes re-added under a file name that differs only by case from a known path are
+rejected too, so add them under the original name. On a case-insensitive workspace filesystem,
+a package whose source directory differs only by case from an existing one is also rejected
+(see [Platforms & Integrations](/docs/reference/compatibility/#workspace-filesystem)).
 
 ## --skip
 

@@ -175,8 +175,12 @@ RPM architecture directory because its hrefs deliberately refer to the root pool
 
 Repository and distribution names must match `[a-z0-9][a-z0-9._-]*`. `.`, `..`, `.sow`,
 `pool`, `dists`, `sow.yml`, `workspace.lock`, `workspace-ops`, and `repo-locks` are
-reserved where applicable. Case-insensitive pool-path collisions are rejected so output
-remains portable between Linux and default macOS filesystems.
+reserved where applicable. A new pool path that collides case-insensitively with a known
+path is rejected, even for identical bytes. On a case-insensitive workspace filesystem
+(the macOS default) a source directory that differs only by case from an existing one is
+rejected too; on Linux both stay distinct, so such a Repository cannot move to a
+case-insensitive filesystem. See
+[Platforms & Integrations](/docs/reference/compatibility/#workspace-filesystem).
 
 > [!WARNING] Never expose .sow
 > Point your web server at `<workspace>/<repo>/`, not at the workspace root. The public

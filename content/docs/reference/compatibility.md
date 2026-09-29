@@ -33,7 +33,8 @@ to print the product version, target OS/architecture, and build toolchain.
 
 Managed workspaces belong on a local POSIX filesystem. Correctness depends on advisory
 locks, `fsync`, descriptor-bound path checks, and atomic same-filesystem rename. NFS and
-other network filesystems are not supported workspace locations.
+other network filesystems are not supported workspace locations. On macOS, use APFS:
+HFS+ lacks atomic directory exchange, and SOW rejects the build.
 
 The public `<workspace>/<repo>/` tree is different: it is a closed `pool/ + dists/`
 namespace designed for whole-root copying and publication. It does not depend on SQLite,
@@ -41,8 +42,14 @@ private journals, or view-local hard-link identity. Keep the complete Repository
 and never expose `.sow/`.
 
 SOW rejects symlinked control paths, unsafe regular files, overlapping filesystem targets,
-and case-folded pool-path collisions. This keeps one Repository portable between
-case-sensitive Linux filesystems and the default case-insensitive macOS setup.
+and a new pool path that collides case-insensitively with an existing or published path,
+including identical bytes added under a file name that differs only by case (add the file
+under its original name). On a case-insensitive workspace filesystem, such as the macOS
+default, SOW also rejects a new package whose source directory differs only by case from an
+existing package's (for example `CaseDemo` and `casedemo`), and `publish` to a filesystem
+target on a case-insensitive volume refuses such aliases before creating an attempt. On
+case-sensitive filesystems (Linux) those source directories stay distinct, so a Repository
+that contains both cannot be moved to a case-insensitive filesystem.
 
 ## Automated integration matrix
 
@@ -51,7 +58,7 @@ case-sensitive Linux filesystems and the default case-insensitive macOS setup.
 | Production CLI clean room | Linux CI | Builds the shipping binary; creates mixed Plain RPM/DEB metadata; initializes `sow/v3`; creates RPM and DEB Dists; adds fixtures; runs query, build, check, changes, config, and log commands |
 | Plain APT client | Ubuntu 22.04 container | Serves `sow create` output over HTTP; runs `apt-get update`, package discovery, exact-version selection, download, and install with an explicitly trusted unsigned source |
 | RPM detached-signature transition | AlmaLinux 8, 9, and 10 containers | Runs real DNF clients against serial `repomd.xml` / `repomd.xml.asc` transition states and pins which combinations succeed or fail |
-| S3-compatible transport | Pinned MinIO container | Exercises bucket listing, HEAD, GET, single-part create-only/CAS PUT, replay, object metadata, retries, and prefix confinement |
+| S3-compatible transport | Pinned MinIO container | Exercises bucket listing, HEAD, GET, single-part create-only/CAS PUT, replay, and object SHA-256 metadata; retries and prefix confinement are covered by local protocol tests |
 | Release packaging | Linux CI | Builds four archives, two RPMs, two DEBs, and `SHA256SUMS`; checks package paths, Apache-2.0 metadata, and packaged license bytes |
 
 The current MinIO integration does not validate conditional multipart completion. Multipart

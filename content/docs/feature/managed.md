@@ -224,7 +224,7 @@ The important asymmetry: `build`, `check`, and `status` default to **all** Dists
 
 ```console
 $ sow ls
-workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
+workspace discovery error: managed: workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
 ```
 
 That is exit `2`. Every inference happens only after path type and symlink validation.

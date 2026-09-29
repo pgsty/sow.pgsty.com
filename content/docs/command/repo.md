@@ -122,10 +122,18 @@ writers, take a backup, and run the command once for every configured Repository
 reads or writes.
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-0.5.0
+cp -a /srv/sow /srv/sow.backup-before-0.5.0   # GNU cp; elsewhere use rsync -aH or tar
 sow repo migrate pigsty -C /srv/sow
 sow repo migrate pgsql -C /srv/sow
 ```
+
+The backup must preserve hard links (DEB `by-hash` entries are hard links); macOS `cp -a`
+does not. The output reports the schema change, for example
+`migrated repository pigsty: single-payload-v1 -> single-payload-v1 schema=12->13 …`; JSON has
+`schema_from` and `schema_to`, and a repeated migration reports `schema=13->13`. Until a
+Repository is migrated, its write commands exit `5` with
+`` repository schema v12 predates this binary (v13); back up the workspace, then run
+`sow repo migrate NAME` ``.
 
 Schema v13 adds indexes for candidate pool-path ownership lookups, avoiding full publication-history
 scans on each add. Index creation costs time and private database space once during migration.
@@ -142,7 +150,9 @@ it does not undo a completed schema migration. Outside an upgrade or an explicit
 do not run migration speculatively.
 
 Starting a new conversion from a pre-release C2 layout is unsupported. Preserve its files and rebuild
-with a supported release; an already recorded layout transition may still complete its bound plan.
+with a supported release. An already recorded layout transition may still complete its bound plan,
+but the result is not a supported 0.5 Repository: the next write may still build one Generation,
+after which the Repository reports `status=error`. Rebuild it from the original packages.
 
 | Flag | Description | Default |
 |---|---|---|

@@ -88,7 +88,13 @@ sow check -r REPOSITORY -C /srv/sow
 
 更新后的 RPM 认证与 APT 元数据契约需要对受影响的 Dist 重建一次。之后，未变化且具有匹配
 Built 证据的 RPM 不必反复读取包体验签。迁移会增加私有数据库索引，发布历史较大时需要时间
-和磁盘空间；迁移后不要再使用旧版本二进制打开数据库。
+和磁盘空间；迁移后不要再使用旧版本二进制打开数据库。`sow repo migrate` 会报告变化，例如
+`schema=12->13`；重复执行显示 `schema=13->13`。Repository 迁移之前，其写命令以 `5` 退出并提示
+`` repository schema v12 predates this binary (v13); back up the workspace, then run
+`sow repo migrate NAME` ``。
+
+备份工具必须保留硬链接，因为 DEB 的 `by-hash` 条目是硬链接：Linux 上可用 GNU `cp -a`、
+`rsync -aH` 或 `tar`；macOS 的 `cp -a` 不保留硬链接。
 
 Plain 仓库新增 `create --metadata-timestamp`，请检查实际二进制的 `create --help` 是否包含
 该参数。默认值仍为 `0`，因此仅升级二进制不会修复已发布 YUM 仓库的时间戳。替换已有维护
@@ -100,7 +106,7 @@ SOW 0.4 引入了内部数据库 Schema v11 与 v12，0.5 升级到 v13。公共
 但每个既有 v0.3 Repository 都必须在普通读写前显式迁移。备份前先停止 Workspace 全部写入：
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-upgrade
+cp -a /srv/sow /srv/sow.backup-before-upgrade   # GNU cp；其他平台请用 rsync -aH 或 tar
 sow repo migrate REPOSITORY -C /srv/sow
 sow build -r REPOSITORY -C /srv/sow
 sow check -r REPOSITORY -C /srv/sow

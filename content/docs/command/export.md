@@ -66,7 +66,9 @@ continue with Plain `create` and an explicit publication time, following the
 
 Copying is the safe default. `--hardlink` is an explicit optimization for an output on the same
 filesystem that consumers cannot mutate. A hard-linked payload shares an inode with SOW's pool; do
-not use this mode for writable or untrusted destinations.
+not use this mode for writable or untrusted destinations. Creating (and later removing) the
+links changes the ctime of the shared Pool files, so the next build re-hashes those payloads once
+to refresh its fast-validation fingerprints.
 
 SOW rejects output that overlaps a configured filesystem publication root. This prevents an export
 from being mistaken for, or modifying, a managed publication target.

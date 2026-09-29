@@ -22,7 +22,7 @@ icon: fa-solid fa-triangle-exclamation
 | `4` | 写锁不可用 —— 被占用且指定了 `--no-wait`,或等待超时 |
 | `5` | 完整性/恢复错误,或 `check` 判定当前结果不可交付 |
 | `6` | 预期拒绝:冲突、protected、无匹配、架构不兼容 |
-| `130` | 命令中断，包括 Ctrl-C 或命令上下文被取消 |
+| `130` | 命令被 Ctrl-C(SIGINT)或 SIGTERM 中断 |
 
 人类可读的结果写 stdout,警告与诊断写 stderr。每个码在 stderr 上有稳定的消息前缀,
 在 [JSON 输出](/zh/docs/reference/json/)中有对应的 `class`:
@@ -38,17 +38,19 @@ icon: fa-solid fa-triangle-exclamation
 | `130` | 随子系统而异 | `interrupted` |
 
 `sow create` 是前缀那一列的例外:它不在 Managed 层内,stderr 上打印的是原始领域错误
-(`plain: scan …`、`plain: marker gate …`),没有 `operation rejected:` 前缀。该前缀仍然出现在
-它的 JSON `errors[].message` 里。
+(`plain: scan …`、`plain: marker gate …`),没有 CLI 类别前缀(例如 `operation rejected:`、
+`lock unavailable:`)。该前缀仍然出现在它的 JSON `errors[].message` 里。
 
 ---
 
 ## 130 —— 中断
 
-Ctrl-C 取消命令并返回 `130`；普通等待锁超时仍返回 `4`。SOW 返回的是数字退出状态，不会向自身重发 SIGINT；父 shell 仍可能继续执行下一条命令。
+Ctrl-C(SIGINT)或 SIGTERM 取消命令并返回 `130`；普通等待锁超时仍返回 `4`。只有命令本身被中断才返回
+`130`：内部超时(例如 R2 上传长时间没有进度)属于普通运行错误(`1`)。SOW 返回的是数字退出状态，不会向自身重发 SIGINT；父 shell 仍可能继续执行下一条命令。
 脚本需要检查状态、使用 `set -e`，或自行处理信号。取消不会被报告成签名策略失败。
 add 在 Desired 提交前被取消时，不会把任何输入报告为 accepted，且先持久化失败状态再清理
-临时包字节。已经提交的变更仍然保留，重跑命令即可恢复或继续收敛。操作完成前应保留原始输入包。
+临时包字节；若清理未能在 5 秒预算内完成，剩余部分由下一条写命令(例如 `sow build`)删除，
+在此之前 `sow check` 报告 `recovering`。已经提交的变更仍然保留，重跑命令即可恢复或继续收敛。操作完成前应保留原始输入包。
 
 ## 0 —— 成功或无操作
 
@@ -134,7 +136,9 @@ workspace discovery error: managed: workspace discovery error: discover workspac
 ```
 
 指向目录的符号链接可以作为发现起点，包括 macOS 上的 `/tmp`。发现仍按字面路径向上
-搜索，未找到工作区时继续回退到 `SOW_DIR`；仓库内部的符号链接仍保留原有校验。
+搜索，未找到工作区时继续回退到 `SOW_DIR`。从起点隐式选择 Repository 与 Dist 的要求更严：
+起点目录与工作区根之间只要有任一符号链接分量，就不能推断，此时请显式传入 `-r`。如果符号链接
+位于 Repository 内部，会推断 Dist 的命令只给 `-r` 仍会失败，还要同时传入 `-d`。
 
 配置文件格式有问题 —— 注意错误会指出具体行号:
 

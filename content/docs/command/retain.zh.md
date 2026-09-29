@@ -59,6 +59,11 @@ removed retained generation 00000000000000000012
 该命令不删除软件包体。移除一个未被保留的 Generation 是幂等空操作。只有在其他安全根也无法
 到达这些包体时，后续本地 [`sow gc`](/zh/docs/command/gc/) 才可能回收。
 
+`retain rm` 在移除前会校验保留根，校验失败时拒绝移除；只要存在这样的损坏保留根，`retain ls`、
+本地 `gc` 与 `check` 也会失败，`check` 会在 `retained` 层指出损坏的 Generation。确认损坏后，
+在没有写入者运行时手工删除 `.sow/<repo>/retained/<GENERATION>`：这只移除 GC 根，不删除任何
+包体；随后重跑 `sow check`。
+
 ## 参数
 
 | 参数 | 适用命令 | 含义 |

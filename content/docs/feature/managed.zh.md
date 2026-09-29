@@ -217,7 +217,7 @@ Dist 选择,按序:
 
 ```console
 $ sow ls
-workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
+workspace discovery error: managed: workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
 ```
 
 退出码 `2`。所有推断都在路径类型与符号链接校验之后才进行。

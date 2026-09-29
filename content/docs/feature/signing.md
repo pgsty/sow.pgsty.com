@@ -161,6 +161,12 @@ RPM is already signed by that key.
 
 The exact public certificate identity of the current built metadata is recorded per Dist, and multiple certificate versions for the same primary fingerprint can coexist — so extending an expiry or adding a subkey does not invalidate what is already published.
 
+Package-signing trust in `fill` or `always` mode is stricter. Adding or rotating a signing subkey
+keeps existing package signatures valid. Extending the expiry of the primary key and re-exporting
+it creates a newer self-signature; SOW 0.5.0 then rejects packages signed before that
+self-signature, and `trusted_keys` cannot hold two versions of the same certificate. For package
+signing, prefer a primary key without expiry and rotate signing subkeys.
+
 ## Plain mode
 
 ```bash

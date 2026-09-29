@@ -30,7 +30,7 @@ Understanding the `state` field is most of understanding the log:
 ```text
 planned → staged → applied → built → done
                         └────────→ done_dirty
-   any nonterminal → recovering → built / rolled_back
+   any nonterminal → recovering → built / done / done_dirty / rolled_back / failed
    pre-apply error  → failed
 ```
 
@@ -41,9 +41,9 @@ planned → staged → applied → built → done
 | `applied` | Desired state and required private pending payloads committed |
 | `built` | The complete static Generation has been switched in |
 | `done` | Terminal — a normal successful command |
-| `done_dirty` | Terminal — Desired is ahead of Built after `--skip` or a documented safe exit while recovering an old, unfrozen mutation |
+| `done_dirty` | Terminal — Desired is ahead of Built after `--skip` (a `--skip` that leaves the Repository clean ends at `done`), or after a documented safe exit while recovering an old, unfrozen mutation |
 | `failed` | Terminal — the operation failed before `applied`, nothing was committed |
-| `rolled_back` | Terminal — a post-`applied` failure the process could safely undo |
+| `rolled_back` | Terminal — recovery abandoned the operation before it changed Desired state, for example a `planned` operation left by an interrupted command |
 | `recovering` | Non-terminal; the next write command must complete or roll it back |
 
 Workspace lifecycle commands (`init`, `repo new`, `repo rm`) use the Workspace file journal instead
@@ -205,10 +205,13 @@ still fail the command.
 
 ```console
 sow log prune 2027-01-01 -r pigsty
-{"operation":"8150803833883584722","repository":"pigsty","before":"2027-01-01T00:00:00+08:00","pruned":1}
+pruned log repository=pigsty operation=8150803833883584722 before=2026-12-31T16:00:00.000000000Z operations=1
 ```
 
-The absolute timestamp is echoed back so the local-timezone interpretation is never ambiguous.
+The absolute timestamp is echoed back (here for a workstation at UTC+8) so the local-timezone
+interpretation is never ambiguous. When a reader defers space reclamation, a second line reads
+`log deletion committed; space reclamation deferred while the database is busy`; with `--json`
+the journal ID and `compaction_deferred` appear in `result`.
 
 | Flag | Description | Default |
 |---|---|---|
@@ -278,7 +281,7 @@ sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 | `log` | `0` | Records printed, including an empty ledger |
 | `log` | `2` | Usage error (including a non-numeric Operation ID), Workspace not found, or ambiguous selection |
 | `log` | `5` | State database unreadable |
-| `log` | `6` | The given Operation ID does not exist |
+| `log` | `6` | The given Operation ID does not exist, or several different `-d` values were given |
 | `log export` | `0` | Export written |
 | `log export` | `1` | I/O failure writing the target, or the parent is not a real directory |
 | `log export` | `2` | Usage error or ambiguous selection |

@@ -63,6 +63,12 @@ It does not delete package bytes. Removing a Generation that is not retained is 
 A later local [`sow gc`](/docs/command/gc/) may reclaim payloads only if no other safety root reaches
 them.
 
+`retain rm` verifies the retained root before removing it and refuses one that fails
+verification. While such a damaged retained root exists, `retain ls`, local `gc`, and `check`
+also fail; `check` names the damaged Generation in its `retained` layer.
+After confirming the damage, and with no writer running, delete `.sow/<repo>/retained/<GENERATION>`
+by hand. This removes only the GC root, never package bytes; then rerun `sow check`.
+
 ## Options
 
 | Flag | Commands | Meaning |

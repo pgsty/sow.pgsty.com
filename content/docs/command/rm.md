@@ -73,7 +73,10 @@ There is no `--allow-empty`, no `--all`, no `--yes` and no `--source-list`.
 ## Preview with --check
 
 `-c/--check` computes exactly what would be removed, what policy would then decide, and which files
-an immediate build would touch — and writes nothing at all.
+an immediate build would touch — and writes nothing at all. `removed` lists only the memberships
+matched by your references. A membership that policy re-evaluation removes as a consequence is not
+listed: the preview shows only the index files that removal changes, and after the write `sow log`
+counts it among the operation's memberships.
 
 ```console
 sow rm centos-release -r demo -d el9 -c

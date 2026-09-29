@@ -49,7 +49,7 @@ Managed 仓库生命周期与变更使用两类持久化载体，各自作用域
 ```text
 planned → staged → applied → built → done
                        └──────────────→ done_dirty
-   任一非终态 → recovering → built / rolled_back
+   任一非终态 → recovering → built / done / done_dirty / rolled_back / failed
    apply 前出错 → failed
 ```
 
@@ -73,12 +73,17 @@ planned → staged → applied → built → done
 ]
 ```
 
-`--skip` 会主动以 `done_dirty` 收尾。恢复旧操作时还有一个有限出口：Desired 已提交、构建计划
-尚未冻结，而可识别的签名/配置拒绝或已知契约升级阻止原构建继续。SOW 校验已提交状态与包字节，
+`--skip` 使 Desired 领先于 Built 时以 `done_dirty` 收尾；若之后仓库仍是干净的（例如重复加入
+已有成员），则以 `done` 收尾。恢复旧操作时还有一个有限出口：Desired 已提交、构建计划尚未冻结，
+且原构建被以下之一阻止：可识别的签名策略拒绝、渲染开始后 `sow.yml` 的字节发生任何变化（哪怕
+只改注释），或已知契约升级。SOW 校验已提交状态与包字节，
 保留 Desired 和旧 Built 视图，并记录暂未构建的原因；必要时修正策略，再重跑 `build`。
 普通 I/O、损坏或已冻结构建失败仍是恢复错误，不会被静默改为 `done_dirty`。
 
 在 `applied` 之前失败的 Operation 会成为 `failed`。这里有一处契约上的微妙之处:`add` 必须在解析包之前先记录 `planned` Operation,所以一个架构不被许可的包确实会留下审计记录。但除了那条终态 `failed` 记录之外,什么都不会被写入 —— 没有包对象、没有成员关系、没有 pending 字节、没有公开树变化、没有 Generation。既留住了审计线索,又保证无效架构不会进入任何产品投影。
+
+如果 Ctrl-C 在 `applied` 之前中断操作，SOW 先记录 `failed`，再在 5 秒预算内删除该操作的临时
+包字节；剩余部分由下一条写命令（例如 `sow build`）删除，在此之前 `sow check` 报告 `recovering`。
 
 ## 锁模型
 

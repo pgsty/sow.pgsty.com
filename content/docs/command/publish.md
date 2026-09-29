@@ -102,6 +102,11 @@ closed.
 Filesystem targets may use `file://` or HTTP(S). Their conditional-deletion absence check requires
 the exact file identity for `file://`, or canonical 404/410 visibility for HTTP(S). R2 requires an
 HTTP(S) public endpoint; R2 target GC remains report-only and does not perform remote deletion.
+Every R2 publish lists the target prefix and sends one HEAD request per listed object, one at a
+time; a publish that changes the target does this twice. R2 target GC only reports candidates and
+never deletes objects, so this cost grows with published history. Do not delete reported objects
+by hand: the next publish requires the remote prefix to match its recorded inventory exactly and
+fails with an integrity error (exit `5`).
 
 ## Safety boundaries
 

@@ -95,6 +95,13 @@ The updated RPM authentication and APT metadata contracts require one rebuild of
 Dists. Afterwards, unchanged RPMs with matching Built evidence do not need repeated payload
 verification. Migration adds private database indexes and can take time and disk space on a
 large publication history; do not reopen the migrated database with an older binary.
+`sow repo migrate` reports the change, for example `schema=12->13`; a repeated run shows
+`schema=13->13`. Until a Repository is migrated, its write commands exit `5` with
+`` repository schema v12 predates this binary (v13); back up the workspace, then run
+`sow repo migrate NAME` ``.
+
+Back up with a tool that preserves hard links, because DEB `by-hash` entries are hard links:
+GNU `cp -a` on Linux, `rsync -aH`, or `tar`. On macOS, `cp -a` does not preserve hard links.
 
 For Plain repositories, 0.5 adds `create --metadata-timestamp`; check that the actual
 binary's `create --help` lists it. The default remains `0`, so replacing the binary alone
@@ -109,7 +116,7 @@ migrated explicitly before ordinary reads or writes. Stop Workspace writers befo
 backup:
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-upgrade
+cp -a /srv/sow /srv/sow.backup-before-upgrade   # GNU cp; elsewhere use rsync -aH or tar
 sow repo migrate REPOSITORY -C /srv/sow
 sow build -r REPOSITORY -C /srv/sow
 sow check -r REPOSITORY -C /srv/sow

@@ -29,7 +29,7 @@ sow log prune BEFORE [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|
 ```text
 planned → staged → applied → built → done
                         └────────→ done_dirty
-   any nonterminal → recovering → built / rolled_back
+   any nonterminal → recovering → built / done / done_dirty / rolled_back / failed
    pre-apply error  → failed
 ```
 
@@ -40,9 +40,9 @@ planned → staged → applied → built → done
 | `applied` | 期望状态与所需的私有 pending 载荷已提交 |
 | `built` | 完整的静态 Generation 已切换 |
 | `done` | 终态——一次正常成功的命令 |
-| `done_dirty` | 终态——`--skip`，或恢复旧的未冻结操作时通过文档所述安全出口收尾；Desired 领先于 Built |
+| `done_dirty` | 终态——`--skip` 后 Desired 领先于 Built（`--skip` 后仓库仍干净则以 `done` 收尾），或恢复旧的未冻结操作时通过文档所述安全出口收尾 |
 | `failed` | 终态——在 `applied` 之前失败，什么都没提交 |
-| `rolled_back` | 终态——`applied` 之后失败，但进程安全地回滚了 |
+| `rolled_back` | 终态——恢复在 Operation 改变 Desired 之前放弃了它，例如被中断命令留下的 `planned` Operation |
 | `recovering` | 非终态；下一条写命令必须先完成或回滚它 |
 
 工作区生命周期命令（`init`、`repo new`、`repo rm`）走的是工作区文件 journal，不会出现在仓库的
@@ -195,10 +195,12 @@ macOS 上 `/tmp` 是指向 `/private/tmp` 的符号链接，所以在那里会�
 
 ```console
 sow log prune 2027-01-01 -r pigsty
-{"operation":"8150803833883584722","repository":"pigsty","before":"2027-01-01T00:00:00+08:00","pruned":1}
+pruned log repository=pigsty operation=8150803833883584722 before=2026-12-31T16:00:00.000000000Z operations=1
 ```
 
-绝对时间戳会被回显，这样本地时区的解释永远不含糊。
+绝对时间戳会被回显（此处为 UTC+8 的工作站），这样本地时区的解释永远不含糊。若有读者使空间回收
+被推迟，输出会多一行 `log deletion committed; space reclamation deferred while the database is busy`；
+使用 `--json` 时，日志 ID 与 `compaction_deferred` 位于 `result` 中。
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
@@ -265,7 +267,7 @@ sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 | `log` | `0` | 记录已打印，包括空账本 |
 | `log` | `2` | 用法错误（包括非数字的 Operation ID）、工作区未找到，或选择有歧义 |
 | `log` | `5` | 状态数据库不可读 |
-| `log` | `6` | 给定的 Operation ID 不存在 |
+| `log` | `6` | 给定的 Operation ID 不存在，或给出了多个不同的 `-d` |
 | `log export` | `0` | 导出成功 |
 | `log export` | `1` | 写目标时 I/O 失败，或父目录不是真实目录 |
 | `log export` | `2` | 用法错误或选择有歧义 |

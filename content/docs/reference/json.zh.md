@@ -49,7 +49,7 @@ Repository 就遇到无效配置），`result` 为 `null`。已提交的部分�
 | 本地 `gc` | 真正执行回收时返回日志 ID；空操作为 `null` |
 | `publish`、`publish --abort` | 存在发布 attempt 时返回其 ID，否则为 `null` |
 | `log ID` | 回显所查询的日志 ID，虽然该命令只读 |
-| `init`、`repo`/`dist`/`retain` 命令、`export`、目标 `gc`、`rm --check`、`log prune` 及其他查询 | `null`；`log prune` 的日志 ID 位于 `result.operation` |
+| `init`、`repo`/`dist`/`retain` 命令、`export`、目标 `gc`、`rm --check`、`log prune`、Plain `create` 及其他查询 | `null`；`log prune` 的日志 ID 位于 `result.operation` |
 
 ### errors
 
@@ -60,7 +60,7 @@ Repository 就遇到无效配置），`result` 为 `null`。已提交的部分�
 | 字段 | 含义 |
 |---|---|
 | `code` | 进程[退出码](/zh/docs/reference/exit-codes/) —— `1` 到 `6`，或中断码 `130`。 |
-| `class` | `runtime`、`usage`、`discovery`、`config`、`partial`、`lock`、`integrity`、`rejected`、`interrupted` 之一。`discovery` 与 `config` 是退出码 `2` 的细分类；`interrupted` 对应 `130`。 |
+| `class` | `runtime`、`usage`、`discovery`、`config`、`partial`、`lock`、`integrity`、`rejected`、`interrupted` 之一。`discovery` 与 `config` 是退出码 `2` 的细分类；`interrupted` 对应 `130`，仅在命令本身收到 SIGINT 或 SIGTERM 时使用。 |
 | `message` | 分类后的错误文本。通常与 stderr 相同；Plain `create` 的 stderr 输出原始领域错误，不含额外的 CLI 类别前缀。 |
 
 请对 `class` 做分支判断,不要匹配 message 文本。message 里含路径和包名,会变;class 不会。
@@ -438,7 +438,7 @@ sow log --json | jq -r '.result.operations[] | .payload_json | fromjson | .confi
 
 ```json
 "result":{"operation":"7140280533435786353","repository":"demo",
- "before":"2026-01-01T00:00:00+08:00","pruned":0}
+ "before":"2026-01-01T00:00:00+08:00","pruned":0,"compaction_deferred":false}
 ```
 
 注意 `before` 会回显裸日期在本地时区解析出的绝对时间戳。

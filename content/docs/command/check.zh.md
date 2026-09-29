@@ -35,7 +35,7 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 | `config` | `sow.yml` 能否针对该 Repository 解析并通过校验 | 配置对象 |
 | `state` | SQLite `quick_check`、外键、日志与恢复证据 | 一个状态库 |
 | `public-modes` | 服务目录中所有文件与目录权限 | 已检查路径 |
-| `retained` | 显式保留记录与冻结 Generation Manifest | 保留记录 |
+| `retained` | 显式保留记录与冻结 Generation Manifest（损坏的保留根会使该层失败，见 [`retain rm`](/zh/docs/command/retain/#retain-rm)） | 保留记录 |
 | `package-bytes` | 包池与私有 pending 包体的 SHA-256 | Package Object |
 | `desired-membership` | Membership 能否在当前策略下解析到真实对象 | 成员关系 |
 | `index` | 渲染索引是否与其声明的成员关系一致 | Dist |

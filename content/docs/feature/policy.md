@@ -53,7 +53,7 @@ Five fields are allowed:
 | `kind` | the fixed enumeration below |
 | `format` | `rpm` or `deb` |
 
-Patterns are case-sensitive exact strings or shell globs (`*`, `?`, `[]`). There is no regex, no version comparison, no negation, and no expression language. Unknown fields, empty rules, and invalid globs fail at `config check` rather than silently matching nothing.
+Patterns are case-sensitive exact strings or shell globs (`*`, `?`, `[]`). There is no regex, no version comparison, no negation, and no expression language. Unknown fields, empty rules, and invalid globs fail at `config check` rather than silently matching nothing. Values are not checked against the `kind` enumeration: a `kind` outside it (for example `debug`) passes validation but matches nothing.
 
 `kind` is derived from the binary name, most specific suffix winning:
 

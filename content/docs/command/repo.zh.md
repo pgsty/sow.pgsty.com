@@ -118,10 +118,17 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 执行普通读写之前逐个迁移所有已配置 Repository。
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-0.5.0
+cp -a /srv/sow /srv/sow.backup-before-0.5.0   # GNU cp；其他平台请用 rsync -aH 或 tar
 sow repo migrate pigsty -C /srv/sow
 sow repo migrate pgsql -C /srv/sow
 ```
+
+备份必须保留硬链接（DEB 的 `by-hash` 条目是硬链接），macOS 的 `cp -a` 不保留硬链接。输出会报告
+Schema 变化，例如 `migrated repository pigsty: single-payload-v1 -> single-payload-v1 schema=12->13 …`；
+JSON 中有 `schema_from` 与 `schema_to`，重复迁移报告 `schema=13->13`。Repository 迁移之前，
+其写命令以 `5` 退出并提示
+`` repository schema v12 predates this binary (v13); back up the workspace, then run
+`sow repo migrate NAME` ``。
 
 Schema v13 为候选包池路径归属查询增加索引，避免每次 add 全表扫描发布历史。迁移时创建索引
 需要一次性的时间与私有数据库空间。随后执行 `sow build`、`sow check`，刷新受影响的 RPM 认证
@@ -134,8 +141,9 @@ Schema Transition 完成后不可逆，不要再用旧版本 SOW 二进制打开
 `PRAGMA user_version`。`--abort` 只适用于诊断出的 pre-commit layout-maintenance attempt，不能
 撤销已经完成的 Schema Migration。除升级或 SOW 明确诊断外，不要试探性执行 migrate。
 
-不支持从开发期 C2 布局启动新的转换。请保留原文件并用受支持的发布版重建；已经记录的布局
-迁移仍可按绑定的原计划完成。
+不支持从开发期 C2 布局启动新的转换。请保留原文件并用受支持的发布版重建。已经记录的布局
+迁移仍可按绑定的原计划完成，但结果不是受支持的 0.5 Repository：之后的下一次写入仍可能构建出
+一个 Generation，随后 Repository 即处于 `status=error`。请用原始包重建。
 
 | 参数 | 含义 | 默认值 |
 |---|---|---|

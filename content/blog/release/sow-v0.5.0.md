@@ -1,7 +1,7 @@
 ---
 title: "SOW v0.5.0"
 linkTitle: "SOW v0.5.0"
-date: 2026-09-28T00:00:00+08:00
+date: 2026-09-29T00:00:00+08:00
 authors: [Vonng]
 description: "SOW v0.5.0 adds explicit publication timestamps for Plain RPM repositories, preserves deterministic builds, and documents migration from existing YUM maintenance workflows."
 categories: [Release]
@@ -88,6 +88,18 @@ content differences. Newly generated GPG metadata signatures use SHA-256 regardl
 local GPG preferences, and new metadata builds require a currently usable signing key.
 Archives and native packages now include third-party license notices.
 
+Pool paths are compared case-insensitively even for identical bytes, so a file name that
+differs only by case cannot become a second URL. On case-insensitive filesystems SOW also
+rejects source directories that differ only by case, in the workspace and before any upload
+to a filesystem target. Concurrent `export rpm-leaf --hardlink` runs and `check` no longer
+report unchanged Pool bytes as an integrity failure. Local `gc` ignores publication inventory
+entries that exist only remotely, such as payloads retained by report-only R2 maintenance.
+
+`sow repo migrate` reports the schema change, and an unmigrated Repository names the command to
+run. Exit `130` is reserved for the command's own interruption. `file://` R2 credentials must
+be regular files, and a v0.4.0 add that omitted a non-empty, fully excluded Dist now recovers
+on the next build.
+
 ## Validate the surrounding maintenance workflow
 
 A migration should exercise each deployed YUM/DNF version and architecture with an existing
@@ -121,7 +133,7 @@ whole-repository switch.
   and release workflows pin GoReleaser v2.18.2 and its action commit.
 - RPM format v6 signatures are not supported in 0.5.0; use RPM format v4 packages for
   package-signing workflows.
-- The 2026-09-28 source `govulncheck` found no reachable vulnerabilities. A required module
+- The 2026-09-29 source `govulncheck` found no reachable vulnerabilities. A required module
   still carries advisory `GO-2026-5932`, but the current code does not import its affected
   package; scans of stripped binaries can still report the module match. This does not
   claim that all required modules are advisory-free; scan the final release commit again.

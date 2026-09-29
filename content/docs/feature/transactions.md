@@ -52,7 +52,7 @@ This is not SQLite's WAL. WAL handles SQLite's own page transactions; it cannot 
 ```text
 planned → staged → applied → built → done
                        └──────────────→ done_dirty
-   any nonterminal → recovering → built / rolled_back
+   any nonterminal → recovering → built / done / done_dirty / rolled_back / failed
    pre-apply error → failed
 ```
 
@@ -76,15 +76,21 @@ planned → staged → applied → built → done
 ]
 ```
 
-`--skip` deliberately ends at `done_dirty`. Recovery also uses this terminal state for an
-old mutation whose Desired change committed but whose build plan was not frozen, when a
-recognized signing/configuration rejection or known contract upgrade prevents that original
-build. SOW validates the committed state and payloads, preserves Desired and the old Built
+`--skip` ends at `done_dirty` when it leaves Desired ahead of Built; if the Repository is
+still clean afterwards (for example, re-adding an existing member), it ends at `done`.
+Recovery also uses `done_dirty` for an old mutation whose Desired change committed but whose
+build plan was not frozen, when one of these prevents that original build: a recognized
+signing-policy rejection, any change to the bytes of `sow.yml` (even a comment) after
+rendering had started, or a known contract upgrade. SOW validates the committed state and payloads, preserves Desired and the old Built
 view, and records why the build was left pending. Correct the policy if needed, then rerun
 `build`. Ordinary I/O, corruption, and failures of a frozen build remain recovery errors;
 they are not silently converted to `done_dirty`.
 
 An operation that fails before `applied` becomes `failed`. This matters for a subtle case in the contract: `add` must record a `planned` operation before parsing packages, so a package with a disallowed architecture does produce an audit record. But apart from that terminal `failed` record, nothing is written — no package object, no membership, no pending bytes, no public tree change, no generation. You keep the audit trail without letting an invalid architecture reach any product projection.
+
+If Ctrl-C interrupts an operation before `applied`, SOW records `failed` before it removes the
+operation's temporary package bytes, within a 5-second budget; anything left is removed by the
+next write command (for example `sow build`), and until then `sow check` reports `recovering`.
 
 ## The lock model
 
