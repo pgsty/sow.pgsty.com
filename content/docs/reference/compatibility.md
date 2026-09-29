@@ -58,10 +58,10 @@ that contains both cannot be moved to a case-insensitive filesystem.
 | Production CLI clean room | Linux CI | Builds the shipping binary; creates mixed Plain RPM/DEB metadata; initializes `sow/v3`; creates RPM and DEB Dists; adds fixtures; runs query, build, check, changes, config, and log commands |
 | Plain APT client | Ubuntu 22.04 container | Serves `sow create` output over HTTP; runs `apt-get update`, package discovery, exact-version selection, download, and install with an explicitly trusted unsigned source |
 | RPM detached-signature transition | AlmaLinux 8, 9, and 10 containers | Runs real DNF clients against serial `repomd.xml` / `repomd.xml.asc` transition states and pins which combinations succeed or fail |
-| S3-compatible transport | Pinned MinIO container | Exercises bucket listing, HEAD, GET, single-part create-only/CAS PUT, replay, and object SHA-256 metadata; retries and prefix confinement are covered by local protocol tests |
+| S3-compatible transport | Pinned PGSTY Silo container (MinIO-compatible) | Exercises bucket listing, HEAD, GET, single-part create-only/CAS PUT, replay, and object SHA-256 metadata; retries and prefix confinement are covered by local protocol tests |
 | Release packaging | Linux CI | Builds four archives, two RPMs, two DEBs, and `SHA256SUMS`; checks package paths, Apache-2.0 metadata, and packaged license bytes |
 
-The current MinIO integration does not validate conditional multipart completion. Multipart
+The current Silo integration does not validate conditional multipart completion. Multipart
 request/protocol tests are separate; they do not establish compatibility with hosted R2.
 Verify real R2 multipart behavior separately before treating that path as accepted.
 

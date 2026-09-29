@@ -52,14 +52,14 @@ SOW 会拒绝符号链接控制路径、不安全普通文件、重叠 filesyste
 | 生产 CLI 干净环境 | Linux CI | 构建交付二进制；生成混合 Plain RPM/DEB 元数据；初始化 `sow/v3`；创建 RPM/DEB Dist；加入 Fixture；执行查询、build、check、changes、config 与 log 命令 |
 | Plain APT 客户端 | Ubuntu 22.04 容器 | 通过 HTTP 服务 `sow create` 输出；在显式信任未签名源时执行 `apt-get update`、包发现、精确版本选择、下载与安装 |
 | RPM 分离签名切换 | AlmaLinux 8、9、10 容器 | 使用真实 DNF 客户端遍历 `repomd.xml` / `repomd.xml.asc` 串行切换状态，并固定各组合的成功/失败行为 |
-| S3 兼容传输 | 固定 MinIO 容器 | 验证 Bucket 列表、HEAD、GET、单段仅创建/CAS PUT、重放与对象 SHA-256 元数据；重试与 Prefix 约束由本地协议测试覆盖 |
+| S3 兼容传输 | 固定的 PGSTY Silo 容器（兼容 MinIO） | 验证 Bucket 列表、HEAD、GET、单段仅创建/CAS PUT、重放与对象 SHA-256 元数据；重试与 Prefix 约束由本地协议测试覆盖 |
 | Release 打包 | Linux CI | 构建四个归档、两个 RPM、两个 DEB 与 `SHA256SUMS`；检查包内路径、Apache-2.0 元数据与协议文件字节 |
 
 DNF 签名切换是协议测试，不是完整 Managed RPM 安装；APT 作业覆盖未签名 Plain 仓库，不覆盖
 Managed 元数据签名。正式上线前，应使用部署中的确切 dnf/APT 版本、仓库 URL、访问策略与
 签名策略完成验收。
 
-当前 MinIO 集成没有验证条件式 Multipart 完成。Multipart 的请求/协议测试单独存在，
+当前 Silo 集成没有验证条件式 Multipart 完成。Multipart 的请求/协议测试单独存在，
 不能据此认定真实 R2 兼容；该路径的验收还需要真实 R2 Multipart 测试。
 
 ## 仓库客户端契约

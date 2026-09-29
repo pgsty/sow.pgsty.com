@@ -131,6 +131,9 @@ whole-repository switch.
   `internal/testdata/`. The clean-delivery manifests follow those paths.
 - Source builds now require Go 1.27.1. The dependency graph uses x/crypto v0.56.0,
   and release workflows pin GoReleaser v2.18.2 and its action commit.
+- The S3-compatible integration test runs against a digest-pinned `pgsty/silo` image, the
+  MinIO-compatible object store maintained by PGSTY, because the upstream `minio/minio`
+  image is no longer available on Docker Hub.
 - RPM format v6 signatures are not supported in 0.5.0; use RPM format v4 packages for
   package-signing workflows.
 - The 2026-09-29 source `govulncheck` found no reachable vulnerabilities. A required module

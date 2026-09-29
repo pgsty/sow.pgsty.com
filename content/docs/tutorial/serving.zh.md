@@ -138,7 +138,7 @@ target checkpoint、缓存 grace 或恢复状态。`sow changes` 描述 Generati
 
 ## R2 target
 
-`provider: r2` 使用 S3 兼容存储传输与只报告的 target GC。传输集成会针对固定 MinIO fixture
+`provider: r2` 使用 S3 兼容存储传输与只报告的 target GC。传输集成会针对固定的 PGSTY Silo fixture
 验证 list、HEAD、GET 与单段条件 PUT；不覆盖条件式 Multipart 完成，也不能替代真实 R2 验收。启用生产目标前，请先在非生产 prefix 验证凭据、bucket
 policy、公共 endpoint、缓存行为、重放与恢复。详见[平台与集成](/zh/docs/reference/compatibility/)。
 

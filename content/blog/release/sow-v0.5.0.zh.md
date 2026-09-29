@@ -114,6 +114,8 @@ Plain 仍是平面目录的多文件重建流程：不生成旧式 SQLite 元数
   测试夹具移至 `internal/testdata/`；干净源码交付清单同步采用这些路径。
 - 源码工具链升级为 Go 1.27.1，依赖采用 x/crypto v0.56.0；发布工作流固定 GoReleaser
   v2.18.2 及其 action 提交。
+- S3 兼容集成测试改为使用按 digest 固定的 `pgsty/silo` 镜像，即 PGSTY 维护的 MinIO
+  兼容对象存储，因为上游 `minio/minio` 镜像已无法从 Docker Hub 获取。
 - 0.5.0 暂不支持 RPM v6 包格式的签名，签名工作流请使用 RPM v4 格式包。
 - 2026-09-29 的源码 `govulncheck` 未发现可达漏洞。所依赖模块仍包含
   `GO-2026-5932` 通告，当前代码没有导入其受影响包；剥离后的二进制扫描仍可能报告模块命中。
