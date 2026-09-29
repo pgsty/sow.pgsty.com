@@ -21,8 +21,12 @@ columns:
       - { label: Release notes, url: blog/release/ }
       - { label: GitHub, url: 'https://github.com/pgsty/sow', external: true }
       - { label: Issues, url: 'https://github.com/pgsty/sow/issues', external: true }
-  - title: Pigsty
+      - { label: License, url: 'https://www.apache.org/licenses/LICENSE-2.0', external: true }
+  - title: "Ecosystem"
     links:
       - { label: Pigsty, url: 'https://pigsty.io', external: true }
       - { label: Package repository, url: 'https://pigsty.io/docs/repo/', external: true }
-      - { label: License, url: 'https://www.apache.org/licenses/LICENSE-2.0', external: true }
+      - { label: "PIG", url: "https://pig.pgsty.com/", external: true }
+      - { label: "PGEXT.CLOUD", url: "https://pgext.cloud/", external: true }
+      - { label: "PG Center", url: "https://pg.center/docs/reference/", external: true }
+      - { label: "PGSQL.CC", url: "https://pgsql.cc/docs/", external: true }
