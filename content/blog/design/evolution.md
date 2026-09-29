@@ -22,6 +22,17 @@ Some sealed folders use “v0.2” and “v0.3” for consecutive pre-release de
 version labels below refer only to released Git tags: the C2 hardlink line was replaced
 before v0.2.0 was tagged.
 
+The detailed history is preserved in four companion records:
+
+- [The Original v0.1 Program](/blog/design/v01-program/) explains the initial product
+  ambition and why its control plane became too broad.
+- [The v0.1 Decision Ledger](/blog/design/v01-decisions/) maps every surviving ADR to its
+  later fate.
+- [What v0.1 Actually Proved](/blog/design/v01-evidence/) summarizes the dated evidence
+  without turning test transcripts into maintained documentation.
+- [The v0.2 Reset](/blog/design/v02-reset/) records the Plain/Managed product boundary and
+  the C2-to-single-payload correction before the release tag.
+
 ## The short history
 
 | Line | Design center | Historical status |
@@ -42,7 +53,8 @@ The exact code and claims for each released line remain available in the
 The first program explored a broad package-distribution control plane: Git-backed
 canonical state, content-addressed storage, Routes and Views, materialized snapshots,
 remote providers, edge authorization, legacy migration, and evidence-bound deletion.
-Forty-five ADRs and a large verification tree made individual failure modes explicit.
+Forty-four surviving ADRs, numbered through 0045, and a large verification tree made
+individual failure modes explicit.
 
 That work produced reusable safety ideas, but the combined product surface was too large
 for the core job. Too many concepts could own or reinterpret the same package bytes and

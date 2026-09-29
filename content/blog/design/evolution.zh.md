@@ -19,6 +19,14 @@ draft: false
 部分封存目录使用“v0.2”“v0.3”表示连续的发布前设计线；下文版本号只指正式 Git Tag。
 C2 硬链接开发线在 v0.2.0 打 Tag 之前已经被替换。
 
+更详细的历史由四篇配套记录承载：
+
+- [v0.1 原始产品计划](/zh/blog/design/v01-program/)解释最初的产品野心，以及控制面为何变得过重；
+- [v0.1 决策账本](/zh/blog/design/v01-decisions/)逐项标注现存 ADR 后来的命运；
+- [v0.1 到底证明了什么](/zh/blog/design/v01-evidence/)汇总日期化证据，而不把测试流水账变成维护文档；
+- [v0.2 重置](/zh/blog/design/v02-reset/)记录 Plain/Managed 产品边界，以及正式 Tag 前从 C2
+  修正为单包体布局的过程。
+
 ## 简要历史
 
 | 版本线 | 设计中心 | 历史状态 |
@@ -37,8 +45,8 @@ C2 硬链接开发线在 v0.2.0 打 Tag 之前已经被替换。
 ## v0.1：问题很有价值，产品概念太多
 
 第一版计划探索了一套宽广的软件分发控制面：Git-backed Canonical State、CAS、Route 与 View、
-Materialized Snapshot、远端 Provider、Edge 鉴权、旧系统迁移与证据门禁删除。四十五份 ADR
-和庞大的验证树，把许多单点失败模式都写得很清楚。
+Materialized Snapshot、远端 Provider、Edge 鉴权、旧系统迁移与证据门禁删除。现存 44 份
+ADR（编号至 0045）和庞大的验证树，把许多单点失败模式都写得很清楚。
 
 这些工作留下了可复用的安全思想，但组合后的产品表面过大。太多概念都可能拥有或重新解释同一份
 包体与公开路径；在小型本地仓库模型稳定之前，Edge、Provider、Migration 与 Repository 已经

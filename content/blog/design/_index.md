@@ -24,6 +24,11 @@ its maintained form; `lastmod` records later editorial or implementation-alignme
 updates. Release notes and source tags remain authoritative for when behavior actually
 shipped.
 
+The Design History records distill the original v0.1 program, its 44 surviving ADR files,
+112 dated evidence reports, and the v0.2 reset into a small maintained narrative. Raw
+planning prompts, reviews, and transcripts stay available through immutable source tags
+and commits; they are primary sources, not a second documentation hierarchy.
+
 ## Authority and evidence
 
 This column is the maintained authority for design rationale and decision history. Current
