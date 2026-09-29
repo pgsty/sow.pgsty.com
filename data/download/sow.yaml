@@ -7,7 +7,7 @@
 # repository channel is rolling on purpose: it tracks whatever the infra
 # repository currently serves, which is not necessarily this tag.
 repo: pgsty/sow
-published: true
+published: false # Set true only after the matching GitHub Release is public.
 channels:
   - id: pigsty
     kind: rolling
@@ -72,10 +72,10 @@ channels:
     note: >-
       Pinned native packages for an offline or promotion-gated pipeline. They
       carry the `1PGSTY` release suffix, install the executable at
-      `/usr/bin/sow`, and ship the Apache-2.0 licence with it.
+      `/usr/bin/sow`, and ship the Apache-2.0 licence and third-party notices.
     note_zh: >-
       适用于离线交付或需要逐级晋级的流水线。安装包带 `1PGSTY` 发布后缀，把可执行文件
-      装到 `/usr/bin/sow`，并随包安装 Apache-2.0 许可证。
+      装到 `/usr/bin/sow`，并随包安装 Apache-2.0 许可证与第三方许可声明。
     steps:
       - title: RPM · x86_64 / aarch64
         title_zh: RPM · x86_64 / aarch64
@@ -100,12 +100,12 @@ channels:
     note: >-
       Installer-free binaries for Linux and macOS on `amd64` and `arm64`, for
       CI, for macOS workstations, and for hosts where you own the install path.
-      Each archive holds the `sow` executable, `README.md`, `CHANGELOG.md`, and
-      the Apache-2.0 `LICENSE`. Windows is not a release target.
+      Each archive holds the `sow` executable, `README.md`, `CHANGELOG.md`,
+      the Apache-2.0 `LICENSE`, and `THIRD_PARTY_NOTICES`. Windows is not a release target.
     note_zh: >-
       面向 Linux 与 macOS 的免安装器二进制，覆盖 `amd64` 与 `arm64`，适合 CI、macOS
       工作站，以及由你自己决定安装路径的主机。每个归档包含 `sow` 可执行文件、
-      `README.md`、`CHANGELOG.md` 与 Apache-2.0 `LICENSE`。不提供 Windows 构建。
+      `README.md`、`CHANGELOG.md`、Apache-2.0 `LICENSE` 与 `THIRD_PARTY_NOTICES`。不提供 Windows 构建。
     steps:
       - title: Linux · amd64
         title_zh: Linux · amd64
@@ -135,11 +135,11 @@ channels:
     icon: fa-solid fa-code-branch
     url: https://github.com/pgsty/sow/tree/${tag}
     note: >-
-      Build the tag yourself. The module declares Go 1.27.0, metadata generation
+      Build the tag yourself. The module declares Go 1.27.1, metadata generation
       needs no C toolchain, and these are the flags the release pipeline uses,
       so a source build reports the same product version as the published one.
     note_zh: >-
-      自行构建对应 Tag。模块声明 Go 1.27.0，生成元数据不需要 C 工具链；下面就是
+      自行构建对应 Tag。模块声明 Go 1.27.1，生成元数据不需要 C 工具链；下面就是
       Release Pipeline 使用的构建参数，因此源码构建与官方发布报告相同的产品版本。
     steps:
       - title: Clone, check out, build

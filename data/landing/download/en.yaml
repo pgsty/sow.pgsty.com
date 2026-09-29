@@ -18,14 +18,14 @@ sections:
 hero:
   eyebrow: Download matrix
   title: Download SOW
-  desc: '**One self-contained CLI, five installation paths.** Choose a package or archive for your operating system and architecture, or build from source. Pinned downloads use SOW 0.5.0; the Pigsty repository follows its own update schedule.'
+  desc: '**One self-contained CLI, five installation paths.** Choose a package or archive for your operating system and architecture, or build from source. Pinned artifacts are enabled after their GitHub Release is public; the Pigsty repository follows its own update schedule.'
   note: SOW 0.5.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
   title_size: 3.4rem
   actions:
-    - label: SOW 0.5.0 on GitHub
-      url: 'https://github.com/pgsty/sow/releases/tag/v0.5.0'
+    - label: Published releases on GitHub
+      url: 'https://github.com/pgsty/sow/releases'
       icon: fa-brands fa-github
       style: primary
       external: true

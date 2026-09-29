@@ -17,14 +17,14 @@ sections:
 hero:
   eyebrow: 下载矩阵
   title: 下载 SOW
-  desc: '**一个自包含 CLI，五条安装路径。** 按操作系统与架构选择安装包、归档，或从源码构建。固定版本下载统一使用 SOW 0.5.0；Pigsty 软件源按自己的更新节奏提供版本。'
+  desc: '**一个自包含 CLI，五条安装路径。** 按操作系统与架构选择安装包、归档，或从源码构建。固定版本产物在对应 GitHub Release 公开后启用；Pigsty 软件源按自己的更新节奏提供版本。'
   note: SOW 0.5.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
   title_size: 3.4rem
   actions:
-    - label: GitHub 上的 SOW 0.5.0
-      url: 'https://github.com/pgsty/sow/releases/tag/v0.5.0'
+    - label: GitHub 已发布版本
+      url: 'https://github.com/pgsty/sow/releases'
       icon: fa-brands fa-github
       style: primary
       external: true
