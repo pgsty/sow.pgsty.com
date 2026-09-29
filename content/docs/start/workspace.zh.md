@@ -115,10 +115,12 @@ sow config show --all
 
 ## 选择规则
 
-- Workspace：从当前目录向上查找，或从 `-C DIR` 开始查找。
+- Workspace：给了 `-C DIR` 就从该目录向上找，否则从当前目录找；未找到工作区时再尝试 `SOW_DIR`。显式 `-C` 不会禁用这条回退。
 - Repository：`-r NAME`、当前路径所属 Repository，或唯一已配置 Repository。
 - Dist：`-d NAME`，可重复；只有命令能够唯一确定范围时才可省略。
 
+`-C` 指定的是发现起点，不保证该目录本身就是最终 Workspace Root。用 `sow config check -C DIR`
+查看解析后的工作区；必须固定操作对象的脚本应指定明确的物理工作区根及 `-r NAME`。
 存在歧义时直接报错；SOW 不会随便挑选 Repository 或 Dist。
 
 ## 下一步

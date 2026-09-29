@@ -27,7 +27,7 @@ Plain 与 Managed 两种模式下 SOW 创建的每一条路径、包池分组规
 以及绝对不能通过 HTTP 暴露的目录。
 {{< /card >}}
 {{< card title="退出码" link="/zh/docs/reference/exit-codes/" >}}
-七个退出码分别代表什么。
+退出码 0–6 与中断码 130 分别代表什么。
 {{< /card >}}
 {{< card title="JSON 输出" link="/zh/docs/reference/json/" >}}
 `sow.cli/v1` Envelope、各顶层字段含义与主要命令族的 Result 形态。

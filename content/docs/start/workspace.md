@@ -122,11 +122,14 @@ For a safe Nginx and filesystem-publication workflow, continue with
 
 ## Selection rules
 
-- Workspace: search upward from the current directory, or start from `-C DIR`.
+- Workspace: search upward from `-C DIR` when supplied, otherwise from the current directory; if no workspace is found, try `SOW_DIR`. An explicit `-C` does not disable that fallback.
 - Repository: `-r NAME`, the containing Repository, or the only configured Repository.
 - Dist: `-d NAME`, repeatable; omission is accepted only when the command can resolve an
   unambiguous scope.
 
+`-C` is a discovery starting point, not a promise that this exact directory becomes the
+Workspace Root. `sow config check -C DIR` shows the resolved workspace; use an explicit
+physical root and `-r NAME` for scripts that must target one particular repository.
 Ambiguity is an error; SOW does not pick an arbitrary Repository or Dist.
 
 ## Next

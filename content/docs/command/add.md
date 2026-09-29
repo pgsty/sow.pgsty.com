@@ -136,15 +136,25 @@ item input="/srv/pkg/centos-release-6-0.el6.centos.5.x86_64.rpm" status=accepted
 managed: batch partially succeeded
 ```
 
-If *nothing* is accepted, the whole operation is rejected with exit `6` and the Repository is
-unchanged:
+If *every input fails*, the operation exits `6`; Desired memberships and public content
+remain unchanged. Human output includes each failed input and its reason, and JSON includes
+them in `result.items`:
 
-```console
+```bash
 sow add /srv/pkg/centos-release-3.1-1.i386.rpm -r pigsty -d el9
-operation rejected: managed: operation rejected: no input package was accepted
 ```
 
 There is no rejected/quarantine directory.
+
+Policy-excluded inputs are not input failures; an entirely excluded batch can succeed even
+when the Dist was empty. If cancellation or preflight rejection prevents Desired from committing,
+prepared inputs are not reported as accepted. A cancelled command returns `130`; keep the original
+input files and rerun it. Committed membership changes are preserved during recovery.
+
+A pool path cannot identify different package bytes, including paths retained in historical
+publication or abandoned-upload records after local GC. A collision rejects that input;
+unrelated valid inputs can still commit. Use a new package version and filename for changed
+content instead of reusing a previously published URL.
 
 ## --skip
 
@@ -222,7 +232,7 @@ policy, is a hard conflict — `add` will not silently re-sign a coordinate in p
 | `3` | Partial batch — at least one item committed and at least one failed |
 | `4` | Repository lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Integrity or recovery error, including a build that failed after `applied` |
-| `6` | Nothing accepted — unsupported architecture, no compatible target Dist, or a coordinate conflict |
+| `6` | Nothing accepted — unsupported architecture, no compatible target Dist, or a coordinate/pool-path conflict |
 
 ## See also
 

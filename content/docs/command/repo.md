@@ -115,30 +115,34 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-This is a specialized maintenance command, not part of a fresh 0.5 Managed workflow. A Repository
-created by SOW 0.4 or 0.5 already has the current single-payload layout and schema v12. Upgrading
-from 0.4 to 0.5 does not require another migration.
-
-After upgrading an existing v0.3 Workspace, however, migration is mandatory: stop all Workspace
+This is a specialized maintenance command, not part of a fresh 0.5 Managed workflow. New 0.5
+Repositories use schema v13 and the current single-payload layout. Upgrading an existing v0.3
+or v0.4 Workspace requires explicit migration: stop all Workspace
 writers, take a backup, and run the command once for every configured Repository before ordinary
 reads or writes.
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-0.4.0
+cp -a /srv/sow /srv/sow.backup-before-0.5.0
 sow repo migrate pigsty -C /srv/sow
 sow repo migrate pgsql -C /srv/sow
 ```
 
-The 0.4 transition installs schema v11 and v12. It recomputes Repository status from every Dist,
+Schema v13 adds indexes for candidate pool-path ownership lookups, avoiding full publication-history
+scans on each add. Index creation costs time and private database space once during migration.
+Run `sow build` and `sow check` afterwards to refresh affected RPM authentication and APT metadata
+contracts. A v0.3 database also receives the v11/v12 repairs: it recomputes Repository status from every Dist,
 repairs publication and Generation signer projections without guessing a missing historical
 signer, removes stale abandoned-object evidence, and backfills revision 1 of the append-only
 publication-target binding ledger. An unrecorded v0.3 historical signer remains explicitly
 unverified; it cannot reach the current head or become a retained trust assertion.
 
-The completed schema transition is one-way. Do not reopen the database with SOW 0.3, and do not edit
+The completed schema transition is one-way. Do not reopen the database with an older SOW binary, and do not edit
 `PRAGMA user_version`. `--abort` applies only to a diagnosed pre-commit layout-maintenance attempt;
 it does not undo a completed schema migration. Outside an upgrade or an explicit SOW diagnostic,
 do not run migration speculatively.
+
+Starting a new conversion from a pre-release C2 layout is unsupported. Preserve its files and rebuild
+with a supported release; an already recorded layout transition may still complete its bound plan.
 
 | Flag | Description | Default |
 |---|---|---|

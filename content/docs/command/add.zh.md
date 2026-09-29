@@ -130,14 +130,22 @@ item input="/srv/pkg/centos-release-6-0.el6.centos.5.x86_64.rpm" status=accepted
 managed: batch partially succeeded
 ```
 
-如果*一个都没被接受*，整个操作以退出码 `6` 被拒绝，仓库保持原样：
+如果*每个输入都失败*，操作以退出码 `6` 被拒绝，期望成员与公开内容保持原样。人类输出会列出
+每个失败输入及其原因，JSON 则在 `result.items` 中保留这些信息：
 
-```console
+```bash
 sow add /srv/pkg/centos-release-3.1-1.i386.rpm -r pigsty -d el9
-operation rejected: managed: operation rejected: no input package was accepted
 ```
 
 没有 rejected/隔离目录。
+
+被策略排除不属于输入失败；全部被排除的批次可以正常成功，包括首次向空 Dist 添加时。
+如果取消或预检拒绝导致 Desired 尚未提交，已准备好的输入不会被报告为 accepted。取消命令
+返回 `130`，保留原始输入文件并重新执行即可；已经提交的成员变更在恢复时保持不变。
+
+一个 pool 路径不能代表两份不同的包字节。本地 GC 后，历史发布与已放弃上传记录保留的路径仍然
+受此约束。路径冲突只拒绝对应输入，无冲突的合法输入仍可提交。内容改变时，使用新的包版本与
+文件名，不要复用已经发布过的 URL。
 
 ## --skip
 
@@ -209,7 +217,7 @@ Managed 模式的 RPM 包签名在 `sow.yml` 的 `signing.rpm.packages.mode` 中
 | `3` | 部分批次——至少一项已提交，至少一项失败 |
 | `4` | 仓库锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 完整性或恢复错误，包括在 `applied` 之后构建失败 |
-| `6` | 一个都没接受——架构不受支持、没有兼容的目标 Dist，或坐标冲突 |
+| `6` | 一个都没接受——架构不受支持、没有兼容的目标 Dist，或坐标/pool 路径冲突 |
 
 ## 参见
 

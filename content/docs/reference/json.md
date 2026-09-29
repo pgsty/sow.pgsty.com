@@ -36,7 +36,7 @@ sow status --json
 | `command` | string | The command as invoked, including the subcommand: `add`, `repo ls`, `config show`. |
 | `ok` | bool | `true` when `errors` is empty. Equivalent to exit code `0`. |
 | `repository` | string or null | The selected repository, or `null` for workspace-wide and plain-mode commands. |
-| `operation` | string or null | The operation ID for write commands, `null` for read-only ones. |
+| `operation` | string or null | Command-specific identity, when available; see the table below. `null` does not imply a read-only command. |
 | `result` | object or null | Command-specific payload, described below. |
 | `errors` | array | Zero or more `{code, class, message}` objects. |
 
@@ -44,6 +44,14 @@ All seven fields are always present. `result` is `null` when the command failed 
 work — an unknown flag, discovery failure, or invalid configuration before a Repository was
 selected, for example. Committed partial results and diagnostic results from `check` or
 `rm --check` are preserved even when the command exits nonzero.
+
+| Command | Envelope `operation` |
+|---|---|
+| `add`, `rm` without `--check`, `build` | Journal ID when one was allocated; otherwise `null` |
+| Local `gc` | Journal ID when collection runs; `null` for a no-op |
+| `publish`, `publish --abort` | Publication attempt ID when available; otherwise `null` |
+| `log ID` | The requested journal ID, even though the command is read-only |
+| `init`, `repo`/`dist`/`retain` commands, `export`, target `gc`, `rm --check`, `log prune`, other queries | `null`; `log prune` places its journal ID in `result.operation` |
 
 ### errors
 
@@ -53,9 +61,9 @@ selected, for example. Committed partial results and diagnostic results from `ch
 
 | Field | Meaning |
 |---|---|
-| `code` | The process [exit code](/docs/reference/exit-codes/) — `1` through `6`. |
-| `class` | `runtime`, `usage`, `discovery`, `config`, `partial`, `lock`, `integrity`, or `rejected`. `discovery` and `config` are stable specializations of exit code `2`. |
-| `message` | The same text written to stderr. |
+| `code` | The process [exit code](/docs/reference/exit-codes/) — `1` through `6`, or `130` for interruption. |
+| `class` | `runtime`, `usage`, `discovery`, `config`, `partial`, `lock`, `integrity`, `rejected`, or `interrupted`. `discovery` and `config` specialize exit code `2`; `interrupted` corresponds to `130`. |
+| `message` | The classified error text. It matches stderr except that Plain `create` prints its raw domain error to stderr, without the additional CLI category prefix. |
 
 Branch on `class`, not on message text. Messages carry paths and package names and will
 change; the class will not.
@@ -122,7 +130,8 @@ sow create /srv/offline --json
 | `marker_sha256` | Digest of the marker file; present only with `--pigsty` |
 | `noop` | `true` when the indexes were already correct and nothing changed |
 | `recovered` | Reserved for schema compatibility; Plain create has no journal recovery and always reports `false` |
-| `signed` | Filenames re-signed; present only with `--sign-with` |
+| `signed` | Filenames actually signed; omitted when the list is empty, even with `--sign-with` |
+| `signer` | Resolved signer identity when available; omitted otherwise |
 
 ### init
 
@@ -156,8 +165,12 @@ names what was found:
           "trixie":{"format":"deb","architectures":["x86_64","aarch64"],"limit":0,"exclude":null}}}}}
 ```
 
-With `--all`, signing entries additionally carry `key_fingerprint`. Private key material
-and passphrases never appear.
+Resolved signing entries can carry `key_fingerprint` without `--all` as well.
+Active RPM package-signing entries also expose `key_snapshot_sha256`, normalized
+`trusted_keys`, `trusted_key_fingerprints`, and `trusted_key_snapshot_sha256s` when
+available. Fingerprints and snapshot digests are independently sorted and deduplicated;
+do not pair these arrays by index. These are identities of public certificates, not
+private keys or passphrases.
 
 ### repo ls, repo new, repo show
 
@@ -262,6 +275,11 @@ older versions in the same operation that admits a new one.
 written and `changes` is a forecast. Note that `removed` lists membership removals only —
 pool bytes are never deleted by `rm`.
 
+| Preview field | Meaning |
+|---|---|
+| `prediction_complete` | Present as `true` only when `rm --check` can predict the complete change set. An absent/false value does not mean the listed changes are exhaustive. |
+
+
 ### build
 
 ```json
@@ -341,9 +359,10 @@ because the layers verify consistency while `ready_to_copy` reports currency:
 | `path` | Always relative to the repository root, always `/`-separated |
 | `size`, `sha256` | Present for `add` and `update`; omitted for `delete` |
 
-Apply the phases in that order and no client ever sees a dangling reference: package
-bytes first, then checksum-named metadata, then the protocol pointers (`repomd.xml`,
-`Release`), and only then the deletion of superseded files.
+This is a local Generation diff, not a safe online replay protocol. Phase ordering
+alone does not cover client caches, multi-file pointer commits, or deletion grace.
+Use `sow publish` for target publication and the separate target GC protocol for
+reclamation; do not immediately execute `delete` entries against a live repository.
 
 `sow changes 0` yields the complete current tree as one `add` set — a full delivery
 manifest.

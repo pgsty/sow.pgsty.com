@@ -47,7 +47,7 @@ Choose only the command and architecture that match the host. RPM installs the l
 
 ## Build from source
 
-The module declares Go 1.27.0. Metadata generation needs no C toolchain. Build the
+The module declares Go 1.27.1. Metadata generation needs no C toolchain. Build the
 same `v0.5.0` tag used by the pinned downloads:
 
 ```bash
@@ -74,16 +74,27 @@ sow help
 
 `sow version` reports product version, target OS/architecture, and build Go toolchain.
 `sow help` lists the command tree. Each archive also contains `README.md`, `CHANGELOG.md`,
-and the Apache-2.0 `LICENSE`.
+the Apache-2.0 `LICENSE`, and `THIRD_PARTY_NOTICES`.
 
 ## Upgrade from 0.4 to 0.5
 
 Install SOW 0.5.0 using the [download page](/download/). See the
 [0.5.0 release notes](/blog/release/sow-v0.5.0/) for the changes in this version.
 
-An existing 0.4 Managed workspace keeps schema v12, `sow/v3` configuration, and the same
-public layout. Back up the workspace as usual before replacing the binary; this upgrade
-requires no additional `sow repo migrate` step.
+SOW 0.5 uses database schema v13, adding indexes for candidate pool-path lookups. It keeps
+`sow/v3` configuration and the public layout. Stop writers and back up the whole workspace,
+then explicitly migrate each Repository before ordinary use:
+
+```bash
+sow repo migrate REPOSITORY -C /srv/sow
+sow build -r REPOSITORY -C /srv/sow
+sow check -r REPOSITORY -C /srv/sow
+```
+
+The updated RPM authentication and APT metadata contracts require one rebuild of affected
+Dists. Afterwards, unchanged RPMs with matching Built evidence do not need repeated payload
+verification. Migration adds private database indexes and can take time and disk space on a
+large publication history; do not reopen the migrated database with an older binary.
 
 For Plain repositories, 0.5 adds `create --metadata-timestamp`; check that the actual
 binary's `create --help` lists it. The default remains `0`, so replacing the binary alone
@@ -92,7 +103,7 @@ does not repair a published YUM repository's timestamp. Follow the
 
 ## Upgrade a 0.3 Managed Workspace
 
-SOW 0.4 introduced internal database schemas v11 and v12; 0.5 retains schema v12. The public layout and
+SOW 0.4 introduced internal database schemas v11 and v12; 0.5 upgrades to v13. The public layout and
 `schema: sow/v3` configuration identifier stay the same, but each existing v0.3 Repository must be
 migrated explicitly before ordinary reads or writes. Stop Workspace writers before taking the
 backup:
@@ -100,11 +111,12 @@ backup:
 ```bash
 cp -a /srv/sow /srv/sow.backup-before-upgrade
 sow repo migrate REPOSITORY -C /srv/sow
+sow build -r REPOSITORY -C /srv/sow
 sow check -r REPOSITORY -C /srv/sow
 ```
 
-Repeat the last two commands for every Repository named in `sow.yml`. The database transition is
-one-way; do not reopen a migrated Workspace with SOW 0.3. See
+Repeat the last three commands for every Repository named in `sow.yml`. The database transition is
+one-way; do not reopen a migrated Workspace with an older binary. See
 [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) for the repaired status, signer, and
 publication evidence.
 

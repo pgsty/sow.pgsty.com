@@ -357,7 +357,9 @@ operation rejected: ... deb metadata key: environment key reference SOW_METADATA
 operation rejected: ... deb metadata key: gpg public-key export returned no bounded key material
 ```
 
-秘密内容永远不会离开引用本身。`sow config show --all` 只显示引用与解析出的 fingerprint:
+私钥与口令不会输出。`sow config show` 不带 `--all` 也可解析并显示 `key_fingerprint`。
+启用 RPM 包签名时，还会显示公钥证书快照摘要和规范化的受信任 key 身份；指纹数组与摘要
+数组独立排序、去重，不能按下标配对。元数据签名条目示例如下：
 
 ```yaml
     signing:

@@ -46,7 +46,7 @@ replaces index paths it owns; unknown files are left alone.
 | Flag | Description | Default |
 |---|---|---|
 | `-j, --jobs N` | Parallel workers for the single package hash/parse pass | logical CPU count |
-| `--metadata-timestamp SECONDS` | Unix seconds from `0` to `9223372036854775807` for RPM repomd data timestamps; leaves DEB, package times and gzip headers unchanged | `0` |
+| `--metadata-timestamp SECONDS` | Unix seconds from `0` to `253402300799` for RPM repomd data timestamps; leaves DEB, package times and gzip headers unchanged | `0` |
 | `--pigsty` | Enable Pigsty compatibility cleanup and completion marker | off |
 | `-S, --sign-with KEY` | Sign unsigned RPMs with a 16/40/64-hex GPG key ID | off |
 | `--overwrite` | Re-sign every RPM; requires `--sign-with` | off |
@@ -119,7 +119,17 @@ or remove the marker yourself.
 
 The default remains a deterministic zero data timestamp. Pass `--metadata-timestamp SECONDS` to set an explicit publication time for RPM metadata. The same packages and time produce the same output; changing only the time changes repomd, leaving its compressed XML streams and RPM bytes unchanged. DEB output is unaffected.
 
-EL7 YUM rejects a repomd whose maximum data timestamp is older than its cached copy. When migrating an existing repository, the publisher must choose a time at least as large as every historical value clients may have seen. Updating revision or filesystem mtime alone does not fix this check.
+EL7 YUM rejects a repomd whose maximum data timestamp is older than its cached copy. When migrating an existing repository, the publisher must choose a time at least as large as every historical value clients may have seen. Updating revision or filesystem mtime alone does not fix this check. Equal timestamps are accepted by EL7; the migration guide recommends advancing by at least one second for changed content so releases remain distinguishable.
+
+> Pass `--metadata-timestamp` on **every** update. Omitting it uses `0` again; SOW
+> does not inherit the previous value. The accepted range is `0..253402300799`
+> Unix seconds (through year 9999). A contemporary millisecond epoch value exceeds
+> this bound and is rejected; SOW does not detect units for smaller numbers. This
+> bound is not a guarantee that every client accepts every date. A far-future value
+> can make EL7 reject later ordinary timestamps until its old metadata cache is cleared.
+> After repomd changes,
+> replace its detached `.asc` signature before publishing: `create` neither
+> refreshes nor removes an old `repomd.xml.asc`.
 
 ```bash
 sow create /srv/flat --metadata-timestamp 1790049000
@@ -170,7 +180,7 @@ installed, and the new marker is written last. A caller must treat a missing mar
 ## Signing RPMs
 
 `-S/--sign-with KEY` is the explicit authorization to modify RPM bytes. `KEY` is exactly 16, 40 or 64
-hexadecimal characters; an `0x` prefix is not accepted. SOW normalizes it to
+hexadecimal characters; an optional `0x` or `0X` prefix is accepted. SOW normalizes it to
 uppercase and passes it to the environment's `rpm --addsign` through the `_gpg_name` macro. The
 private key, passphrase, GPG home, pinentry and any extra RPM macros come from your environment —
 SOW never receives, persists or echoes a secret.
@@ -258,7 +268,7 @@ Failure envelope:
 
 ```console
 sow create /srv/empty --json
-{"schema":"sow.cli/v1","command":"create","ok":false,"repository":null,"operation":null,"result":{"dir":"","rpm":0,"deb":0,"kept":null,"removed":null,"marker":false,"noop":false,"recovered":false},"errors":[{"code":6,"class":"rejected","message":"operation rejected: plain: scan /srv/empty: no supported top-level regular RPM or DEB packages"}]}
+{"schema":"sow.cli/v1","command":"create","ok":false,"repository":null,"operation":null,"result":null,"errors":[{"code":6,"class":"rejected","message":"operation rejected: plain: scan /srv/empty: no supported top-level regular RPM or DEB packages"}]}
 ```
 
 ## Exit codes

@@ -76,7 +76,13 @@ planned → staged → applied → built → done
 ]
 ```
 
-`done_dirty` is reachable only when you explicitly pass `--skip`. A default `add` that fails after `applied` returns an error, keeps the old built view serving, and leaves the operation recoverable — it does not quietly settle as dirty.
+`--skip` deliberately ends at `done_dirty`. Recovery also uses this terminal state for an
+old mutation whose Desired change committed but whose build plan was not frozen, when a
+recognized signing/configuration rejection or known contract upgrade prevents that original
+build. SOW validates the committed state and payloads, preserves Desired and the old Built
+view, and records why the build was left pending. Correct the policy if needed, then rerun
+`build`. Ordinary I/O, corruption, and failures of a frozen build remain recovery errors;
+they are not silently converted to `done_dirty`.
 
 An operation that fails before `applied` becomes `failed`. This matters for a subtle case in the contract: `add` must record a `planned` operation before parsing packages, so a package with a disallowed architecture does produce an audit record. But apart from that terminal `failed` record, nothing is written — no package object, no membership, no pending bytes, no public tree change, no generation. You keep the audit trail without letting an invalid architecture reach any product projection.
 

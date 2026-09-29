@@ -122,7 +122,17 @@ Replace the placeholder with the 40-hex fingerprint printed in `$FPR`. For this 
 - `never` leaves input bytes unchanged.
 
 SOW invokes `rpm --addsign` or `rpm --resign` on a private staged copy, not on the input
-file. Revalidate and rebuild after changing the policy:
+file. These rules apply to newly imported packages: `build` never re-signs an
+existing immutable object. Before enabling `fill` or changing its key, check that
+**every existing RPM** is signed by the configured key or a trusted identity.
+Checking only for an empty `signature_key` is insufficient: an existing third-party
+signature may also be untrusted. Add the appropriate public key to `trusted_keys`
+when that trust is intended; otherwise prepare correctly signed packages outside the
+repository and import them with a new package version and filename, or rebuild a fresh
+repository from the original packages. Keep the old policy until that preparation is
+complete. A policy rejection leaves the existing Desired projection intact.
+
+After confirming existing package compatibility, revalidate and rebuild:
 
 ```bash
 sow config check
@@ -188,7 +198,8 @@ an APT `Release`:
 sow create /srv/flat --sign-with 0123456789ABCDEF
 ```
 
-The key must be exactly 16, 40, or 64 hexadecimal characters, with no `0x` prefix, and the
+The key must contain exactly 16, 40, or 64 hexadecimal characters after an optional `0x` or
+`0X` prefix. SOW removes that prefix and normalizes the key to uppercase. The
 matching private key must be usable by the ambient `rpm`/GPG setup. Without `--overwrite`,
 already signed RPMs keep their bytes; adding `--overwrite` explicitly re-signs every RPM.
 SOW signs private staged copies before replacing package bytes and metadata.

@@ -84,6 +84,12 @@ deleting more remote objects.
 
 After commit intent, recovery is forward-only. Rerun `sow publish TARGET`; do not use `--abort`.
 
+Payload URLs are immutable. New attempts cannot replace a package with different bytes at the
+same path. For an interrupted attempt created by an older binary, `--abort` requires every
+existing remote object to remain unchanged. If the old binary already replaced a payload,
+rerunning `publish` can finish only when the remote bytes exactly match that attempt's recorded
+new identity. Different or missing bytes remain an error; recovery does not overwrite them.
+
 ## Public visibility checks
 
 Provider storage success is not enough: publication verifies the canonical `public_endpoint` before

@@ -47,7 +47,9 @@ Managed 路径从不由用户输入拼装,而是由解析后的真实工作区�
 │   └── <repo>/
 │       ├── stage/                # 同文件系统的 staging 区
 │       ├── recovery/             # 删除动作的原子移入目标
-│       └── pending/              # --skip 的耐久 payload
+│       ├── pending/              # --skip 的耐久 payload
+│       ├── retained/             # 保留代的私有根
+│       └── transitions/          # 布局迁移的恢复状态
 └── <repo>/                       # 可对外服务的树
     ├── pool/                     # 不可变包字节
     └── dists/
@@ -65,7 +67,9 @@ $ find .sow | sort
 .sow/pigsty.db-wal
 .sow/pigsty/pending
 .sow/pigsty/recovery
+.sow/pigsty/retained
 .sow/pigsty/stage
+.sow/pigsty/transitions
 .sow/repo-locks
 .sow/repo-locks/pigsty.lock
 .sow/workspace-ops
@@ -81,7 +85,8 @@ $ find .sow | sort
 
 私有 SQLite 数据库按 `package_sha256` 索引 Desired/Built Membership，因此查询与构建可以
 一次批量展开完整成员投影，而不是为每个软件包单独查询。数据库还保存以不可变包体 SHA-256
-为键、可重建的软件包事实缓存。Ingest 只需完整认证并解析每个新软件包一次；生产构建只按本次
+为键、可重建的软件包事实缓存。Ingest 从已认证快照解析一次软件包事实；快照安装到 pending、
+再提升到 Pool 时，为保证恢复正确性，各阶段仍独立验证内容，整个 add 并不是只读一遍包体。生产构建只按本次
 选中的 Digest，以有界、确定性批次读取 Facts Row，遇到缺失或损坏记录时再从已认证包体惰性
 重建。无关或超大的 Facts Row 不会被读取。
 
@@ -91,10 +96,11 @@ $ find .sow | sort
 对每个唯一物理包体哈希一次。
 
 缓存与指纹只属于私有实现状态，不改变公共 `pool/ + dists/` 布局。不要手工编辑数据库或
-`PRAGMA user_version`。v0.3 Repository 必须先备份，再通过
-[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 显式升级，之后才能执行普通 0.4
-或 0.5 读写。由 0.4 或 0.5 创建的 Repository 已使用 Schema v12，从 0.4 升级到 0.5 不需要
-新增迁移。其他维护只在 SOW 诊断明确指出时执行。
+`PRAGMA user_version`。v0.3 或 v0.4 Repository 必须先备份，再通过
+[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 显式升级，之后才能执行普通 0.5
+读写。Schema v13 为包池路径归属增加索引，使 add 只查询候选路径，不再扫描无关发布历史。
+首次构建刷新受影响的 RPM 认证与 APT 元数据契约，之后未变化的包可复用匹配的 Built 认证证据。
+其他维护只在 SOW 诊断明确指出时执行。
 
 ## `sow.yml` 驱动一切
 
@@ -183,6 +189,9 @@ Managed 命令按以下顺序寻找最近祖先中的 `sow.yml`:
 4. 还是没有:失败,并提示 `sow init`、`--workdir` 与 `SOW_DIR`。
 
 找到第一个 `sow.yml` 就停,不会越过它继续往上找"更好的那个"。
+查找沿传入路径的字面祖先进行，找到后再解析并绑定真实工作区根。符号链接起点可以使用，
+但其字面祖先未必等于目标的物理祖先；别名引起选择歧义时，直接指定物理根。
+`sow config check` 报告解析后的工作区，而不只是发现起点。
 
 `--workdir` 不是 `chdir`。它只改变发现的起点。`sow add` 里的相对 `PATH` 仍然相对你真实的当前目录解析 —— 这正是 `sow add ./build/*.rpm -C /srv/ws` 应有的行为。
 

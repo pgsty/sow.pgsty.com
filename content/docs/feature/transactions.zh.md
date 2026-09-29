@@ -73,7 +73,10 @@ planned → staged → applied → built → done
 ]
 ```
 
-只有你显式给出 `--skip` 才可能走到 `done_dirty`。默认 `add` 如果在 `applied` 之后渲染失败,命令返回错误、旧 Built 视图继续服务、Operation 保持可恢复 —— 它不会悄悄地以 dirty 收尾。
+`--skip` 会主动以 `done_dirty` 收尾。恢复旧操作时还有一个有限出口：Desired 已提交、构建计划
+尚未冻结，而可识别的签名/配置拒绝或已知契约升级阻止原构建继续。SOW 校验已提交状态与包字节，
+保留 Desired 和旧 Built 视图，并记录暂未构建的原因；必要时修正策略，再重跑 `build`。
+普通 I/O、损坏或已冻结构建失败仍是恢复错误，不会被静默改为 `done_dirty`。
 
 在 `applied` 之前失败的 Operation 会成为 `failed`。这里有一处契约上的微妙之处:`add` 必须在解析包之前先记录 `planned` Operation,所以一个架构不被许可的包确实会留下审计记录。但除了那条终态 `failed` 记录之外,什么都不会被写入 —— 没有包对象、没有成员关系、没有 pending 字节、没有公开树变化、没有 Generation。既留住了审计线索,又保证无效架构不会进入任何产品投影。
 

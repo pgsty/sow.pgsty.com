@@ -41,7 +41,7 @@ planned → staged → applied → built → done
 | `applied` | Desired state and required private pending payloads committed |
 | `built` | The complete static Generation has been switched in |
 | `done` | Terminal — a normal successful command |
-| `done_dirty` | Terminal — `--skip` was given, so the public tree deliberately stayed behind |
+| `done_dirty` | Terminal — Desired is ahead of Built after `--skip` or a documented safe exit while recovering an old, unfrozen mutation |
 | `failed` | Terminal — the operation failed before `applied`, nothing was committed |
 | `rolled_back` | Terminal — a post-`applied` failure the process could safely undo |
 | `recovering` | Non-terminal; the next write command must complete or roll it back |
@@ -197,7 +197,11 @@ real path instead.
 
 ## sow log prune
 
-Deletes eligible terminal audit records older than `BEFORE` and safely compacts the database.
+Deletes eligible terminal audit records older than `BEFORE` and attempts to reclaim database space.
+If a long-lived reader prevents compaction or the final WAL checkpoint, logical pruning still
+completes and later writes remain usable. The result reports `compaction_deferred: true`;
+close the reader and rerun prune when space reclamation is needed. Real database and I/O errors
+still fail the command.
 
 ```console
 sow log prune 2027-01-01 -r pigsty

@@ -51,6 +51,9 @@ RPM 与 DEB 的元数据密钥分开声明,所以你可以像上面这样两边�
 
 `InRelease` 的 clearsign 正文与 `Release` 完全一致。没有配元数据密钥时,这两个签名文件根本不会生成 —— 你只会得到 `repomd.xml` 和 `Release`。
 
+0.5.0 暂不支持 RPM v6 包格式的签名；包体签名与验签工作流请使用 RPM v4 格式包。
+这是 RPM 容器格式的限制，不限制下面的元数据密钥引用形态。
+
 ## 四种密钥引用形态
 
 密钥引用是一个 URI,scheme 决定由谁来签:
@@ -67,6 +70,15 @@ RPM 与 DEB 的元数据密钥分开声明,所以你可以像上面这样两边�
 `passphrase` 引用接受相对 Workspace Root 的路径、`file://` 或 `env://`，不接受 `agent://`。
 
 **任何秘密都不会被持久化。** 配置、SQLite、日志、JSON 输出和错误文本里,只有引用字符串、fingerprint 和公钥验证证书。`config show --all` 打印引用与 fingerprint,绝不打印密钥材料。如果某个密钥引用无法解析或不可用于签名,`config check` 会在你执行 build 之前就告诉你。
+
+Agent 元数据签名按身份与确定性发布时间探签一次小消息，检查 GPG 实际选中的子钥，再固定
+完整指纹完成签名，因此支持一台机器只持有证书中部分签名子钥的部署。GPG 时钟被冻结，
+同一操作的多个 Dist 复用选钥结果。新构建要求实际签名钥匙在发布时间和当前时间都有效；
+历史验签及已冻结树的恢复继续使用留存证书与原字节。
+
+新 APT 元数据使用 SHA-256 签名。创建新的发布尝试时，InRelease 与 Release.gpg 都必须使用
+SHA-256、SHA-384 或 SHA-512。历史 SHA-1 签名仍可验证；升级后执行 `sow build` 刷新旧 APT
+元数据，再开始新发布。已经冻结的发布尝试仍按原计划恢复。
 
 ## RPM 包体签名
 
@@ -105,7 +117,16 @@ Ring 接受的 Packet 拼在一起，虚构出 Retained Signer。
 NEVRA 不变，并且签名身份与配置完全一致。`fill` 与 `always` 必须有 `rpm`、`gpg`，且匹配私钥
 必须存在于 `rpm` 使用的 GPG 环境中。key 引用用于标识并验证签名者，不会把私钥自动导入该环境。
 
-由于签名里嵌入了时间戳,签名过程不可复现 —— 同一个未签名 RPM 签两次会得到不同字节。于是重复 add 一个已经加过的包看起来就像内容冲突。SOW 用 **signature-neutral payload digest** 解决这个问题:对不可变的 header 与 payload(排除 RPM signature header)计算 SHA-256。如果逻辑坐标已存在、neutral digest 相同,且既有对象满足当前策略,SOW 就复用既有的最终字节而不再签名。重复 add 同一个包是稳定的空操作。
+由于签名里嵌入了时间戳，同一个未签名 RPM 签两次会得到不同字节。SOW 对不可变的 header
+与 payload（排除签名头）计算 **signature-neutral payload digest**。逻辑坐标与该摘要相同，
+且既有对象满足当前策略时，才复用最终字节。重复 add 只有在满足复用条件时才是空操作；策略
+变化导致重签时，可能产生不同字节并触发包池路径冲突。此时应使用新的包版本和文件名，不能
+覆盖已经发布的 URL。
+
+同一命令内，渲染复用 RPM 签名预检结果；跨命令时，未变化的包字节与完全一致的签名策略可
+复用已认证的 Built 证据。策略、证书、文件指纹变化或证据缺失时重新验证。认证契约升级后，
+首次构建会建立一次证据；`sow check` 仍是显式全量审计。常规目录/stat 检查与元数据生成仍然
+需要与所选仓库范围对应的工作量。
 
 这种复用的口子刻意开得很窄。`never` 模式要求完整字节一致,因为该模式承诺保留输入字节。如果 payload digest 不同,或既有对象不满足当前签名策略,那就是硬冲突 —— `add` 不会悄悄地在既有坐标上就地重签一个包。这里没有 `--replace`;如果重签导致字节变化,请提高 release,或专门规划一次密钥轮换流程。
 
@@ -135,7 +156,7 @@ sow create /srv/repo --sign-with 6D5C5A26C36B1F73
 sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
 ```
 
-Plain 模式只签 RPM 包体,没有元数据签名。`KEY` 必须是恰好 16、40 或 64 位十六进制 GPG key ID/fingerprint，不接受 `0x` 前缀；规范化为大写后作为 `_gpg_name` macro 传给 `rpm`。不带 `--overwrite` 时只签没有可解析嵌入签名的 RPM;带上则对全部保留的 RPM 重签。
+Plain 模式只签 RPM 包体,没有元数据签名。`KEY` 去掉可选的 `0x` 或 `0X` 前缀后，必须是恰好 16、40 或 64 位十六进制 GPG key ID/fingerprint；去掉前缀并规范化为大写后作为 `_gpg_name` macro 传给 `rpm`。不带 `--overwrite` 时只签没有可解析嵌入签名的 RPM;带上则对全部保留的 RPM 重签。
 
 `--sign-with` 要求 `--pigsty` 清理后至少保留一个顶层 RPM。纯 DEB 目录、缺少 `rpm` 可执行文件、密钥不可用,都在任何公开变更之前失败。签名是显式慢路径，必然包含复制、签名验证与最终 RPM 解析读取；中断后按当前包目录重跑，而不是重放 Plain journal。见 [Plain 平面仓库](/zh/docs/feature/plain/)。
 

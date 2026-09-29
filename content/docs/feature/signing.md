@@ -51,6 +51,10 @@ With a metadata key configured, every build produces the signature files, includ
 
 The clearsigned body of `InRelease` is identical to `Release`. Without a metadata key, neither signature file is generated at all — you get `repomd.xml` and `Release` and nothing else.
 
+RPM format v6 signatures are not supported in 0.5.0; use RPM format v4 packages for
+package-signing and verification workflows. This is an RPM container-format limitation,
+not a restriction on the metadata key-reference forms below.
+
 ## Four key-reference forms
 
 A key reference is a URI, and the scheme decides who does the signing:
@@ -68,6 +72,18 @@ A `passphrase` reference accepts a Workspace-relative path, `file://`, or `env:/
 does not accept `agent://`.
 
 **Nothing secret is ever persisted.** Configuration, SQLite, logs, JSON output, and error text hold only the reference string, the fingerprint, and the public verifier certificate. `config show --all` prints references and fingerprints, never key material. If a key reference is unresolvable or unusable for signing, `config check` says so before you run a build.
+
+Agent metadata signing probes one small message per identity and deterministic publication time,
+validates the subkey GPG actually selected, then pins its complete fingerprint for signing.
+This supports machines holding only one of a certificate's signing subkeys. GPG time is frozen;
+multiple Dists reuse the same operation-local selection. The selected key must be valid both at
+the publication time and now for new builds. Historical verification and recovery of already
+frozen trees continue to use their retained certificate and bytes.
+
+New APT metadata signatures use SHA-256. A new publication attempt requires SHA-256, SHA-384,
+or SHA-512 in both InRelease and Release.gpg. Historical SHA-1 signatures can still verify;
+run `sow build` after upgrading to refresh old APT metadata before starting a new publication.
+An existing frozen publication attempt resumes its original plan.
 
 ## RPM package signing
 
@@ -111,7 +127,14 @@ executables and a matching secret key in the GPG environment used by `rpm` are m
 for `fill` and `always`. A key reference identifies and verifies the signer; it does not
 provision the secret key into that environment.
 
-Because signatures embed a timestamp, signing is not reproducible — the same unsigned RPM signed twice gives different bytes. Re-adding a package you already added would therefore look like a content conflict. SOW avoids that with a **signature-neutral payload digest**: a SHA-256 over the immutable header and payload, excluding the RPM signature header. If the logical coordinate already exists and the neutral digest matches, and the existing object satisfies the current policy, SOW reuses the existing final bytes instead of signing again. Repeated `add` of the same package is a stable no-op.
+Because signatures embed a timestamp, signing is not reproducible — the same unsigned RPM signed twice gives different bytes. SOW uses a **signature-neutral payload digest** over the immutable header and payload, excluding the signature header. When the logical coordinate and neutral digest match and the existing object satisfies the current policy, SOW reuses the existing final bytes. Repeated add is a no-op only when this reuse applies; a policy change requiring re-signing can produce different bytes and a pool-path conflict. Use a new package version and filename rather than overwrite an already published URL.
+
+Within one command, rendering reuses the RPM signature preflight result. Across commands, unchanged
+package bytes and an identical complete signing policy can reuse authenticated Built evidence.
+A changed policy/certificate, file fingerprint, or missing evidence requires verification again.
+The first build after the authentication-contract upgrade establishes this evidence once;
+`sow check` remains the explicit full audit. Ordinary directory/stat checks and metadata generation
+still take work proportional to the selected repository scope.
 
 That reuse is narrow on purpose. `never` requires a full byte match, since that mode promises to preserve input bytes. If the payload digest differs, or the stored object does not satisfy the current signing policy, it is a hard conflict — `add` will not quietly re-sign a package in place under an existing coordinate. There is no `--replace`; if re-signing changes the bytes, bump the release, or plan a proper key-rotation workflow.
 
@@ -145,7 +168,7 @@ sow create /srv/repo --sign-with 6D5C5A26C36B1F73
 sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
 ```
 
-Plain mode signs RPM package bodies only; it has no metadata signing. `KEY` is exactly 16, 40, or 64 hexadecimal characters, without an `0x` prefix; it is normalized to uppercase and passed to `rpm` as the `_gpg_name` macro. Without `--overwrite`, only RPMs with no parseable embedded signature are signed. With it, every retained RPM is re-signed.
+Plain mode signs RPM package bodies only; it has no metadata signing. `KEY` contains exactly 16, 40, or 64 hexadecimal characters after an optional `0x` or `0X` prefix; the prefix is removed and the key is normalized to uppercase and passed to `rpm` as the `_gpg_name` macro. Without `--overwrite`, only RPMs with no parseable embedded signature are signed. With it, every retained RPM is re-signed.
 
 `--sign-with` requires at least one top-level RPM retained after `--pigsty` cleanup. A DEB-only directory, a missing `rpm` binary, or an unavailable key fails before anything public changes. Signing is an explicit slow path with necessary copy, signature-verification, and final-RPM parse reads; if interrupted, rerun from the current package directory rather than replaying a Plain journal. See [Plain Flat Repositories](/docs/feature/plain/).
 

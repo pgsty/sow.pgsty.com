@@ -40,7 +40,7 @@ planned → staged → applied → built → done
 | `applied` | 期望状态与所需的私有 pending 载荷已提交 |
 | `built` | 完整的静态 Generation 已切换 |
 | `done` | 终态——一次正常成功的命令 |
-| `done_dirty` | 终态——给了 `--skip`，公开树被有意保留在旧代 |
+| `done_dirty` | 终态——`--skip`，或恢复旧的未冻结操作时通过文档所述安全出口收尾；Desired 领先于 Built |
 | `failed` | 终态——在 `applied` 之前失败，什么都没提交 |
 | `rolled_back` | 终态——`applied` 之后失败，但进程安全地回滚了 |
 | `recovering` | 非终态；下一条写命令必须先完成或回滚它 |
@@ -188,7 +188,10 @@ macOS 上 `/tmp` 是指向 `/private/tmp` 的符号链接，所以在那里会�
 
 ## sow log prune
 
-删除早于 `BEFORE` 且符合条件的终态审计记录，并安全压缩数据库。
+删除早于 `BEFORE` 且符合条件的终态审计记录，并尝试回收数据库空间。如果长读连接阻止压缩
+或最后的 WAL checkpoint，逻辑裁剪仍会完成，后续写入保持可用。结果以
+`compaction_deferred: true` 表示延期；关闭读连接后，需要回收空间时再执行 prune。
+真实数据库或 I/O 错误仍会使命令失败。
 
 ```console
 sow log prune 2027-01-01 -r pigsty

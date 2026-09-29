@@ -34,7 +34,7 @@ Version 0.5 adds an explicit way to choose the publication time:
 sow create /srv/yum.candidate --metadata-timestamp "$PUBLISH_TIME"
 ```
 
-`SECONDS` is an integer from `0` to `9223372036854775807`. Negative, malformed, overflowing,
+`SECONDS` is an integer from `0` to `253402300799`. Negative, malformed, overflowing,
 or duplicate values are usage errors. The option belongs to `create`; it is not a
 Managed `build`, `publish`, or RPM leaf-export option.
 
@@ -71,40 +71,64 @@ createrepo_c 0.20.1 output. A difference in the number of dependency rows or `pr
 attributes is not by itself evidence of missing dependencies. The relevant upstream change
 is [createrepo_c PR #427](https://github.com/rpm-software-management/createrepo_c/pull/427).
 
-## What the maintenance integration verified
+## Repository and publication fixes
 
-The accompanying Pigsty maintenance work exercised 10 flat repositories: eight PGSQL
-EL7–10 architecture leaves and two INFRA architecture leaves, containing 17,571 RPMs.
-The timestamp repair left all 17,343 PGSQL RPMs and their compressed XML unchanged. Two
-previously unsigned INFRA packages were signed. A subsequent maintenance run promoted
-zero files across all 10 repositories.
+This release prevents historical Dist-removal cleanup from deleting a package that has
+been re-added to another Dist. Signing-policy and pool-path checks now reject incompatible
+inputs before committing Desired changes, and interrupted operations from earlier binaries
+have bounded recovery paths that preserve committed data and still reject altered bytes.
 
-Cached-client acceptance covered EL7 on both architectures and EL8, EL9, and EL10 on
-arm64. Each environment moved from an old index to the repaired repository and then to
-another content generation, using the same URL and repository ID without clearing metadata
-cache. All 10 transitions passed index checks, actual package download, and signature
-verification with both package and repository checks enabled.
+Published payload paths cannot be reused for different content, even after local GC.
+Publication recovery never overwrites an immutable payload. Reader-held SQLite snapshots
+no longer turn a durable write into a reported checkpoint failure. External input paths
+can traverse symlink ancestors while package leaves retain their existing checks.
 
-These results describe that tested maintenance integration. They are not a claim that
-every RPM was installed or that every possible YUM/DNF configuration was tested. The
-wrapper's persistent clock, signature reuse, and selective re-signing are not new built-in
-`sow create` features. Plain mode also remains a flat, multi-file rebuild: it does not
+APT metadata verification accepts GnuPG's final-newline convention without ignoring other
+content differences. Newly generated GPG metadata signatures use SHA-256 regardless of
+local GPG preferences, and new metadata builds require a currently usable signing key.
+Archives and native packages now include third-party license notices.
+
+## Validate the surrounding maintenance workflow
+
+A migration should exercise each deployed YUM/DNF version and architecture with an existing
+metadata cache. Keep the same URL and repository ID, move from the old index to the SOW
+index and then to another content generation, and verify index refresh, actual package
+download, and the configured package and repository signature checks. Retain the commands,
+source revision, input manifests, and results with any claimed package or transition counts.
+
+The wrapper's persistent clock, signature reuse, and selective re-signing are not new
+built-in `sow create` features. Plain mode remains a flat, multi-file rebuild: it does not
 generate legacy SQLite metadata or module streams, and it does not provide an atomic
 whole-repository switch.
 
 ## Upgrade and developer notes
 
-- Upgrading an existing 0.4 Managed workspace adds no database migration. Schema v12,
-  `sow/v3` configuration, and the public `pool/ + dists/` layout are unchanged. A workspace
-  still on 0.3 must complete the [existing explicit migration](/docs/command/repo/#sow-repo-migrate).
+- Upgrading a 0.3 or 0.4 Managed workspace requires a backup and explicit
+  [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate). Schema v13 indexes candidate
+  pool paths; `sow/v3` configuration and the public `pool/ + dists/` layout are unchanged.
+  Then build and check each Repository: affected RPM authentication and APT metadata
+  contracts refresh once, and subsequent unchanged RPMs reuse matching Built evidence.
+- Cancellation records a terminal failure before cleaning uncommitted package bytes;
+  commands interrupted with Ctrl-C return 130. Empty, fully excluded additions recover
+  without stranding the Repository. Long readers can defer post-prune space reclamation.
+- Agent metadata signing freezes time and pins the actual usable subkey after one small
+  probe per identity/time. New APT publication rejects weak signature digests while
+  historical verification and frozen recovery keep their original meaning.
 - Maintained documentation is consolidated on this site. Compatibility and performance
   checks now live in `qa/compat/` and `qa/perf/`; shared RPM fixtures live in
   `internal/testdata/`. The clean-delivery manifests follow those paths.
-- Go 1.27.0 remains the minimum source toolchain. No dependency or toolchain upgrade is
-  part of the changes after v0.4.0.
-- Local release-readiness checks passed: the full Go suite, race checks, static analysis,
-  vulnerability and upstream-provenance checks, deterministic source delivery, four
-  Linux/macOS archive builds, and two RPM/two DEB builds with package-content verification.
+- Source builds now require Go 1.27.1. The dependency graph uses x/crypto v0.56.0,
+  and release workflows pin GoReleaser v2.18.2 and its action commit.
+- RPM format v6 signatures are not supported in 0.5.0; use RPM format v4 packages for
+  package-signing workflows.
+- The 2026-09-28 source `govulncheck` found no reachable vulnerabilities. A required module
+  still carries advisory `GO-2026-5932`, but the current code does not import its affected
+  package; scans of stripped binaries can still report the module match. This does not
+  claim that all required modules are advisory-free; scan the final release commit again.
+- Before tagging, require the full Go suite, race checks, static analysis, vulnerability
+  and upstream-provenance checks, deterministic source delivery, client integration, and
+  archive/package verification for the final release revision. Local validation does not
+  replace successful CI and Integration runs for that exact commit.
 
 For a new flat directory, the existing `sow create DIR` workflow remains valid. For a
 published YUM repository, start with [Migrating an Existing YUM Repository](/docs/tutorial/yum-migration/)

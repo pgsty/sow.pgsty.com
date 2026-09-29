@@ -71,9 +71,8 @@ JSON 结果还包含 `dirty_reasons` 与最近一次 Operation：
 ## 只读契约
 
 `status` 不迁移也不修复状态。Repository 数据库无法安全读取时，命令退出 `5`；请先执行
-诊断信息明确指出的维护命令，再重新查询。尤其是 v0.3 Repository，使用 0.4 或 0.5 读取前必须先
-备份，并逐个执行 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。已有 0.4 数据库
-升级到 0.5 不需要新增迁移。
+诊断信息明确指出的维护命令，再重新查询。v0.3 或 v0.4 Repository 使用 0.5 读取前必须先备份，
+再逐个执行 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)，升级到 Schema v13。
 
 ## 退出行为
 

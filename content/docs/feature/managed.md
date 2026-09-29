@@ -47,7 +47,9 @@ Managed paths are never assembled from user input. They are derived from the res
 │   └── <repo>/
 │       ├── stage/                # staging on the same filesystem
 │       ├── recovery/             # atomic-move target for deletions
-│       └── pending/              # durable payload for --skip
+│       ├── pending/              # durable payload for --skip
+│       ├── retained/             # private retained-generation roots
+│       └── transitions/          # layout-transition recovery state
 └── <repo>/                       # the servable tree
     ├── pool/                     # immutable package bytes
     └── dists/
@@ -65,7 +67,9 @@ $ find .sow | sort
 .sow/pigsty.db-wal
 .sow/pigsty/pending
 .sow/pigsty/recovery
+.sow/pigsty/retained
 .sow/pigsty/stage
+.sow/pigsty/transitions
 .sow/repo-locks
 .sow/repo-locks/pigsty.lock
 .sow/workspace-ops
@@ -84,7 +88,9 @@ Names must match `[a-z0-9][a-z0-9._-]*`, and `.`, `..`, `.sow`, `pool`, `dists` 
 The private SQLite database indexes Desired and Built Membership by `package_sha256`, so
 queries and builds expand a complete membership projection in bulk instead of issuing one
 query per package. It also keeps a rebuildable package-facts cache keyed by immutable
-package SHA-256. Ingest authenticates and parses a new package once; production builds load only
+package SHA-256. Ingest parses package facts once from an authenticated snapshot. Installing
+that snapshot into pending storage and promoting it to Pool each verify content independently
+for recovery; the complete add operation is not a single payload read. Production builds load only
 the selected digest rows in bounded, deterministic batches and lazily rebuild a missing or corrupt
 row from authenticated package bytes. Unrelated or oversized facts rows are not read.
 
@@ -95,10 +101,11 @@ full cryptographic audit and hashes every unique physical payload once regardles
 
 The cache and its fingerprints are private implementation state; they do not change the
 public `pool/ + dists/` layout. Never edit the database or its `PRAGMA user_version` by
-hand. A v0.3 Repository must be backed up and explicitly upgraded with
-[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) before ordinary 0.4 or 0.5 reads or writes.
-Repositories created by 0.4 or 0.5 already use schema v12, so the 0.4-to-0.5 upgrade requires no
-new migration. Other maintenance is performed only when a
+hand. A v0.3 or v0.4 Repository must be backed up and explicitly upgraded with
+[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) before ordinary 0.5 reads or writes.
+Schema v13 indexes pool-path ownership so add queries only candidate paths instead of unrelated
+publication history. The first build refreshes affected RPM authentication and APT metadata contracts;
+unchanged packages can then reuse matching Built authentication evidence. Other maintenance runs when a
 SOW diagnostic names it.
 
 ## `sow.yml` drives everything
@@ -188,6 +195,10 @@ Managed commands look for the nearest ancestor `sow.yml`, in this order:
 4. Still nothing: fail, with a hint about `sow init`, `--workdir`, and `SOW_DIR`.
 
 The first `sow.yml` found wins; SOW does not keep climbing past it looking for a better one.
+The search walks the supplied path's lexical ancestors, then resolves and binds the real
+workspace root. A symlink starting directory is accepted, but its lexical ancestors may differ
+from the target's physical ancestors. Use the physical root explicitly if an alias makes
+selection ambiguous; `sow config check` reports the resolved workspace, not just the start.
 
 `--workdir` is not `chdir`. It changes only where discovery starts. A relative `PATH` argument in `sow add` is still resolved against your real current directory, which is what you want when you run `sow add ./build/*.rpm -C /srv/ws`.
 

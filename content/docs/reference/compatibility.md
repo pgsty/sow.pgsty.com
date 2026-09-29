@@ -24,9 +24,9 @@ SOW binary; a real package manager remains the final check for a deployed reposi
 | Windows | no | no | not supported |
 
 Release binaries use `CGO_ENABLED=0` and require no language runtime. The source module requires
-Go 1.27.0 or newer; 0.5 does not raise that minimum. Archives include `README.md`,
-`CHANGELOG.md`, and the Apache-2.0 `LICENSE`;
-Linux packages install the same license with the binary. Use [`sow version`](/docs/command/)
+Go 1.27.1 or newer. Archives include `README.md`, `CHANGELOG.md`, the Apache-2.0 `LICENSE`,
+and `THIRD_PARTY_NOTICES`. Linux packages include the same license and third-party notices
+with the binary. Use [`sow version`](/docs/command/)
 to print the product version, target OS/architecture, and build toolchain.
 
 ## Workspace filesystem
@@ -51,8 +51,12 @@ case-sensitive Linux filesystems and the default case-insensitive macOS setup.
 | Production CLI clean room | Linux CI | Builds the shipping binary; creates mixed Plain RPM/DEB metadata; initializes `sow/v3`; creates RPM and DEB Dists; adds fixtures; runs query, build, check, changes, config, and log commands |
 | Plain APT client | Ubuntu 22.04 container | Serves `sow create` output over HTTP; runs `apt-get update`, package discovery, exact-version selection, download, and install with an explicitly trusted unsigned source |
 | RPM detached-signature transition | AlmaLinux 8, 9, and 10 containers | Runs real DNF clients against serial `repomd.xml` / `repomd.xml.asc` transition states and pins which combinations succeed or fail |
-| S3-compatible transport | Pinned MinIO container | Exercises bucket listing, HEAD, GET, create-only/CAS writes, replay, conditional multipart upload, object metadata, retries, and prefix confinement |
+| S3-compatible transport | Pinned MinIO container | Exercises bucket listing, HEAD, GET, single-part create-only/CAS PUT, replay, object metadata, retries, and prefix confinement |
 | Release packaging | Linux CI | Builds four archives, two RPMs, two DEBs, and `SHA256SUMS`; checks package paths, Apache-2.0 metadata, and packaged license bytes |
+
+The current MinIO integration does not validate conditional multipart completion. Multipart
+request/protocol tests are separate; they do not establish compatibility with hosted R2.
+Verify real R2 multipart behavior separately before treating that path as accepted.
 
 The DNF signature-transition probe is a protocol test, not a complete Managed RPM install.
 The APT job covers an unsigned Plain repository, not Managed metadata signing. Run the
@@ -79,6 +83,13 @@ For that workflow, generate a self-contained copy with
 [`sow export rpm-leaf`](/docs/command/export/). The export has local package paths and a
 completion manifest; it is not a second canonical Repository.
 
+Managed RPM and `export rpm-leaf` use a fixed `0` repomd data timestamp and expose no
+`--metadata-timestamp` option. They cannot directly take over the same EL7 repository ID
+while clients retain a positive cached timestamp; changing the base URL alone does not help.
+Use a new client repository ID or clear its metadata cache. To keep the old ID and cache,
+continue with Plain `create` and an explicit publication time, following the
+[migration guide](/docs/tutorial/yum-migration/) and re-signing repomd.
+
 ## Migrating an existing Plain YUM repository
 
 Plain emits the primary, filelists, and other XML streams. It does not generate legacy
@@ -98,6 +109,11 @@ RPM dependency projection follows modern createrepo_c semantics for `%pretrans` 
 the parser. Older createrepo_c versions can emit different dependency rows or `pre="1"`
 attributes; compare dependency meaning and real client behavior rather than raw row counts.
 See [upstream PR #427](https://github.com/rpm-software-management/createrepo_c/pull/427).
+
+RPM format v6 signatures are not supported in 0.5.0. The new signature tag can be treated
+as unsigned, so package signing or verification may reject such a package. Use RPM format v4
+packages for signing workflows; do not interpret this limitation as a promise to preserve
+or verify an RPM format v6 signature.
 
 ## Publication Providers
 

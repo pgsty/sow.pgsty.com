@@ -79,6 +79,10 @@ Rebind 与发布使用同一组 Workspace/Repository 锁，并在数据库事务
 
 写入 commit intent 后只能前向恢复：重新运行 `sow publish TARGET`，不能使用 `--abort`。
 
+包的 URL 不可变，新发布不能在同一路径覆盖成不同字节。对于旧程序留下的中断尝试，`--abort`
+要求已有远端对象保持原样。如果旧程序已经覆盖了 payload，重新运行 `publish` 仅在远端字节
+精确匹配该尝试记录的新身份时才能完成。字节不同或缺失仍会报错，恢复过程不会覆盖它们。
+
 ## 公共可见性校验
 
 Provider 存储写入成功还不够：写入 Checkpoint 之前，发布流程还要校验 canonical

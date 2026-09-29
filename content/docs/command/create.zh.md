@@ -43,7 +43,7 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 | 参数 | 说明 | 默认 |
 |---|---|---|
 | `-j, --jobs N` | 唯一一次包哈希/解析扫描的并发 worker 数 | 逻辑 CPU 数 |
-| `--metadata-timestamp SECONDS` | RPM repomd 的 data 时间戳，取值 `0` 至 `9223372036854775807` 的 Unix 秒；不影响 DEB、包时间或 gzip 头 | `0` |
+| `--metadata-timestamp SECONDS` | RPM repomd 的 data 时间戳，取值 `0` 至 `253402300799` 的 Unix 秒；不影响 DEB、包时间或 gzip 头 | `0` |
 | `--pigsty` | 启用 Pigsty 兼容清理与完成 marker | 关闭 |
 | `-S, --sign-with KEY` | 用 16/40/64 位十六进制 GPG key ID 给未签名 RPM 补签 | 关闭 |
 | `--overwrite` | 重签全部 RPM；必须与 `--sign-with` 同用 | 关闭 |
@@ -90,7 +90,13 @@ created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=true recover
 
 ## 已有 YUM 仓库的发布时间
 
-EL7 的 YUM 会拒收 data 最大时间比缓存更早的 repomd。因此迁移已有在线仓库时，不要使用默认的 `0`；给本次发布指定一个不低于历史最大值的时间，真实内容更新建议严格递增：
+EL7 的 YUM 会拒收 data 最大时间比缓存更早的 repomd。因此迁移已有在线仓库时，不要使用默认的 `0`；给本次发布指定一个不低于历史最大值的时间，真实内容更新建议严格递增。EL7 接受相等时间；迁移指南建议内容变化时至少加一秒，是为了区分各次发布：
+
+> **每次更新都要传入** `--metadata-timestamp`；省略时仍使用 `0`，不会继承旧值。
+> 接受范围为 `0..253402300799` Unix 秒（截至 9999 年）。当代毫秒纪元值会因超出范围而被
+> 拒绝；SOW 不会自动辨认较小数值的单位。这是输入范围，不代表所有客户端都支持任意日期。
+> 过大的未来时间可能使 EL7 拒绝随后正常时间的索引，直到清理旧元数据缓存。repomd 变化后，必须在发布前
+> 重新生成并替换 `.asc` 签名；`create` 不会更新或删除旧 `repomd.xml.asc`。
 
 ```bash
 sow create /srv/flat --metadata-timestamp 1790049000
@@ -148,7 +154,7 @@ d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab  epel-release-7
 
 ## RPM 包签名
 
-`-S/--sign-with KEY` 是修改 RPM 字节的显式授权。`KEY` 必须是恰好 16、40 或 64 位十六进制 GPG key ID/fingerprint，不接受 `0x` 前缀。SOW 将其规范化为大写，通过 `_gpg_name` macro 传给环境中的
+`-S/--sign-with KEY` 是修改 RPM 字节的显式授权。`KEY` 必须是恰好 16、40 或 64 位十六进制 GPG key ID/fingerprint，接受可选的 `0x` 或 `0X` 前缀。SOW 将其规范化为大写，通过 `_gpg_name` macro 传给环境中的
 `rpm --addsign`。私钥、passphrase、GPG home、pinentry 以及额外 RPM macro 都由你的运行环境提供——
 SOW 不接收、不持久化、不回显任何秘密。
 
@@ -230,7 +236,7 @@ sow create /www/pigsty -j 8 --pigsty --metadata-timestamp "${PUBLISH_TIME:?Set t
 
 ```console
 sow create /srv/empty --json
-{"schema":"sow.cli/v1","command":"create","ok":false,"repository":null,"operation":null,"result":{"dir":"","rpm":0,"deb":0,"kept":null,"removed":null,"marker":false,"noop":false,"recovered":false},"errors":[{"code":6,"class":"rejected","message":"operation rejected: plain: scan /srv/empty: no supported top-level regular RPM or DEB packages"}]}
+{"schema":"sow.cli/v1","command":"create","ok":false,"repository":null,"operation":null,"result":null,"errors":[{"code":6,"class":"rejected","message":"operation rejected: plain: scan /srv/empty: no supported top-level regular RPM or DEB packages"}]}
 ```
 
 ## 退出码

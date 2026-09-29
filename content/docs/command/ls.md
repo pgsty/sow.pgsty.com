@@ -58,7 +58,7 @@ run from inside `<repo>/dists/<dist>/`.
 
 ```console
 sow ls -r pigsty
-workspace discovery error: managed: workspace discovery or configuration error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
+workspace discovery error: managed: workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
 ```
 
 The command takes no write lock and does not hash package files. `--json` returns the same rows in

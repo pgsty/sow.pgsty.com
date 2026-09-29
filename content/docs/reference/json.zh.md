@@ -35,13 +35,21 @@ sow status --json
 | `command` | string | 实际调用的命令,含子命令:`add`、`repo ls`、`config show`。 |
 | `ok` | bool | `errors` 为空时为 `true`,等价于退出码 `0`。 |
 | `repository` | string 或 null | 选定的仓库;工作区级与 Plain 模式命令为 `null`。 |
-| `operation` | string 或 null | 写命令的 Operation ID,只读命令为 `null`。 |
+| `operation` | string 或 null | 命令对应的可用身份，见下表；`null` 不代表命令只读。 |
 | `result` | object 或 null | 命令专属载荷,详见下文。 |
 | `errors` | array | 零个或多个 `{code, class, message}` 对象。 |
 
 七个字段 **永远存在**。命令在有意义工作之前失败时（例如未知参数、发现失败，或尚未选中
 Repository 就遇到无效配置），`result` 为 `null`。已提交的部分结果，以及 `check`、
 `rm --check` 的诊断结果，即使命令非零退出也会保留。
+
+| 命令 | Envelope 的 `operation` |
+|---|---|
+| `add`、不带 `--check` 的 `rm`、`build` | 分配了日志 ID 时返回该 ID，否则为 `null` |
+| 本地 `gc` | 真正执行回收时返回日志 ID；空操作为 `null` |
+| `publish`、`publish --abort` | 存在发布 attempt 时返回其 ID，否则为 `null` |
+| `log ID` | 回显所查询的日志 ID，虽然该命令只读 |
+| `init`、`repo`/`dist`/`retain` 命令、`export`、目标 `gc`、`rm --check`、`log prune` 及其他查询 | `null`；`log prune` 的日志 ID 位于 `result.operation` |
 
 ### errors
 
@@ -51,9 +59,9 @@ Repository 就遇到无效配置），`result` 为 `null`。已提交的部分�
 
 | 字段 | 含义 |
 |---|---|
-| `code` | 进程[退出码](/zh/docs/reference/exit-codes/) —— `1` 到 `6`。 |
-| `class` | `runtime`、`usage`、`discovery`、`config`、`partial`、`lock`、`integrity`、`rejected` 之一。`discovery` 与 `config` 是退出码 `2` 的稳定细分类。 |
-| `message` | 与写到 stderr 的文本相同。 |
+| `code` | 进程[退出码](/zh/docs/reference/exit-codes/) —— `1` 到 `6`，或中断码 `130`。 |
+| `class` | `runtime`、`usage`、`discovery`、`config`、`partial`、`lock`、`integrity`、`rejected`、`interrupted` 之一。`discovery` 与 `config` 是退出码 `2` 的细分类；`interrupted` 对应 `130`。 |
+| `message` | 分类后的错误文本。通常与 stderr 相同；Plain `create` 的 stderr 输出原始领域错误，不含额外的 CLI 类别前缀。 |
 
 请对 `class` 做分支判断,不要匹配 message 文本。message 里含路径和包名,会变;class 不会。
 
@@ -116,7 +124,8 @@ sow create /srv/offline --json
 | `marker_sha256` | marker 文件的摘要;仅 `--pigsty` 时出现 |
 | `noop` | 索引本来就正确、什么都没改时为 `true` |
 | `recovered` | 为兼容稳定 schema 保留；Plain create 没有 journal 恢复，始终为 `false` |
-| `signed` | 被重签的文件名;仅 `--sign-with` 时出现 |
+| `signed` | 实际签过名的文件名；列表为空时省略，即使给了 `--sign-with` |
+| `signer` | 可用时返回解析后的签名者身份；否则省略 |
 
 ### init
 
@@ -149,7 +158,10 @@ sow create /srv/offline --json
           "trixie":{"format":"deb","architectures":["x86_64","aarch64"],"limit":0,"exclude":null}}}}}
 ```
 
-带 `--all` 时,签名条目会额外携带 `key_fingerprint`。私钥内容与口令永不出现。
+不带 `--all` 时，已解析的签名条目也可携带 `key_fingerprint`。启用 RPM 包签名时，还会按
+可用情况输出 `key_snapshot_sha256`、规范化的 `trusted_keys`、`trusted_key_fingerprints`
+和 `trusted_key_snapshot_sha256s`。指纹和快照摘要分别排序、去重，不能按数组下标配对。
+这些是公钥证书身份，不包含私钥或口令。
 
 ### repo ls / repo new / repo show
 
@@ -249,6 +261,11 @@ sow create /srv/offline --json
 带 `-c/--check` 运行时 `check` 为 `true`,此时 **什么都没写**,`changes` 是一份预测。
 注意 `removed` 只列出成员关系的移除 —— `rm` 永远不删除包池字节。
 
+| 预览字段 | 含义 |
+|---|---|
+| `prediction_complete` | 仅 `rm --check` 能完整预测变更时以 `true` 出现；缺失或为 false 不表示所列变更完整。 |
+
+
 ### build
 
 ```json
@@ -326,8 +343,9 @@ sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
 | `path` | 永远相对仓库根,永远用 `/` 分隔 |
 | `size`、`sha256` | `add` 与 `update` 有;`delete` 没有 |
 
-按这个 phase 顺序施加变更,客户端永远不会取到悬空引用:先包体,
-再校验和命名的元数据,然后是协议指针(`repomd.xml`、`Release`),最后才删除被取代的文件。
+这是一份本地 Generation 差异，不是可以直接在线回放的发布协议。仅按 phase 排序无法
+覆盖客户端缓存、多文件指针提交和删除宽限期。目标发布应使用 `sow publish`，回收走独立的
+目标 GC 协议；不要立即对在线仓库执行其中的 `delete` 条目。
 
 `sow changes 0` 把当前整棵树作为一个 `add` 集合给出 —— 也就是一份完整交付清单。
 

@@ -113,26 +113,29 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-这是专用维护命令，不属于全新的 0.5 Managed 工作流。由 SOW 0.4 或 0.5 创建的 Repository
-已经使用当前单包体布局与 Schema v12，从 0.4 升级到 0.5 无需再次迁移。
-
-但从既有 v0.3 Workspace 升级时，迁移是强制步骤：先停止全部 Workspace 写入并完成备份，再在
+这是专用维护命令，不属于全新的 0.5 Managed 工作流。新建的 0.5 Repository 使用 Schema v13
+与当前单包体布局。从既有 v0.3 或 v0.4 Workspace 升级时必须显式迁移：先停止全部写入并备份，再在
 执行普通读写之前逐个迁移所有已配置 Repository。
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-0.4.0
+cp -a /srv/sow /srv/sow.backup-before-0.5.0
 sow repo migrate pigsty -C /srv/sow
 sow repo migrate pgsql -C /srv/sow
 ```
 
-0.4 Transition 会安装 Schema v11 与 v12：按全部 Dist 重新派生 Repository 状态；在不猜测缺失
+Schema v13 为候选包池路径归属查询增加索引，避免每次 add 全表扫描发布历史。迁移时创建索引
+需要一次性的时间与私有数据库空间。随后执行 `sow build`、`sow check`，刷新受影响的 RPM 认证
+与 APT 元数据契约。v0.3 数据库还会获得 v11/v12 的修复：按全部 Dist 重新派生 Repository 状态；在不猜测缺失
 历史签名者的前提下修复 Publication 与 Generation Signer Projection；移除陈旧 abandoned-object
 evidence；并回填 append-only publication-target binding ledger 的 Revision 1。v0.3 未记录的历史
 Signer 保持显式未验证，不能进入 Current Head，也不能成为 retained trust assertion。
 
-Schema Transition 完成后不可逆，不要再用 SOW 0.3 打开数据库，也不要手工修改
+Schema Transition 完成后不可逆，不要再用旧版本 SOW 二进制打开数据库，也不要手工修改
 `PRAGMA user_version`。`--abort` 只适用于诊断出的 pre-commit layout-maintenance attempt，不能
 撤销已经完成的 Schema Migration。除升级或 SOW 明确诊断外，不要试探性执行 migrate。
+
+不支持从开发期 C2 布局启动新的转换。请保留原文件并用受支持的发布版重建；已经记录的布局
+迁移仍可按绑定的原计划完成。
 
 | 参数 | 含义 | 默认值 |
 |---|---|---|

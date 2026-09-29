@@ -57,7 +57,7 @@ Desired 与 Built 不一致时，首行显示 `dirty=true`。`BUILT_DISTS` 为�
 
 ```console
 sow ls -r pigsty
-workspace discovery error: managed: workspace discovery or configuration error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
+workspace discovery error: managed: workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
 ```
 
 该命令不获取写锁，也不重新哈希包文件。`--json` 在 `result.packages` 中返回同一批记录。

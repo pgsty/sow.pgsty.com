@@ -47,6 +47,8 @@ create 会丢弃保留命名空间里的陈旧临时路径并重建。不得服�
 │   └── <repo>/
 │       ├── stage/
 │       ├── recovery/
+│       ├── retained/
+│       ├── transitions/
 │       └── pending/
 └── <repo>/                               # 发布这个完整目录
     ├── pool/
@@ -60,10 +62,10 @@ create 会丢弃保留命名空间里的陈旧临时路径并重建。不得服�
 `<repo>.db` 与可重建的软件包事实缓存都属于私有状态，不改变公共仓库布局或
 `sow/v3` 配置标识。
 
-SOW 0.4 与 0.5 都使用内部数据库 Schema v12，从 0.4 升级到 0.5 无需新增数据库迁移。
-Append-only Publication-target Binding Revision、Package
-Facts、Signer Projection 与 Recovery Evidence 均只存在于 `<repo>.db`。v0.3 数据库必须先备份，
-再通过 `sow repo migrate` 升级；绝不要手工修改 `PRAGMA user_version`，也不要脱离匹配的公共/私有
+SOW 0.5 使用内部数据库 Schema v13。v0.3 或 v0.4 数据库必须先备份，再显式执行
+`sow repo migrate`；v13 新增索引，让包池路径归属检查只查询候选路径。Append-only
+Publication-target Binding Revision、Package Facts、Signer Projection 与 Recovery Evidence
+均只存在于 `<repo>.db`。绝不要手工修改 `PRAGMA user_version`，也不要脱离匹配的公共/私有
 Repository 状态单独复制数据库。
 
 ## 规范包池

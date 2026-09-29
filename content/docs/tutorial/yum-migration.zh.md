@@ -43,8 +43,8 @@ EL7 YUM 可能拒收 data 最大时间早于缓存的索引。检查当前 `repo
 `<data><timestamp>`，取客户端可能见过的最大值。如果在线索引此前已被写成零，只看这个
 零值无法恢复历史。revision 和文件 mtime 不能替代该记录。
 
-维护脚本应在同一个仓库锁内操作，并在上传目录外保存历史最大发布时间。真正产生新一代内容时，
-选择：
+维护脚本应在同一个仓库锁内操作，并在上传目录外保存历史最大发布时间。下面的 `+1` 是区分新内容的
+发布策略；EL7 本身也接受相等时间。真正产生新一代内容时，选择：
 
 ```text
 下一次时间 = max(当前 Unix 秒,
@@ -71,7 +71,7 @@ set -euo pipefail
 : "${SOW:?Set the path to the tested SOW binary}"
 : "${HISTORICAL_MAX:?Set the verified historical maximum Unix second}"
 : "${SIGN_KEY:?Set the full metadata signing fingerprint}"
-PUBLISH_TIME=$(python3 -c 'import sys,time; h=int(sys.argv[1]); assert 0 <= h < 9223372036854775807; print(max(int(time.time()), h+1))' "$HISTORICAL_MAX")
+PUBLISH_TIME=$(python3 -c 'import sys,time; h=int(sys.argv[1]); assert 0 <= h < 253402300799; print(max(int(time.time()), h+1))' "$HISTORICAL_MAX")
 
 "$SOW" create /srv/yum.candidate --metadata-timestamp "$PUBLISH_TIME"
 gpg --batch --yes --armor --detach-sign --local-user "$SIGN_KEY" \

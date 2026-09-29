@@ -45,7 +45,7 @@ Use the largest value clients may have seen. If the live index was already reset
 it is not a sufficient record of that history. Revision and file mtime are not substitutes.
 
 A maintenance wrapper should hold one lock for the repository and retain a publication
-high-water mark outside the uploaded tree. For a changed generation, choose:
+high-water mark outside the uploaded tree. The `+1` below is a publication policy that distinguishes changed generations; EL7 itself also accepts equality. For a changed generation, choose:
 
 ```text
 next time = max(current Unix second,
@@ -75,7 +75,7 @@ set -euo pipefail
 : "${SOW:?Set the path to the tested SOW binary}"
 : "${HISTORICAL_MAX:?Set the verified historical maximum Unix second}"
 : "${SIGN_KEY:?Set the full metadata signing fingerprint}"
-PUBLISH_TIME=$(python3 -c 'import sys,time; h=int(sys.argv[1]); assert 0 <= h < 9223372036854775807; print(max(int(time.time()), h+1))' "$HISTORICAL_MAX")
+PUBLISH_TIME=$(python3 -c 'import sys,time; h=int(sys.argv[1]); assert 0 <= h < 253402300799; print(max(int(time.time()), h+1))' "$HISTORICAL_MAX")
 
 "$SOW" create /srv/yum.candidate --metadata-timestamp "$PUBLISH_TIME"
 gpg --batch --yes --armor --detach-sign --local-user "$SIGN_KEY" \

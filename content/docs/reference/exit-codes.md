@@ -1,7 +1,7 @@
 ---
 title: "Exit Codes"
 linkTitle: "Exit Codes"
-description: "The seven exit codes, what each means, and a command that reproduces it."
+description: "Exit codes 0–6 and interruption code 130, with meanings and examples."
 categories: [Reference]
 tags: [cli, output]
 url: "/docs/reference/exit-codes/"
@@ -9,7 +9,7 @@ weight: 500
 icon: fa-solid fa-triangle-exclamation
 ---
 
-Every `sow` command exits with one of seven codes. They are stable, they are the same for
+Every `sow` command uses exit codes 0–6 or interruption code 130. They are the same for
 every command, and they are meant to be branched on in scripts — the distinction between
 "this failed" and "this was correctly refused" is the whole point of having more than one
 nonzero code.
@@ -23,6 +23,7 @@ nonzero code.
 | `4` | Write lock unavailable — held and `--no-wait`, or the timeout expired |
 | `5` | Integrity or recovery error, or `check` judged the result not deliverable |
 | `6` | Expected rejection: conflict, protected, no match, incompatible architecture |
+| `130` | Command interrupted, including Ctrl-C or a cancelled command context |
 
 Human-readable results go to stdout; warnings and diagnostics go to stderr. Each code has
 a stable message prefix on stderr, and a matching `class` in
@@ -31,17 +32,29 @@ a stable message prefix on stderr, and a matching `class` in
 | Code | stderr prefix | JSON `class` |
 |---|---|---|
 | `1` | varies by subsystem | `runtime` |
-| `2` | `usage error:` / `workspace discovery error:` / `configuration error:` | `usage` |
+| `2` | `usage error:` / `workspace discovery error:` / `configuration error:` | `usage`, `discovery`, `config` |
 | `3` | `... batch partially succeeded` | `partial` |
 | `4` | `lock unavailable:` | `lock` |
 | `5` | `integrity or recovery error:` | `integrity` |
 | `6` | `operation rejected:` | `rejected` |
+| `130` | varies by subsystem | `interrupted` |
 
 `sow create` is the exception to the prefix column: being outside the managed layer, it
 prints its raw domain error on stderr (`plain: scan …`, `plain: marker gate …`) without the
 `operation rejected:` prefix. The prefix is still present in its JSON `errors[].message`.
 
 ---
+
+## 130 — Interrupted
+
+Ctrl-C cancels the command and returns `130`; ordinary lock-wait timeout remains `4`.
+SOW returns a numeric exit status; it does not re-send SIGINT to itself. A parent shell may
+therefore continue to the next command unless the script checks the status, uses `set -e`,
+or handles signals itself. Cancellation is not reported as a signing-policy failure. For an add cancelled before
+Desired commits, no input is reported as accepted and the failure state is durable before
+temporary package bytes are removed. An already committed change remains committed;
+rerun the command to recover or converge it. Keep the original input packages until the
+operation completes.
 
 ## 0 — Success or no-op
 
@@ -115,22 +128,26 @@ sow ls
 ```
 
 ```console
-workspace discovery error: managed: workspace discovery or configuration error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
+workspace discovery error: managed: workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
 ```
 
 No workspace anywhere above the current directory — the message names where it searched and
 how to fix it:
 
 ```console
-workspace discovery error: managed: workspace discovery or configuration error: workspace not found (searched cwd="/home/vonng"); run sow init or set --workdir/SOW_DIR
+workspace discovery error: managed: workspace discovery error: workspace not found (searched cwd="/home/vonng"); run sow init or set --workdir/SOW_DIR
 ```
 
-A start directory that is not a real directory — a symlink, for instance, which is what
-`/tmp` is on macOS — is refused before the search even begins:
+A start path that names a regular file rather than a directory is refused before
+the search begins:
 
 ```console
-workspace discovery error: managed: workspace discovery or configuration error: discover workspace from cwd "/tmp": start is not a directory
+workspace discovery error: managed: workspace discovery error: discover workspace from workdir "/srv/sow/sow.yml": start is not a directory
 ```
+
+A symlink to a directory is accepted as a discovery start, including `/tmp` on macOS.
+Discovery still walks the literal path's ancestors and falls back to `SOW_DIR`
+when no workspace is found. Repository-internal symlinks retain their existing checks.
 
 A malformed configuration file — note that the offending line is named:
 

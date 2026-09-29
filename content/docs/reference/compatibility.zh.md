@@ -22,10 +22,10 @@ icon: fa-solid fa-circle-check
 | macOS | 是 | 是 | 归档 |
 | Windows | 否 | 否 | 不支持 |
 
-Release 二进制使用 `CGO_ENABLED=0`，不需要语言运行时。源码 Module 要求 Go 1.27.0 或更新版本，
-0.5 没有提高该下限。归档包含 `README.md`、`CHANGELOG.md` 与 Apache-2.0
-`LICENSE`，Linux 软件包会随二进制安装同一份
-协议文件。使用 [`sow version`](/zh/docs/command/) 查看产品版本、目标 OS/架构与构建工具链。
+Release 二进制使用 `CGO_ENABLED=0`，不需要语言运行时。源码 Module 要求 Go 1.27.1 或更新版本。
+归档包含 `README.md`、`CHANGELOG.md`、Apache-2.0 `LICENSE` 与 `THIRD_PARTY_NOTICES`，
+Linux 软件包也随二进制包含同一份协议与第三方许可声明。
+使用 [`sow version`](/zh/docs/command/) 查看产品版本、目标 OS/架构与构建工具链。
 
 ## 工作区文件系统
 
@@ -47,12 +47,15 @@ SOW 会拒绝符号链接控制路径、不安全普通文件、重叠 filesyste
 | 生产 CLI 干净环境 | Linux CI | 构建交付二进制；生成混合 Plain RPM/DEB 元数据；初始化 `sow/v3`；创建 RPM/DEB Dist；加入 Fixture；执行查询、build、check、changes、config 与 log 命令 |
 | Plain APT 客户端 | Ubuntu 22.04 容器 | 通过 HTTP 服务 `sow create` 输出；在显式信任未签名源时执行 `apt-get update`、包发现、精确版本选择、下载与安装 |
 | RPM 分离签名切换 | AlmaLinux 8、9、10 容器 | 使用真实 DNF 客户端遍历 `repomd.xml` / `repomd.xml.asc` 串行切换状态，并固定各组合的成功/失败行为 |
-| S3 兼容传输 | 固定 MinIO 容器 | 验证 Bucket 列表、HEAD、GET、仅创建/CAS 写入、重放、条件式 Multipart Upload、对象元数据、重试与 Prefix 约束 |
+| S3 兼容传输 | 固定 MinIO 容器 | 验证 Bucket 列表、HEAD、GET、单段仅创建/CAS PUT、重放、对象元数据、重试与 Prefix 约束 |
 | Release 打包 | Linux CI | 构建四个归档、两个 RPM、两个 DEB 与 `SHA256SUMS`；检查包内路径、Apache-2.0 元数据与协议文件字节 |
 
 DNF 签名切换是协议测试，不是完整 Managed RPM 安装；APT 作业覆盖未签名 Plain 仓库，不覆盖
 Managed 元数据签名。正式上线前，应使用部署中的确切 dnf/APT 版本、仓库 URL、访问策略与
 签名策略完成验收。
+
+当前 MinIO 集成没有验证条件式 Multipart 完成。Multipart 的请求/协议测试单独存在，
+不能据此认定真实 R2 兼容；该路径的验收还需要真实 R2 Multipart 测试。
 
 ## 仓库客户端契约
 
@@ -70,6 +73,12 @@ Managed 客户端必须消费完整 Repository Root：
 [`sow export rpm-leaf`](/zh/docs/command/export/) 生成自包含副本。导出使用本地包路径并带有
 完成清单，但不是第二个规范 Repository。
 
+Managed RPM 与 `export rpm-leaf` 的 repomd data 时间戳固定为 `0`，没有
+`--metadata-timestamp` 选项。因此它们不能直接接管保留了正数时间戳缓存的同一个 EL7
+repository ID；换 baseurl 本身不能解决。需要客户端采用新的 repository ID 或清理元数据缓存。
+若必须保留旧 ID 和缓存继续更新，请使用带显式时间戳的 Plain `create`，按
+[迁移指南](/zh/docs/tutorial/yum-migration/) 维护发布时间并重签 repomd。
+
 ## 迁移已有 Plain YUM 仓库
 
 Plain 生成 primary、filelists、other 三份 XML，不生成旧式 SQLite 元数据或模块流。
@@ -86,6 +95,9 @@ RPM 依赖投影遵循现代 createrepo_c 对 `%pretrans`、`%posttrans` 依赖�
 回归测试巩固了这一契约，没有修改解析器。旧版 createrepo_c 可能输出不同数量的依赖行或
 `pre="1"` 属性；应比较依赖含义和真实客户端行为，不能只比行数。对应上游变更见
 [PR #427](https://github.com/rpm-software-management/createrepo_c/pull/427)。
+
+0.5.0 暂不支持 RPM v6 包格式的签名；新的签名 tag 可能被当作未签名，签名或验签流程因而
+拒绝该包。签名工作流请使用 RPM v4 格式包，不应期待 SOW 保留或验证 RPM v6 格式的签名。
 
 ## 发布 Provider
 

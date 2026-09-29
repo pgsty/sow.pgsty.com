@@ -50,6 +50,16 @@ exported RPM leaf el9/x86_64 generation=00000000000000000012 method=copy package
 源必须是已完成的 Built Generation。导出物是独立制品，不属于 Desired Membership、
 Built Generation、发布输入或 GC 根。
 
+导出失败可能在 `DIR` 留下半成品；导出没有 journal 或自动回滚。保持该目录离线，修正原因
+（例如签名私钥不可用），然后换一个不存在或为空的输出目录重试。不要发布失败产物，也不要
+期望重跑命令自动合并非空目录。
+
+Managed RPM 与 `export rpm-leaf` 的 repomd data 时间戳固定为 `0`，没有
+`--metadata-timestamp` 选项。因此它们不能直接接管保留了正数时间戳缓存的同一个 EL7
+repository ID；换 baseurl 本身不能解决。需要客户端采用新的 repository ID 或清理元数据缓存。
+若必须保留旧 ID 和缓存继续更新，请使用带显式时间戳的 Plain `create`，按
+[迁移指南](/zh/docs/tutorial/yum-migration/) 维护发布时间并重签 repomd。
+
 ## 复制与硬链接
 
 复制是安全默认值。`--hardlink` 只适用于同一文件系统、且消费者无法修改的可信只读目标。硬链接

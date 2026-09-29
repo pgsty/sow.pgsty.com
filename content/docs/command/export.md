@@ -50,6 +50,18 @@ The destination contains:
 The source must be a completed Built Generation. The export is a separate artifact: it is not
 Desired Membership, a Built Generation, publication input, or a GC root.
 
+A failed export can leave partial files in `DIR`; there is no export journal or automatic
+rollback. Keep that directory offline, correct the cause (for example, an unavailable signer),
+and retry into a different absent or empty directory. Do not publish a failed export or
+expect a retry to merge into its non-empty output.
+
+Managed RPM and `export rpm-leaf` use a fixed `0` repomd data timestamp and expose no
+`--metadata-timestamp` option. They cannot directly take over the same EL7 repository ID
+while clients retain a positive cached timestamp; changing the base URL alone does not help.
+Use a new client repository ID or clear its metadata cache. To keep the old ID and cache,
+continue with Plain `create` and an explicit publication time, following the
+[migration guide](/docs/tutorial/yum-migration/) and re-signing repomd.
+
 ## Copy versus hard link
 
 Copying is the safe default. `--hardlink` is an explicit optimization for an output on the same

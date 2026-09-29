@@ -79,8 +79,7 @@ run [`sow check`](/docs/command/check/) before delivery.
 `status` never migrates or repairs state. If the Repository database cannot be read safely,
 the command exits `5`; run the maintenance command named by the diagnostic before retrying. In
 particular, back up and run [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) for every
-v0.3 Repository before reading it with SOW 0.4 or 0.5. An existing 0.4 schema needs no new migration
-for 0.5.
+v0.3 or v0.4 Repository before reading it with SOW 0.5 and its schema v13.
 
 ## Exit behavior
 

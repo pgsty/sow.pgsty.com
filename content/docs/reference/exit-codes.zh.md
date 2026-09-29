@@ -1,7 +1,7 @@
 ---
 title: "退出码"
 linkTitle: "退出码"
-description: "七个退出码分别代表什么,以及每个码一条可复现的触发命令。"
+description: "退出码 0–6 与中断码 130 的含义和示例。"
 categories: [Reference]
 tags: [cli, output]
 url: "/zh/docs/reference/exit-codes/"
@@ -9,7 +9,7 @@ weight: 500
 icon: fa-solid fa-triangle-exclamation
 ---
 
-每条 `sow` 命令都以七个退出码之一结束。它们是稳定的、对所有命令一致,
+每条 `sow` 命令都使用退出码 0–6 或中断码 130，对所有命令一致，
 并且就是设计来给脚本做分支判断的 —— 区分"这件事失败了"和"这件事被正确地拒绝了",
 正是设置多个非零码的全部意义。
 
@@ -22,6 +22,7 @@ icon: fa-solid fa-triangle-exclamation
 | `4` | 写锁不可用 —— 被占用且指定了 `--no-wait`,或等待超时 |
 | `5` | 完整性/恢复错误,或 `check` 判定当前结果不可交付 |
 | `6` | 预期拒绝:冲突、protected、无匹配、架构不兼容 |
+| `130` | 命令中断，包括 Ctrl-C 或命令上下文被取消 |
 
 人类可读的结果写 stdout,警告与诊断写 stderr。每个码在 stderr 上有稳定的消息前缀,
 在 [JSON 输出](/zh/docs/reference/json/)中有对应的 `class`:
@@ -29,17 +30,25 @@ icon: fa-solid fa-triangle-exclamation
 | 码 | stderr 前缀 | JSON `class` |
 |---|---|---|
 | `1` | 随子系统而异 | `runtime` |
-| `2` | `usage error:` / `workspace discovery error:` / `configuration error:` | `usage` |
+| `2` | `usage error:` / `workspace discovery error:` / `configuration error:` | `usage`, `discovery`, `config` |
 | `3` | `... batch partially succeeded` | `partial` |
 | `4` | `lock unavailable:` | `lock` |
 | `5` | `integrity or recovery error:` | `integrity` |
 | `6` | `operation rejected:` | `rejected` |
+| `130` | 随子系统而异 | `interrupted` |
 
 `sow create` 是前缀那一列的例外:它不在 Managed 层内,stderr 上打印的是原始领域错误
 (`plain: scan …`、`plain: marker gate …`),没有 `operation rejected:` 前缀。该前缀仍然出现在
 它的 JSON `errors[].message` 里。
 
 ---
+
+## 130 —— 中断
+
+Ctrl-C 取消命令并返回 `130`；普通等待锁超时仍返回 `4`。SOW 返回的是数字退出状态，不会向自身重发 SIGINT；父 shell 仍可能继续执行下一条命令。
+脚本需要检查状态、使用 `set -e`，或自行处理信号。取消不会被报告成签名策略失败。
+add 在 Desired 提交前被取消时，不会把任何输入报告为 accepted，且先持久化失败状态再清理
+临时包字节。已经提交的变更仍然保留，重跑命令即可恢复或继续收敛。操作完成前应保留原始输入包。
 
 ## 0 —— 成功或无操作
 
@@ -109,20 +118,23 @@ sow ls
 ```
 
 ```console
-workspace discovery error: managed: workspace discovery or configuration error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
+workspace discovery error: managed: workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
 ```
 
 当前目录向上找不到任何工作区 —— 错误会说明搜索位置与修复方式:
 
 ```console
-workspace discovery error: managed: workspace discovery or configuration error: workspace not found (searched cwd="/home/vonng"); run sow init or set --workdir/SOW_DIR
+workspace discovery error: managed: workspace discovery error: workspace not found (searched cwd="/home/vonng"); run sow init or set --workdir/SOW_DIR
 ```
 
-起始目录本身不是真实目录(比如符号链接,macOS 上的 `/tmp` 就是)时,搜索根本不会开始:
+起点指向普通文件而不是目录时，搜索不会开始：
 
 ```console
-workspace discovery error: managed: workspace discovery or configuration error: discover workspace from cwd "/tmp": start is not a directory
+workspace discovery error: managed: workspace discovery error: discover workspace from workdir "/srv/sow/sow.yml": start is not a directory
 ```
+
+指向目录的符号链接可以作为发现起点，包括 macOS 上的 `/tmp`。发现仍按字面路径向上
+搜索，未找到工作区时继续回退到 `SOW_DIR`；仓库内部的符号链接仍保留原有校验。
 
 配置文件格式有问题 —— 注意错误会指出具体行号:
 

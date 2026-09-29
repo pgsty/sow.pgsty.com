@@ -177,10 +177,9 @@ sow rm patroni -r pgsql -d el9 -c --json | jq -r '.result.changes[] | "\(.phase)
 | `0` | Memberships removed and rebuilt, or a `--check` preview printed |
 | `1` | Runtime I/O or renderer failure |
 | `2` | Usage error — `--check` with `--skip`, `--check` with lock flags, ambiguous selection, Workspace not found |
-| `3` | Partial batch — at least one reference removed and at least one failed |
 | `4` | Repository lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Integrity or recovery error |
-| `6` | A reference matched nothing, or an ambiguous non-bare reference |
+| `6` | A reference matched nothing, or a non-bare reference was ambiguous; the whole batch is rejected and no memberships are removed |
 
 ## See also
 

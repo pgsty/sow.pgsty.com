@@ -147,8 +147,8 @@ live target without those controls.
 ## R2 targets
 
 `provider: r2` uses an S3-compatible storage transport and report-only target GC. The
-transport integration covers list, HEAD, GET, and conditional PUT against a pinned MinIO
-fixture. Validate credentials, bucket policy, public endpoint, cache behavior, replay, and
+transport integration covers list, HEAD, GET, and single-part conditional PUT against a pinned MinIO
+fixture; it does not validate conditional multipart completion or replace real R2 acceptance. Validate credentials, bucket policy, public endpoint, cache behavior, replay, and
 recovery on a nonproduction prefix before enabling a production target. See
 [Platforms & Integrations](/docs/reference/compatibility/).
 

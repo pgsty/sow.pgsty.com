@@ -30,7 +30,7 @@ Every path SOW creates in plain and managed mode, the pool grouping rule, name
 constraints, and which directories must never be exposed over HTTP.
 {{< /card >}}
 {{< card title="Exit Codes" link="/docs/reference/exit-codes/" >}}
-The seven exit codes and what each one means.
+Exit codes 0–6, interruption code 130, and what each means.
 {{< /card >}}
 {{< card title="JSON Output" link="/docs/reference/json/" >}}
 The `sow.cli/v1` envelope, the meaning of each top-level field, and result shapes for the

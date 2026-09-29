@@ -385,8 +385,11 @@ operation rejected: ... deb metadata key: environment key reference SOW_METADATA
 operation rejected: ... deb metadata key: gpg public-key export returned no bounded key material
 ```
 
-Secret material never leaves the reference. `sow config show --all` prints the reference
-and the resolved fingerprint, and nothing else:
+Private key and passphrase material is never printed. `sow config show` can resolve
+`key_fingerprint` with or without `--all`. Active RPM package-signing entries also
+include public-certificate snapshot digests and normalized trusted-key identities;
+fingerprint and digest arrays are independently sorted/deduplicated, so they must
+not be paired by index. A metadata signing entry looks like:
 
 ```yaml
     signing:
