@@ -361,6 +361,8 @@ params:
       loading: lazy
 
   ui:
+    preset: paper
+    preset_menu: [paper, slate, ink, terminal]
     # OINK applies the shared shell to product-specific content types.
     # /download/ is an OINK landing page, so it is not a shell type.
     shell_types: [docs, blog, swagger]
