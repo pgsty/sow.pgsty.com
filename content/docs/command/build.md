@@ -1,7 +1,7 @@
 ---
 title: "sow build"
 linkTitle: "build"
-description: "Converge Desired Membership and renderer configuration into a complete Built Generation."
+description: "Build local indexes from Desired membership and current configuration."
 categories: [Command]
 tags: [cli, managed, generation]
 url: "/docs/command/build/"
@@ -9,9 +9,7 @@ weight: 1200
 icon: fa-solid fa-hammer
 ---
 
-`sow build` is the explicit Desired-to-Built convergence command. It acquires the Repository write
-lock, recovers any decidable unfinished Operation, renders and verifies a complete Generation, then
-switches protocol pointers last.
+`sow build` updates local indexes to match Desired membership and current configuration. Run it after `add --skip`, `rm --skip`, or a policy change. It recovers unfinished local Repository operations before starting the next build.
 
 ## Synopsis
 
@@ -27,10 +25,10 @@ sow build [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 | `-d, --dist NAME` | Build named Dists; repeatable | all affected Dists |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
-| `--json` | Wrap the result in the `sow.cli/v1` envelope | false |
+| `--json` | Output JSON | false |
 
-Without `-d`, SOW converges every affected Dist in the selected Repository. With `-d`, only those
-Dists converge; unselected changes remain dirty.
+Without `-d`, SOW builds every affected Dist in the selected Repository. With `-d`, only those
+Dists are built; unselected changes remain dirty.
 
 ## Result
 
@@ -41,7 +39,7 @@ sow build -r demo -d el9
 built repository=demo operation=2769214987359113555 dists=el9 revision=4 generation=00000000000000000005 dirty=false
 ```
 
-Use `--json` for the command-specific object inside the standard envelope.
+Use `--json` to read the result in a script.
 
 ## No-op builds
 
@@ -53,7 +51,7 @@ sow build -r demo -d el9
 build repository=demo dists=el9 already current (noop) revision=4 generation=00000000000000000005 dirty=false
 ```
 
-## Policy convergence
+## Apply policy changes {#policy-convergence}
 
 `build` re-evaluates the current `exclude` and `limit` policy. Tightening policy may remove Desired
 Membership. Loosening policy does not reconstruct historical members from leftover pool bytes; run
@@ -61,21 +59,9 @@ Membership. Loosening policy does not reconstruct historical members from leftov
 
 ## Commit and recovery
 
-SOW stages new metadata on the same filesystem, verifies it, then switches mutable protocol pointers
-last. RPM checksum-named metadata and APT by-hash keep old and new readers self-consistent.
+SOW moves required pending packages into `pool/`, writes the indexes, then updates client entry points such as `repomd.xml` and `Release`. One build can include several Dists. They share the resulting Generation; unselected dirty Dists still need a build.
 
-Pending package promotion is a bounded, single-writer group commit. Each batch contains at
-most 512 objects or 1 GiB: SOW creates Pool links, persists every distinct target parent,
-then removes pending names and persists the shared pending directory. An interruption can
-leave a pending-only, exact dual-link, or Pool-only state, all recoverable from the journal;
-it cannot durably lose both names.
-
-One Operation may cover several Dists. Each Dist always exposes a complete view; when `build`
-returns, every included Dist belongs to the same Built Generation.
-
-Before starting new work, `build` attempts forward recovery or safe rollback of a non-terminal
-Operation. If journal, database, and filesystem evidence contradict each other, the Repository enters
-`error` and `build` refuses to guess. There is no force-repair flag.
+If a build stops, rerun it. SOW uses the operation journal to finish or roll back the unfinished work. If the journal, database, and files disagree, the command reports an integrity error. Use `sow check` and `sow log` to identify the affected state.
 
 ## Progress events
 
@@ -88,13 +74,11 @@ contains `phase`, `completed`, `total`, and `jobs`. Current phases are:
 - `normalizing_public_tree`;
 - `finalizing`.
 
-These events do not advance the Operation state and deliberately do not checkpoint SQLite
-after every update. They are audit/observability records, not recovery decisions. Inspect
-them with [`sow log OPERATION`](/docs/command/log/#one-operation-in-detail).
+Inspect the events with [`sow log OPERATION`](/docs/command/log/#one-operation-in-detail).
 
 ## Metadata signing
 
-Managed metadata signing is configured only in `sow.yml`; there is no command-line key override.
+Configure metadata signing in `sow.yml`.
 Changing a configured key reference or fingerprint makes affected Dists dirty, and the next build
 re-signs their metadata.
 
@@ -105,7 +89,7 @@ re-signs their metadata.
 
 | Code | Trigger |
 |---|---|
-| `0` | Converged successfully or nothing to do |
+| `0` | Build completed or nothing to do |
 | `1` | Renderer, signing, or filesystem failure |
 | `2` | Usage error, Workspace not found, or implicit Repository selection is ambiguous |
 | `4` | Repository write lock unavailable |
@@ -114,7 +98,7 @@ re-signs their metadata.
 
 ## See also
 
-- [`sow status`](/docs/command/status/) — determine whether convergence is needed
+- [`sow status`](/docs/command/status/) — determine whether a build is needed
 - [`sow check`](/docs/command/check/) — verify the resulting tree
 - [`sow changes`](/docs/command/changes/) — inspect the resulting file delta
 - [Transactions & Recovery](/docs/feature/transactions/) — full commit protocol

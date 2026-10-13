@@ -1,7 +1,7 @@
 ---
 title: "Your First Workspace"
 linkTitle: "First Workspace"
-description: "Create a workspace with RPM and DEB Dists, add packages, and verify the public tree."
+description: "Create a workspace, organize RPM and DEB packages, and check the repository."
 categories: [Start]
 tags: [managed, repository, dist, generation]
 url: "/docs/start/workspace/"
@@ -9,8 +9,9 @@ weight: 300
 icon: fa-solid fa-layer-group
 ---
 
-Managed mode keeps configuration, membership, generations, and audit state. This example
-starts from an empty directory.
+This example creates a Managed repository with two named package sets, called Dists:
+`el9` for RPMs and `bookworm` for DEBs. Use an empty, writable `/srv/sow` directory, or
+substitute another path.
 
 {{% steps %}}
 
@@ -26,14 +27,11 @@ cd /srv/sow
 ```text
 /srv/sow/
 ├── sow.yml   # configuration; schema: sow/v3
-└── .sow/     # SQLite state, locks, staging, recovery, journals
+└── .sow/     # private state managed by SOW
 ```
 
-Do not edit or serve `.sow/`. `init` is idempotent: rerunning it validates and converges
-declared repositories and Dists; it does not reset a valid workspace.
-
-The default architecture families are `x86_64` and `aarch64`. Configuration accepts
-`amd64` and `arm64` as aliases and normalizes them to those family names.
+Edit `sow.yml` when you need to change configuration. SOW manages the private `.sow/`
+directory. You can repeat `init` without resetting existing packages or state.
 
 ## Create a Repository and two Dists {#2-create-a-repository-and-two-dists}
 
@@ -43,9 +41,8 @@ sow dist new el9 --format rpm
 sow dist new bookworm --format deb
 ```
 
-A Repository owns one public `pool/ + dists/` tree and one private state database. A Dist
-has exactly one format. `dist new` materializes a valid empty view, so empty clients receive
-an empty index instead of a 404.
+Each Dist has one package format. `dist new` creates empty indexes for `x86_64` and
+`aarch64` by default. Both Dists share the Repository's `pool/` directory.
 
 The public layout is now:
 
@@ -72,20 +69,7 @@ sow add /path/to/packages/*.rpm -d el9
 sow add /path/to/packages/*.deb -d bookworm
 ```
 
-SOW reads identity and architecture from the package itself, stores accepted bytes under
-`local/pool/`, updates Desired Membership, and builds affected Dists before returning.
-The package path is only an input; later builds use the managed pool.
-
-Use `--skip` to stage several membership changes without rebuilding each time, then
-converge once:
-
-```bash
-sow add /path/to/more/*.rpm -d el9 --skip
-sow build
-```
-
-While Desired Membership is ahead of the Built Generation, the Repository is `dirty` and
-`ready_to_copy=false`.
+Replace the input paths with real package files. SOW reads package identity and architecture, stores each accepted file in `local/pool/`, updates membership, and builds the affected Dists. Later builds use the pool, so the original input files are no longer needed by SOW.
 
 ## Inspect and verify {#4-inspect-and-verify}
 
@@ -96,41 +80,36 @@ sow ls -d bookworm
 sow check
 ```
 
-`status` is a cheap state read. `check` is the delivery gate: it verifies configuration,
-state, public modes, retained roots, package bytes, Desired Membership, indexes,
-signatures, and the Generation manifest. It writes nothing. Only a clean Repository that
-passes all layers returns success.
-
-To see normalized configuration and defaults:
-
-```bash
-sow config show --all
-```
+`ls` lists the packages in each Dist. `status` should report `clean` and
+`ready_to_copy=true`. A successful `check` confirms that the files match the recorded build.
 
 ## Serve the Repository {#5-serve-the-repository}
 
-The public unit is `/srv/sow/local`, not the workspace root. Serve that directory at a
-stable URL prefix; do not expose `sow.yml` or `.sow/`.
+Publish the complete `/srv/sow/local` directory so clients can reach both indexes and package files. Keep the workspace configuration and `.sow/` outside the server root.
 
-- DNF base URL: `https://repo.example.com/local/dists/el9/x86_64/`
-- APT source: `deb https://repo.example.com/local bookworm main`
-
-For a safe Nginx and filesystem-publication workflow, continue with
-[Serve Repositories](/docs/tutorial/serving/).
+Follow [Serve Repositories](/docs/tutorial/serving/) to publish with Nginx. The [YUM](/docs/tutorial/yum-repo/) and [APT](/docs/tutorial/apt-repo/) tutorials show client configuration, including the trust settings for unsigned repositories.
 
 {{% /steps %}}
 
+## Batch later updates
+
+When you need to add several batches, use `--skip` and build once at the end:
+
+```bash
+sow add /path/to/more/*.rpm -d el9 --skip
+sow build
+```
+
+While membership changes await a build, `sow status` reports `dirty` and `ready_to_copy=false`.
+
+
 ## Selection rules
 
-- Workspace: search upward from `-C DIR` when supplied, otherwise from the current directory; if no workspace is found, try `SOW_DIR`. An explicit `-C` does not disable that fallback.
-- Repository: `-r NAME`, the containing Repository, or the only configured Repository.
-- Dist: `-d NAME`, repeatable; omission is accepted only when the command can resolve an
-  unambiguous scope.
+The commands above find the workspace from the current directory and select its only
+Repository. From another directory, use `-C /srv/sow`. With multiple Repositories, add
+`-r local`. Use `-d NAME` to select a Dist; repeat it to select several.
 
-`-C` is a discovery starting point, not a promise that this exact directory becomes the
-Workspace Root. `sow config check -C DIR` shows the resolved workspace; use an explicit
-physical root and `-r NAME` for scripts that must target one particular repository.
-Ambiguity is an error; SOW does not pick an arbitrary Repository or Dist.
+See [selection rules](/docs/command/#repository-selection) for discovery and defaults.
 
 ## Next
 

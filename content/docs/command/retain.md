@@ -1,7 +1,7 @@
 ---
 title: "sow retain"
 linkTitle: "retain"
-description: "Add, list, and remove explicit retained-Generation roots for local garbage collection."
+description: "Keep or release the package files needed by a Generation."
 categories: [Command]
 tags: [cli, retention, generation]
 url: "/docs/command/retain/"
@@ -9,8 +9,7 @@ weight: 1600
 icon: fa-solid fa-box-archive
 ---
 
-`sow retain` manages explicit local Generation roots. `retain add` can freeze only the current Built
-Generation; after later builds make it historical, its required package payloads remain protected.
+`sow retain` protects the package files needed by a selected Generation from local GC. Add the current Built Generation before a later build replaces it. Retention preserves package files and a frozen manifest; it does not restore or publish an older repository view.
 
 ## Synopsis
 
@@ -24,23 +23,18 @@ sow retain rm GENERATION  [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR 
 
 ## retain add
 
-Requires `GENERATION` to equal the current Built Generation, verifies it, freezes its manifest under
-private Workspace state, and adds an explicit GC root. Older Generations cannot be recreated after
-the fact with `retain add`.
+Pass the current Built Generation number. SOW verifies the Generation, saves its manifest, and records that GC must keep its package files. Add this record before building a newer Generation.
 
 ```console
 sow retain add 12 -r pgsql
 retained generation 00000000000000000012: /srv/sow/.sow/pgsql/retained/00000000000000000012
 ```
 
-The retained record protects payloads; it does not switch the current view or publish anything.
-Adding an already retained Generation is idempotent only when the verified record agrees with current
-evidence.
+Adding the same Generation again changes nothing if its retained record still passes verification.
 
 ## retain ls
 
-Lists explicit retained records. It is read-only and therefore accepts neither lock options nor
-`--dist`.
+Lists retained records for the Repository.
 
 ```console
 sow retain ls -r pgsql
@@ -52,7 +46,7 @@ An empty list is a successful result.
 
 ## retain rm
 
-Removes only the explicit retained root:
+Removes the retention record for a Generation:
 
 ```console
 sow retain rm 12 -r pgsql
@@ -60,14 +54,15 @@ removed retained generation 00000000000000000012
 ```
 
 It does not delete package bytes. Removing a Generation that is not retained is an idempotent no-op.
-A later local [`sow gc`](/docs/command/gc/) may reclaim payloads only if no other safety root reaches
-them.
+A later local [`sow gc`](/docs/command/gc/) can reclaim these packages when no other state or operation needs them.
 
-`retain rm` verifies the retained root before removing it and refuses one that fails
-verification. While such a damaged retained root exists, `retain ls`, local `gc`, and `check`
-also fail; `check` names the damaged Generation in its `retained` layer.
-After confirming the damage, and with no writer running, delete `.sow/<repo>/retained/<GENERATION>`
-by hand. This removes only the GC root, never package bytes; then rerun `sow check`.
+If a retained record is damaged, `retain rm`, `retain ls`, local `gc`, and `check` report the error. The `retained` layer in `check` identifies the affected Generation. To discard that damaged record:
+
+1. Stop Workspace writers.
+2. Move `.sow/<repo>/retained/<GENERATION>` to a backup location outside the Workspace.
+3. Run `sow check` again.
+
+Moving the record also removes its protection against GC.
 
 ## Options
 
@@ -77,7 +72,7 @@ by hand. This removes only the GC root, never package bytes; then rerun `sow che
 | `-r, --repo NAME` | all | Select a Repository |
 | `-T, --timeout DUR` | `add`, `rm` | Maximum write-lock wait |
 | `-N, --no-wait` | `add`, `rm` | Fail immediately when locked |
-| `--json` | all | Emit the `sow.cli/v1` envelope |
+| `--json` | all | Output JSON |
 
 ## Exit behavior
 
@@ -92,6 +87,6 @@ by hand. This removes only the GC root, never package bytes; then rerun `sow che
 
 ## See also
 
-- [`sow gc`](/docs/command/gc/) — consumes retention roots
+- [`sow gc`](/docs/command/gc/) — reclaim packages that no retained state needs
 - [`sow changes`](/docs/command/changes/) — inspect a Built Generation delta
 - [Repository Layout](/docs/reference/layout/) — private retained-record location

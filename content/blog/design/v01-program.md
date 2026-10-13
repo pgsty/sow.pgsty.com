@@ -2,7 +2,7 @@
 title: "The Original SOW v0.1 Program: A Git for Package Repositories"
 linkTitle: "v0.1 Original Program"
 date: 2026-07-11
-lastmod: 2026-08-28
+lastmod: 2026-10-13
 authors: [Vonng]
 description: "Why SOW began as a Git/CAS/Route/Edge control plane, what that model achieved, and why the product later reset around a smaller Repository core."
 categories: [Design]
@@ -13,22 +13,17 @@ icon: fa-solid fa-code-branch
 draft: false
 ---
 
-> [!IMPORTANT] Historical design record
-> This article describes the v0.1 program initiated on 2026-07-11 and sealed in
-> the v0.1.0 source baseline on 2026-07-31. The Git/CAS/Route/Edge product model
-> is retired. Current behavior is defined by [SOW Docs](/docs/) and the maintained
-> [System Model](/blog/design/model/).
+The v0.1 program began on 2026-07-11 and was sealed as v0.1.0 on July 31. It aimed to
+replace Pigsty's Makefile-and-rclone workflow with one Go control plane for APT, YUM, and
+static assets. That control plane covered local state, package history, upstream sync,
+channels, views, snapshots, two clouds, CDN behavior, commercial access control, and
+migration.
 
-SOW did not begin as a small repository indexer. The original goal was to replace a large
-Pigsty Makefile-and-rclone workflow with one Go control plane for APT, YUM, and static
-assets. It would own local state, package lifecycle, upstream synchronization, channels,
-views, snapshots, publication to two independent clouds, CDN behavior, commercial access
-control, migration, recovery, and verification.
-
-The phrase used at the time was **“Git for artifact repositories.”** It was a coherent
-answer to a real problem: package distribution has immutable content, mutable names,
-history, promotion, publication, and rollback. The difficulty was not that the analogy was
-wrong. The difficulty was how much product surface the analogy invited SOW to own.
+The guiding phrase was **“Git for artifact repositories.”** Package distribution has
+immutable content, mutable names, history, promotion, publication, and rollback. The
+analogy helped describe those needs, but it also expanded the scope of the product.
+The Git/CAS/Route/Edge model was later retired; the current model is described in
+[System Model](/blog/design/model/).
 
 ## The problem the first design tried to solve
 
@@ -62,7 +57,7 @@ state, and operator intent all had to fit one Git-shaped authority.
 ### CAS owned the bytes
 
 Package bodies lived in an immutable SHA-256 pool. Published trees used hardlinks into that
-pool, so reachability rather than filenames decided whether a byte could be collected.
+pool, so package references determined whether a file could be removed.
 This made local deduplication and history inexpensive, but required one filesystem and
 made materialized paths, receipts, and inode identity part of the product contract.
 
@@ -71,16 +66,16 @@ made materialized paths, receipts, and inode identity part of the product contra
 Repository, View, Snapshot, Stable, History, and per-target remote refs described the
 meaning and retention of content. A mutable view could move without erasing stable or
 historical reachability. Removing a view changed references; garbage collection remained a
-separate, evidence-gated operation.
+separate operation that checked all remaining references.
 
-### Publication was a saga
+### Each target had its own publication history {#publication-was-a-saga}
 
 Cloudflare R2 and Tencent COS were independent targets. Each target prepared immutable
 objects, persisted commit intent, moved protocol pointers, purged the CDN, verified public
 visibility, and advanced its own checkpoint. One target succeeding could not be rolled
 back merely because the other failed.
 
-The important order was already recognizable:
+The publication order was:
 
 ```text
 immutable payload
@@ -90,10 +85,11 @@ immutable payload
   -> public verification
   -> checkpoint
   -> grace
-  -> evidence-gated deletion
+  -> deletion after reference and identity checks
 ```
 
-That sequence survives in current SOW.
+Current publication retains this ordering. Cache grace and provider deletion checks apply
+to remote garbage collection.
 
 ### Routes and Edge were part of repository correctness
 
@@ -102,24 +98,23 @@ metadata. Private objects lived behind an Edge contract shared by Cloudflare Wor
 EdgeOne. Authentication had to run before origin access; tokens could not enter origin
 URLs, cache keys, or logs.
 
-This closed the confidentiality problem, but also made CDN routing, token verification,
-provider deployment, log sinks, and cache topology prerequisites of the repository model.
+This design made CDN routing, token verification, provider deployment, log sinks, and
+cache topology prerequisites of the repository model.
 
 ## Why the design was attractive
 
-The v0.1 model had several strong properties:
+The model gave each part of the system explicit rules:
 
 - every durable fact had an explicit owner;
 - immutable bytes and mutable names were separated;
 - local and remote publication states were observable independently;
 - pointer-last publication made partial work recoverable;
-- GC required a complete reachability closure;
+- GC checked all package references before deletion;
 - plans and receipts were revalidated instead of blindly trusted;
 - client compatibility, provider compatibility, and implementation evidence were distinct;
 - the exact legacy migration surface was treated as data, not tribal knowledge.
 
-The later product did not discard these ideas. It kept them after removing much of the
-machinery that first expressed them.
+These rules continued in later releases with fewer supporting mechanisms.
 
 ## Why the product reset
 
@@ -151,7 +146,7 @@ Finally, recovering every derived path under hostile-writer and crash conditions
 more identity, journal, quarantine, and retirement machinery than the core job justified.
 
 Upstream synchronization and channel promotion were another deliberate scope cut. V1 had
-real streaming, fuzz, URL, and proof-order evidence for fetching packages, but acquisition
+tests for streaming downloads, malformed input, URLs, and verification order, but acquisition
 introduced its own policy, retry, provenance, and remote-ownership model. The reset made
 package acquisition an external input concern so SOW could own repository admission and
 publication without also becoming a universal mirror orchestrator.
@@ -165,7 +160,7 @@ publication without also becoming a universal mirror orchestrator.
 | Pointers commit after payload preparation | [Publication & Recovery](/blog/design/publication/) |
 | Post-commit recovery is forward-only | Managed operation and publication journals |
 | Plans and paths are untrusted input | Exact identity, containment, and rebind checks |
-| Deletion requires complete evidence | Reference closure, grace, absence, and provider capability |
+| Deletion requires complete evidence | References and exact object identity; cache grace and provider capability for remote deletion |
 | Generated server config is derived state | The complete Repository root is the hosting unit; serving remains explicit operator configuration |
 | Compatibility is a matrix | [Platforms & Integrations](/docs/reference/compatibility/) |
 | Historical evidence never upgrades itself | Dated Design and Release records |
@@ -181,9 +176,8 @@ publication without also becoming a universal mirror orchestrator.
 - the multi-cloud publication control plane and provider bootstrap/attestation system;
 - V1-specific projection receipts, leases, quarantine commands, and recovery surfaces.
 
-Some implementation ideas later returned in smaller forms, but the ownership boundary
-changed: current SOW is a repository engine first, not a distribution platform for every
-surrounding concern.
+Some implementation ideas later returned under a narrower boundary: SOW manages
+repositories and their publication. Package acquisition and serving remain external tasks.
 
 ## Timeline
 
@@ -203,8 +197,7 @@ The immutable [v0.1.0 `docs/` tree](https://github.com/pgsty/sow/tree/v0.1.0/doc
 preserves the original [architecture contract](https://github.com/pgsty/sow/blob/v0.1.0/docs/architecture.md),
 [requirements traceability](https://github.com/pgsty/sow/blob/v0.1.0/docs/requirements-traceability.md),
 [migration material](https://github.com/pgsty/sow/tree/v0.1.0/docs/migration), ADRs, and
-evidence. Those files explain the historical implementation; they do not override this
-site's maintained history or current documentation.
+evidence for the historical implementation.
 
 Continue with the [v0.1 Decision Ledger](/blog/design/v01-decisions/),
 [v0.1 Evidence Ledger](/blog/design/v01-evidence/), and

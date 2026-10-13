@@ -16,9 +16,9 @@ sections:
   - cta
 
 hero:
-  eyebrow: Download matrix
+  eyebrow: SOW for Linux and macOS
   title: Download SOW
-  desc: '**One self-contained CLI, five installation paths.** Choose a package or archive for your operating system and architecture, or build from source. Pinned artifacts are enabled after their GitHub Release is public; the Pigsty repository follows its own update schedule.'
+  desc: 'Install from the Pigsty repository, download a versioned package or archive, or build from source. Choose the file for your operating system and architecture.'
   note: SOW 0.5.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
@@ -35,50 +35,50 @@ hero:
       style: ghost
 
 download:
-  eyebrow: Install matrix
-  title: Pick the route that matches the host
-  desc: 'Commands and links use the selected release version. Verify downloaded files against SHA256SUMS from that same release. The Pigsty repository is a rolling channel; the other paths pin the version shown above.'
+  eyebrow: Installation
+  title: Choose an installation method
+  desc: 'The package and archive downloads below use SOW 0.5.0. The Pigsty repository provides its latest packaged version.'
   keys: [sow]
 
 next:
-  eyebrow: Then what
-  title: Where to go from here
+  eyebrow: Next steps
+  title: Create and serve a repository
   columns: 3
   link_label: Read
   items:
     - title: Quick Start
       meta: Start
       icon: fa-solid fa-bolt
-      desc: Turn a directory of RPM and DEB files into a usable flat repository in five steps.
+      desc: Build a flat repository from a directory of RPM and DEB files.
       url: docs/start/quickstart/
     - title: First Workspace
       meta: Start
       icon: fa-solid fa-folder-tree
-      desc: Move from a Plain directory to a Managed workspace with membership, policy, and generations.
+      desc: Create a Managed workspace to select packages and keep build history.
       url: docs/start/workspace/
     - title: CLI Reference
       meta: Reference
       icon: fa-solid fa-terminal
-      desc: Syntax, selection rules, output, state transitions, and exit behavior for every command.
+      desc: Look up command syntax, options, output, and exit codes.
       url: docs/command/
     - title: Serve a repository
       meta: Tutorial
       icon: fa-solid fa-server
-      desc: Publish the generated public tree with the HTTP server you already operate.
+      desc: Configure an HTTP server so clients can download packages.
       url: docs/tutorial/serving/
     - title: Compatibility
       meta: Reference
       icon: fa-solid fa-table-list
-      desc: Which distributions, package clients, and object-storage targets are covered.
+      desc: Check supported platforms, repository formats, clients, and storage targets.
       url: docs/reference/compatibility/
     - title: Release notes
       meta: History
       icon: fa-solid fa-clock-rotate-left
-      desc: What changed in each tag, in both languages, with its artifacts and upgrade notes.
+      desc: Read version changes and upgrade instructions.
       url: blog/release/
 
 cta:
-  title: Installed? Build the first repository.
+  title: Build your first repository
   actions:
     - label: Get Started
       url: docs/start/

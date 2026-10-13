@@ -3,32 +3,40 @@ title: "SOW v0.2.0"
 linkTitle: "SOW v0.2.0"
 date: 2026-08-08
 authors: [Vonng]
-description: "SOW v0.2.0 provides Plain and Managed RPM/DEB repositories, verified generations, signing, publication, retention, GC, and RPM leaf export."
+description: "SOW v0.2.0 introduced Plain and Managed RPM/DEB repositories, signing, publication, retained generations, and RPM leaf export."
 categories: [Release]
 tags: [release, managed, signing, publish, generation]
 weight: 10
 url: "/blog/release/sow-docs-launch/"
 ---
 
-SOW 0.2.0 is a self-contained RPM and DEB repository manager from
-[Pigsty](https://pigsty.io). Release artifacts target Linux and macOS as single Go
-executables.
+SOW 0.2.0 introduced Plain and Managed workflows for RPM and DEB repositories. It builds static package repositories with one Go executable on Linux or macOS.
 
-## Two operating modes
+This page describes the 0.2.0 release. Use the [current documentation](/docs/) for installation and operations today.
 
-**Plain mode** indexes RPM and DEB files already present at one directory's top level:
+<span id="two-operating-modes"></span>
+
+## Build a flat repository
+
+Plain mode indexes RPM and DEB files at the top level of a directory:
 
 ```bash
 sow create /srv/repo
 ```
 
-It writes `repodata/`, `Packages`, and `Packages.gz` in place. Plain mode has no
-Workspace, state database, generations, or DEB `Release` signing.
+For RPMs, it writes `repodata/`. For DEBs, it writes `Packages` and `Packages.gz`. A mixed directory gets both. Plain mode uses the directory contents as its state and needs no workspace or database.
 
-**Managed mode** owns package membership and lifecycle:
+The release also added `--sign-with` to sign unsigned RPM packages. Use `--overwrite` to replace existing RPM signatures. Plain mode does not generate or sign an APT `Release` file.
+
+<span id="lifecycle-controls"></span>
+
+## Manage a repository over time
+
+Managed mode records package membership and builds named Dists:
 
 ```bash
-mkdir -p /srv/sow && cd /srv/sow
+mkdir -p /srv/sow
+cd /srv/sow
 sow init .
 sow repo new pigsty
 sow dist new el9 --format rpm -r pigsty
@@ -36,30 +44,23 @@ sow add /path/to/packages/*.rpm -r pigsty -d el9
 sow check -r pigsty
 ```
 
-Each accepted package body is stored once beneath `pool/`. RPM and APT client views live
-beneath `dists/` and are materialized as immutable Generations.
+Each Repository stores a package file once under `pool/`. Its Dists contain RPM or APT metadata under `dists/`. Builds record generations so SOW can report changes and retain selected repository states.
 
-## Lifecycle controls
+Version 0.2.0 added:
 
-Managed repositories include:
+- `sow/v3` configuration and package membership policies;
+- metadata signing for RPM and APT, plus RPM package signing;
+- `status`, `check`, `changes`, and operation logs;
+- recoverable publication to filesystem and R2 targets;
+- retained generations and local garbage collection;
+- `rpm-leaf` export for tools that need a standalone RPM directory.
 
-- strict `sow/v3` configuration and explicit membership policy;
-- RPM metadata, APT metadata, and optional RPM package signing;
-- cheap `status` plus nine-layer `check` for publication gating;
-- recoverable filesystem and R2 publication attempts;
-- explicit retained Generations and reachability-based local GC;
-- standalone `rpm-leaf` export for consumers that reject parent-relative rpm-md paths.
+Serve or publish the complete Repository tree so metadata can reach the shared package pool. `sow publish` manages upload order and recovery for configured targets. R2 cleanup reports candidates without deleting remote objects.
 
-The canonical Managed tree must be delivered as a complete repository. Use `sow publish`
-for configured targets or stage a whole-root copy offline before an atomic switch. Do not
-update a live repository file by file.
+<span id="compatibility-evidence"></span>
 
-## Compatibility evidence
+## Release testing and source
 
-The active test suite proves clean-room current-CLI builds for both formats, a Plain APT
-consumer on Ubuntu 22.04, RPM detached-signature behavior in AlmaLinux 8/9/10 probes, and
-an isolated S3-compatible provider fixture. Those probes do not by themselves establish a
-complete current Managed DNF/APT or R2 CLI acceptance gate.
+The release added APT/DNF and S3-compatible integration workflows, plus a tag-driven GoReleaser pipeline for Linux/macOS archives and Linux RPM/DEB packages. Historical code and tests are available under the [v0.2.0 source tag](https://github.com/pgsty/sow/tree/v0.2.0).
 
-See [Compatibility](/docs/reference/compatibility/) for the exact claim boundary and
-[Quick Start](/docs/start/quickstart/) for a fresh installation path.
+For the current release, use [Download](/download/). Current client and storage coverage is listed in [Platforms & Integrations](/docs/reference/compatibility/).

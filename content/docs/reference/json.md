@@ -1,7 +1,7 @@
 ---
 title: "JSON Output"
 linkTitle: "JSON Output"
-description: "The sow.cli/v1 envelope, its fields, and result shapes for the primary command families."
+description: "Look up JSON response fields, package and operation IDs, errors, and command results."
 categories: [Reference]
 tags: [cli, output, json]
 url: "/docs/reference/json/"
@@ -9,496 +9,304 @@ weight: 600
 icon: fa-solid fa-code
 ---
 
-Every command that produces data accepts `--json`. The output is a single line on stdout
-carrying a versioned envelope, so you can pipe it straight into `jq` without worrying
-about which command produced it.
+<span id="stdout-and-stderr"></span>
+
+Use `--json` on data commands to read one newline-terminated JSON document from stdout.
+Diagnostics go to stderr. `log export` is the exception: it writes JSON Lines and does
+not accept `--json`.
 
 ```bash
-sow status --json
+sow status -r demo --json | jq '.result.status'
 ```
 
-```json
-{"schema":"sow.cli/v1","command":"status","ok":true,"repository":"pigsty","operation":null,
- "result":{"repository":"pigsty","status":"clean","ready_to_copy":true,"desired_revision":4,
- "built_generation":"00000000000000000004","dirty_dists":[],"dirty_reasons":[],"pending":{"count":0,"bytes":0},
- "recent_operation":{"id":"8632724976452398569","kind":"add","state":"done",
- "created_at":"2026-08-04T04:07:17.665377Z","updated_at":"2026-08-04T04:07:18.293848Z"},
- "repository_locked":false},"errors":[]}
-```
+<span id="the-envelope"></span>
 
-(Line-wrapped here for readability; the real output is one line.)
+## Envelope
 
-## The envelope
+Every JSON response has these seven fields:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `schema` | string | Always `sow.cli/v1`. Check it before parsing anything else. |
-| `command` | string | The command as invoked, including the subcommand: `add`, `repo ls`, `config show`. |
-| `ok` | bool | `true` when `errors` is empty. Equivalent to exit code `0`. |
-| `repository` | string or null | The selected repository, or `null` for workspace-wide and plain-mode commands. |
-| `operation` | string or null | Command-specific identity, when available; see the table below. `null` does not imply a read-only command. |
-| `result` | object or null | Command-specific payload, described below. |
-| `errors` | array | Zero or more `{code, class, message}` objects. |
+| `schema` | string | `sow.cli/v1` |
+| `command` | string | Command name, including subcommand, such as `repo ls` |
+| `ok` | boolean | Command succeeded; `false` when errors are present |
+| `repository` | string or null | Selected repository, when attached to the response |
+| `operation` | string or null | Command-specific operation or publication identity |
+| `result` | object or null | Command data, including useful partial or diagnostic results on failure |
+| `errors` | array | Error objects with `code`, `class`, and `message` |
 
-All seven fields are always present. `result` is `null` when the command failed before meaningful
-work — an unknown flag, discovery failure, or invalid configuration before a Repository was
-selected, for example. Committed partial results and diagnostic results from `check` or
-`rm --check` are preserved even when the command exits nonzero.
+Example of a successful configuration check:
 
-| Command | Envelope `operation` |
+```json
+{
+  "schema": "sow.cli/v1",
+  "command": "config check",
+  "ok": true,
+  "repository": null,
+  "operation": null,
+  "result": {"workspace": "/srv/repo", "repositories": 1, "dists": 2},
+  "errors": []
+}
+```
+
+The actual output occupies one line. Paths and counts depend on the workspace.
+A failure before meaningful work usually has `result: null`. A failed `check` and a
+partially successful `add` can still return useful results. Preserve them when `ok` is false.
+
+### Errors
+
+```json
+{"code":3,"class":"partial","message":"managed: batch partially succeeded"}
+```
+
+Branch on `code` or `class`, not message text. Classes are `runtime`, `usage`, `discovery`,
+`config`, `partial`, `lock`, `integrity`, `rejected`, and `interrupted`.
+See [Exit codes](/docs/reference/exit-codes/) for the mapping and next steps.
+
+<span id="operation-ids-are-strings"></span>
+<span id="generation-ids-are-fixed-width-strings"></span>
+
+### Identities
+
+Keep operation and generation IDs as strings. Operation IDs can exceed JavaScript's exact
+integer range. Generation IDs are 20-digit, zero-padded decimal strings:
+
+```json
+{"operation":"8632724976452398569","built_generation":"00000000000000000004"}
+```
+
+This applies to `generation`, `built_generation`, `base_generation`, and generation-valued
+`base` fields. Desired revisions and counts remain JSON numbers.
+
+The top-level `operation` field is set as follows:
+
+| Command | Value |
 |---|---|
-| `add`, `rm` without `--check`, `build` | Journal ID when one was allocated; otherwise `null` |
-| Local `gc` | Journal ID when collection runs; `null` for a no-op |
-| `publish`, `publish --abort` | Publication attempt ID when available; otherwise `null` |
-| `log ID` | The requested journal ID, even though the command is read-only |
-| `init`, `repo`/`dist`/`retain` commands, `export`, target `gc`, `rm --check`, `log prune`, Plain `create`, other queries | `null`; `log prune` places its journal ID in `result.operation` |
+| `add`, `rm` without preview, `build`, local `gc` | Journal ID, if allocated |
+| `publish`, `publish --abort` | Publication attempt ID, if available |
+| `log ID` | Requested operation ID |
+| Other commands | `null`; `log prune` puts its ID in `result.operation` |
 
-### errors
+A null operation does not mean the command is read-only. `where` keeps the top-level
+repository null and places repository names inside its locations.
 
-```json
-"errors":[{"code":3,"class":"partial","message":"managed: batch partially succeeded"}]
-```
+<span id="result-shapes"></span>
+<span id="create"></span>
 
-| Field | Meaning |
+## Plain `create`
+
+| Result field | Meaning |
 |---|---|
-| `code` | The process [exit code](/docs/reference/exit-codes/) — `1` through `6`, or `130` for interruption. |
-| `class` | `runtime`, `usage`, `discovery`, `config`, `partial`, `lock`, `integrity`, `rejected`, or `interrupted`. `discovery` and `config` specialize exit code `2`; `interrupted` corresponds to `130` and is used only when the command itself receives SIGINT or SIGTERM. |
-| `message` | The classified error text. It matches stderr except that Plain `create` prints its raw domain error to stderr, without the additional CLI category prefix. |
+| `dir` | Absolute indexed directory |
+| `rpm`, `deb` | Indexed package counts |
+| `kept` | Sorted included filenames |
+| `removed` | Files removed by `--pigsty` |
+| `marker` | Whether the completion marker was produced |
+| `marker_sha256` | Marker digest, present with the marker |
+| `noop` | No public changes were needed |
+| `recovered` | Always `false`; Plain mode has no journal recovery |
+| `signed`, `signer` | Signed filenames and signer identity, when available |
 
-Branch on `class`, not on message text. Messages carry paths and package names and will
-change; the class will not.
+<span id="init"></span>
+<span id="config-check-and-config-show"></span>
 
-> [!NOTE] A nonzero exit still returns the result
-> When a batch partially succeeds, `ok` is `false` *and* `result` lists everything that was
-> committed. Never discard the payload because the exit code was nonzero — for `add`, that
-> is exactly where you learn which packages landed.
+## Initialization and configuration
 
-### Operation IDs are strings
-
-```json
-"operation":"8632724976452398569"
-```
-
-Operation IDs are 64-bit values serialized as decimal strings, because they routinely
-exceed what an IEEE 754 double can represent exactly. In JavaScript, `JSON.parse` on a
-bare number would silently corrupt them. Keep them as strings; `jq` handles them
-correctly as-is.
-
-### Generation IDs are fixed-width strings
-
-```json
-"built_generation":"00000000000000000004"
-```
-
-Generation IDs cover the full unsigned 64-bit domain and are serialized as exactly 20
-zero-padded decimal digits. Treat `generation`, `built_generation`, `base_generation`,
-and Generation-valued `base` fields as strings. The fixed width preserves numeric order
-under ordinary bytewise comparison.
-
-### stdout and stderr
-
-Results and the JSON envelope go to stdout. Warnings and error diagnostics go to stderr,
-*in addition to* appearing in the `errors` array. So this works:
-
-```bash
-sow check --json 2>/dev/null | jq -e '.ok'
-```
-
-## Result shapes
-
-### create
-
-```bash
-sow create /srv/offline --json
-```
-
-```json
-{"schema":"sow.cli/v1","command":"create","ok":true,"repository":null,"operation":null,
- "result":{"dir":"/srv/offline","rpm":4,"deb":3,
- "kept":["blackbox_exporter-0.28.0-1.aarch64.rpm","blackbox_exporter-0.28.0-1.x86_64.rpm",
- "libpq5_18.2-1.pgdg12+1_amd64.deb","pev2-1.23.0-1.noarch.rpm"],
- "removed":[],"marker":false,"noop":true,"recovered":false},"errors":[]}
-```
-
-| Field | Meaning |
+| Command | Result |
 |---|---|
-| `dir` | The absolute directory that was indexed |
-| `rpm`, `deb` | Package counts per format |
-| `kept` | Filenames included in the indexes, sorted |
-| `removed` | Packages deleted by `--pigsty` cleanup; empty otherwise |
-| `marker` | Whether `repo_complete` was written |
-| `marker_sha256` | Digest of the marker file; present only with `--pigsty` |
-| `noop` | `true` when the indexes were already correct and nothing changed |
-| `recovered` | Reserved for schema compatibility; Plain create has no journal recovery and always reports `false` |
-| `signed` | Filenames actually signed; omitted when the list is empty, even with `--sign-with` |
-| `signer` | Resolved signer identity when available; omitted otherwise |
+| `init` | `workspace`, `config_created`, `repositories_initialized`, `dists_initialized`, `existing` |
+| `config check` | `workspace`, `repositories`, `dists` |
+| `config show` | Effective configuration: `schema`, `architectures`, `repos`, and `targets` when present |
 
-### init
+Resolved signing settings can contain public fingerprints and certificate snapshot
+hashes. Fingerprint and hash arrays are independently sorted and must not be paired by
+index. See [Configuration](/docs/reference/config/#key-references).
 
-```json
-"result":{"workspace":"/srv/repo","config_created":true,
- "repositories_initialized":0,"dists_initialized":0,"existing":[]}
-```
+<span id="repo-ls-repo-new-repo-show"></span>
+<span id="dist-ls-dist-new-dist-show"></span>
 
-On a rerun over a workspace that already exists, the counters are `0` and `existing`
-names what was found:
+## Repositories and Dists
 
-```json
-"result":{"workspace":"/srv/repo","config_created":false,
- "repositories_initialized":0,"dists_initialized":0,"existing":["sow.yml"]}
-```
+`repo ls` returns `result.repositories[]`. `repo new` and `repo show` return one repository
+object directly. Common fields are `name`, `path`, `protected`, `dists`, `generation`,
+`desired_revision`, `status`, `packages`, `memberships`, and `config`.
+`dirty_reasons` and `recent_operation` appear when available. An operation summary has
+`id`, `kind`, `state`, `created_at`, and `updated_at`, plus optional `error_class`.
+The same summary shape appears in `status.pending_operation` and `status.recent_operation`.
 
-### config check and config show
+`packages` counts stored package objects; `memberships` counts Desired Dist memberships.
+One object in two Dists counts as one package and two memberships.
 
-```json
-"result":{"workspace":"/srv/repo","repositories":1,"dists":2}
-```
+`dist ls` returns `result.dists[]`. `dist new` and `dist show` return one Dist object:
+`name`, `format`, `architectures`, `desired_members`, `built_members`, `generation`, `dirty`,
+`status`, `effective_config_sha256`, and `config`, with optional `dirty_reasons`.
 
-`config show` returns the effective configuration itself, in the same shape as
-[`sow.yml`](/docs/reference/config/) after normalization:
+Each architecture entry has `family` and `ecosystem_arch`. DEB uses canonical family
+`x86_64` with ecosystem name `amd64`, for example.
 
-```json
-"result":{"schema":"sow/v3","architectures":["x86_64","aarch64"],
- "repos":{"pigsty":{"protected":false,
- "signing":{"rpm":{"packages":{"mode":"never"}}},
- "dists":{"el9":{"format":"rpm","architectures":["x86_64","aarch64"],"limit":0,"exclude":null},
-          "trixie":{"format":"deb","architectures":["x86_64","aarch64"],"limit":0,"exclude":null}}}}}
-```
+`repo rm` and `dist rm` return `name`, `removed`, and `noop`.
+`repo migrate` returns `repository`, `repository_id`, `from_layout`, `to_layout`,
+`schema_from`, `schema_to`, `phase`, `generation`, `grace_not_before`, `legacy_aliases`, and
+`complete`. `grace_not_before` is null when no grace deadline applies.
+See [`repo migrate`](/docs/command/repo/#sow-repo-migrate) for phase meanings.
 
-Resolved signing entries can carry `key_fingerprint` without `--all` as well.
-Active RPM package-signing entries also expose `key_snapshot_sha256`, normalized
-`trusted_keys`, `trusted_key_fingerprints`, and `trusted_key_snapshot_sha256s` when
-available. Fingerprints and snapshot digests are independently sorted and deduplicated;
-do not pair these arrays by index. These are identities of public certificates, not
-private keys or passphrases.
+<span id="add"></span>
+<span id="rm"></span>
+<span id="build"></span>
 
-### repo ls, repo new, repo show
+## `add`, `rm`, and `build`
 
-`repo ls` returns an array; `repo new` and `repo show` return one object of the same
-shape.
+All three report repository state after the operation: `repository`, `desired_revision`,
+`built_generation`, and `dirty`.
 
-```json
-"result":{"repositories":[{"name":"pigsty","path":"/srv/repo/pigsty","protected":false,
- "dists":2,"generation":"00000000000000000004","desired_revision":4,"status":"clean","packages":7,"memberships":7,
- "recent_operation":{"id":"8632724976452398569","kind":"add","state":"done",
-  "created_at":"2026-08-04T04:07:17.665377Z","updated_at":"2026-08-04T04:07:18.293848Z"},
- "config":{"protected":false,"signing":{...},"dists":{...}}}]}
-```
+`add` also returns `operation`, `accepted`, `failed`, `memberships_added`,
+`memberships_removed`, and `items[]`. Each item has `input` and `status`. It also has
+`format`, `coordinate`, `sha256`, a per-Dist `dists` map, and `error` when those values are available.
 
-`packages` counts distinct package objects in the pool; `memberships` counts
-distribution memberships, so a package in two distributions counts once and twice
-respectively.
-
-`repo rm` returns only the outcome:
-
-```json
-"result":{"name":"demo","noop":false,"removed":true}
-```
-
-### dist ls, dist new, dist show
-
-```json
-"result":{"dists":[{"name":"el9","format":"rpm",
- "architectures":[{"family":"x86_64","ecosystem_arch":"x86_64"},
-                  {"family":"aarch64","ecosystem_arch":"aarch64"}],
- "desired_members":4,"built_members":4,"generation":"00000000000000000003","dirty":false,"status":"clean",
- "effective_config_sha256":"39913af601d10d4d4033b0c29e8d66df385f8a6eb22f45219773a7fc170d4243",
- "config":{"format":"rpm","architectures":["x86_64","aarch64"],"limit":0,"exclude":null}}]}
-```
-
-Each architecture entry carries both names: `family` is the canonical form used in
-configuration, `ecosystem_arch` is what appears in the published tree — identical for RPM,
-`amd64`/`arm64` for DEB.
-
-`desired_members` ahead of `built_members`, or `dirty: true`, means a `sow build` is
-pending. `effective_config_sha256` is the digest of everything that feeds the renderer;
-when it changes, the distribution becomes dirty.
-
-`dist rm` mirrors `repo rm`: `{"name":"el9","noop":false,"removed":true}`.
-
-### add
-
-```json
-"result":{"operation":"320653458389425222","repository":"demo",
- "desired_revision":2,"built_generation":"00000000000000000002","dirty":false,
- "accepted":1,"failed":0,"memberships_added":1,"memberships_removed":0,
- "items":[{"input":"/incoming/pev2-1.23.0-1.noarch.rpm","status":"accepted","format":"rpm",
- "coordinate":"pev2-0:1.23.0-1.noarch",
- "sha256":"d06d7f23b9cfc6aedaab7b60c8e890cda020efe84f1f246243414862b98b1229",
- "dists":{"el9":"accepted"}}]}
-```
-
-One `items` entry per input path, in stable order. `status` is the item's overall
-outcome, and `dists` gives the per-distribution decision:
-
-| `status` | Meaning |
+| Item status | Meaning |
 |---|---|
-| `accepted` | New package object, membership created |
-| `reused` | The identical object already existed; may still add membership elsewhere |
-| `excluded` | Kept out by policy — see `dists` for whether it was `excluded` or `limited` |
-| `failed` | Not admitted; `error` carries the reason |
+| `accepted` | New package accepted into membership |
+| `reused` | Existing package object reused; membership can still change |
+| `excluded` | No selected Dist accepted the package because of policy |
+| `failed` | Input failed; inspect `error` |
 
-The per-distribution values are `accepted`, `excluded`, and `limited`. A package can be
-accepted by one distribution and limited by another in the same command:
+Per-Dist outcomes are `accepted`, `excluded`, or `limited`. A package can have different
+outcomes in different Dists. Membership removal counts can increase when `limit` removes
+older versions.
 
-```json
-"items":[{"input":".../libpq5_18.2-1.pgdg12+1_amd64.deb","status":"excluded","format":"deb",
- "coordinate":"libpq5=18.2-1.pgdg12+1:amd64","sha256":"310611d0...","dists":{"trixie":"limited"}}]
-```
+`rm` returns optional `operation`, `removed[]`, selected `dists`, `changes[]`, and `check`.
+Each `removed` record has `dist`, `sha256`, `coordinate`, and `name`.
+A preview has `check: true`; only `prediction_complete: true` confirms a complete predicted
+file list. Pool bytes are not removed by `rm`.
 
-A failed item carries `error` instead of the package fields:
+`build` returns `operation`, considered `dists`, and `noop`. A no-op creates no new generation.
 
-```json
-{"input":"/incoming/broken-1.0-1.x86_64.rpm","status":"failed",
- "error":"invalid RPM package: parse RPM reader: unexpected EOF"}
-```
+<span id="status"></span>
+<span id="check"></span>
 
-`memberships_added` and `memberships_removed` count both sides, because `limit` can evict
-older versions in the same operation that admits a new one.
+## `status` and `check`
 
-### rm
+`status` returns `status`, `ready_to_copy`, `desired_revision`, `built_generation`,
+`dirty_dists`, `dirty_reasons`, `pending`, and `repository_locked`.
+Optional fields include `pending_operation`, `recent_operation`, and `lock_holder`.
 
-```json
-"result":{"operation":"3422380511083828695","repository":"pigsty",
- "desired_revision":5,"built_generation":"00000000000000000005","dirty":false,"check":false,
- "removed":[{"dist":"el9","sha256":"45171966...",
-   "coordinate":"rpm:pgbouncer_fdw_18-0:1.4.0-1PGDG.rhel9.8.x86_64","name":"pgbouncer_fdw_18"}],
- "dists":["el9"],
- "changes":[{"op":"add","path":"dists/el9/x86_64/repodata/1a57aa2f...-filelists.xml.gz",
-   "phase":"metadata","size":382,"sha256":"1a57aa2f..."},
-  {"op":"update","path":"dists/el9/x86_64/repodata/repomd.xml","phase":"pointer",
-   "size":1510,"sha256":"f28ffe14..."},
-  {"op":"delete","path":"dists/el9/x86_64/repodata/0df96f0b...-primary.xml.gz","phase":"delete"}]}
-```
+`status` is `clean`, `dirty`, `recovering`, or `error`. `pending` contains `count` and `bytes`.
+A successful status query can return any repository state. `ok: true` means the query
+succeeded. Before publication or copying, run `check` for a complete validation.
 
-`check` is `true` when the command ran with `-c/--check`, in which case nothing was
-written and `changes` is a forecast. Note that `removed` lists membership removals only —
-pool bytes are never deleted by `rm`.
+`check` returns `repository`, `status`, `ready_to_copy`, `built_generation`,
+`desired_revision`, and `layers[]`. Each layer has `name`, `ok`, `checked`, and `issues`.
 
-| Preview field | Meaning |
-|---|---|
-| `prediction_complete` | Present as `true` only when `rm --check` can predict the complete change set. An absent/false value does not mean the listed changes are exhaustive. |
+Normal layers are `config`, `state`, `public-modes`, `retained`, `package-bytes`,
+`desired-membership`, `index`, `signature`, and `generation-manifest`.
+An active layout transition instead reports the first three and `layout-transition`.
+A dirty repository can pass individual consistency layers and still fail readiness with
+exit `5`.
 
+## `changes`
 
-### build
-
-```json
-"result":{"operation":"3701044631565986409","repository":"pigsty",
- "dists":["el9","trixie"],"desired_revision":5,"built_generation":"00000000000000000005",
- "noop":true,"dirty":false}
-```
-
-`noop: true` means the desired state already matched the built tree, so no generation was
-created. `dists` lists the distributions considered, not necessarily the ones rebuilt.
-
-### status
-
-```json
-"result":{"repository":"pigsty","status":"clean","ready_to_copy":true,
- "desired_revision":4,"built_generation":"00000000000000000004","dirty_dists":[],"dirty_reasons":[],
- "pending":{"count":0,"bytes":0},
- "recent_operation":{"id":"8632724976452398569","kind":"add","state":"done",
-  "created_at":"...","updated_at":"..."},
- "repository_locked":false}
-```
-
-`status` is one of `clean`, `dirty`, `recovering`, `error`. `ready_to_copy` is the field
-to read in a deploy script — but remember `status` exits `0` in every state, so test the
-field, not the exit code:
-
-```bash
-sow status --json | jq -e '.result.ready_to_copy' >/dev/null || exit 1
-```
-
-`pending` counts package bytes held privately after `add --skip`, not yet published.
-`repository_locked` reports whether another process currently holds the write lock.
-
-### check
-
-```json
-"result":{"repository":"pigsty","status":"clean","ready_to_copy":true,
- "built_generation":"00000000000000000004","desired_revision":4,
- "layers":[{"name":"config","ok":true,"checked":5,"issues":[]},
-  {"name":"state","ok":true,"checked":1,"issues":[]},
-  {"name":"public-modes","ok":true,"checked":72,"issues":[]},
-  {"name":"retained","ok":true,"checked":0,"issues":[]},
-  {"name":"package-bytes","ok":true,"checked":7,"issues":[]},
-  {"name":"desired-membership","ok":true,"checked":7,"issues":[]},
-  {"name":"index","ok":true,"checked":2,"issues":[]},
-  {"name":"signature","ok":true,"checked":11,"issues":[]},
-  {"name":"generation-manifest","ok":true,"checked":1,"issues":[]}]}
-```
-
-Steady-state checks return nine layers in this order, each with a count of what it examined and any
-issues found. A non-terminal layout transition instead returns `config`, `state`, `public-modes`,
-and `layout-transition`, then stops with a not-ready result. A dirty repository can report every steady-state
-layer `ok: true` and still fail with exit `5`,
-because the layers verify consistency while `ready_to_copy` reports currency:
-
-```json
-{...,"ok":false,"result":{"status":"dirty","ready_to_copy":false,...},
- "errors":[{"code":5,"class":"integrity",
-  "message":"integrity or recovery error: managed: repository is not ready to copy: repository status is dirty"}]}
-```
-
-### changes
-
-```json
-"result":{"repository":"pigsty","base":"00000000000000000004","generation":"00000000000000000005","dirty":false,
- "changes":[{"op":"add","path":"dists/el9/x86_64/repodata/1a57aa2f...-filelists.xml.gz",
-   "phase":"metadata","size":382,"sha256":"1a57aa2f..."},
-  {"op":"update","path":"dists/el9/x86_64/repodata/repomd.xml","phase":"pointer",
-   "size":1510,"sha256":"f28ffe14..."},
-  {"op":"delete","path":"dists/el9/x86_64/repodata/0df96f0b...-primary.xml.gz","phase":"delete"}]}
-```
+The result has `repository`, `base`, `generation`, `dirty`, and `changes[]`.
+Each change contains:
 
 | Field | Values |
 |---|---|
 | `op` | `add`, `update`, `delete` |
 | `phase` | `payload`, `metadata`, `pointer`, `delete` |
-| `path` | Always relative to the repository root, always `/`-separated |
-| `size`, `sha256` | Present for `add` and `update`; omitted for `delete` |
+| `path` | Slash-separated path relative to the repository root |
+| `size`, `sha256` | Present for added/updated files; omitted for deletions |
 
-This is a local Generation diff, not a safe online replay protocol. Phase ordering
-alone does not cover client caches, multi-file pointer commits, or deletion grace.
-Use `sow publish` for target publication and the separate target GC protocol for
-reclamation; do not immediately execute `delete` entries against a live repository.
+No base compares with the previous built generation. Base `0` lists the complete current
+tree. A numbered base compares that recorded generation with the current one.
+This is a local file difference; use `publish` and target `gc` for remote changes.
 
-`sow changes 0` yields the complete current tree as one `add` set — a full delivery
-manifest.
+<span id="ls-show-where"></span>
 
-### ls, show, where
+## Package queries
 
-`ls` returns an array of package objects; `show` returns exactly one under `package`.
-
-```json
-"result":{"repository":"pigsty","dists":["el9"],"dirty":false,
- "packages":[{"sha256":"d06d7f23...","format":"rpm","coordinate":"pev2-0:1.23.0-1.noarch",
- "architecture":"noarch","canonical_arch":"neutral",
- "pool_path":"pool/p/pev2/pev2-1.23.0-1.noarch.rpm","filename":"pev2-1.23.0-1.noarch.rpm",
- "size":316372,"name":"pev2","source":"pev2","version":"1.23.0","epoch":"0","release":"1",
- "kind":"main","payload_sha256":"0413d629...","signature_key":"E7935D8DB9BD8B20",
- "storage":"pool","created_revision":3,"dists":["el9"],"built_dists":["el9"]}]}
-```
-
-The fields worth knowing:
-
-| Field | Meaning |
+| Command | Result fields |
 |---|---|
-| `architecture` | As it appears in the package header: `x86_64`, `noarch`, `amd64`, `all` |
-| `canonical_arch` | The family SOW groups by: `x86_64`, `aarch64`, or `neutral` |
-| `payload_sha256` | RPM only — the signature-neutral digest used to recognize re-signed copies |
-| `signature_key` | Key ID of the embedded signature, when the package carries one |
-| `storage` | `pool` when published, `pending` when added with `--skip` |
-| `dists` / `built_dists` | Desired membership versus what the last build published |
+| `ls` | `repository`, selected `dists`, `dirty`, `packages[]` |
+| `show` | `repository`, `package` |
+| `where` | `reference`, `locations[]` |
 
-`dists` longer than `built_dists` is another way to see that a build is pending.
+Package objects include `sha256`, `format`, `coordinate`, `architecture`, `canonical_arch`,
+`pool_path`, `filename`, `size`, `name`, `source`, `version`, `kind`, `storage`,
+`created_revision`, `dists`, and `built_dists`. Optional fields include `epoch`, `release`,
+RPM `payload_sha256` and `signature_key`, and `warning`.
 
-`where` searches the whole workspace and returns locations instead of full objects:
+`architecture` is native (`noarch`, `amd64`, etc.); `canonical_arch` is `x86_64`, `aarch64`,
+or `neutral`. `storage` is `pool` or `pending`; it does not describe remote publication.
+`dists` records Desired membership; `built_dists` records the last built membership.
+Package-object `coordinate` omits the format prefix; prepend `format + ":"` to form a
+CLI coordinate reference. `where` location coordinates already include the prefix. Each location has `repository`,
+`dists`, `built_dists`, `sha256`, and `coordinate`.
 
-```json
-"result":{"reference":"pev2","locations":[{"repository":"pigsty","dists":["el9"],
- "built_dists":["el9"],"sha256":"d06d7f23...","coordinate":"rpm:pev2-0:1.23.0-1.noarch"}]}
-```
+<span id="publish-retain-gc-export"></span>
 
-### publish, retain, gc, export
+## Publication and maintenance
 
-Managed lifecycle commands use the same envelope and keep numeric Generation values as
-JSON strings:
-
-| Command | Important `result` fields |
+| Command | Main result fields |
 |---|---|
-| `publish` | `repository`, `target`, `provider`, `generation`, `attempt`, `checkpoint`, `phase`, `objects`, `noop` |
+| `publish` | `repository`, `target`, `provider`, `generation`, optional `attempt`/`checkpoint`, `phase`, `objects`, `noop` |
 | `publish --abort` | `repository`, `target`, `provider`, `attempt`, `phase`, `objects` |
-| `publish --rebind` | Same result as `publish`; the binding revision is durable private audit state, not an extra wire field |
-| `retain add` / `retain rm` | `repository`, `record`, `record_identity`, `path` |
-| `retain ls` | `repository`, `generations[]` with the same retained record shape |
-| local `gc` | `operation`, `repository`, `base_generation`, `generation`, `objects`, `bytes`, `noop` |
-| target `gc` | `repository`, `target`, `provider`, `phase`, `reports`, `candidates`, `deleted_objects`, `deleted_bytes`, `retained_objects`, `pending_grace`, `completed_attempts`, `noop` |
+| `retain add/rm` | `repository`, `record`, `record_identity`, `path` |
+| `retain ls` | `repository`, `generations[]` |
+| Local `gc` | Optional `operation`, `repository`, `base_generation`, `generation`, `objects`, `bytes`, `noop` |
+| Target `gc` | `repository`, `target`, `provider`, `phase`, `reports`, `candidates`, `deleted_objects`, `deleted_bytes`, `retained_objects`, `pending_grace`, `completed_attempts`, `noop` |
 | `export rpm-leaf` | `repository`, `repository_id`, `generation`, `dist`, `arch`, `directory`, `method`, `signed`, `signer_identity`, `packages`, `files`, `manifest_sha256` |
 
-An optional identity such as `attempt`, `checkpoint`, or local-GC `operation` is omitted
-when there is no value. R2 target GC reports candidates as retained and never reports
-remote deletion performed by SOW.
+`publish --rebind` has the normal publish shape. R2 target GC reports candidates without
+deleting remote objects.
 
-### log
+<span id="log"></span>
+<span id="log-export-is-not-an-envelope"></span>
 
-`sow log` returns the operation ledger, newest first:
+## Operation logs
 
-```json
-"result":{"repository":"pigsty","operations":[{"id":"3701044631565986409","kind":"build",
- "state":"done",
- "payload_json":"{\"version\":2,\"repository\":\"pigsty\",\"kind\":\"build\",\"config_sha256\":\"37eb6dcf...\",\"skip\":false,\"noop\":true,\"dists\":[\"el9\",\"trixie\"],\"build_dists\":[],\"manifest_sha256\":\"125d7266...\"}",
- "result_json":"{\"dists\":2,\"dropped_pending\":[]}",
- "created_at":"2026-08-04T04:08:08.691678Z","updated_at":"2026-08-04T04:08:08.763019Z"}]}
-```
+`log` returns `repository` and `operations[]`, newest first. `log ID` returns `repository`
+and `detail`, with `operation`, `duration_ms`, `events`, `packages`, `memberships`, and `files`.
 
-`payload_json` and `result_json` are strings containing nested JSON, not objects. They are
-stored verbatim so the audit record is byte-stable; parse them with a second pass:
+| Detail array | Record fields |
+|---|---|
+| `events` | `sequence`, `state`, `detail_json`, `occurred_at` |
+| `packages` | `sequence`, `input_path`, `disposition`; optional `package_sha256`, `coordinate`, `error_class`, `message`, `dists` |
+| `memberships` | `sequence`, `dist`, `package_sha256`, `action` |
+| `files` | `sequence`, `action`, `phase`, `path`; optional `size`, `sha256` |
 
-```bash
-sow log --json | jq -r '.result.operations[] | .payload_json | fromjson | .config_sha256'
-```
-
-Passing an operation ID returns the full detail — state transitions, structured
-`build_progress` events, packages, memberships, and every file action:
-
-```json
-"result":{"repository":"pigsty","detail":{"operation":{...},"duration_ms":598,
- "events":[{"sequence":0,"state":"planned","detail_json":"{}","occurred_at":"..."},
-  {"sequence":1,"state":"staged",...},{"sequence":2,"state":"applied",...},
-  {"sequence":3,"state":"applied","detail_json":"{\"version\":1,\"kind\":\"build_progress\",\"phase\":\"rendering\",\"completed\":1,\"total\":2,\"jobs\":8}",...},
-  {"sequence":4,"state":"built",...},{"sequence":5,"state":"done",...}],
- "packages":[{"sequence":0,"input_path":"pgbouncer_fdw_18","package_sha256":"45171966...",
-  "coordinate":"rpm:pgbouncer_fdw_18-0:1.4.0-1PGDG.rhel9.8.x86_64","disposition":"removed"}],
- "memberships":[{"sequence":0,"dist":"el9","package_sha256":"45171966...","action":"remove"}],
- "files":[{"sequence":0,"action":"add","phase":"metadata","path":"dists/el9/x86_64/repodata/1a57aa2f...-filelists.xml.gz","size":382,"sha256":"1a57aa2f..."}]}}
-```
-
-`sow log prune` returns what it removed:
-
-```json
-"result":{"operation":"7140280533435786353","repository":"demo",
- "before":"2026-01-01T00:00:00+08:00","pruned":0,"compaction_deferred":false}
-```
-
-Note that `before` echoes the absolute timestamp a bare date resolved to in your local
-timezone.
-
-### log export is not an envelope
-
-`sow log export` writes **JSON Lines** — one complete operation record per line, no
-envelope, no `--json` flag. It is meant for archiving, not for scripting a single command:
+`payload_json`, `result_json`, and event `detail_json` are strings containing JSON.
+Parse them separately when needed:
 
 ```bash
-sow log export - | head -1
-sow log export operations.jsonl
+sow log -r demo --json \
+  | jq '.result.operations[] | .payload_json | fromjson'
 ```
 
-It refuses to overwrite an existing file, and it refuses a target whose parent directory
-is a symlink.
+`log prune` returns `operation`, `repository`, `before`, `pruned`, and
+`compaction_deferred`. A date-only argument is resolved in the machine's local timezone;
+`before` contains the resolved timestamp.
 
-## A worked example
+`log export` writes one complete operation record per line, without the envelope:
 
-Fail a deploy unless the repository is both consistent and current, then list exactly what
-to copy:
+```bash
+sow log export operations.jsonl -r demo
+sow log export - -r demo
+```
+
+A file target must be new and its immediate parent must be a real directory, not a symlink.
+
+<span id="a-worked-example"></span>
+
+## Use a validation result in a script
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
-
-if ! sow check -r pigsty --json 2>/dev/null | jq -e '.ok' >/dev/null; then
-  echo "repository is not deliverable" >&2
-  exit 1
-fi
-
-# Full manifest of the current published tree, in delivery order.
-sow changes 0 -r pigsty --json \
+sow check -r demo --json | jq -e '.ok' >/dev/null
+sow changes 0 -r demo --json \
   | jq -r '.result.changes[] | [.phase, .op, .path] | @tsv'
 ```
 
-## See also
+This checks the local repository and prints its current file manifest. To publish it,
+run `sow publish TARGET` for the configured target.
 
-- [Exit Codes](/docs/reference/exit-codes/) — the `code` and `class` values in `errors`
-- [CLI Commands](/docs/command/) — which commands accept `--json`
-- [Observability & Audit](/docs/feature/audit/) — what the operation ledger records
+<span id="see-also"></span>

@@ -1,7 +1,7 @@
 ---
 title: "平台与集成"
 linkTitle: "平台"
-description: "Release 目标、文件系统要求、仓库客户端、发布 Provider 与自动化集成覆盖。"
+description: "支持的平台、文件系统要求、仓库格式、客户端与集成测试覆盖。"
 categories: [Reference]
 tags: [rpm, deb, yum, apt, object-storage]
 url: "/zh/docs/reference/compatibility/"
@@ -11,126 +11,117 @@ weight: 700
 icon: fa-solid fa-circle-check
 ---
 
-本页说明 SOW 提供哪些构建目标、工作区依赖什么存储语义，以及自动化集成具体覆盖哪些行为。
-仓库生成在 SOW 二进制内部完成；部署后的最终门禁仍是实际软件包管理器。
+SOW 在 Linux 和 macOS 上构建 RPM、DEB 仓库文件。工作区使用受支持的本地文件系统，
+再为客户端配置 HTTP 或存储访问。
 
-## Release 目标
+<span id="release-目标"></span>
 
-| 操作系统 | `amd64` | `arm64` | 制品 |
+## 平台
+
+| 操作系统 | `amd64` | `arm64` | 发布格式 |
 |---|---:|---:|---|
 | Linux | 是 | 是 | 归档、RPM、DEB |
 | macOS | 是 | 是 | 归档 |
-| Windows | 否 | 否 | 不支持 |
+| Windows | 否 | 否 | — |
 
-Release 二进制使用 `CGO_ENABLED=0`，不需要语言运行时。源码 Module 要求 Go 1.27.1 或更新版本。
-归档包含 `README.md`、`CHANGELOG.md`、Apache-2.0 `LICENSE` 与 `THIRD_PARTY_NOTICES`，
-Linux 软件包也随二进制包含同一份协议与第三方许可声明。
-使用 [`sow version`](/zh/docs/command/) 查看产品版本、目标 OS/架构与构建工具链。
+发布二进制使用 `CGO_ENABLED=0`，不需要语言运行时。源码构建要求 Go 1.27.1 或更新版本。
+归档包含 README、更新日志、Apache-2.0 许可证与第三方许可声明；
+Linux 软件包随二进制包含许可文件。用 `sow version` 查看版本、平台和构建工具链。
 
 ## 工作区文件系统
 
-Managed 工作区应放在本地 POSIX 文件系统上。正确性依赖建议锁、`fsync`、基于描述符的路径
-校验与同文件系统原子 rename；NFS 等网络文件系统不属于受支持的工作区位置。macOS 上请使用
-APFS：HFS+ 不支持原子目录交换，SOW 会拒绝构建。
+使用支持建议锁、`fsync` 和同文件系统原子重命名的本地 POSIX 文件系统。
+NFS 等网络文件系统不是受支持的工作区位置。
+macOS 上使用 APFS；所需原子目录交换不可用时，SOW 会拒绝构建。
 
-公共 `<workspace>/<repo>/` 树是另一条边界：它是闭合的 `pool/ + dists/` 命名空间，可整根
-复制或发布，不依赖 SQLite、私有 journal 或 view-local hardlink identity。必须保持完整
-Repository，不得暴露 `.sow/`。
+工作区公开目录和私有暂存区放在同一文件系统。
+只对外服务 `<workspace>/<repo>/`。完整的 `pool/ + dists/` 可以复制到其他存储，
+无需附带私有数据库或日志。
 
-SOW 会拒绝符号链接控制路径、不安全普通文件、重叠 filesystem target，以及与已有或已发布
-路径在大小写折叠后冲突的新 Pool 路径；这也包括以仅大小写不同的文件名加入完全相同的字节
-（请使用原文件名加入）。在大小写不敏感的工作区文件系统上（例如 macOS 默认配置），SOW 还会
-拒绝源目录与已有包仅大小写不同的新包（例如 `CaseDemo` 与 `casedemo`）；向位于大小写不敏感
-卷上的 filesystem target 执行 `publish` 时，也会在创建 attempt 之前拒绝这类别名。在大小写
-敏感的文件系统（Linux）上，这样的两个源目录彼此独立，因此同时包含两者的 Repository 不能
-迁移到大小写不敏感的文件系统。
+仅大小写不同的包池完整路径会被拒绝。大小写不敏感文件系统还会拒绝源码目录的大小写别名。
+大小写敏感卷上创建的仓库可能包含目标卷无法区分的源码目录，filesystem 发布会在开始前检查。
+详见[布局](/zh/docs/reference/layout/)。
 
-## 自动化集成矩阵
+<span id="仓库客户端契约"></span>
 
-| 表面 | 环境 | 已验证行为 |
+## 仓库格式与客户端
+
+| 输出 | 客户端入口 | 包位置 |
 |---|---|---|
-| 生产 CLI 干净环境 | Linux CI | 构建交付二进制；生成混合 Plain RPM/DEB 元数据；初始化 `sow/v3`；创建 RPM/DEB Dist；加入 Fixture；执行查询、build、check、changes、config 与 log 命令 |
-| Plain APT 客户端 | Ubuntu 22.04 容器 | 通过 HTTP 服务 `sow create` 输出；在显式信任未签名源时执行 `apt-get update`、包发现、精确版本选择、下载与安装 |
-| RPM 分离签名切换 | AlmaLinux 8、9、10 容器 | 使用真实 DNF 客户端遍历 `repomd.xml` / `repomd.xml.asc` 串行切换状态，并固定各组合的成功/失败行为 |
-| S3 兼容传输 | 固定的 PGSTY Silo 容器（兼容 MinIO） | 验证 Bucket 列表、HEAD、GET、单段仅创建/CAS PUT、重放与对象 SHA-256 元数据；重试与 Prefix 约束由本地协议测试覆盖 |
-| Release 打包 | Linux CI | 构建四个归档、两个 RPM、两个 DEB 与 `SHA256SUMS`；检查包内路径、Apache-2.0 元数据与协议文件字节 |
+| Plain RPM | `repodata/repomd.xml` | 与 `repodata/` 同级 |
+| Plain DEB | `Packages` 或 `Packages.gz` | 与索引同级，使用平面 APT 源 |
+| Managed RPM | `dists/<dist>/<arch>/repodata/repomd.xml` | 通过相对路径回到根 `pool/` |
+| Managed DEB | `dists/<dist>/Release` 或已签名的 `InRelease` | 相对于仓库根的 `pool/` 路径 |
 
-DNF 签名切换是协议测试，不是完整 Managed RPM 安装；APT 作业覆盖未签名 Plain 仓库，不覆盖
-Managed 元数据签名。正式上线前，应使用部署中的确切 dnf/APT 版本、仓库 URL、访问策略与
-签名策略完成验收。
+Managed APT 使用 component `main` 和 SHA-256 by-hash 索引。
+元数据签名生成 RPM `repomd.xml.asc` 或 APT `InRelease`、`Release.gpg`。
 
-当前 Silo 集成没有验证条件式 Multipart 完成。Multipart 的请求/协议测试单独存在，
-不能据此认定真实 R2 兼容；该路径的验收还需要真实 R2 Multipart 测试。
+### RPM 的 XML 与 SQLite 元数据
 
-## 仓库客户端契约
+SOW 生成 gzip 压缩的 `primary`、`filelists`、`other` XML，不生成 SQLite 格式的
+`primary_db`、`filelists_db`、`other_db`。两者是不同元数据格式；
+只读取 `primary_db` 的工具需要增加 XML 输入支持或单独转换。
 
-Plain RPM 仓库在包文件旁提供 `repodata/`；Plain DEB 仓库在包文件旁提供 `Packages` 与
-`Packages.gz`。配置好客户端信任策略后，可通过 `file://` 或 HTTP 使用。
+缺少 `primary_db` 本身不会阻止 YUM 读取仓库。上游 YUM 在没有可用 SQLite 索引时，
+会读取 XML 并生成本地缓存，见 [YUM 元数据加载实现](https://github.com/rpm-software-management/yum/blob/master/yum/yumRepo.py)。
+SOW 输出的 XML 使用 gzip，因此比较其他仓库或工具时，zstd 支持是另一个问题。
 
-Managed 客户端必须消费完整 Repository Root：
-
-- APT 索引位于 `dists/<dist>/main/binary-<arch>/`，并引用根级 `pool/`。`Release` 声明
-  SHA-256 by-hash 索引；配置签名后增加 `InRelease` 与 `Release.gpg`。
-- RPM 元数据位于 `dists/<dist>/<arch>/repodata/`，通过相对位置回指根级 `pool/`。必须服务
-  整个 Repository，不能只发布一个架构目录。
-
-默认 `dnf reposync` 会拒绝规范 Managed RPM 的父级相对包路径。该工作流应使用
-[`sow export rpm-leaf`](/zh/docs/command/export/) 生成自包含副本。导出使用本地包路径并带有
-完成清单，但不是第二个规范 Repository。
-
-Managed RPM 与 `export rpm-leaf` 的 repomd data 时间戳固定为 `0`，没有
-`--metadata-timestamp` 选项。因此它们不能直接接管保留了正数时间戳缓存的同一个 EL7
-repository ID；换 baseurl 本身不能解决。需要客户端采用新的 repository ID 或清理元数据缓存。
-若必须保留旧 ID 和缓存继续更新，请使用带显式时间戳的 Plain `create`，按
-[迁移指南](/zh/docs/tutorial/yum-migration/) 维护发布时间并重签 repomd。
-
-## 迁移已有 Plain YUM 仓库
-
-Plain 生成 primary、filelists、other 三份 XML，不生成旧式 SQLite 元数据或模块流。
-普通 RPM 可以配合适当的 `module_hotfixes=1` 策略使用；模块 profile 与 `dnf module install`
-需要另一套工作流。
-
-EL7 YUM 会把 `repomd.xml` 中最大的 data 时间与缓存比较。SOW 0.5.0 新增
-`create --metadata-timestamp SECONDS`，但默认仍为 `0`。已有在线仓库应使用不低于历史最大值
-的时间，真实更新应继续递增；仅改变 revision 或文件 mtime 无效。调用者负责保存历史时间并
-单独签署 `repomd.xml`。验收应保留原仓库 URL、ID、缓存和目标 GPG 检查策略。完整步骤见
+SOW 不生成 zchunk、modulemd 或源码包索引。客户端需要模块 profile 或
+`dnf module install` 时，应保留提供模块元数据的工具。
+将模块化包作为普通 RPM 安装时，按需配置客户端 `module_hotfixes`，详见
 [迁移指南](/zh/docs/tutorial/yum-migration/)。
 
-RPM 依赖投影遵循现代 createrepo_c 对 `%pretrans`、`%posttrans` 依赖的处理方式。0.5 新增的
-回归测试巩固了这一契约，没有修改解析器。旧版 createrepo_c 可能输出不同数量的依赖行或
-`pre="1"` 属性；应比较依赖含义和真实客户端行为，不能只比行数。对应上游变更见
-[PR #427](https://github.com/rpm-software-management/createrepo_c/pull/427)。
+### `dnf reposync`
 
-0.5.0 暂不支持 RPM v6 包格式的签名；新的签名 tag 可能被当作未签名，签名或验签流程因而
-拒绝该包。签名工作流请使用 RPM v4 格式包，不应期待 SOW 保留或验证 RPM v6 格式的签名。
+默认 `dnf reposync` 将下载限制在单仓库目录，因此会拒绝规范 Managed RPM 视图中指向父目录
+的包路径。这符合其[安全写入路径规则](https://dnf-plugins-core.readthedocs.io/en/latest/reposync.html)。
+该工作流使用 [`sow export rpm-leaf`](/zh/docs/command/export/) 生成自包含目录。
+
+<span id="迁移已有-plain-yum-仓库"></span>
+
+### 已有 EL7 缓存
+
+EL7 YUM 会把元数据 data timestamp 与已缓存仓库比较。
+Plain `create --metadata-timestamp SECONDS` 可以保留并推进已有发布时间，默认值为 `0`。
+
+Managed RPM 与导出的 RPM 仓库使用固定时间戳 `0`，没有覆盖选项。
+同一客户端仓库 ID 已缓存正数时间戳时，使用新仓库 ID 或清理该 ID 的元数据缓存。
+只改变 base URL 不够。需要保留旧 ID 和缓存时，使用 Plain 模式，按
+[YUM 迁移](/zh/docs/tutorial/yum-migration/) 的时间戳流程操作。
+
+### RPM 签名
+
+包签名工作流支持 RPM 格式 v4，不支持 RPM 格式 v6 的签名标签。
+元数据密钥引用是独立功能，详见[签名](/zh/docs/feature/signing/)。
 
 ## 发布 Provider
 
-| Provider | 契约 |
-|---|---|
-| `filesystem` | 发布到预先存在且安全的 `file://` endpoint 下。Target GC 只有在缓存 grace 与存储/公共缺失证据成立后，才执行精确条件删除。 |
-| `r2` | 通过 S3 兼容存储传输发布。Target GC 只写入精确候选报告，绝不删除远端对象。 |
+| Provider | 发布 | 目标 GC |
+|---|---|---|
+| `filesystem` | 写入已有规范 `file://` endpoint 之下 | 缓存宽限期后条件删除，再验证公开入口已不可获取 |
+| `r2` | 通过 S3 兼容存储操作写入 | 只报告候选，不删除远端对象 |
 
-两种 Provider 都在配置 Prefix 下发布同一棵完整 `pool/ + dists/` 树。`public_endpoint` 属于
-Target 校验的一部分；SOW 不创建 HTTP 服务、DNS 记录、Bucket Policy、CDN 或凭据。启用生产
-发布前，应先在非生产 Prefix 验证这些由部署方负责的表面。
+两者都在配置前缀下发布完整仓库。存储对应的 HTTP 服务、DNS、凭据、访问策略和缓存行为
+需要另行配置。`public_endpoint` 告诉 SOW 从哪里验证公开内容，不会创建服务。
+R2 公开 endpoint 必须使用 HTTP(S)，filesystem 还支持 `file://` 验证。
 
-Filesystem 与 R2 的 HTTP(S) 端点共用 canonical-GET 内容 verifier；Filesystem 还可使用基于
-描述符的 `file://` 校验，R2 公共端点则必须为 HTTP(S)。Target Name、`public_endpoint` 与
-`max_cache_ttl` 只能通过显式 [`publish --rebind`](/zh/docs/command/publish/#重绑定可变目标配置)
-修改；Storage Identity 与 Prefix 不可变。
+<span id="自动化集成矩阵"></span>
+<span id="部署门禁"></span>
 
-## 部署门禁
+## 自动化覆盖
 
-交付前必须通过深度校验，并检查物理变更计划：
+源码包含以下集成检查：
 
-```bash
-sow check -r REPOSITORY
-sow changes 0 -r REPOSITORY
-```
+| 检查 | 环境 | 范围 |
+|---|---|---|
+| CLI 干净环境流程 | Linux CI | 交付二进制、混合 Plain 输出、Managed 初始化、RPM/DEB Dist、查询、构建与检查 |
+| Plain APT 客户端 | `pgsty/u22` Ubuntu 22.04 容器 | 显式信任未签名源时的 HTTP 更新、包发现、版本选择、下载与安装 |
+| RPM 分离签名切换 | AlmaLinux 8/9 与 `pgsty/el10` 容器 | `repomd.xml` 及分离签名切换时的 DNF 行为 |
+| S3 兼容传输 | 固定版本的 PGSTY Silo 容器 | Bucket 列表、HEAD、GET、条件式单段 PUT、重放和对象 SHA-256 元数据 |
+| 发布打包 | Linux CI | 四个归档、两个 RPM、两个 DEB、校验和、包内路径与许可文件 |
 
-发布后，再访问实际 `repomd.xml` 或 `Release` URL，并运行目标软件包管理器。本地构建、Provider
-写入、HTTP 可达与客户端安装是四个独立检查。
+DNF 测试检查签名切换，APT 测试使用未签名 Plain 输出。
+完整的已签名 Managed 安装及托管 R2 条件式分段上传完成，需要在部署环境检查。
 
-相关契约见[仓库布局](/zh/docs/reference/layout/)、[签名模型](/zh/docs/feature/signing/)与
-[发布与恢复](/zh/blog/design/publication/)。
+切换客户端前，运行 `sow check`，发布到目标，再使用实际客户端配置刷新索引并安装一个包。
+客户端设置见[对外服务](/zh/docs/tutorial/serving/)。

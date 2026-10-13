@@ -11,7 +11,7 @@
   <path d="M 299.0 60.0 L 299.0 70.0 L 220.0 70.0" fill="none" stroke="rgba(148,176,210,0.48)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M 220.0 70.0 L 220.0 84.0" fill="none" stroke="rgba(148,176,210,0.48)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M 220.0 84.0 L 216.2 77.0 L 223.8 77.0 Z" fill="rgba(148,176,210,0.48)"/>
   <rect x="32" y="86" width="376" height="88" rx="14" fill="#121c29" stroke="rgba(148,176,210,0.24)" stroke-width="1.25"/>
-  <text x="52" y="110" text-anchor="start" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="700" fill="#5eead4" letter-spacing="1.2">统一包池</text>
+  <text x="52" y="110" text-anchor="start" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="700" fill="#5eead4" letter-spacing="1.2">共享包池</text>
   <text x="388" y="110" text-anchor="end" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="500" fill="#7f8da1">只存一份</text>
   <rect x="68.0" y="126" width="24" height="24" rx="5" fill="rgba(94,234,212,0.15)" stroke="rgba(94,234,212,0.42)" stroke-width="1.15"/>
   <rect x="103.0" y="126" width="24" height="24" rx="5" fill="rgba(224,163,92,0.15)" stroke="rgba(224,163,92,0.42)" stroke-width="1.15"/>
@@ -22,7 +22,7 @@
   <rect x="278.0" y="126" width="24" height="24" rx="5" fill="rgba(224,163,92,0.15)" stroke="rgba(224,163,92,0.42)" stroke-width="1.15"/>
   <rect x="313.0" y="126" width="24" height="24" rx="5" fill="rgba(94,234,212,0.15)" stroke="rgba(94,234,212,0.42)" stroke-width="1.15"/>
   <rect x="348.0" y="126" width="24" height="24" rx="5" fill="rgba(94,234,212,0.15)" stroke="rgba(94,234,212,0.42)" stroke-width="1.15"/>
-  <text x="220" y="165" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#93a3b8">每个软件包一个对象 · 无重复 object key</text>
+  <text x="220" y="165" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="500" fill="#93a3b8">每个仓库内，每个软件包只存一份</text>
   <path d="M 220.0 174.0 L 220.0 196.0" fill="none" stroke="rgba(148,176,210,0.48)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M 220.0 196.0 L 216.2 189.0 L 223.8 189.0 Z" fill="rgba(148,176,210,0.48)"/>
   <rect x="24" y="198" width="392" height="116" rx="14" fill="#121c29" stroke="rgba(148,176,210,0.24)" stroke-width="1.25"/>
   <text x="44" y="222" text-anchor="start" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="700" fill="#5eead4" letter-spacing="1.2">仓库视图</text>

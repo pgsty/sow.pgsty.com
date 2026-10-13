@@ -1,7 +1,7 @@
 ---
 title: "设计归档"
 linkTitle: "设计归档"
-description: "按日期归档 SOW 在所有权、仓库布局、发布、恢复与兼容性边界上的架构决策。"
+description: "解释 SOW 的仓库布局、发布流程与设计演变。"
 categories: [Design]
 tags: [managed, publish, transaction]
 url: "/zh/blog/design/"
@@ -18,24 +18,17 @@ cascade:
   featured_image: wash
 ---
 
-设计归档解释 SOW 为什么采纳某项契约、否决了哪些替代方案，以及结论实际达到了哪一层证据。
-文章按 `date` 排列，记录设计理由首次形成可维护正文的日期；`lastmod` 记录后续编辑或与
-实现对齐的日期。功能实际在哪个版本交付，仍以发布注记与源码 Tag 为准。
+设计归档解释 SOW 在仓库布局、状态模型和发布流程上的选择。
+文章日期记录决策成文时间，修改日期记录后续修订。
 
-“设计历史”系列把最初的 v0.1 产品计划、现存 44 份 ADR、112 份日期化证据报告，以及 v0.2
-重置过程，提炼为少量可持续维护的叙事。原始规划 Prompt、评审与执行记录仍可通过不可变源码
-Tag 和 Commit 查阅；它们是第一手史料，不是与本站并行的第二套文档目录。
+了解当前设计，可以从以下文章开始：
 
-## 权威与证据
+- [系统模型](/zh/blog/design/model/)：软件包、发行版、构建快照与发布目标。
+- [一棵包体树](/zh/blog/design/single-payload/)：为什么多个视图共用包池。
+- [发布与恢复](/zh/blog/design/publication/)：上传顺序、检查点与清理。
+- [设计原则](/zh/blog/design/principles/)：状态归属与写入协调。
 
-本专栏是持续维护的设计理由与决策历史权威来源。当前命令、配置与运维行为仍以
-[SOW 文档](/zh/docs/)为准；历史版本的精确行为则绑定对应源码 Tag 与[发布注记](/zh/blog/release/)。
+<span id="权威与证据"></span>
 
-每项运维结论都应与它真正达到的证据层一致：
-
-```text
-设计 -> 实现 -> 聚焦测试 -> 真实客户端/Provider 实跑 -> 发布物
-```
-
-前一层通过，不代表后一层自动通过。[平台与集成](/zh/docs/reference/compatibility/)
-记录自动化客户端、Provider 与文件系统覆盖；Release 制品属于独立交付门禁。
+历史系列介绍 v0.1 产品计划、设计决策与测试，以及 v0.2 重构和后续版本，并链接到对应源码快照。
+当前命令见 [SOW 文档](/zh/docs/)，各版本变化见[发布说明](/zh/blog/release/)。

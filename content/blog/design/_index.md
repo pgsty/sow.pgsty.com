@@ -1,7 +1,7 @@
 ---
 title: "Design Records"
 linkTitle: "Design"
-description: "Dated architecture decisions behind SOW's ownership, repository layout, publication, recovery, and compatibility boundaries."
+description: "Why SOW uses its current repository layout and publication workflow, and how the design changed."
 categories: [Design]
 tags: [managed, publish, transaction]
 url: "/blog/design/"
@@ -18,30 +18,19 @@ cascade:
   featured_image: wash
 ---
 
-Design records explain why SOW adopted a contract, what it rejected, and which evidence
-boundary applies. They are ordered by `date`, which records when the rationale first took
-its maintained form; `lastmod` records later editorial or implementation-alignment
-updates. Release notes and source tags remain authoritative for when behavior actually
-shipped.
+Design records explain the choices behind SOW's repository layout, state model, and
+publication workflow. Article dates record when a decision was documented; modification
+dates record later revisions.
 
-The Design History records distill the original v0.1 program, its 44 surviving ADR files,
-112 dated evidence reports, and the v0.2 reset into a small maintained narrative. Raw
-planning prompts, reviews, and transcripts stay available through immutable source tags
-and commits; they are primary sources, not a second documentation hierarchy.
+Start with these current design explanations:
 
-## Authority and evidence
+- [System model](/blog/design/model/): packages, Dists, Generations, and targets.
+- [One package tree](/blog/design/single-payload/): why views share a Pool.
+- [Publication and recovery](/blog/design/publication/): upload order, checkpoints, and cleanup.
+- [Design principles](/blog/design/principles/): state ownership and coordination.
 
-This column is the maintained authority for design rationale and decision history. Current
-commands, configuration, and operator behavior remain in [SOW Docs](/docs/); exact behavior
-of a historical release remains attached to that release's source tag and
-[release note](/blog/release/).
+<span id="authority-and-evidence"></span>
 
-Each operational claim should match the evidence layer it has actually reached:
-
-```text
-design -> implementation -> focused tests -> real client/provider run -> release artifact
-```
-
-Passing one layer does not imply the next. The [platform and integration reference](/docs/reference/compatibility/)
-records the automated client, Provider, and filesystem coverage; release artifacts are a
-separate delivery gate.
+The historical series follows the v0.1 program, its design decisions and tests, the v0.2
+reset, and later releases. It links to dated source snapshots. Use [SOW Docs](/docs/) for
+current commands and [release notes](/blog/release/) for version-specific changes.

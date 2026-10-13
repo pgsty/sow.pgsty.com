@@ -3,31 +3,40 @@ title: "SOW v0.2.0"
 linkTitle: "SOW v0.2.0"
 date: 2026-08-08
 authors: [Vonng]
-description: "SOW v0.2.0 提供 Plain 与 Managed RPM/DEB 仓库、可验证 Generation、签名、发布、保留、GC 与 RPM Leaf 导出。"
+description: "SOW v0.2.0 引入 Plain 与 Managed RPM/DEB 仓库、签名、发布、构建快照保留与 RPM Leaf 导出。"
 categories: [Release]
 tags: [release, managed, signing, publish, generation]
 weight: 10
 url: "/zh/blog/release/sow-docs-launch/"
 ---
 
-SOW 0.2.0 是 [Pigsty](https://pigsty.cc) 出品的自包含 RPM/DEB 仓库管理器，Release
-资产以单个 Go 可执行文件覆盖 Linux 与 macOS 构建目标。
+SOW 0.2.0 引入了面向 RPM 与 DEB 仓库的 Plain 和 Managed 工作流。它以单个 Go 可执行文件，在 Linux 或 macOS 上构建静态软件包仓库。
 
-## 两种工作模式
+本文记录 0.2.0 发布时的功能。当前安装与操作方法见[现行文档](/zh/docs/)。
 
-**Plain 模式** 给目录顶层已有的 RPM 与 DEB 文件就地生成索引：
+<span id="两种工作模式"></span>
+
+## 构建平面仓库
+
+Plain 模式索引目录顶层的 RPM 与 DEB 文件：
 
 ```bash
 sow create /srv/repo
 ```
 
-它写入 `repodata/`、`Packages` 与 `Packages.gz`。Plain 模式没有 Workspace、状态数据库、
-Generation，也不生成或签署 DEB `Release`。
+RPM 生成 `repodata/`，DEB 生成 `Packages` 与 `Packages.gz`，混合目录同时生成两种索引。Plain 模式以目录内容作为状态，不需要工作区或数据库。
 
-**Managed 模式** 负责包成员关系与完整生命周期：
+本版还加入 `--sign-with`，为未签名 RPM 软件包签名。使用 `--overwrite` 可替换已有 RPM 签名。Plain 模式不生成或签署 APT `Release` 文件。
+
+<span id="生命周期控制"></span>
+
+## 持续管理仓库
+
+Managed 模式记录软件包成员，并构建具名 Dist：
 
 ```bash
-mkdir -p /srv/sow && cd /srv/sow
+mkdir -p /srv/sow
+cd /srv/sow
 sow init .
 sow repo new pigsty
 sow dist new el9 --format rpm -r pigsty
@@ -35,28 +44,23 @@ sow add /path/to/packages/*.rpm -r pigsty -d el9
 sow check -r pigsty
 ```
 
-每个接纳的包体只在 `pool/` 下保存一次；RPM 与 APT 客户端视图位于 `dists/`，并以不可变
-Generation 落成。
+每个 Repository 在 `pool/` 下保存一份软件包文件。Dist 的 RPM 或 APT 元数据位于 `dists/`。每次构建记录一个快照，供 SOW 比较变更并保留选定的仓库状态。
 
-## 生命周期控制
+0.2.0 加入了以下功能：
 
-Managed 仓库提供：
+- `sow/v3` 配置与软件包成员策略；
+- RPM、APT 元数据签名，以及 RPM 软件包签名；
+- `status`、`check`、`changes` 与操作日志；
+- 可恢复的 filesystem 与 R2 发布；
+- 构建快照保留与本地垃圾回收；
+- 为需要独立 RPM 目录的工具提供 `rpm-leaf` 导出。
 
-- 严格的 `sow/v3` 配置与显式成员策略；
-- RPM 元数据、APT 元数据与可选 RPM 包体签名；
-- 低成本 `status` 与作为发布门禁的九层 `check`；
-- 可恢复的 filesystem 与 R2 发布尝试；
-- 显式保留 Generation 与基于可达性的本地 GC；
-- 面向拒绝 rpm-md 父级相对路径的消费者的独立 `rpm-leaf` 导出。
+服务或发布完整 Repository 目录树，让元数据能访问共享包池。对已配置目标，`sow publish` 管理上传顺序与中断恢复。R2 清理只报告候选对象，不删除远端对象。
 
-规范 Managed 树必须作为完整仓库交付。已配置目标使用 `sow publish`；其他传输方式应先把
-整根复制到离线 staging，再原子切换。不要逐文件更新在线仓库。
+<span id="兼容性证据"></span>
 
-## 兼容性证据
+## 发布测试与源码
 
-当前测试套件证明：两种格式都能由现行 CLI 在干净环境构建；Ubuntu 22.04 能消费 Plain APT
-仓库；AlmaLinux 8/9/10 探针覆盖 RPM 分离签名行为；另有独立 S3 兼容 Provider Fixture。
-这些探针本身不能证明完整的现行 Managed DNF/APT 或 R2 CLI 端到端验收。
+本版加入 APT/DNF 与 S3 兼容集成测试，并通过标签触发 GoReleaser，构建 Linux/macOS 归档与 Linux RPM/DEB 软件包。历史代码与测试保留在 [v0.2.0 源码标签](https://github.com/pgsty/sow/tree/v0.2.0)。
 
-确切声明边界见[兼容性](/zh/docs/reference/compatibility/)，全新安装入口见
-[快速上手](/zh/docs/start/quickstart/)。
+当前版本见[下载页](/zh/download/)。当前客户端与存储测试范围见[平台与集成](/zh/docs/reference/compatibility/)。

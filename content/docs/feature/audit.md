@@ -1,7 +1,7 @@
 ---
 title: "Observability & Audit"
 linkTitle: "Observability & Audit"
-description: "Use status, check, changes, retention, and the operation log without confusing state with proof."
+description: "Inspect state, verify repository content, compare generations, and read operation history."
 categories: [Feature]
 tags: [audit, transaction]
 url: "/docs/feature/audit/"
@@ -9,140 +9,132 @@ weight: 800
 icon: fa-solid fa-magnifying-glass-chart
 ---
 
-Each read surface answers a different question.
+Use `status` to inspect state, `check` to verify a repository, `changes` to list file
+changes, and `log` to read operation history.
 
-| Command | Question | Writes? |
-|---|---|---:|
-| `status` | What state is the Repository in? | no |
-| `check` | Does the selected Repository satisfy the complete delivery contract? | no |
-| `changes` | What physical files differ between Built Generations? | no |
-| `log` | Which operations and dispositions were recorded? | no |
-| `retain ls` | Which Generations are explicit local GC roots? | no |
+| Command | Answers |
+|---|---|
+| `status` | Does the repository need a build or recovery? Is a writer active? |
+| `check` | Are state, package bytes, indexes, and signatures consistent and ready for delivery? |
+| `changes` | Which local files changed between built generations? |
+| `log` | Which operations ran, and what did they change? |
+| `retain ls` | Which generations are explicitly retained? |
 
-## `status`: cheap state
+These commands do not modify repository contents.
+
+<span id="status-cheap-state"></span>
+
+## Inspect state
 
 ```bash
-sow status -r local
+sow status -r demo
 ```
 
-It reports the Desired revision, Built Generation, dirty Dists, pending payload counts,
-lock state, and `ready_to_copy`. It does not hash the public tree, recover an operation, or
-build.
+The result includes Desired revision, built generation, dirty Dists, pending package
+count and bytes, writer-lock state, and `ready_to_copy`.
 
-| Repository state | Meaning |
+| State | Meaning |
 |---|---|
-| `clean` | Desired and Built agree |
-| `dirty` | Desired changed; the public tree is still the previous Built Generation |
-| `recovering` | a durable nonterminal operation exists |
-| `error` | durable evidence conflicts and automatic recovery cannot choose safely |
+| `clean` | Desired and built state agree |
+| `dirty` | Membership or configuration needs a build |
+| `recovering` | Recorded work needs recovery or cleanup |
+| `error` | Recorded state or file evidence has an unresolved error |
 
-Use `status` to diagnose. Do not use it as a substitute for `check`.
+`status` reports state without hashing the public tree. For `dirty`, run `build`.
+For `recovering` or `error`, follow the diagnostic and
+[recovery procedure](/docs/feature/transactions/#recover-an-interrupted-operation).
+Run `check` before delivery.
 
-## `check`: delivery proof
+<span id="check-delivery-proof"></span>
+
+## Verify the repository
 
 ```bash
-sow check -r local
+sow check -r demo
 ```
 
-In steady state, the checker reports nine ordered layers:
+A normal check reports nine layers:
 
-| Layer | Verifies |
+| Layer | Checks |
 |---|---|
-| `config` | strict configuration and effective Dist inputs |
+| `config` | Configuration and effective Dist settings |
 | `state` | SQLite schema and relational state |
-| `public-modes` | expected public file and directory modes |
-| `retained` | explicit retained Generation records and frozen metadata |
-| `package-bytes` | pool/pending objects against recorded SHA-256 |
-| `desired-membership` | package identity, membership, and architecture consistency |
-| `index` | rendered metadata and reference closure |
-| `signature` | declared metadata and RPM package trust requirements |
-| `generation-manifest` | recorded Built manifest against the public tree |
+| `public-modes` | Public file and directory permissions |
+| `retained` | Retained generation records and metadata |
+| `package-bytes` | Pool and pending bytes against recorded SHA-256 |
+| `desired-membership` | Package identity, architecture, and membership |
+| `index` | Index contents and referenced files |
+| `signature` | Configured metadata and RPM package signatures |
+| `generation-manifest` | Built file manifest against the public tree |
 
-A non-terminal layout transition has a shorter diagnostic surface: `config`, `state`,
-`public-modes`, then `layout-transition`. The check stops there and returns not-ready until the
-diagnosed maintenance operation completes or is safely aborted before commit.
+An unfinished layout transition instead reports `config`, `state`, `public-modes`, and
+`layout-transition`. Complete or abort that migration as directed by
+[`repo migrate`](/docs/command/repo/#sow-repo-migrate).
 
-`check` writes and repairs nothing. A dirty or recovering Repository is not deliverable
-even if its last committed tree remains readable. Put `check` in the release pipeline and
-stop on any nonzero exit.
+`check` reads and hashes each unique physical package regardless of cached fingerprints.
+It does not repair files. A dirty or recovering repository fails readiness even if its
+previous built tree remains consistent.
 
-Every unique physical package payload receives one authoritative SHA-256 pass per check,
-regardless of cached fingerprints. Descriptor-bound evidence is then shared across retained
-records, indexes, signatures, the final Generation manifest, and `changes`. Signed RPM verification
-uses one additional shared stream for all signature packets and trust rings; it is not multiplied by
-the number of Dists, keys, or retained Generations.
+<span id="changes-generation-difference"></span>
 
-## `changes`: Generation difference
+## Compare generations
 
 ```bash
-sow changes -r local
-sow changes 0 -r local
-sow changes 42 -r local --json
+sow changes -r demo
+sow changes 0 -r demo
+sow changes 42 -r demo --json
 ```
 
-- no base argument compares the current Built Generation with its predecessor;
-- base `0` describes the complete current public tree;
-- base `N` gives the net difference from recorded Generation `N` to current Built.
+No base compares with the previous built generation. Base `0` lists the complete current
+tree. Base `42` compares recorded generation 42 with the current one.
+Rows contain the action, phase, repository-relative path, size, and SHA-256 as applicable.
 
-Rows include operation, phase, Repository-relative path, size, and SHA-256. Phases use the
-same vocabulary as local construction: payload, metadata, pointer, delete.
+This comparison does not inspect a publication target. Use `sow publish TARGET` to update
+that target and resume interrupted transfers. Use target GC to reclaim remote objects.
 
-`changes` is a manifest/difference surface. It does not contact a destination, persist a
-remote checkpoint, enforce cache grace, or recover an interrupted transfer. Use
-`sow publish TARGET` for a configured live target. For an offline copy, stage a complete
-tree, verify it, and switch it into service atomically.
+<span id="generation-retention-and-gc"></span>
 
-## Generation retention and GC
+## Retain generations and collect unused packages
+
+`retain add` accepts the current built generation only. If `status` reports generation 42,
+retain it before a later build replaces it:
 
 ```bash
-sow retain add 42 -r local
-sow retain ls -r local
-sow retain rm 42 -r local
-sow gc -r local
+sow retain add 42 -r demo
+sow retain ls -r demo
 ```
 
-`retain add` verifies and freezes a Generation's metadata and reference sets; it does not
-copy another package tree. The retained record is an explicit GC root. `retain rm` removes
-that root but deletes no package bytes itself.
+The command verifies the generation and saves its metadata and references. Package files
+remain in the shared pool. When generation 42 is no longer needed, remove its retention
+record with `sow retain rm 42 -r demo`. Then run `sow gc -r demo` to collect unused bytes.
+Local `gc` requires a clean repository; build pending changes first. It preserves packages
+needed by Desired, built, and previous-client membership records, retained generations,
+recovery, or publication state. See [`gc`](/docs/command/gc/) for the complete rules.
 
-Local `sow gc` deletes only payloads proven unreachable from the current state, explicit
-retentions, active recovery/publication state, and other recorded roots. Target GC is a
-separate operation: `sow gc TARGET` uses that Provider's safety model.
+The previous-generation metadata kept during ordinary builds is separate from explicit
+retention. For target cleanup, run `sow gc TARGET`. Filesystem targets support conditional
+deletion after cache grace; R2 targets report candidates without deleting them.
 
-During ordinary builds, SOW carries forward the immediately preceding RPM immutable
-metadata and APT by-hash objects so a reader of the previous pointer can finish. This
-bounded protocol window is separate from explicit `retain`.
+<span id="operation-log"></span>
 
-## Operation log
+## Read and export the log
 
 ```bash
-sow log -r local
-sow log OPERATION -r local
-sow log export operations.jsonl -r local
-sow log prune 2026-01-01 -r local
+sow log -r demo
+sow log OPERATION -r demo
+sow log export operations.jsonl -r demo
+sow log prune 2026-01-01 -r demo
 ```
 
-The ledger records operation kind/state, timestamps, configuration/manifest identities,
-package dispositions, membership changes, and physical changes where applicable.
+The log records operation state, times, package results, membership changes, and file
+changes where applicable. An operation detail can include build-progress events.
 
-`log export` writes stable JSONL, refuses to overwrite an existing file, and validates its
-output path. `log prune` accepts a date or RFC 3339 timestamp and removes only eligible
-terminal audit records; it does not remove current state, recovery evidence, or Generation
-manifests still required elsewhere.
+`log export` writes JSON Lines to a new file or stdout. `log prune` accepts a date or
+RFC 3339 timestamp and removes eligible terminal audit records. Required recovery records
+and generation manifests remain available.
 
-## Operational pattern
+See [JSON output](/docs/reference/json/) for scripts and
+[Transactions and recovery](/docs/feature/transactions/) for interrupted operations.
 
-```bash
-sow build -r local
-sow check -r local
-sow publish public
-```
-
-Use `status` for monitoring, `check` for the gate, `publish` for target mutation, and `log`
-for later evidence.
-
-## See also
-
-- [`sow build`](/docs/command/build/) and [`sow check`](/docs/command/check/)
-- [Log commands](/docs/command/log/)
-- [`sow publish`](/docs/command/publish/) and [`sow gc`](/docs/command/gc/)
+<span id="operational-pattern"></span>
+<span id="see-also"></span>

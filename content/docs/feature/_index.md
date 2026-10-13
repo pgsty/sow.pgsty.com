@@ -1,7 +1,7 @@
 ---
 title: "Features"
 linkTitle: "Features"
-description: "Plain and Managed repository generation, package pools, policy, signing, transactions, publication, and audit."
+description: "Choose a repository mode, then add package policies, signing, publication, and audit."
 categories: [Feature]
 tags: [plain, managed, policy, signing]
 url: "/docs/feature/"
@@ -11,55 +11,53 @@ weight: 300
 icon: fa-solid fa-cubes
 ---
 
-SOW has two isolated execution paths. Plain mode is a stateless rebuild of one directory;
-Managed mode records package membership and immutable repository generations in a workspace.
-Neither path silently adopts state from the other.
+SOW creates repository indexes in two modes. Choose Plain for a directory you can rebuild.
+Choose Managed for ongoing package updates, policy, signing, and publication.
 
-## Capability matrix
+<span id="capability-matrix"></span>
+
+## Capabilities
 
 | Capability | Plain | Managed |
-|---|---:|---:|
-| RPM and DEB metadata | yes | yes |
-| Mixed RPM + DEB operation | one directory | one Repository, separate Dists |
-| Persistent membership and generations | no | yes |
-| Per-architecture views and neutral packages | no | yes |
-| `exclude` and version `limit` policy | no | yes |
-| Metadata signing | no | RPM and DEB |
-| RPM package signing | `--sign-with` | `never`, `fill`, `always` |
-| Transaction journal and recovery | rerun `create` | workspace, Repository, publication |
-| Queryable operation log and JSONL export | no | yes |
-| Publication targets | no | filesystem and R2 |
-
-SOW parses packages and renders metadata in-process. It does not invoke
-`createrepo_c`, `dpkg-scanpackages`, `reprepro`, or `modifyrepo_c`. RPM package signing
-is the exception: it needs the host `rpm` command and GPG environment because it rewrites
-package payloads.
-
-## Repository formats
-
-| Surface | RPM/YUM | DEB/APT |
 |---|---|---|
-| Package facts | RPM header | DEB control archive |
-| Identity | NEVRA + exact-byte SHA-256 | `name=version:arch` + exact-byte SHA-256 |
-| Indexes | `primary`, `filelists`, `other`, `repomd.xml` | `Packages`, `Packages.gz`, `Release` |
-| Neutral architecture | `noarch` | `all` |
-| Immutable index paths | checksum-named rpm-md | `by-hash/SHA256` |
-| Managed metadata signatures | `repomd.xml.asc` | `InRelease`, `Release.gpg` |
+| RPM and DEB indexes | One directory, either or both formats | One repository, separate Dists |
+| Stored membership and generations | — | Yes |
+| Per-architecture views | — | Yes, including neutral packages |
+| Package exclusions | Fixed cleanup with `--pigsty` | Configurable per Dist |
+| Version limits | — | Configurable per Dist |
+| Metadata signing | — | RPM and DEB |
+| RPM package signing | `--sign-with` | `never`, `fill`, `always` |
+| Recovery after interruption | Rerun `create` | Recorded operations and publication attempts |
+| Operation log and JSONL export | — | Yes |
+| Publication targets | — | Filesystem and R2 |
 
-SOW intentionally omits SQLite rpm-md, zchunk, modulemd, source-package indexes, and
-MD5/SHA1 DEB manifests. It builds repository files; it does not run an HTTP server or CDN.
+SOW parses packages and generates indexes itself. It does not require `createrepo_c`,
+`dpkg-scanpackages`, or `reprepro`. RPM package signing uses the host `rpm` and GPG
+environment. Metadata signing uses `gpg` when a key reference resolves to a GPG key identifier.
 
-## Read by question
+<span id="repository-formats"></span>
 
-| Question | Page |
+## Generated formats
+
+| Format | Plain | Managed additions |
+|---|---|---|
+| RPM | `primary`, `filelists`, `other` XML and `repomd.xml` | Architecture views; optional `repomd.xml.asc` |
+| DEB | `Packages`, `Packages.gz` | `Release`, by-hash indexes; optional `InRelease` and `Release.gpg` |
+
+RPM XML is gzip-compressed. SOW does not generate SQLite rpm-md, zchunk, modulemd, or
+source-package indexes. Use your HTTP server or object-storage service to serve the
+output. See [Platforms and integrations](/docs/reference/compatibility/) for client details.
+
+<span id="read-by-question"></span>
+
+## Learn a feature
+
+| Task | Read |
 |---|---|
-| What does `sow create` write and replace? | [Plain Flat Repositories](/docs/feature/plain/) |
-| How do workspaces, repositories, Dists, and private state relate? | [Managed Workspaces](/docs/feature/managed/) |
-| How does one pool feed many metadata-only views? | [Pool & Metadata Views](/docs/feature/views/) |
-| Why was a package excluded or limited? | [Membership Policy](/docs/feature/policy/) |
-| Which key signs which object? | [Signing Model](/docs/feature/signing/) |
-| What happens after interruption? | [Transactions & Recovery](/docs/feature/transactions/) |
-| How do I inspect, verify, and audit a repository? | [Observability & Audit](/docs/feature/audit/) |
-
-For release targets, filesystem requirements, clients, and Providers, use
-[Platforms & Integrations](/docs/reference/compatibility/).
+| Generate indexes beside existing packages | [Plain repositories](/docs/feature/plain/) |
+| Manage repeated package updates | [Managed workspaces](/docs/feature/managed/) |
+| Share package bytes across Dist views | [Pool and views](/docs/feature/views/) |
+| Exclude packages or keep recent versions | [Membership policy](/docs/feature/policy/) |
+| Sign packages and indexes | [Signing](/docs/feature/signing/) |
+| Continue after an interruption | [Transactions and recovery](/docs/feature/transactions/) |
+| Inspect state, validate output, and read history | [Observability and audit](/docs/feature/audit/) |

@@ -9,19 +9,15 @@ weight: 100
 icon: fa-solid fa-rocket
 ---
 
-SOW builds static RPM/YUM and DEB/APT repositories; it is not an HTTP daemon. Choose one
-of two isolated paths:
+SOW turns RPM and DEB files into static YUM and APT repositories. Install SOW, then choose how to manage your packages:
 
-- **Plain:** `sow create` rebuilds indexes beside the packages in an ordinary directory.
-- **Managed:** a workspace tracks package membership, Dists, architecture views, policy,
-  signing, generations, audit history, and publication targets.
+- **Plain mode:** run `sow create DIR` to build indexes for the packages in a directory.
+- **Managed mode:** create a workspace to group packages into Dists, limit versions, sign metadata, and publish updates.
 
-- [Installation](/docs/start/install/) — Choose a release archive, RPM/DEB package, or source build; verify the installed binary.
-- [Quick Start](/docs/start/quickstart/) — Create and serve a flat repository from a directory of packages.
-- [First Workspace](/docs/start/workspace/) — Initialize Managed mode, create RPM and DEB Dists, add packages, build, and check.
-- [Core Concepts](/docs/start/concepts/) — Workspace, Repository, Dist, Package Object, Desired Membership, and Built Generation.
+- [Installation](/docs/start/install/) — Install a release archive, Linux package, or source build.
+- [Quick Start](/docs/start/quickstart/) — Build a flat repository and use it from a local client.
+- [First Workspace](/docs/start/workspace/) — Create RPM and DEB Dists, add packages, and check the result.
+- [Core Concepts](/docs/start/concepts/) — Learn how workspaces, repositories, Dists, and generations fit together.
 {.cards}
 
-Managed workspaces require a local POSIX filesystem with advisory locks, fsync, and atomic
-rename semantics. Metadata generation is in-process; optional RPM package signing needs
-`rpm`, while an `agent://` metadata key needs `gpg` and `gpg-agent`.
+Serve the generated files through a static HTTP server or object storage. See [Installation](/docs/start/install/#storage-and-optional-tools) for storage and signing requirements.

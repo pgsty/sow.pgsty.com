@@ -9,98 +9,91 @@ weight: 400
 icon: fa-solid fa-diagram-project
 ---
 
-## Plain or Managed
+<span id="choose-a-mode"></span>
 
-The two execution paths are separate.
+## Choose a mode {#plain-or-managed}
 
-| | Plain | Managed |
+| Need | Plain | Managed |
 |---|---|---|
-| Entry point | `sow create DIR` | `init`, `repo`, `dist`, `add`, `rm`, `build` |
-| State | package directory | `sow.yml` plus private SQLite/journals |
-| Public layout | flat RPM/DEB indexes | Repository `pool/ + dists/` |
-| Formats | RPM and DEB may share one directory | one format per Dist |
-| Architecture views | no | yes |
-| Policy and audit | no | yes |
-| Metadata signing and publication targets | no | yes |
+| Build indexes from a package directory | `sow create DIR` | Import packages with `sow add` |
+| Keep configuration and package membership | Directory contents are the state | `sow.yml` and private SQLite databases |
+| Organize packages | One flat directory; RPM and DEB can coexist | Named Dists; one format per Dist |
+| Publish architecture views | No | Yes |
+| Apply filters and version limits | Pigsty conventions with `--pigsty` | Configurable per Dist |
+| Sign RPM packages | Yes | Yes |
+| Sign repository metadata | Sign separately | Configure keys in `sow.yml` |
+| Track generations and publication | Manage these outside SOW | Built in |
 
-Choose Plain when directory contents already equal the desired repository. Choose Managed
-when SOW must own membership, policy, generations, signing, audit, or publication.
+Use Plain when the directory already contains the packages you want to publish. Use Managed when SOW should track membership and maintain the repository over time.
 
-## Managed hierarchy
+<span id="workspace-repository-and-dist"></span>
+
+## Workspace, Repository, and Dist {#managed-hierarchy}
 
 ```text
 Workspace                    /srv/sow
 ├── sow.yml                  configuration
-├── .sow/                    private state; never served
+├── .sow/                    private state
 └── Repository               /srv/sow/local
-    ├── pool/                canonical package payloads
+    ├── pool/                package files
     └── dists/
-        └── Dist             one named RPM or DEB membership set
-            └── views        metadata rendered per architecture
+        └── Dist             a named RPM or DEB package set
+            └── views        metadata for each architecture
 ```
 
-- **Workspace** is the configuration and discovery boundary.
-- **Repository** is the isolation, Generation, publication, and public-tree boundary.
-  Repositories do not deduplicate payloads with one another.
-- **Dist** is a named membership set in exactly one package format.
-- **Architecture view** is derived output, not a second membership set. `noarch` RPMs and
-  `all` DEBs are selected into every applicable view without duplicating their pool bytes.
+A **workspace** holds configuration and private state for one or more repositories.
 
-## One canonical payload
+A **Repository** owns a package pool, Dists, build history, and publication targets. Serve its complete `pool/` and `dists/` tree. Keep `sow.yml` and `.sow/` outside the HTTP document root.
 
-A package object is identified by its exact-byte SHA-256. Its logical coordinate comes
-from the RPM header or DEB control data, not the filename.
+A **Dist** selects packages of one format. For example, `el9` can contain RPMs and `bookworm` can contain DEBs. You choose the names; SOW does not check whether a package is compatible with the operating system named by its Dist.
 
-Each accepted payload has one canonical path under the Repository `pool/`. RPM architecture
-views contain `repodata/` only; their package locations use parent-relative paths back to
-the pool. APT `Packages` entries name the same pool directly.
+An **architecture view** contains metadata for one architecture. SOW includes neutral RPM `noarch` and DEB `all` packages in each applicable view.
 
-Ordinary package clients and mirror tools are different contracts. Default `dnf reposync`
-rejects the canonical RPM view's parent traversal. When a self-contained RPM mirror leaf
-is required, create a separate artifact with `sow export rpm-leaf`.
+<span id="store-each-package-once"></span>
 
-## Desired and Built
+## Store each package once {#one-canonical-payload}
 
-Managed mode tracks intent and public bytes separately:
+SOW identifies a **package object** by the SHA-256 of the complete package file. It reads the package name, version, and architecture from package metadata.
+
+Within a Repository, each accepted package has one path under `pool/`. Multiple Dists can refer to that path. Separate repositories have separate pools.
+
+RPM metadata uses relative paths back to the pool. APT `Packages` entries use paths relative to the Repository root. Keep the complete Repository tree together when you serve or copy it.
+
+Some mirror tools, including default `dnf reposync`, reject the parent-relative RPM paths. Use [`sow export rpm-leaf`](/docs/command/export/) to create a standalone RPM repository for those tools.
+
+<span id="desired-membership-and-built-generations"></span>
+
+## Desired membership and built generations {#desired-and-built}
+
+**Desired membership** is the package set selected for each Dist. A **Generation** identifies
+a completed build and its file manifest. **Built Generation** is the current completed
+build. Package files stay in the shared pool; each build does not create another copy.
 
 ```text
-add / rm -> Desired Membership (revision)
-                    |
-                  build
-                    v
-             Built Generation -> pool/ + dists/
+add / rm → Desired membership → build → Built Generation
 ```
 
-`add` and `rm` build affected Dists by default. `--skip` records membership changes but
-leaves the Repository `dirty`; `sow build` later converges Desired into a new Built
-Generation.
+`add` and `rm` normally update membership and build the affected Dists in one command. With `--skip`, they update membership only. Run `sow build` after a batch of skipped changes, or after changing build or signing configuration.
 
-- `sow status` reads state cheaply and reports `ready_to_copy`.
-- `sow check` performs the full, read-only delivery proof. Dirty or recovering state is
-  not deliverable.
-- `sow changes [BASE_GENERATION]` describes the physical difference between a recorded
-  Generation and the current Built Generation. It is evidence and planning output, not a
-  substitute for publication recovery or remote verification.
-- `sow publish TARGET` publishes a verified Generation through the configured provider and
-  records target-scoped recovery/checkpoint state.
-
-## Transactions and failure states
-
-Writes are serialized by Workspace or Repository locks and journal their intent before
-public mutation. Payloads and immutable metadata are prepared before mutable protocol
-pointers. A later writer recovers an interrupted operation before starting new work.
-
-The operational states are:
-
-| State | Meaning |
+| Command | Use |
 |---|---|
-| `clean` | Desired and Built agree |
-| `dirty` | Desired changed; Built is still the previous committed Generation |
-| `recovering` | a nonterminal operation must be resolved |
-| `error` | durable evidence conflicts; SOW refuses to guess |
+| `sow status` | Read the current state and `ready_to_copy` value |
+| `sow check` | Check package files, indexes, signatures, and recorded state without changing them |
+| `sow changes [BASE_GENERATION]` | List file changes from a recorded generation to the current build |
+| `sow publish TARGET` | Check and publish the current build to a configured target |
 
-Use `status` to diagnose and `check` as the release gate. Do not publish a Repository with
-`ready_to_copy=false`.
+<span id="understand-repository-state"></span>
+
+## Understand repository state {#transactions-and-failure-states}
+
+| State | Meaning | Next action |
+|---|---|---|
+| `clean` | Membership and configuration match the built output | Ready for `check` or publication |
+| `dirty` | Membership or configuration needs a build | Run `build`, then `check` |
+| `recovering` | An interrupted operation needs recovery | Follow the error and [recovery steps](/docs/reference/troubleshooting/#a-command-was-interrupted) |
+| `error` | Stored state or files conflict | Inspect the reported error and operation log |
+
+Use [`sow log`](/docs/command/log/) to inspect failed or interrupted operations.
 
 ## Continue
 

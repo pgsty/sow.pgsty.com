@@ -9,20 +9,17 @@ weight: 400
 icon: fa-solid fa-server
 ---
 
-SOW writes static files; it is not an HTTP server. This guide keeps the writable Workspace
-separate from the path Nginx serves.
+SOW generates static repository files. This guide publishes a Managed Repository to a separate directory, then serves that directory with Nginx. It continues from [First Workspace](/docs/start/workspace/).
 
-## Public and private paths
+<span id="public-and-private-paths"></span>
 
-| Mode | Public unit | Never serve |
-|---|---|---|
-| Plain | the directory passed to `sow create` | transient `.sow-plain-stage-*` output; no durable journal |
-| Managed | one Repository's complete `pool/ + dists/` tree | Workspace `sow.yml`, `.sow/`, SQLite, locks, journals, staging |
+The source is `/srv/sow/local`; the public copy will be `/srv/repo-public/local`.
+Both contain the complete `pool/` and `dists/` tree. The workspace configuration and
+private state stay outside the server root.
 
-For the workspace in [First Workspace](/docs/start/workspace/), the source Repository is
-`/srv/sow/local`. Do not make `/srv/sow` the document root.
+<span id="1-gate-the-source-generation"></span>
 
-## 1. Gate the source Generation
+## 1. Build and check
 
 ```bash
 cd /srv/sow
@@ -30,23 +27,22 @@ sow build -r local
 sow check -r local
 ```
 
-Continue only when `check` returns `0`. `status` is useful for diagnosis, but `check` is
-the full read-only delivery proof.
+Continue when `check` succeeds.
 
-## 2. Configure a filesystem target
+<span id="2-configure-a-filesystem-target"></span>
 
-Create the endpoint directory first. It must be a real, canonical directory, not a symlink;
-SOW refuses to create a missing endpoint for you.
+## 2. Add a filesystem target
+
+Create the target's parent directory and give the SOW operator write access:
 
 ```bash
 sudo install -d -m 0755 /srv/repo-public
 sudo chown "$(id -u):$(id -g)" /srv/repo-public
 ```
 
-The second command gives the current operator write access; use the account that will run
-`sow publish` if publication runs under a dedicated service user.
+Use the account that runs `sow publish` if it differs from your current user. The endpoint must already exist at its physical path; use no symlink components.
 
-Add a target to `/srv/sow/sow.yml`:
+Add this target to `/srv/sow/sow.yml`:
 
 ```yaml
 targets:
@@ -62,24 +58,26 @@ targets:
     exclusive_write_authority: true
 ```
 
-The three booleans are mandatory safety acknowledgements. The endpoint and prefix combine
-to `/srv/repo-public/local`; SOW creates and owns the prefix below the pre-existing endpoint.
+SOW creates `/srv/repo-public/local` from `endpoint` and `prefix`. The three required booleans declare that this workspace is the source of truth and the only writer for that target. Use a separate prefix for other tools.
 
-Validate and publish:
+This example checks the published files through `file://` and declares no intermediary cache. If you later add a proxy or CDN, use its public Repository URL for `public_endpoint`
+and its longest cache lifetime for `max_cache_ttl`. Apply these changes through
+[`publish --rebind`](/docs/command/publish/). SOW uses them to check delivery and decide
+when old files can be removed.
+
+Publish the Repository:
 
 ```bash
-sow config check
 sow publish public
 ```
 
-Publication copies immutable payloads and metadata before mutable protocol pointers,
-verifies the result, and records a target checkpoint. Repeating the command for an
-unchanged Generation is an idempotent no-op.
+SOW copies package files and immutable metadata first, then updates client entry points. It checks the result and records the published generation. Repeating publication without changes reports a no-op.
 
-Do not let another tool write into the same target prefix. The target contract is
-single-writer and exclusive.
+<span id="3-serve-the-target-with-nginx"></span>
 
-## 3. Serve the target with Nginx
+## 3. Configure Nginx
+
+Install Nginx and add a server configuration like this. Replace `repo.example.com` with your hostname:
 
 ```nginx
 server {
@@ -99,61 +97,74 @@ server {
 }
 ```
 
-Reload Nginx after validating its configuration. The client URLs are:
-
-```text
-DNF baseurl: http://repo.example.com/local/dists/el9/x86_64/
-APT source:  deb http://repo.example.com/local bookworm main
-```
-
-If metadata or packages are signed, publish the corresponding public key separately and
-configure `gpgkey`/`Signed-By`; private keys never belong under the document root.
-
-## 4. Verify the served entry points
+Check and reload the configuration:
 
 ```bash
-curl --fail --head \
-  http://repo.example.com/local/dists/el9/x86_64/repodata/repomd.xml
-
-curl --fail --head \
-  http://repo.example.com/local/dists/bookworm/Release
-
-curl --fail --head \
-  http://repo.example.com/local/dists/bookworm/main/binary-amd64/Packages.gz
+sudo nginx -t
+sudo nginx -s reload
 ```
 
-Then run the actual package manager from a client host. HTTP reachability is not package
-client verification; both checks matter.
+These commands assume Nginx is already running. If this is a new installation, start it through your operating system's service manager after `nginx -t` succeeds.
 
-The complete Repository prefix must have one access policy. RPM metadata may resolve a
-package through `../../../pool/...`, and APT `Filename` fields point to `pool/...` directly.
-Protecting `dists/` while accidentally exposing or blocking `pool/` breaks the repository.
+The client addresses are:
 
-## Manual and air-gapped delivery
+| Client | Address |
+|---|---|
+| DNF `baseurl` | `http://repo.example.com/local/dists/el9/$basearch/` |
+| APT `URIs` | `http://repo.example.com/local` |
+| APT `Suites` / `Components` | `bookworm` / `main` |
 
-If `sow publish` cannot reach the destination:
+Use the [YUM](/docs/tutorial/yum-repo/) or [APT](/docs/tutorial/apt-repo/) tutorial for the full source configuration. To verify signatures, distribute the public key and follow [Sign Your Repository](/docs/tutorial/signing/).
 
-1. run `sow check` on the source;
-2. copy the complete Repository into a new, non-live staging or release directory;
-3. verify transport checksums against `sow changes 0` or an archive manifest;
-4. atomically switch an operator-owned parent reference to the new directory;
-5. keep the previous release until clients and caches have moved past it.
+<span id="4-verify-the-served-entry-points"></span>
 
-Do **not** run an unordered `rsync --delete` directly against a live Repository root. That
-does not preserve SOW's pointer ordering, target checkpoint, cache grace, or recovery state.
-`sow changes` describes Generation differences; it is not an authorization to mutate a
-live target without those controls.
+## 4. Check client access
 
-## R2 targets
+Configure a client with the addresses above. Refresh its indexes and install a package.
+This checks access to both `dists/` and `pool/`. Apply the same access rules to both
+directories.
 
-`provider: r2` uses an S3-compatible storage transport and report-only target GC. The
-transport integration covers list, HEAD, GET, and single-part conditional PUT against a pinned PGSTY Silo
-fixture; it does not validate conditional multipart completion or replace real R2 acceptance. Validate credentials, bucket policy, public endpoint, cache behavior, replay, and
-recovery on a nonproduction prefix before enabling a production target. See
-[Platforms & Integrations](/docs/reference/compatibility/).
+<span id="next"></span>
 
-## Next
+## Publish an update
 
-- [`sow publish`](/docs/command/publish/) and [`sow gc`](/docs/command/gc/)
-- [Publication design](/blog/design/publication/)
-- [Signing tutorial](/docs/tutorial/signing/)
+After changing membership or configuration, build any pending changes and publish again:
+
+```bash
+sow build -r local
+sow check -r local
+sow publish public
+```
+
+If publication stops, rerun `sow publish public` to resume it. See [`sow publish`](/docs/command/publish/) for recovery and target changes, and [`sow gc`](/docs/command/gc/) for cleanup after the cache grace period.
+
+<span id="manual-and-air-gapped-delivery"></span>
+
+## Deliver to an isolated host
+
+When SOW cannot reach the destination, stop source writers while creating and checking
+the copy:
+
+1. Run `sow check` on the source.
+2. Copy the complete Repository to a new release directory on the destination. Preserve hard links, for example with `rsync -aH` or `tar`.
+3. Verify transferred files against `sow changes 0` or an archive checksum manifest.
+4. Switch the server's path to the new release directory.
+5. Keep package and immutable metadata URLs referenced by old indexes reachable until the maximum cache lifetime expires, then clean up the old release.
+
+For paths absent from the new release, the HTTP server can fall back to the previous
+release directory during that interval.
+
+Copying directly over a live tree can expose indexes before their package files arrive. Prepare the new directory first and switch it as a unit.
+
+## Serve a Plain repository
+
+For Plain mode, serve the directory passed to `sow create`. Keep temporary hidden files
+inaccessible; the Nginx dotfile rule above does this.
+
+<span id="r2-targets"></span>
+
+## Publish to R2
+
+Use `provider: r2` for Cloudflare R2. Configure its endpoint, bucket, credential reference, public URL, and cache lifetime; see the [target configuration reference](/docs/reference/config/). Run an initial publication to a test prefix and check it from your package clients.
+
+R2 target garbage collection reports deletion candidates; SOW does not delete those objects. See [Platforms & Integrations](/docs/reference/compatibility/) for tested storage operations.

@@ -2,9 +2,9 @@
 title: "SOW v0.1 Decision Ledger: What Survived and What Was Retired"
 linkTitle: "v0.1 Decision Ledger"
 date: 2026-07-12
-lastmod: 2026-08-28
+lastmod: 2026-10-13
 authors: [Vonng]
-description: "A curated ledger of all 44 surviving v0.1 ADR files, the problem each addressed, and whether its decision survived, evolved, became migration-only, or retired with V1."
+description: "All 44 surviving v0.1 architecture decisions: their original purpose and how each changed after the repository model reset."
 categories: [Design]
 tags: [history, v0.1, adr, decision, migration]
 url: "/blog/design/v01-decisions/"
@@ -13,29 +13,22 @@ icon: fa-solid fa-list-check
 draft: false
 ---
 
-> [!IMPORTANT] Historical decision ledger
-> The v0.1.0 tag contains 44 ADR files numbered 0001 through 0045; 0006 is absent.
-> This page preserves their meaning without republishing each historical implementation
-> contract as current guidance.
-
-An ADR is valuable even when its implementation is retired. It records the failure mode
-the team refused to ignore, the boundary selected at the time, and often the evidence
-required before a dangerous operation could proceed.
-
-The table below classifies each decision into four fates:
+The v0.1.0 tag contains 44 architecture decision records (ADRs), numbered 0001 through
+0045; 0006 is absent. Each ADR records a problem, the decision made at the time, and the
+conditions that implementation had to meet. This table shows what happened to those
+decisions after the repository model changed.
 
 | Fate | Meaning |
 |---|---|
-| **Retained** | The principle remains part of current SOW with substantially the same boundary. |
-| **Evolved** | The problem and safety rule survived, but ownership or implementation changed. |
-| **Migration history** | The decision governed a one-time Pigsty/V1 cutover and is no longer a product contract. |
-| **Retired** | The decision belonged to the Git/CAS/Route/Edge product model removed from current SOW. |
+| **Retained** | The principle remains in current SOW with substantially the same boundary. |
+| **Evolved** | The problem remains, but ownership or implementation changed. |
+| **Migration history** | The decision governed the Pigsty/V1 cutover. |
+| **Retired** | The decision belonged to the removed Git/CAS/Route/Edge model. |
 
-Primary decision dates run from 2026-07-11 through 2026-07-28; ADR-0035 carries later
-amendments on July 29 and July 31. Most early ADRs were consolidated into Git on July 19
-after already being used by implementation and evidence work. The v0.1.0 tag tree was
-checked to contain the same 44 ADR paths represented below. One raw link is intentionally
-omitted because the historical record names obsolete infrastructure details.
+Decision dates run from 2026-07-11 through July 28. ADR-0035 also has amendments from
+July 29 and July 31. Most early ADRs entered Git together on July 19, after implementation
+had begun. ADR-0032 is summarized without a direct link because it names obsolete
+infrastructure details.
 
 ## Core state, publication, and trust
 
@@ -47,7 +40,7 @@ omitted because the historical record names obsolete infrastructure details.
 | [0004](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0004-edge-token-verifier-deployment-contract.md) | Edge token verification and deployment had one versioned cross-provider contract. | **Retired.** Edge entitlement is no longer part of the SOW repository engine. |
 | [0005](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0005-legacy-make-target-dispositions.md) | Every legacy Make target was mapped to SOW, retirement, or policy rejection. | **Migration history.** The mapping completed its cutover role and left the active product. |
 | [0007](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0007-pro-oss-unified-repository.md) | Public and gated packages shared one canonical repository instead of a separate Pro bucket. | **Retired.** The commercial Edge topology left product scope; the more general single-owner lesson remains. |
-| [0008](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0008-gc-reachability-and-confirmation.md) | GC followed complete reachability and required explicit confirmation for destructive work. | **Retained.** Current local and target GC still require closure, exact identity, grace, and capability. |
+| [0008](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0008-gc-reachability-and-confirmation.md) | GC followed complete reachability and required explicit confirmation for destructive work. | **Evolved.** Current GC checks references and exact identity. The old `--apply --confirm` interface retired; remote deletion also checks cache grace and provider capability. |
 | [0009](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0009-forward-only-remote-generation-restore.md) | Once a remote generation became visible, recovery rolled forward rather than inventing rollback. | **Retained.** Commit intent remains the boundary between abandon/reconcile and forward-only recovery. |
 | [0010](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0010-repository-signing-identity-and-rotation-boundary.md) | Metadata signing bound exact public/private identities and treated rotation as a repository-wide transition. | **Evolved.** Current signer evidence and trust-ring rules preserve exact identity without the V1 ref topology. |
 | [0011](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0011-evidence-bound-remote-deletion.md) | Remote deletion required target ownership, inventory, checkpoint, grace, and conditional-delete evidence. | **Retained.** R2 remains report-only because it cannot satisfy the required atomic delete capability. |
@@ -57,7 +50,7 @@ omitted because the historical record names obsolete infrastructure details.
 | [0015](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0015-target-identity-and-published-ref-state.md) | Configuration named a target; published refs and checkpoints belonged to canonical state. | **Retained.** Target-neutral generations and target-prefix attempts/checkpoints remain separate owners. |
 | [0016](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0016-frozen-vendor-sdk-boundary.md) | Cloud adapters used concrete, bounded SDK/API contracts instead of a generic provider abstraction. | **Evolved.** Concrete provider boundaries survived; V1 Edge/COS details retired. |
 | [0017](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0017-rpm-package-keyring-and-cryptographic-verification.md) | Accepted RPM signatures had to close against a stable repository keyring and opened payload identity. | **Evolved.** v0.4 independent multi-ring verification strengthens the same trust boundary. |
-| [0018](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0018-selected-set-local-materialization-transaction.md) | A selected package set staged, validated, committed, and recovered as one bounded local transaction. | **Evolved.** V1 materialization retired; current Plain/Managed pointer-last staging keeps the transactional lesson. |
+| [0018](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0018-selected-set-local-materialization-transaction.md) | A selected package set staged, validated, committed, and recovered as one bounded local transaction. | **Evolved.** Managed operations use recovery journals. Plain stages metadata and replaces pointers last; an interrupted Plain build is rebuilt. |
 
 ## Legacy topology, compatibility, and migration
 
@@ -86,7 +79,7 @@ omitted because the historical record names obsolete infrastructure details.
 | [0034](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0034-cloudflare-nonproduction-worker-bootstrap.md) | Worker bootstrap used leases, two-phase recovery, exact resources, and reversible state. | **Retired.** Cloudflare deployment is no longer repository-engine responsibility. |
 | [0035](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0035-cloudflare-provider-attestation-and-log-sink-lease.md) | Provider identity, runtime bindings, log sink, and lease ownership were attested before use. | **Retired.** The exact Edge control plane left product scope. |
 | [0036](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0036-provider-delete-capability-and-checkpoint-fenced-fallback.md) | R2 lacked conditional DeleteObject, so an explicit `checkpoint-fenced` unconditional-delete fallback was allowed behind a deterministic capability probe and repeated identity/fence proofs. | **Evolved; fallback not inherited.** Capability probing and fail-closed defaults survived, but current SOW disables R2 remote deletion and keeps target GC report-only. |
-| [0037](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0037-pre-upload-confidential-edge-denial-attestation.md) | Gated publication had to prove denial at the Edge before uploading confidential bytes. | **Evolved.** The Edge product surface retired; proving authorization before exposure survived. |
+| [0037](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0037-pre-upload-confidential-edge-denial-attestation.md) | Gated publication had to prove denial at the Edge before uploading confidential bytes. | **Retired.** Edge access control is now an external deployment responsibility. |
 | [0038](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0038-yum-consumer-preflight-receipt.md) | YUM cutover required an expiring receipt bound to exact endpoints, generation, and trust bytes. | **Migration history.** It made a dangerous consumer cutover auditable and then retired. |
 | [0039](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0039-caret-url-wire-canonicalization.md) | Caret had one canonical URL spelling across Go, Edge, logs, and origin routing. | **Evolved.** The route was retired; canonical encode-once path handling remains. |
 
@@ -96,29 +89,25 @@ omitted because the historical record names obsolete infrastructure details.
 |---|---|---|
 | [0040](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0040-bounded-configuration-topology.md) | Configuration cardinality and expanded topology were bounded before allocation or execution. | **Retained.** Current parsers and state wires keep explicit size/cardinality limits. |
 | [0041](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0041-preserved-projection-orphan-quarantine.md) | Unknown final projection stages were preserved for audit rather than guessed away. | **Evolved.** Current recovery still preserves contradictory evidence and fails closed. |
-| [0042](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0042-derived-state-replacement-outcome.md) | Derived-state replacement had explicit success, rollback, preserved, and blocked outcomes. | **Retained.** Current operations report precise recovery outcomes instead of collapsing them into success/failure. |
-| [0043](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0043-derived-state-hostile-writer-admission.md) | File mutation bound descriptor identity and stated the same-UID hostile-writer limit honestly. | **Retained.** Path safety still fails closed without claiming protection outside its OS ownership boundary. |
+| [0042](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0042-derived-state-replacement-outcome.md) | Derived-state replacement had explicit success, rollback, preserved, and blocked outcomes. | **Evolved.** Managed journals record operation phases; recovery stops when recorded state and files disagree. |
+| [0043](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0043-derived-state-hostile-writer-admission.md) | File mutation checked descriptor identity and defined the limit against a hostile writer using the same OS user. | **Retained.** Path checks reject identity changes; OS permissions remain the boundary against other writers. |
 | [0044](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0044-preserved-projection-audit-retirement.md) | Preserved audit copies could be retired only through an exact capability and confirmation token. | **Evolved.** The V1 command retired; exact capability-bound deletion remains a design rule. |
 | [0045](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0045-generic-derived-state-residue-recovery.md) | Unjournaled residue had a bounded classifier and could never be silently adopted or deleted. | **Retained.** Current recovery distinguishes known state, safe residue, and contradictory evidence. |
 
 ## The pattern behind the ledger
 
-The decisions that survived were not the most elaborate V1 mechanisms. They were the
-small invariants beneath them:
+The decisions that continued share a few rules:
 
-- one owner for each fact;
-- exact identity before mutation;
-- immutable preparation before pointer commit;
-- forward recovery after commit intent;
-- complete evidence before deletion;
-- explicit bounds and honest non-goals;
-- compatibility claims attached to the client/provider actually tested.
+- Give each fact one owner.
+- Check exact identity before mutation.
+- Prepare immutable content before committing pointers.
+- Recover forward after commit intent.
+- Check references and deletion conditions before removing data.
+- Set input limits and define the product scope.
+- Record compatibility against the client and provider tested.
 
-The Git database, route graph, Edge bootstrap, and migration commands were replaceable.
-These invariants were not. They are maintained today in
-[Design Principles](/blog/design/principles/),
-[System Model](/blog/design/model/), and
-[Publication & Recovery](/blog/design/publication/).
+Their current implementation is described in [Design Principles](/blog/design/principles/),
+[System Model](/blog/design/model/), and [Publication & Recovery](/blog/design/publication/).
 
 The [v0.1.0 ADR directory](https://github.com/pgsty/sow/tree/v0.1.0/docs/adr)
 remains the immutable primary source. The next article summarizes the separate

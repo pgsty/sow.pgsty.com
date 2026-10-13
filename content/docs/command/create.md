@@ -1,7 +1,7 @@
 ---
 title: "sow create"
 linkTitle: "create"
-description: "Generate a flat RPM/DEB repository in an ordinary directory — the Plain mode entry point."
+description: "Generate RPM and DEB indexes beside package files."
 categories: [Command]
 tags: [cli, plain, rpm, deb]
 url: "/docs/command/create/"
@@ -10,14 +10,7 @@ weight: 100
 icon: fa-solid fa-folder-tree
 ---
 
-`sow create` turns a directory that already contains `.rpm` and `.deb` files into a flat repository
-by writing indexes next to the packages. It is the whole of Plain mode: no `sow.yml`, no SQLite, no
-Workspace discovery. This page covers the one-pass scan contract, explicit RPM publication time,
-the `--pigsty` completion gate, and RPM signing with `--sign-with`.
-
-> [!NOTE] Version availability
-> `--metadata-timestamp` requires [SOW 0.5.0](/blog/release/sow-v0.5.0/) or later.
-> Check the exact binary's `create --help` before switching an existing maintenance script.
+`sow create` writes RPM and DEB indexes beside the package files in a directory. Use it for a flat repository that does not need a managed Workspace. `DIR` defaults to the current directory.
 
 ## Synopsis
 
@@ -25,34 +18,26 @@ the `--pigsty` completion gate, and RPM signing with `--sign-with`.
 sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite]] [-T DUR | -N] [--json]
 ```
 
-`DIR` defaults to the current directory.
-
 ## Description
 
-`create` reads the top-level regular files in `DIR` and renders the index formats implied by what it
-finds: `repodata/` when RPMs are present, `Packages` and `Packages.gz` when DEBs are present, both
-when the directory is mixed. All architectures come from the package headers — Plain mode has no
-architecture flag and no permit list.
+`create` reads the top-level regular package files in `DIR`. For RPMs, it generates `repodata/`. For DEBs, it generates `Packages` and `Packages.gz`. A mixed directory gets both formats. Architectures come from the package headers; Plain mode accepts all architectures found in the packages.
 
-Flat metadata only ever references packages in the same directory. RPM `location` is the bare
-basename and DEB `Filename` is `./<basename>`, so both remain relative whether the directory is
-exposed as a `file://` source or an HTTP root.
+Indexes use relative package paths: the filename for RPM, and `./<filename>` for DEB. Serve the package directory through HTTP or use it as a local `file://` source.
 
-By default `create` does not delete, move, rename, re-sign or rewrite a single package byte. It only
-replaces index paths it owns; unknown files are left alone.
+By default, `create` updates its indexes and preserves the package files. `--pigsty` can delete matching packages, and `--sign-with` can replace RPMs with signed copies.
 
 ## Options
 
 | Flag | Description | Default |
 |---|---|---|
-| `-j, --jobs N` | Parallel workers for the single package hash/parse pass | logical CPU count |
+| `-j, --jobs N` | Parallel package-processing workers | logical CPU count |
 | `--metadata-timestamp SECONDS` | Unix seconds from `0` to `253402300799` for RPM repomd data timestamps; leaves DEB, package times and gzip headers unchanged | `0` |
 | `--pigsty` | Enable Pigsty compatibility cleanup and completion marker | off |
-| `-S, --sign-with KEY` | Sign unsigned RPMs with a 16/40/64-hex GPG key ID | off |
+| `-S, --sign-with KEY` | Sign unsigned RPMs with a GPG key ID or fingerprint | off |
 | `--overwrite` | Re-sign every RPM; requires `--sign-with` | off |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 | `-h, --help` | Show help | — |
 
 ## Scan rules
@@ -62,7 +47,7 @@ replaces index paths it owns; unknown files are left alone.
 - Every valid version enters the index. Two files claiming the same logical coordinate with
   different content is a hard failure.
 - A directory with no supported package is rejected in default mode. `--pigsty` accepts an empty
-  authoritative set so an interrupted all-package cleanup can converge and write its marker.
+  package set so rerunning an interrupted cleanup can finish and write its marker.
 
 ```console
 sow create /srv/empty
@@ -71,20 +56,7 @@ plain: scan /srv/empty: no supported top-level regular RPM or DEB packages
 
 ## Package I/O and final validation
 
-For the normal unsigned path, each selected package has exactly one full content pass. A worker opens
-it, computes SHA-256 once, parses its header/control metadata, and retains the complete parsed result.
-RPM XML and DEB `Packages` are rendered from that retained result; neither rendering nor generated
-metadata validation reopens package payloads. `--jobs` parallelizes this pass while canonical result
-ordering keeps output bytes independent of worker scheduling.
-
-Immediately before publication, `create` relists the top-level package set and compares file identity,
-type/mode, size, and mtime with the post-scan snapshot. This is a cheap `stat` check, not a second hash.
-A changed set or stat returns integrity error `5` before any staged output is published. Deliberately
-preserving inode, size, and mtime while modifying bytes is outside the local cooperative-writer
-contract.
-
-Explicit RPM signing is an exception: copying, signing, signature verification, and parsing the final
-signed RPM necessarily add reads for packages that are modified.
+Keep the input directory unchanged while `create` runs. SOW scans the packages, then checks for file changes before replacing the indexes. A detected change returns exit code `5`. Use `--jobs` to set the number of parallel package-processing workers.
 
 ## Deterministic output and idempotence
 
@@ -104,48 +76,34 @@ created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=true recover
 
 ## The repo_complete gate
 
-Default mode never creates `repo_complete`. If the marker already exists, `create` refuses to write
-indexes rather than leaving a stale marker claiming a build that no longer matches:
+If the directory contains `repo_complete`, use `--pigsty` to refresh it with the indexes. Running without `--pigsty` returns an error:
 
 ```console
 sow create /srv/pigsty
 plain: marker gate /srv/pigsty/repo_complete: repo_complete exists; use --pigsty or remove it explicitly before rebuilding
 ```
 
-Either re-run with `--pigsty` (which withdraws and republishes the marker in its documented order)
-or remove the marker yourself.
+To keep using the completion marker, rerun with `--pigsty`. If you no longer use it, move the marker out of the directory first.
 
 ## Publication time for existing YUM repositories
 
-The default remains a deterministic zero data timestamp. Pass `--metadata-timestamp SECONDS` to set an explicit publication time for RPM metadata. The same packages and time produce the same output; changing only the time changes repomd, leaving its compressed XML streams and RPM bytes unchanged. DEB output is unaffected.
+`--metadata-timestamp` sets the RPM repomd data timestamps. It does not change package files, compressed XML streams, or DEB indexes. The default is `0`, and the accepted range is `0..253402300799` Unix seconds. This option was added in SOW 0.5.0.
 
-EL7 YUM rejects a repomd whose maximum data timestamp is older than its cached copy. When migrating an existing repository, the publisher must choose a time at least as large as every historical value clients may have seen. Updating revision or filesystem mtime alone does not fix this check. Equal timestamps are accepted by EL7; the migration guide recommends advancing by at least one second for changed content so releases remain distinguishable.
-
-> Pass `--metadata-timestamp` on **every** update. Omitting it uses `0` again; SOW
-> does not inherit the previous value. The accepted range is `0..253402300799`
-> Unix seconds (through year 9999). A contemporary millisecond epoch value exceeds
-> this bound and is rejected; SOW does not detect units for smaller numbers. This
-> bound is not a guarantee that every client accepts every date. A far-future value
-> can make EL7 reject later ordinary timestamps until its old metadata cache is cleared.
-> After repomd changes,
-> replace its detached `.asc` signature before publishing: `create` neither
-> refreshes nor removes an old `repomd.xml.asc`.
+EL7 YUM rejects metadata whose maximum data timestamp is older than its cached copy. When replacing an existing metadata generator, choose a timestamp at least as large as the highest value previously published. For changed content, advance it by at least one second to distinguish updates.
 
 ```bash
-sow create /srv/flat --metadata-timestamp 1790049000
+sow create /srv/flat --metadata-timestamp "${PUBLISH_TIME:?Set the publication time}"
 ```
 
-The number is an example, not a universal migration value. A maintenance wrapper should preserve the existing repomd and valid signature when metadata content is unchanged, and advance the time for actual updates. Retain a publication high-water mark outside the upload tree; include trusted pre-migration backups when repairing a repository already reset to zero. Rolling back package content is a new publication and must not roll the clock back.
+Record the publication time and pass it on every update. Omitting the option resets it to `0`. Restoring older package content is a new publication, so keep the timestamp increasing. Use seconds, not milliseconds, and avoid future dates.
 
-After changing repomd, the caller must regenerate its detached GPG signature. `create` does not sign repomd. This option does not change managed build or RPM leaf export timestamp semantics.
+If clients verify `repomd.xml.asc`, regenerate that signature after repomd changes. `create` neither signs repomd nor updates or removes its old detached signature.
 
-See [Migrating an Existing YUM Repository](/docs/tutorial/yum-migration/) for backup,
-publication-clock, signing, and cached-client acceptance steps.
+See [Migrating an Existing YUM Repository](/docs/tutorial/yum-migration/) for the complete procedure.
 
 ## --pigsty
 
-`--pigsty` enables three coupled compatibility actions in one invocation. Their publication order
-is marker-gated, but the operation is rebuilt on retry rather than recovered from a journal:
+`--pigsty` applies these cleanup rules and writes a completion marker:
 
 1. Delete DEB packages whose parsed architecture is `i386`. RPMs are not removed merely for
    carrying an `i386/i486/i586/i686` architecture.
@@ -166,31 +124,18 @@ b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead  centos-release
 d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab  epel-release-7-5.noarch.rpm
 ```
 
-Cleanup only touches top-level regular package files that parsed successfully and matched a rule.
-Directories and unknown files are never removed by glob.
+Cleanup applies only to top-level regular package files that parsed successfully and matched a rule.
 
-The publication order matters for callers that gate on the marker: the existing `repo_complete` is
-withdrawn *before* indexes switch, matched packages are deleted only after replacement metadata is
-installed, and the new marker is written last. A caller must treat a missing marker as incomplete.
-
-> [!NOTE] Marker semantics
-> Treat a missing `repo_complete` as "build in progress". That is the contract `--pigsty` is designed
-> around.
+SOW removes the existing `repo_complete` before replacing indexes. It then deletes the packages matched by the cleanup rules and writes the new marker last. A missing marker means the build is incomplete.
 
 ## Signing RPMs
 
-`-S/--sign-with KEY` is the explicit authorization to modify RPM bytes. `KEY` is exactly 16, 40 or 64
-hexadecimal characters; an optional `0x` or `0X` prefix is accepted. SOW normalizes it to
-uppercase and passes it to the environment's `rpm --addsign` through the `_gpg_name` macro. The
-private key, passphrase, GPG home, pinentry and any extra RPM macros come from your environment —
-SOW never receives, persists or echoes a secret.
+`-S/--sign-with KEY` signs RPM package files through the local RPM/GPG environment. Use a 16-digit hexadecimal key ID or a 40- or 64-digit fingerprint. An optional `0x` or `0X` prefix is accepted. Configure the private key and passphrase in that environment before running the command.
 
 - Default: only RPMs with no parseable embedded OpenPGP signature are signed. Anything already
   signed keeps its bytes.
 - `--overwrite` requires `--sign-with` and switches to `rpm --resign` over every retained RPM.
-- Signing happens on a private same-filesystem stage copy. Each result is re-parsed to confirm the
-  embedded signature, the signature-neutral digest and NEVRA are unchanged, and rpm-md is generated
-  from the final complete bytes.
+- SOW signs a temporary copy, checks that package identity and content are unchanged, then replaces the original RPM. The indexes describe the final signed file.
 - At least one top-level RPM must remain after `--pigsty` cleanup, and `rpm` must be on `PATH`.
 
 ```console
@@ -215,19 +160,11 @@ usage error: --sign-with must be a 16, 40, or 64 hexadecimal GPG key ID/fingerpr
 
 ## Locking, staging and overwrite rebuild
 
-`create` takes a write lock on the target directory and honors `--timeout`/`--no-wait`. All metadata
-is written to a private stage and validated before publication begins. The lock coordinates SOW
-writers on the local machine; arbitrary external package mutation is unsupported.
+`create` locks the target directory while it updates the indexes. Use `--timeout` or `--no-wait` to control lock waiting.
 
-Plain create does not create a durable operation journal, rollback pre-images, or recovery trash.
-Publication consists of several single-file renames, so a crash may leave a partially replaced set of
-derived files. Re-run `sow create` with the intended current options: it discards reserved stale Plain
-temporary state and rebuilds all indexes from the packages that currently exist. `recovered` is
-always `false`; a rerun is a fresh overwrite build, not replay.
+An interruption can leave only part of the index set updated. Rerun `sow create` with the same intended options to rebuild from the current packages. Plain mode rebuilds from scratch; the result field `recovered` remains `false`.
 
-A flat directory has no whole-repository generation pointer, and RPM plus DEB entry points cannot be
-swapped in one POSIX rename. Plain therefore does not promise cross-file instantaneous atomicity. Use
-`repo_complete` as the `--pigsty` gate, or use Managed mode when transactional recovery is required.
+For `--pigsty`, expose the repository only after `repo_complete` appears. Use Managed mode when you need journaled recovery.
 
 ## Examples
 

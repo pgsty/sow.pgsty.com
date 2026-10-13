@@ -1,7 +1,7 @@
 ---
 title: "sow publish"
 linkTitle: "publish"
-description: "将当前已验证 Generation 发布到配置的 filesystem 或 R2 目标。"
+description: "将构建快照发布到文件系统或 R2 目标。"
 categories: [Command]
 tags: [cli, publish, object-storage, filesystem]
 url: "/zh/docs/command/publish/"
@@ -9,8 +9,7 @@ weight: 1500
 icon: fa-solid fa-cloud-arrow-up
 ---
 
-`sow publish` 将某个 Repository 的当前 Built Generation 交付到 `sow.yml` 的 `targets:` 中指定的
-目标。目标已经绑定 Repository 与 Provider，因此命令不接受 `--repo` 或 `--dist`。
+`sow publish` 将当前构建快照复制到 `sow.yml` 的 `targets:` 中配置的目标。目标配置指定仓库与存储类型。需要发布最新期望状态时，先完成构建。
 
 ## 语法
 
@@ -20,27 +19,31 @@ sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -
 
 | 参数 | 含义 | 默认值 |
 |---|---|---|
-| `--abort` | 放弃已对账、但尚未写入持久 commit intent 的尝试 | false |
+| `--abort` | 放弃尚未进入提交阶段的中断发布 | false |
 | `--rebind` | 确认并记录允许修改的目标名称、公共端点或缓存 TTL | false |
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
-| `-T, --timeout DUR` | 最长 Repository 等锁时间；`0` 表示无限等待 | `0` |
+| `-T, --timeout DUR` | 最长仓库等锁时间；`0` 表示无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
-| `--json` | 输出 `sow.cli/v1` Envelope | false |
+| `--json` | 输出 JSON | false |
 
 `TARGET` 必须是已配置的 `filesystem` 或 `r2` 发布目标。`--abort` 与 `--rebind` 互斥。
 
+## 发布前准备 {#安全边界}
+
+需要包含最新软件包与策略变更时，先运行 `build`。dirty 仓库仍可以发布上一个已完成的构建快照。
+
+配置目标的 Web 服务或存储桶访问权限，使 `public_endpoint` 能读取发布文件，然后运行 `sow publish TARGET`。
+
 ## 发布协议
 
-交付前，SOW 要求存在已完成的 Built Generation，并验证公开树与冻结 Generation Manifest 精确
-一致；然后按以下顺序规划并写入对象：
+SOW 先核对本地文件与已完成的构建快照清单，再按以下顺序发布：
 
-1. 不可变包体；
-2. 校验和寻址元数据；
-3. 可变协议指针；
-4. 验证并持久化 Checkpoint。
+1. 包文件；
+2. 使用独立内容 URL 的元数据；
+3. `repomd.xml`、`Release` 等客户端入口；
+4. 验证公共访问并保存发布检查点。
 
-精确对象集合、Receipt、阶段与 commit intent 都会落盘，确保中断后可以对账恢复。目标已经位于
-当前 Generation 时，重复发布是幂等空操作。
+SOW 记录进度，中断后可用同一命令继续发布。目标已包含当前构建快照时，重复运行不产生变化。
 
 ```console
 sow publish local
@@ -51,76 +54,56 @@ publication demo generation=00000000000000000005 to local is already current (no
 
 ## 重绑定可变目标配置
 
-首次成功 publish 会持久绑定 Repository、存储命名空间与 Target Identity。之后配置发生漂移时，
-SOW 会拒绝静默接受。只有诊断信息明确提示 `--rebind`，并且你已经复核变更后，才执行：
+首次发布会记录仓库与目标绑定。修改目标名称、公共地址或缓存 TTL 后，使用 `--rebind` 记录新设置并继续发布：
 
 ```bash
 sow publish prod --rebind
 ```
 
-如果改的是 `targets:` Map Key，请使用新目标名。Rebind 保留 active attempt 与 checkpoint identity，
-并追加不可变、由操作者确认的 binding revision。
+如果修改了 `targets:` 中的目标名，命令中使用新名称。
 
 | 可以修改 | 不可变；必须配置新目标 |
 |---|---|
-| 目标名称 | Repository Identity |
-| `public_endpoint` | Provider、存储 `endpoint` 或 region |
-| `max_cache_ttl` | bucket 或 `prefix` |
+| 目标名称 | 仓库身份 |
+| `public_endpoint` | 存储类型、存储 `endpoint` 或区域 |
+| `max_cache_ttl` | 存储桶或 `prefix` |
 
-Rebind 与发布使用同一组 Workspace/Repository 锁，并在数据库事务内重新核对不可变字段；它可以
-继续前滚 active commit-intent attempt。Target Maintenance 未完成时禁止改变 TTL；filesystem
-正在进行 conditional-delete 维护时禁止改变 `public_endpoint`。首次绑定必须运行普通 publish，
-不能使用 `--rebind`。
+修改 `max_cache_ttl` 前，先完成目标维护。文件系统目标有未完成的删除操作时，也需先完成删除，再修改 `public_endpoint`。首次发布到新目标时，直接运行 `sow publish TARGET`。
 
 ## Abort 与恢复
 
-`--abort` 只允许在持久 commit intent 之前使用。SOW 会对账已经创建的对象，保留后续安全判断所需
-证据，并在不继续复制或删除远端对象的前提下放弃本次尝试。
+发布中断后，重新运行 `sow publish TARGET` 继续发布。
 
-写入 commit intent 后只能前向恢复：重新运行 `sow publish TARGET`，不能使用 `--abort`。
+需要放弃本次发布时，在进入 `commit_intent` 阶段前运行 `sow publish TARGET --abort`。SOW 核对已上传的对象，记录放弃结果，并保留远端文件。进入 `commit_intent` 后，使用普通发布命令完成本次发布。
 
-包的 URL 不可变，新发布不能在同一路径覆盖成不同字节。对于旧程序留下的中断尝试，`--abort`
-要求已有远端对象保持原样。如果旧程序已经覆盖了 payload，重新运行 `publish` 仅在远端字节
-精确匹配该尝试记录的新身份时才能完成。字节不同或缺失仍会报错，恢复过程不会覆盖它们。
+已发布的包 URL 对应固定内容。内容改变时，使用新的包版本与文件名。如果远端文件与本次发布记录不符，按报告处理冲突，详见[故障处理](/zh/docs/reference/troubleshooting/)。
 
 ## 公共可见性校验
 
-Provider 存储写入成功还不够：写入 Checkpoint 之前，发布流程还要校验 canonical
-`public_endpoint`。HTTP(S) 目标以普通 GET 为最终权威；no-cache Probe 只能促进 Revalidation，
-必须由之后的普通 GET 才能通过。陈旧内容与缺失对象按 `max_cache_ttl` 重试；408、425、429 与
-5xx 使用较短的有界重试窗口。等待 Header 与 Body 空闲进度分别计时；响应超长时失败关闭。
+记录发布检查点前，SOW 会通过 `public_endpoint` 读取并验证已发布文件。HTTP(S) 校验使用普通 GET 请求。内容过期或缺失时，在 `max_cache_ttl` 范围内重试。
 
-Filesystem 可使用 `file://` 或 HTTP(S) 公共端点。执行条件删除时，`file://` 需要精确文件身份
-缺失，HTTP(S) 则需要 canonical 404/410。R2 必须使用 HTTP(S) 公共端点；R2 Target GC 仍然
-只报告候选，不执行远端删除。每次 R2 发布都会列举目标前缀，并对列出的每个对象串行发出一次
-HEAD 请求；改变目标内容的发布会执行两次。由于 R2 Target GC 从不删除对象，这项成本会随发布
-历史增长。不要手工删除被报告的对象：下一次发布要求远端前缀与记录的清单完全一致，否则以完整性
-错误失败（退出码 `5`）。
+文件系统目标支持 `file://` 或 HTTP(S) 公共地址，R2 目标要求 HTTP(S)。每次 R2 发布都会列出目标前缀并逐个用 HEAD 检查对象；有更新时执行两次清单检查。保留 R2 中的旧对象：目标 GC 只报告、不删除，后续发布还会核对远程前缀与已记录清单。
 
-## 安全边界
+## 移除已发布视图
 
-- SOW 只发布到配置目标，不接受任意目标路径。
-- 尚未构建的 Desired 变化不会进入发布。dirty Repository 因而可以发布上一个完整 Built
-  Generation；如果目标必须反映当前 Desired 状态，应先运行 `build`。
-- 布局迁移与相互矛盾的恢复证据会阻止发布；可裁决的未完成 Dist 操作会在选择源 Generation
-  之前恢复。
-- 对象顺序保证包管理器指针不会引用尚不存在的内容。
-- 发布命令不负责外部 Web Server、Bucket Policy、DNS 路由或缓存配置。
+只要目标仍在配置中，SOW 就不允许本地变更移除它已发布的入口，例如整个 Dist、RPM 架构视图或配套签名文件。
+
+需要停用该目标时，先停止向它发布，从 `sow.yml` 的 `targets:` 中删除对应配置，再运行 `sow config check`。随后可以移除本地视图。此操作保留原有远程文件与发布历史。需要发布删减后的仓库时，配置使用不同存储前缀的新目标，并将客户端切换到该目标。
 
 ## 退出行为
 
 | 代码 | 触发条件 |
 |---|---|
-| `0` | 发布完成，或目标已经是当前 Generation |
-| `1` | 文件系统、Provider、网络、验证或绑定冲突（包括必须 rebind） |
+| `0` | 发布完成，或目标已经是当前构建快照 |
+| `1` | 文件系统、存储类型、网络、验证或绑定冲突（包括必须 rebind） |
 | `2` | 用法、工作区发现或 `sow.yml` 无效 |
-| `4` | Repository 写锁不可用 |
+| `4` | 仓库写锁不可用 |
 | `5` | 本地/发布恢复证据不一致，或源不可交付 |
 | `6` | 目标不存在/不安全，或其他安全前置条件拒绝 Publish/Abort/Rebind |
 
 ## 参见
 
-- [`sow status`](/zh/docs/command/status/) 与 [`sow check`](/zh/docs/command/check/) —— 判断当前 Built Generation 是否正是准备交付的版本
-- [`sow gc`](/zh/docs/command/gc/) —— 保守的目标维护
-- [`sow.yml` 发布目标](/zh/docs/reference/config/#publication-targets) —— Provider 配置
-- [发布模型](/zh/blog/design/publication/) —— 阶段、Receipt、恢复与 Cache Grace
+- [`sow status`](/zh/docs/command/status/) 与 [`sow check`](/zh/docs/command/check/) —— 判断当前构建快照是否正是准备交付的版本
+- [`sow gc`](/zh/docs/command/gc/) —— 回收目标中不再需要的文件
+- [`sow.yml` 发布目标](/zh/docs/reference/config/#publication-targets) —— 存储类型配置
+- [发布模型](/zh/blog/design/publication/) —— 阶段、回执、恢复与缓存宽限期

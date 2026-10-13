@@ -2,9 +2,9 @@
 title: "SOW v0.1 原始计划：软件仓库的 Git"
 linkTitle: "v0.1 原始计划"
 date: 2026-07-11
-lastmod: 2026-08-28
+lastmod: 2026-10-13
 authors: [Vonng]
-description: "SOW 为什么最初选择 Git/CAS/Route/Edge 控制面，这套模型解决了什么，又为何后来围绕更小的 Repository Core 重置。"
+description: "SOW 为什么最初选择 Git/CAS/Route/Edge 控制面，这套模型解决了什么，又为何后来转为仓库引擎。"
 categories: [Design]
 tags: [history, v0.1, git, cas, publication, migration]
 url: "/zh/blog/design/v01-program/"
@@ -13,180 +13,171 @@ icon: fa-solid fa-code-branch
 draft: false
 ---
 
-> [!IMPORTANT] 历史设计记录
-> 本文描述 2026-07-11 启动、并在 2026-07-31 封存为 v0.1.0 源码基线的原始计划。
-> Git/CAS/Route/Edge 产品模型已经退役；当前行为以 [SOW 文档](/zh/docs/)和维护中的
-> [系统模型](/zh/blog/design/model/)为准。
+v0.1 计划始于 2026-07-11，并于 7 月 31 日封存为 v0.1.0。
+它计划用一个 Go 控制面替换 Pigsty 的 Makefile 与 rclone 工作流，统一管理 APT、YUM 和静态制品。
+范围包括本地状态、包历史、上游同步、渠道、视图、快照、双云发布、CDN 行为、商业访问控制和迁移。
 
-SOW 最初并不是一个小型仓库索引器。原始目标是用一个 Go 控制面，替换 Pigsty 中庞大的
-Makefile + rclone 工作流，统一管理 APT、YUM 与静态制品，覆盖本地状态、包生命周期、上游
-同步、Channel、View、Snapshot、双云发布、CDN 行为、商业访问控制、迁移、恢复与验证。
-
-当时采用的说法是：**“制品仓库的 Git”。** 这确实回应了一个真实问题：软件分发同时具有
-不可变内容、可变名称、历史、晋级、发布与回滚。问题不在这个类比完全错误，而在它诱导 SOW
-承担了过大的产品表面。
+当时的核心说法是：**“制品仓库的 Git”。** 软件分发确实需要不可变内容、可变名称、历史、晋级、
+发布与回滚。这个类比帮助描述了需求，也扩大了产品范围。
+Git/CAS/Route/Edge 模型后来退役，当前模型见[系统模型](/zh/blog/design/model/)。
 
 ## 第一版设计要解决什么
 
-旧系统已经发布了几十条被 APT、DNF、脚本与安装入口依赖的稳定 URL。替代系统既要保持这些
-URL，又要提供 Makefile 工作流难以安全表达的能力：
+旧系统已经发布了几十条稳定 URL，供 APT、DNF、脚本和安装入口使用。
+替代系统既要保留这些 URL，又要补足 Makefile 工作流难以可靠实现的能力：
 
 - 每个已接纳包体只有一个身份；
-- Desired State 与每朵云实际发布的状态分离；
-- Snapshot 与历史保留不能靠猜测哪些文件仍然存活；
-- 增量上传与 Purge 成本应与变更集成正比；
-- Metadata 准备完成、Pointer 尚未发布时崩溃，系统仍可恢复；
-- 上游索引、包签名与迁移例外都要有 Provenance；
-- 商业私有对象不能通过公共索引或 Cache Key 泄漏；
-- 兼容性必须来自真实 APT/DNF 客户端，而不只是元数据语法正确。
+- 期望状态与各云实际发布的状态分开记录；
+- 快照与历史记录明确指出哪些文件仍在使用；
+- 增量上传与缓存清理成本随变更量增长；
+- 元数据准备完成、协议指针尚未发布时发生崩溃，仍可恢复；
+- 上游索引、包签名与迁移例外都有来源记录；
+- 商业私有对象不会通过公共索引或缓存键泄漏；
+- 使用真实 APT/DNF 客户端检验兼容性。
 
-原始计划有意把这些问题视为同一套所有权系统。
+原始计划将这些需求纳入同一套所有权模型。
 
 ## v0.1 选择的模型
 
-### Git 是正典状态
+### Git 保存权威状态 {#git-是正典状态}
 
-`.sow/state` 是由内嵌 Go Git 库操作的普通 Worktree。Manifest、Ref、Provenance、配置摘要、
-Target Checkpoint 与安全标签都是 Git 内容；SQLite 只是可以重建的查询投影。
+`.sow/state` 是由内嵌 Go Git 库操作的普通工作树。
+清单、引用、来源记录、配置摘要、目标检查点和安全标签都保存在 Git 中。
+SQLite 只提供查询数据，可以从 Git 重建。
 
-这样，每次状态迁移都有持久历史，一次 Ref 更新可以成为本地 Commit Boundary。代价是：
-包管理、发布、迁移与操作意图，都必须进入同一种 Git 形状的权威模型。
+每次状态迁移都有持久历史，一次引用更新就是本地提交边界。
+这也要求包管理、发布、迁移和操作意图都采用同一种 Git 状态模型。
 
 ### CAS 拥有字节
 
-包体进入以 SHA-256 命名的不可变 Pool；公开树通过 Hardlink 指向 Pool，因此能否回收由
-Reachability 决定，而不是由文件名决定。这让本地去重与历史保留成本很低，但也要求 Pool 与
-物化树位于同一文件系统，并把 Path、Receipt 与 inode 身份变成产品契约的一部分。
+包体进入以 SHA-256 命名的不可变包池，公开树通过硬链接指向包池。
+能否回收包体取决于引用可达性。这样可以低成本地去重和保留历史，
+但包池与公开树必须位于同一文件系统，路径、回执和 inode 身份也成为产品契约的一部分。
 
 ### Ref 表达产品语义
 
-Repository、View、Snapshot、Stable、History 与每个 Target 的 Remote Ref 描述内容的意义和
-保留边界。移动一个可变 View 不会删除 Stable 或历史可达性；删除 View 只改变引用，GC 始终是
-另一项受证据约束的操作。
+Repository、View、Snapshot、Stable、History 和各目标的远端引用，描述内容的用途与保留范围。
+移动可变 View 不会删除 Stable 或历史引用。
+删除 View 只改变引用，垃圾回收仍是独立操作，执行前要检查完整引用关系。
 
-### 发布是一条 Saga
+### 每个目标分别记录发布历史 {#发布是一条-saga}
 
-Cloudflare R2 与腾讯 COS 是相互独立的 Target。每个 Target 分别准备不可变对象、持久化
-Commit Intent、移动协议 Pointer、Purge CDN、验证公共可见性，并推进自己的 Checkpoint。
-一朵云成功后，不会仅因另一朵云失败而回滚。
+Cloudflare R2 与腾讯 COS 是独立目标。
+每个目标分别准备不可变对象、持久化提交意图、移动协议指针、清理 CDN 缓存、验证公共可见性，
+并推进自己的检查点。一朵云成功后，不会仅因另一朵云失败而回滚。
 
-当时已经形成了延续至今的顺序：
+发布顺序是：
 
 ```text
 不可变包体
   -> 不可变元数据
-  -> 持久 Commit Intent
-  -> 可变协议 Pointer
+  -> 持久化提交意图
+  -> 可变协议指针
   -> 公共验证
-  -> Checkpoint
-  -> Grace
-  -> 证据门禁删除
+  -> 检查点
+  -> 缓存宽限期
+  -> 检查删除条件后回收
 ```
 
-这套顺序延续至当前 SOW。
+当前发布仍沿用这一顺序。缓存宽限期与存储服务的删除能力检查用于远端垃圾回收。
 
 ### Route 与 Edge 属于仓库正确性
 
-公共树保持旧 URL，Generation-aware Route 选择不可变 Metadata；私有对象则位于 Cloudflare
-Worker 与 EdgeOne 共享的 Edge 契约之后。鉴权必须先于 Origin 访问，Token 不得进入 Origin
-URL、Cache Key 或日志。
+公共树保留旧 URL，Route 根据 Generation（构建快照）选择不可变元数据。
+私有对象位于 Cloudflare Worker 与 EdgeOne 共享的边缘服务接口之后。
+鉴权必须先于源站访问，令牌不能进入源站 URL、缓存键或日志。
 
-这解决了机密性闭包，却也让 CDN Route、Token Verifier、Provider 部署、日志 Sink 与缓存拓扑
-都变成仓库模型的前置条件。
+这使 CDN 路由、令牌验证、服务部署、日志接收端和缓存拓扑都成为仓库模型的前置条件。
 
 ## 这套设计为什么有吸引力
 
-v0.1 具备不少强性质：
+模型为各部分规定了明确规则：
 
-- 每个持久事实都有明确 Owner；
+- 每个持久事实都有所有者；
 - 不可变字节与可变名称分离；
-- 本地与各 Remote Target 的发布状态独立可观测；
-- Pointer-last 发布让半完成工作可以恢复；
-- GC 必须计算完整 Reachability Closure；
-- Plan 与 Receipt 会重新验证，而不是盲目信任；
-- Client、Provider 与实现证据彼此独立；
-- 旧系统迁移面被当作数据，而不是口口相传的运维知识。
+- 本地与各远端目标的发布状态可以独立观察；
+- 最后发布协议指针，使未完成的工作可以恢复；
+- 垃圾回收计算完整引用关系；
+- 使用前重新验证计划与回执；
+- 分别验证客户端、存储服务和本地实现；
+- 将旧系统迁移范围记录为数据。
 
-后续产品没有抛弃这些思想，而是在删掉大量承载机制后继续保留它们。
+后续版本以更少的机制保留了这些规则。
 
 ## 为什么后来必须重置
 
 到七月底，SOW v0.1 已经包含：
 
-- 作为内部数据库协议的 Git Commit 与 Ref；
-- 全局 CAS 与 Hardlink Materialization；
-- Route、View、Snapshot、Generation、Projection、Receipt 与 Lease；
-- APT/YUM/Asset Sync 与旧系统迁移；
-- Cloud SDK、Edge Bootstrap、Provider Attestation、Purge、Token 与私有 Origin；
-- 44 份现存 ADR 文件和 112 份日期化 Evidence 报告。
+- 充当内部数据库协议的 Git 提交与引用；
+- 全局内容寻址存储与硬链接物化层；
+- Route、View、Snapshot、Generation、Projection、Receipt 和 Lease 等概念；
+- 内置 APT/YUM/静态制品同步与旧系统迁移；
+- 云 SDK、边缘服务初始化、服务身份验证、缓存清理、令牌和私有源站逻辑；
+- 44 份现存 ADR 和 112 份按日期记录的验证报告。
 
-每一项都在解决真实失败模式，但组合起来产生了几个问题。
+每一项都针对具体失败情形，但组合后产生了几个问题。
 
-第一，同一个包与公共路径被太多对象“拥有”：它同时是 CAS Object、Manifest Entry、View
-Member、Materialized Route、Snapshot Reference 与 Remote Target Object。
+第一，同一个包与公共路径被过多对象描述。它同时是 CAS 对象、清单条目、View 成员、
+物化 Route、Snapshot 引用和远端目标对象。
 
-第二，本地软件仓库生成与 Cloud/Edge 生命周期强耦合。只想构建一个 YUM 或 APT 仓库的用户，
-也要承担商业访问控制和分布式发布的概念成本。
+第二，本地仓库生成与云端、边缘服务生命周期耦合。只想构建 YUM 或 APT 仓库的用户，
+也要理解商业访问控制和分布式发布。
 
-第三，迁移计划变成了永久产品子系统。旧拓扑、Make Target、CDN 行为和 Provider 例外在迁移
-时很重要，却不应永久进入软件仓库抽象。
+第三，迁移计划变成了永久子系统。旧拓扑、Make 目标、CDN 行为和服务例外在切换时有用，
+却不应长期留在仓库模型中。
 
-最后，在 Hostile Writer 与 Crash 条件下恢复每条派生 Path，需要的 Identity、Journal、
-Quarantine 与 Retirement 机制，已经超过核心任务值得承担的复杂度。
+最后，为了在恶意并发写入和崩溃后恢复每条派生路径，系统引入了越来越多的身份检查、日志、
+隔离与退役机制，复杂度超过了仓库核心任务的需要。
 
-Upstream Sync 与 Channel Promotion 也是一次有意的范围裁剪。V1 已为 Package Fetch 留下真实
-Streaming、Fuzz、URL 与 Proof-order 证据，但 Acquisition 会引入自己的 Policy、Retry、
-Provenance 与 Remote Ownership。重置把包获取改为外部输入问题，让 SOW 可以拥有 Repository
-Admission 与 Publication，而不必同时成为万能 Mirror Orchestrator。
+上游同步与渠道晋级也被移出产品。V1 已经验证过包获取的流式处理、异常输入、URL 和校验顺序，
+但下载流程会引入独立的策略、重试、来源与远端所有权模型。
+重置将包获取交给外部工具，让 SOW 专注于包接纳、仓库管理和发布。
 
 ## 重置后保留下来的东西
 
-| v0.1 教训 | 当前维护形态 |
+| v0.1 教训 | 当前形态 |
 |---|---|
-| 每个持久事实只有一个 Owner | [系统模型](/zh/blog/design/model/)中的 Repository 与 Target-prefix 所有权 |
-| 正典数据与投影不同 | 一个 `pool/` 加纯元数据 `dists/` |
-| 包体先准备，Pointer 最后提交 | [发布与恢复](/zh/blog/design/publication/) |
-| Commit 后只能前向恢复 | Managed Operation 与 Publication Journal |
-| Plan 与 Path 都是不可信输入 | 精确身份、Containment 与 Rebind 检查 |
-| 删除需要完整证据 | 引用闭包、Grace、Absence 与 Provider Capability |
-| 生成的 Server Config 是派生状态 | 完整 Repository Root 是 Hosting Unit，Serving 仍由运维者显式配置 |
-| 兼容性是一张矩阵 | [平台与集成](/zh/docs/reference/compatibility/) |
-| 历史证据不会自动升级 | 日期化 Design 与 Release 记录 |
+| 每个持久事实只有一个所有者 | [系统模型](/zh/blog/design/model/)中的仓库与目标前缀所有权 |
+| 包原件与生成索引分开管理 | 一个 `pool/` 加纯元数据 `dists/` |
+| 包体先准备，协议指针最后提交 | [发布与恢复](/zh/blog/design/publication/) |
+| 提交后只能前向恢复 | Managed 操作日志与发布日志 |
+| 使用前验证计划与路径 | 精确身份、路径范围和重新绑定检查 |
+| 删除前检查完整证据 | 引用关系与对象身份；远端删除还检查缓存宽限期与存储服务能力 |
+| 生成的服务端配置是派生状态 | 完整仓库根目录是托管单位，服务配置由运维者管理 |
+| 兼容性需要逐项验证 | [平台与集成](/zh/docs/reference/compatibility/) |
+| 历史结果与版本绑定 | 按日期记录的设计与发布文章 |
 
 ## 被淘汰的东西
 
 - Git 产品状态与“SQLite 只是可丢弃缓存”的模型；
-- 跨产品 CAS 与 Hardlink 物化层；
+- 跨产品 CAS 与硬链接物化层；
 - Route/View/Snapshot 公共命令模型；
-- 生成的 Nginx Include、Route Receipt 与 V1 Serving 控制状态；
-- 内置 Upstream Sync、Promote 与旧 Make Target 迁移；
-- 把 Edge Token Entitlement 与私有 Origin 当作仓库前置条件；
-- 多云发布控制面与 Provider Bootstrap/Attestation；
-- V1 专属 Projection Receipt、Lease、Quarantine 命令与恢复表面。
+- 生成的 Nginx 配置片段、Route 回执与 V1 服务控制状态；
+- 内置上游同步、晋级与旧 Make 目标迁移；
+- 作为仓库前置条件的边缘令牌权限与私有源站拓扑；
+- 多云发布控制面、服务初始化与身份验证系统；
+- V1 专用投影回执、租约、隔离命令和恢复接口。
 
-一些实现思想后来以更小的形式回归，但所有权边界已经改变：当前 SOW 首先是 Repository
-Engine，而不是试图拥有周边所有问题的软件分发平台。
+部分实现思想后来在更小的范围内回归。SOW 管理仓库及其发布，包获取与服务托管仍由外部工具负责。
 
 ## 时间线
 
 | 日期 | 里程碑 |
 |---|---|
-| 2026-07-11 | Goal、Brainstorm、技术调研、客户端与规模基线 |
-| 2026-07-12 | Git/CAS/发布核心契约与首批协议/Provider 证据 |
-| 2026-07-13–16 | 包信任、事务、旧拓扑与迁移闭包 |
-| 2026-07-17–20 | Provider Bootstrap、Edge 机密性、删除能力与输入上限 |
-| 2026-07-22–29 | Path Identity、Hostile Writer、Quarantine 与 Residue Recovery 强化 |
-| 2026-07-30–31 | Clean-room MVP 证据与 v0.1.0 源码封存 |
-| 2026-08-01 起 | Plain/Managed 重置，并最终移除 V1 Runtime |
+| 2026-07-11 | 目标、构思、技术调研、客户端与规模基线 |
+| 2026-07-12 | Git/CAS/发布核心契约与首批协议、存储服务验证 |
+| 2026-07-13–16 | 包信任、事务、旧拓扑与迁移验证 |
+| 2026-07-17–20 | 服务初始化、边缘机密性、删除能力与输入上限 |
+| 2026-07-22–29 | 路径身份、恶意并发写入、隔离与残留恢复 |
+| 2026-07-30–31 | 从空环境验证最小可用产品，封存 v0.1.0 源码 |
+| 2026-08-01 起 | Plain/Managed 重置，随后移除 V1 运行时 |
 
 ## 第一手资料与后续记录
 
-不可变的 [v0.1.0 `docs/` 树](https://github.com/pgsty/sow/tree/v0.1.0/docs)保留了原始
+[v0.1.0 `docs/` 树](https://github.com/pgsty/sow/tree/v0.1.0/docs)保留了原始
 [架构契约](https://github.com/pgsty/sow/blob/v0.1.0/docs/architecture.md)、
 [需求追踪](https://github.com/pgsty/sow/blob/v0.1.0/docs/requirements-traceability.md)、
-[迁移材料](https://github.com/pgsty/sow/tree/v0.1.0/docs/migration)、ADR 与 Evidence。
-这些文件用于解释历史实现，不能覆盖本站维护中的历史叙事或当前产品文档。
+[迁移材料](https://github.com/pgsty/sow/tree/v0.1.0/docs/migration)、ADR 和历史验证报告。
 
 接下来可阅读 [v0.1 决策账本](/zh/blog/design/v01-decisions/)、
-[v0.1 证据账本](/zh/blog/design/v01-evidence/)与
-[v0.2 重置](/zh/blog/design/v02-reset/)。
+[v0.1 证据账本](/zh/blog/design/v01-evidence/)与 [v0.2 重置](/zh/blog/design/v02-reset/)。

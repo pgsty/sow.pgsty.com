@@ -10,11 +10,11 @@ icon: fa-solid fa-hammer
 ---
 
 [`pgsty/infra-pkg`](https://github.com/pgsty/infra-pkg) 是 Pigsty Infra 软件包的上游构建源码。
-本教程假设双架构 RPM 与 DEB 已经构建完成，只处理后半程：从一堆包开始，用 SOW 建成真正可消费、可维护的 `infra` 仓库。
+本教程使用已构建的 x86-64 与 ARM64 RPM、DEB，创建包含滚动频道、稳定发布与月度快照的 `infra` 仓库。先安装 SOW、`jq` 与 Docker。安装示例使用 `pg-exporter`；请包含该包，以及客户端镜像中尚未安装的依赖。
 
 ## 1. 把包集中到 ~/repo
 
-本教程固定使用 `~/repo`，不再为每条路径定义环境变量。先把已有包复制进两个输入目录：
+为本工作区使用新的 `~/repo` 目录。从 `infra-pkg` 源码目录复制软件包到两个输入目录：
 
 ```bash
 mkdir -p ~/repo/packages/rpm ~/repo/packages/deb
@@ -22,27 +22,13 @@ cp ~/pgsty/infra-pkg/dist/rpm/*.rpm ~/repo/packages/rpm/
 cp ~/pgsty/infra-pkg/dist/deb/*.deb ~/repo/packages/deb/
 ```
 
-先确认四个“格式 × 架构”象限都有真实包体：
+输入需同时包含 x86-64 与 ARM64 包。第 3 步会按包内元数据检查格式与架构。
 
-```bash
-find ~/repo/packages/rpm -maxdepth 1 -type f -name '*.x86_64.rpm' | wc -l
-find ~/repo/packages/rpm -maxdepth 1 -type f -name '*.aarch64.rpm' | wc -l
-find ~/repo/packages/deb -maxdepth 1 -type f -name '*_amd64.deb' | wc -l
-find ~/repo/packages/deb -maxdepth 1 -type f -name '*_arm64.deb' | wc -l
-```
+<span id="2-创建-infra-repository-与两个-dist"></span>
 
-四个结果都必须大于零。此时目录只有输入包池：
+## 2. 创建 infra 仓库与两个 Dist
 
-```text
-~/repo/
-└── packages/
-    ├── rpm/                         # x86_64 + aarch64 RPM
-    └── deb/                         # amd64 + arm64 DEB
-```
-
-## 2. 创建 infra Repository 与两个 Dist
-
-初始化 Workspace，并创建名为 `infra` 的 Repository：
+初始化工作区，并创建名为 `infra` 的仓库：
 
 ```bash
 sow init ~/repo
@@ -52,15 +38,7 @@ sow dist new rpm --format rpm -r infra
 sow dist new deb --format deb -r infra
 ```
 
-现在模型已经确定：
-
-```text
-Repository: infra
-├── Dist: rpm    format=rpm    policy=latest
-└── Dist: deb    format=deb    policy=latest
-```
-
-打开 `~/repo/sow.yml`，把配置整理为：
+在 `~/repo/sow.yml` 中给两个 Dist 设置 `limit: 1`：
 
 ```yaml
 schema: sow/v3
@@ -77,16 +55,15 @@ repos:
 ```
 
 `limit: 1` 按“包名 + 原生架构”只保留最新一个版本。因此 `rpm` 与 `deb` 就是两个滚动更新的
-latest channel；它们仍会同时保留 x86-64 与 ARM64 两个架构。
+最新版本频道；它们仍会同时保留 x86-64 与 ARM64 两个架构。
 
 ```bash
 sow config check
-sow config show --all -r infra
 ```
 
 ## 3. 一次性导入并构建
 
-先更新 Desired Membership，最后只构建一次：
+先导入两种格式的软件包，再统一构建索引：
 
 ```bash
 cd ~/repo
@@ -96,7 +73,7 @@ sow build -r infra -d rpm -d deb
 sow check -r infra
 ```
 
-`sow check` 返回 `0`，才算初始化完成。再核对 SOW 从包头读出的真实格式与架构：
+`sow check` 成功后，列出 SOW 从包内元数据读出的格式与架构：
 
 ```bash
 sow ls -r infra -d rpm -d deb --json |
@@ -117,12 +94,6 @@ SOW 使用规范化架构名，因此 DEB 的 `amd64/arm64` 在这里显示为 `
 
 ## 4. 看懂生成的目录
 
-打印实际目录：
-
-```bash
-find ~/repo -maxdepth 6 -type d | LC_ALL=C sort
-```
-
 关键结构应当是：
 
 ```text
@@ -132,7 +103,7 @@ find ~/repo -maxdepth 6 -type d | LC_ALL=C sort
 ├── packages/                          # 原始输入包池，可自行归档
 │   ├── rpm/
 │   └── deb/
-└── infra/                             # 完整的公开 Repository Root
+└── infra/                             # 完整的公开仓库根目录
     ├── pool/                          # RPM 与 DEB 共享的单副本包池
     └── dists/
         ├── rpm/
@@ -145,29 +116,20 @@ find ~/repo -maxdepth 6 -type d | LC_ALL=C sort
                 └── binary-arm64/
 ```
 
-这里有一个容易混淆、但必须记住的路径规则：SOW 的 Dist 固定放在 `dists/` 下。因此逻辑上的
-`infra/rpm` 与 `infra/deb`，真实视图路径分别是 `/infra/dists/rpm/` 和 `/infra/dists/deb/`；
-包体则统一放在 `/infra/pool/`。发布或挂载时必须使用完整的 `~/repo/infra`，不能只拿走某个 Dist。
+SOW 把所有 Dist 放在 `dists/` 下，把软件包放在 `pool/` 下。发布或挂载完整的 `~/repo/infra` 目录树，让每个 Dist 都能访问其软件包。
 
 ## 5. 用 Nginx 只读服务仓库
 
-使用官方 `nginx:alpine` 镜像，把 Repository Root 只读挂载到 `/infra`：
+使用官方 `nginx:alpine` 镜像，把仓库根目录只读挂载到 `/infra`：
 
 ```bash
 docker network create --internal infra-lab
 docker run --detach \
   --name infra-nginx \
   --network infra-lab \
-  --publish 8080:80 \
+  --publish 127.0.0.1:8080:80 \
   --volume "$HOME/repo/infra:/usr/share/nginx/html/infra:ro" \
   nginx:alpine
-```
-
-直接检查两种索引入口：
-
-```bash
-curl -fsS http://127.0.0.1:8080/infra/dists/rpm/x86_64/repodata/repomd.xml | head
-curl -fsS http://127.0.0.1:8080/infra/dists/deb/Release | head
 ```
 
 Nginx 只看得到 `~/repo/infra`，既看不到 `sow.yml` 与 `.sow/`，也无法修改仓库。
@@ -203,7 +165,7 @@ RPM 的 `baseurl` 必须落到具体架构视图。`$basearch` 会由 dnf 展开
 
 ## 7. 在 Ubuntu 24.04 中只用 infra 安装 DEB
 
-APT 的 URI 指向 Repository Root，`Suites` 才是 Dist 名 `deb`：
+APT 的 URI 指向仓库根目录，`Suites` 才是 Dist 名 `deb`：
 
 ```bash
 docker run --rm --interactive --network infra-lab ubuntu:24.04 bash -s <<'UBUNTU'
@@ -227,16 +189,14 @@ command -v pg_exporter
 UBUNTU
 ```
 
-本教程使用隔离 HTTP 仓库，所以临时关闭了验签。正式服务应配置 RPM/APT 元数据签名，并移除
-`gpgcheck=0` 与 `Trusted: yes`。
+本例使用未签名仓库。按[仓库签名](/zh/docs/tutorial/signing/)配置后，为 RPM 元数据启用 `repo_gpgcheck=1`，为 APT 配置 `Signed-By`。RPM 包也有签名时，再启用 `gpgcheck=1`。从已签名 APT 源中删除 `Trusted: yes`。
 
-Docker 默认验证宿主机架构。若要完成四格运行矩阵，分别给两条 `docker run` 增加
-`--platform linux/amd64` 与 `--platform linux/arm64` 后各跑一次；跨架构运行需要 Docker 的
-binfmt/QEMU 支持。仓库清单检查与客户端安装检查是两个独立门禁。
+默认情况下，Docker 容器使用宿主机架构。需要测试另一架构时，给对应的 `docker run`
+增加 `--platform linux/amd64` 或 `--platform linux/arm64`；跨架构运行需要 binfmt/QEMU 支持。
 
 ## 8. 日常维护：添加一个新版本
 
-更新仓库的正常动作是 `add`，不是先删除旧包。假设已经拿到新版 `pg-exporter` 的四个包体：
+更新仓库时直接执行 `add`。假设已经拿到新版 `pg-exporter` 的四个软件包：
 
 ```bash
 cp ~/pgsty/infra-pkg/dist/rpm/pg-exporter-*.rpm ~/repo/packages/rpm/
@@ -249,16 +209,12 @@ sow build -r infra -d rpm -d deb
 sow check -r infra
 ```
 
-因为 latest Dist 配了 `limit: 1`，新版本胜出后，旧版本会自动退出该 Dist 的 Desired Membership。
-旧字节不会被立即删除，也不会因为以后放宽策略而自动回来。
+因为 latest Dist 配了 `limit: 1`，新版本胜出后，旧版本会自动退出该 Dist 的成员集合。
+旧包文件不会被立即删除，也不会因为以后放宽策略而自动回来。
 
 可以重新运行第 6、7 节的客户端，先 `makecache/update`，再安装或升级，完成更新验收。
 
-> [!WARNING] 删除只用于硬订正
-> 正常发布不要先 `sow rm`。如果某个错误包必须紧急撤回，先用 `sow ls -r infra -d rpm --json`
-> 或对应的 `-d deb` 找到精确 SHA-256，
-> 再依次执行 `sow rm sha256:... -r infra -d rpm --check` 与不带 `--check` 的同一命令。
-> `rm` 只删除 Dist Membership，pool 字节仍由保守的 `sow gc` 独立回收；不要用裸包名误删所有版本与架构。
+撤下错误软件包时，用 `sow ls -r infra -d rpm --json` 找到其 SHA-256。先执行 `sow rm sha256:DIGEST -r infra -d rpm --check` 预览，再去掉 `--check` 执行。DEB 使用 `-d deb`。SHA-256 引用选中一个包对象；裸包名会选中其全部版本与架构。未使用的包池文件由 `sow gc` 单独回收。
 
 ## 9. 两层保留策略：latest 与 stable
 
@@ -268,7 +224,7 @@ sow check -r infra
 cd ~/repo
 sow dist new rpm-stable --format rpm -r infra
 sow dist new deb-stable --format deb -r infra
-sow config show --all -r infra -d rpm-stable -d deb-stable
+sow config show -r infra -d rpm-stable -d deb-stable
 ```
 
 新 Dist 的默认 `limit` 是 `0`，表示保留所有版本。最终策略是：
@@ -280,17 +236,16 @@ sow config show --all -r infra -d rpm-stable -d deb-stable
 | `rpm-stable` | RPM | 0 | 累积所有已晋升 RPM |
 | `deb-stable` | DEB | 0 | 累积所有已晋升 DEB |
 
-注意：`stable` 不是把“包池里的所有历史”自动放回来，而是从现在开始，累积每次明确晋升的版本。
+`stable` 从创建后开始累积每次明确晋升的版本。
 
 ## 10. 把 latest 晋升到 stable
 
-SOW 没有独立的 `promote` 命令。当前可靠做法是先冻结写入并导出源 Dist 的精确 Membership，
-再把这些对象加入目标 Dist。输入直接取自 `infra/pool`；SOW 会校验并复用已有 Package Object，
-不会重新打包，也不会在 pool 中复制第二份包体。
+把源 Dist 的包池文件加入目标 Dist，即可晋升软件包。SOW 校验并复用已有包对象，不增加第二份文件。导出清单前暂停其他仓库写入任务，晋升完成后再恢复。
 
 先确保源状态干净，并保存本次晋升清单：
 
 ```bash
+set -euo pipefail
 cd ~/repo
 sow check -r infra
 mkdir -p ~/repo/manifests
@@ -301,12 +256,12 @@ sow ls -r infra -d deb --json |
   jq -r '.result.packages[].pool_path' > ~/repo/manifests/deb-latest-202608.list
 ```
 
-在晋升结束前暂停对 `rpm` 与 `deb` 的写入，然后复用这些 pool 对象：
+把清单中的包池对象加入 stable Dist：
 
 ```bash
 cd ~/repo
 (
-  set -e
+  set -euo pipefail
   while IFS= read -r pool_path; do
     sow add "$HOME/repo/infra/$pool_path" -r infra -d rpm-stable --skip
   done < ~/repo/manifests/rpm-latest-202608.list
@@ -331,12 +286,13 @@ cd ~/repo
 cd ~/repo
 sow dist new rpm-202608 --format rpm -r infra
 sow dist new deb-202608 --format deb -r infra
-sow config show --all -r infra -d rpm-202608 -d deb-202608
+sow config show -r infra -d rpm-202608 -d deb-202608
 ```
 
-在快照窗口内暂停 stable 写入，先把其精确 Membership 固化为清单：
+创建快照期间，暂停其他仓库写入任务。先保存 stable 的包清单：
 
 ```bash
+set -euo pipefail
 sow check -r infra
 sow ls -r infra -d rpm-stable --json |
   jq -r '.result.packages[].pool_path' > ~/repo/manifests/rpm-stable-202608.list
@@ -349,7 +305,7 @@ sow ls -r infra -d deb-stable --json |
 ```bash
 cd ~/repo
 (
-  set -e
+  set -euo pipefail
   while IFS= read -r pool_path; do
     sow add "$HOME/repo/infra/$pool_path" -r infra -d rpm-202608 --skip
   done < ~/repo/manifests/rpm-stable-202608.list
@@ -363,39 +319,29 @@ cd ~/repo
 )
 ```
 
-把这次已验证的完整 Repository Generation 也加入保留集合，防止后续 GC 把它当作不可达历史处理：
+如需在将来删除快照 Dist 后仍保留这次构建，另外记录当前仓库构建快照：
 
 ```bash
 sow retain add "$(sow status -r infra --json | jq -r '.result.built_generation')" -r infra
 sow retain ls -r infra
 ```
 
-`retain` 保留的是整个 Repository Generation，用于恢复与 GC 安全根；客户端可见的固定 URL 仍由
-`rpm-202608` 与 `deb-202608` 两个 Dist 提供。SOW 尚不强制快照 Dist 只读，因而创建后不再对它们
-执行 `add` 或 `rm` 是维护规约的一部分。
+`retain` 保存本次构建的元数据，并防止相关包文件被垃圾回收。客户端仍通过快照 Dist 访问。
+SOW 不会将这些 Dist 设为只读；创建后保留其成员与生效配置，内容才会固定。
 
 ## 12. 客户端地址总表
 
-同一个 Nginx 与同一份 `infra/pool` 支撑所有 channel：
+同一个 Nginx 与同一份 `infra/pool` 支撑所有频道：
 
-| Channel | dnf `baseurl` | APT `URIs` / `Suites` |
+| 频道 | dnf `baseurl` | APT `URIs` / `Suites` |
 |---|---|---|
 | latest | `http://infra-nginx/infra/dists/rpm/$basearch/` | `http://infra-nginx/infra` / `deb` |
 | stable | `http://infra-nginx/infra/dists/rpm-stable/$basearch/` | `http://infra-nginx/infra` / `deb-stable` |
 | 2026-08 | `http://infra-nginx/infra/dists/rpm-202608/$basearch/` | `http://infra-nginx/infra` / `deb-202608` |
 
-最终验收：
+用 `sow dist ls -r infra` 查看全部六个 Dist。
 
-```bash
-cd ~/repo
-sow dist ls -r infra
-sow status -r infra
-sow check -r infra
-```
-
-到这里，我们得到的不是一次性演示目录，而是一个可以继续收包、晋升与做月度快照的真实 Infra
-Repository：`rpm/deb` 负责快速更新，`rpm-stable/deb-stable` 负责积累正式历史，月度 Dist 提供固定入口，
-所有视图复用同一份不可变包体。
+滚动 Dist 保留最新软件包，stable Dist 累积已晋升版本，月度 Dist 保留选定快照。所有视图共用同一个包池。
 
 实验结束后可停止临时服务：
 

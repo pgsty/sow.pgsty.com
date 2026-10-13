@@ -1,7 +1,8 @@
 ---
 title: SOW Blog
 linkTitle: Blog
-description: Release notes and project news
+description: Release notes, design decisions, and project news
+url: "/blog/"
 weight: 40
 type: blog
 sidebar_root_for: self
@@ -33,5 +34,4 @@ cascade:
 icon: fa-solid fa-blog
 ---
 
-Release notes, design notes, and project news for SOW — the self-contained APT / YUM
-package repository manager by Pigsty.
+Release notes, design notes, and project news for SOW, Pigsty's APT and YUM package repository manager.

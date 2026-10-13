@@ -1,7 +1,7 @@
 ---
 title: "sow status"
 linkTitle: "status"
-description: "Read Repository convergence, readiness, pending payload, recent Operation, and lock state without deep verification."
+description: "Read repository state, pending data, and lock activity."
 categories: [Command]
 tags: [cli, managed, audit]
 url: "/docs/command/status/"
@@ -9,8 +9,7 @@ weight: 1100
 icon: fa-solid fa-gauge-high
 ---
 
-`sow status` is the cheap Repository health query. It reads state but does not hash files, verify
-signatures, recover Operations, build metadata, or take the write lock.
+`sow status` reports whether a Repository needs a build, how much pending data it holds, and whether a writer is active. It reads stored state without hashing package files. Use [`sow check`](/docs/command/check/) to verify file contents.
 
 ## Synopsis
 
@@ -23,22 +22,18 @@ sow status [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json]
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a Repository | [selection rules](/docs/command/#repository-selection) |
 | `-d, --dist NAME` | Restrict status to these Dists; repeatable | all Dists |
-| `--json` | Emit the `sow.cli/v1` envelope | false |
+| `--json` | Output JSON | false |
 
 ## Repository states
 
-Every Repository tracks a Desired Revision in SQLite and the Built Generation represented by its
-public `dists/` tree.
+SOW records the intended package set as Desired state and the last build as a Built Generation.
 
-| State | Meaning | Public view |
+| State | Meaning | Next step |
 |---|---|---|
-| `clean` | Desired state matches Built state | current, complete Generation |
-| `dirty` | Desired state is ahead, commonly after `--skip` or a config change | previous complete Generation |
-| `recovering` | A non-terminal Operation must be recovered by the next write command | last completed protocol pointer |
-| `error` | Automatic recovery cannot choose safely | last completed view; no overwrite attempted |
-
-Dirty never means a half-written repository. Readers see either the old complete view or the new
-complete view because protocol pointers are switched last.
+| `clean` | Desired state matches Built state | Run `check` before copying the Repository |
+| `dirty` | Desired and Built state differ, commonly after `--skip` or a config change | Run `build` to apply the changes |
+| `recovering` | A local Repository operation was interrupted | Run `build` to recover it |
+| `error` | State, files, or recovery records need attention | Read `dirty_reasons`, then run `check` and `log` |
 
 ## Output
 
@@ -71,15 +66,11 @@ The JSON result additionally includes `dirty_reasons` and the most recent Operat
 }
 ```
 
-`ready_to_copy=false` is a hard warning. `true` is only a cheap state result, not a byte-level proof;
-run [`sow check`](/docs/command/check/) before delivery.
+`ready_to_copy` summarizes the recorded state. When it is false, `dirty_reasons` explains why. [`sow check`](/docs/command/check/) performs the file-content validation.
 
-## Read-only contract
+## Reading stored state {#read-only-contract}
 
-`status` never migrates or repairs state. If the Repository database cannot be read safely,
-the command exits `5`; run the maintenance command named by the diagnostic before retrying. In
-particular, back up and run [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) for every
-v0.3 or v0.4 Repository before reading it with SOW 0.5 and its schema v13.
+`status` reports stored state without migrating or repairing it. It can read database schemas v6, v12, and the current v13. Unsupported or unreadable state returns `5`. Before writing to an older Workspace, back it up and run [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) for each Repository.
 
 ## Exit behavior
 
@@ -96,7 +87,7 @@ should inspect the structured state rather than treating those conditions as com
 
 ## See also
 
-- [`sow build`](/docs/command/build/) — converge a dirty Repository
-- [`sow check`](/docs/command/check/) — use a full integrity/readiness gate
+- [`sow build`](/docs/command/build/) — build pending Repository changes
+- [`sow check`](/docs/command/check/) — validate the repository before delivery
 - [`sow log`](/docs/command/log/) — inspect the recent Operation reported here
 - [Transactions & Recovery](/docs/feature/transactions/) — state transitions and pointer safety

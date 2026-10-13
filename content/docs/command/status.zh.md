@@ -1,7 +1,7 @@
 ---
 title: "sow status"
 linkTitle: "status"
-description: "快速读取 Repository 的收敛、可交付、待处理包体、最近 Operation 与锁状态。"
+description: "查看仓库状态、待构建数据与锁占用情况。"
 categories: [Command]
 tags: [cli, managed, audit]
 url: "/zh/docs/command/status/"
@@ -9,8 +9,7 @@ weight: 1100
 icon: fa-solid fa-gauge-high
 ---
 
-`sow status` 是低成本的 Repository 状态查询。它读取状态，但不哈希文件、不验签、不恢复
-Operation、不构建元数据，也不获取写锁。
+`sow status` 显示仓库是否需要构建、待构建数据量及写锁占用情况。它读取已记录状态，不扫描包文件内容。需要验证文件内容时，使用 [`sow check`](/zh/docs/command/check/)。
 
 ## 语法
 
@@ -21,23 +20,20 @@ sow status [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json]
 | 参数 | 含义 | 默认值 |
 |---|---|---|
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
-| `-r, --repo NAME` | 选择 Repository | [选择规则](/zh/docs/command/) |
+| `-r, --repo NAME` | 选择仓库 | [选择规则](/zh/docs/command/) |
 | `-d, --dist NAME` | 只查看指定 Dist；可重复 | 全部 Dist |
-| `--json` | 输出 `sow.cli/v1` Envelope | false |
+| `--json` | 输出 JSON | false |
 
-## Repository 状态
+## 仓库状态 {#repository-状态}
 
-每个 Repository 同时跟踪 SQLite 中的 Desired Revision，以及公开 `dists/` 树对应的
-Built Generation。
+SOW 记录期望的软件包集合，以及上一次构建完成的构建快照。
 
-| 状态 | 含义 | 公开视图 |
+| 状态 | 含义 | 下一步 |
 |---|---|---|
-| `clean` | Desired 与 Built 一致 | 当前且完整的 Generation |
-| `dirty` | Desired 已领先，常见于 `--skip` 或配置变化之后 | 上一个完整 Generation |
-| `recovering` | 存在非终态 Operation，下一条写命令必须先恢复 | 上一个已完成的协议指针 |
-| `error` | 自动恢复无法安全裁决 | 保留上一个完整视图，不尝试覆盖 |
-
-dirty 不代表仓库只写了一半。协议指针最后切换，因此读者看到的始终是完整旧视图或完整新视图。
+| `clean` | 期望状态与已构建状态一致 | 复制仓库前运行 `check` |
+| `dirty` | 两种状态不同，常见于 `--skip` 或配置变化之后 | 运行 `build` 应用变更 |
+| `recovering` | 本地仓库操作被中断 | 运行 `build` 恢复 |
+| `error` | 状态、文件或恢复记录需要处理 | 查看 `dirty_reasons`，运行 `check` 与 `log` |
 
 ## 输出
 
@@ -46,10 +42,10 @@ sow status -r pgsql
 repository=pgsql status=dirty ready_to_copy=false revision=4 generation=3 dirty_dists=trixie pending=4/2326 locked=false
 ```
 
-人类可读输出包含 Repository 状态、`ready_to_copy`、Desired Revision、Built Generation、
+人类可读输出包含仓库状态、`ready_to_copy`、期望状态修订号、构建快照、
 受影响 Dist、待处理对象数量/字节数与写锁状态。
 
-JSON 结果还包含 `dirty_reasons` 与最近一次 Operation：
+JSON 结果还包含 `dirty_reasons` 与最近一次操作记录：
 
 ```json
 {
@@ -65,14 +61,11 @@ JSON 结果还包含 `dirty_reasons` 与最近一次 Operation：
 }
 ```
 
-`ready_to_copy=false` 是明确警告；`true` 只是廉价状态判断，并非字节级完整性证明。交付前应运行
-[`sow check`](/zh/docs/command/check/)。
+`ready_to_copy` 汇总已记录的状态。为 false 时，`dirty_reasons` 给出原因。文件内容由 [`sow check`](/zh/docs/command/check/) 校验。
 
-## 只读契约
+## 读取行为 {#只读契约}
 
-`status` 不迁移也不修复状态。Repository 数据库无法安全读取时，命令退出 `5`；请先执行
-诊断信息明确指出的维护命令，再重新查询。v0.3 或 v0.4 Repository 使用 0.5 读取前必须先备份，
-再逐个执行 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)，升级到 Schema v13。
+`status` 读取状态，不迁移或修复数据库。它可以读取 schema v6、v12 与当前 v13 数据库。不支持或无法读取的状态返回 `5`。对旧工作区执行写操作前，先备份，再逐个运行 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。
 
 ## 退出行为
 
@@ -81,15 +74,15 @@ JSON 结果还包含 `dirty_reasons` 与最近一次 Operation：
 
 | 代码 | 触发条件 |
 |---|---|
-| `0` | Repository 状态可读 |
+| `0` | 仓库状态可读 |
 | `1` | 运行时 I/O 错误 |
-| `2` | 用法错误、未发现工作区或隐式 Repository 选择有歧义 |
+| `2` | 用法错误、未发现工作区或隐式仓库选择有歧义 |
 | `5` | 状态库不可读或不一致 |
-| `6` | 显式指定的 Repository 或 Dist 未配置 |
+| `6` | 显式指定的仓库或 Dist 未配置 |
 
 ## 参见
 
-- [`sow build`](/zh/docs/command/build/) —— 收敛 dirty Repository
-- [`sow check`](/zh/docs/command/check/) —— 完整的完整性/可交付门禁
-- [`sow log`](/zh/docs/command/log/) —— 查看这里报告的最近 Operation
+- [`sow build`](/zh/docs/command/build/) —— 构建仓库的待处理变更
+- [`sow check`](/zh/docs/command/check/) —— 检查文件完整性
+- [`sow log`](/zh/docs/command/log/) —— 查看这里报告的最近操作记录
 - [事务与恢复](/zh/docs/feature/transactions/) —— 状态变化与指针安全

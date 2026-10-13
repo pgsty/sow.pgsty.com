@@ -8,18 +8,18 @@ sections:
 hero:
   eyebrow: Software Object Warehouse
   title_lines:
-    - Build Package Repos
-    - Ship What Changed
+    - Build package repositories
+    - Publish what changed
   title_size: 4rem
-  lead: Create YUM and APT indexes from local RPM and DEB packages. Use Plain mode for an existing package directory, or Managed mode for package policy, snapshots, signing, and incremental publication.
+  lead: Build YUM and APT repositories from local RPM and DEB files. Index an existing directory with `sow create`. Use a Managed workspace to select packages, sign metadata, keep snapshots, and publish updates.
   note: SOW 0.5.0 · Linux + macOS · RPM + DEB · Apache-2.0
   image:
     light: img/sow-architecture-light.svg
     dark: img/sow-architecture-dark.svg
     alt: >-
-      SOW Managed mode: local .rpm and .deb files enter one package pool that
-      stores each package body once, the pool is projected as YUM and APT
-      repository views that hold metadata only, and publication uploads the
+      SOW Managed mode: local .rpm and .deb files enter a repository's package pool,
+      which stores each package body once. YUM and APT views share that pool
+      and hold their own metadata. Publication uploads the
       changed objects alone to a filesystem or Cloudflare R2 target.
   media:
     # The hero carries an architecture diagram rather than an emblem, so the
@@ -44,37 +44,35 @@ hero:
       style: ghost
 
 capabilities:
-  eyebrow: Core capabilities
-  title: Flat or Managed
-  text: One command builds a local repository; a Managed workspace keeps membership, generations, and publication history.
+  eyebrow: Two ways to build
+  title: Choose Plain or Managed
+  text: Plain mode indexes the packages in a directory. Managed mode tracks package selection, builds, and publication.
   items:
     - ref: 01 / CREATE
-      title: Create repo in one command
+      title: Index a package directory
       url: docs/command/create/
       motto: Point SOW at a directory of packages
       bullets:
         - '`sow create` indexes top-level RPM and DEB files in place'
         - Produces rpm-md metadata and APT Packages indexes
-        - Explicit publication timestamps support existing YUM clients
-      value: From package files to repository metadata, no daemon or toolchain.
+        - Set the metadata timestamp when replacing an existing YUM index
+      value: Serve the resulting directory with a static HTTP server.
       visual:
         type: code
         aria_label: Create a flat RPM and DEB repository
         title: create.sh
         lines:
           - { class: p, prefix: '$ ', text: 'sow create /srv/repo --jobs 8' }
-          - { class: ok, prefix: '✓ ', text: 'repodata/repomd.xml' }
-          - { class: ok, prefix: '✓ ', text: Packages }
-          - { class: ok, prefix: '✓ ', text: Packages.gz }
+          - { class: p, prefix: '$ ', text: 'python3 -m http.server 8080 --bind 127.0.0.1 --directory /srv/repo' }
     - ref: 02 / MANAGED
       title: One pool, many views
       url: docs/feature/managed/
       motto: Curate Enterprise Linux, Debian, and Ubuntu repositories
       bullets:
-        - Stores each live package once, then projects metadata-only Dists
-        - Avoids duplicate object keys and redundant uploads on object storage
-        - Immutable Built Generation manifests retain snapshots and variants
-      value: Membership, policy, signing, and snapshots stay explicit and auditable.
+        - Stores one copy of each package per repository
+        - Shares that copy across distributions and architecture views
+        - Keeps build history and selected snapshots
+      value: Choose packages for each distribution and build its indexes.
       visual:
         type: components
         aria_label: Managed repository model
@@ -85,16 +83,16 @@ capabilities:
           - { icon: fa-brands fa-ubuntu, title: Ubuntu, detail: APT views, url: docs/tutorial/apt-repo/ }
           - { icon: fa-solid fa-box-archive, title: One Pool, detail: deduplicated payload, url: docs/feature/views/ }
           - { icon: fa-solid fa-camera, title: Generations, detail: immutable manifests, url: docs/feature/transactions/ }
-          - { icon: fa-solid fa-code-branch, title: Variants, detail: Dists and targets, url: docs/reference/config/ }
+          - { icon: fa-solid fa-code-branch, title: Package sets, detail: Dists, url: docs/reference/config/ }
     - ref: 03 / READY TO RUN
-      title: Self-contained builds, checked output
+      title: One executable
       url: download/
       motto: The same CLI on macOS and Linux
       bullets:
-        - Self-contained `CGO_ENABLED=0` archives for `amd64` and `arm64`
-        - The release pipeline builds RPM and DEB packages for Linux
-        - Validates generated metadata; Managed mode adds recoverable writes
-      value: No repository daemon and no language runtime to operate.
+        - Linux and macOS archives for `amd64` and `arm64`
+        - RPM and DEB installation packages for Linux
+        - Built-in package parsing and metadata generation
+      value: Run SOW as a command. Managed state uses an embedded SQLite database.
       visual:
         type: components
         aria_label: Supported release targets
@@ -105,69 +103,67 @@ capabilities:
           - { icon: fa-solid fa-box, title: RPM, detail: x86_64 · aarch64 }
           - { icon: fa-solid fa-box-open, title: DEB, detail: amd64 · arm64 }
     - ref: 04 / INCREMENTAL
-      title: Publish only the change set
-      url: docs/command/changes/
-      motto: Inspect first, then synchronize
+      title: Publish repository updates
+      url: docs/command/publish/
+      motto: Publish to a filesystem or Cloudflare R2 target
       bullets:
-        - '`sow changes` reports payload, metadata, pointer, and removal records'
-        - The operation log preserves who changed what and when
-        - Publication uploads the delta, not every repository object
-      value: Small repository changes stay small on filesystem and cloud targets.
+        - '`sow changes` lists file changes between local builds'
+        - Publication compares the current build with the target’s last publication
+        - Uploads changed files and records the result
+      value: Configure a target in `sow.yml`, then run `sow publish TARGET`.
       visual:
         type: code
-        aria_label: Inspect and publish an incremental change set
+        aria_label: Inspect local changes and publish the repository
         title: publish.sh
         lines:
           - { class: p, prefix: '$ ', text: 'sow changes -r pgsql' }
-          - { class: ok, prefix: '+ ', text: 'pool/p/postgresql-18/...' }
-          - { class: ok, prefix: '~ ', text: 'dists/el9/x86_64/repodata/...' }
           - { class: p, prefix: '$ ', text: 'sow publish prod' }
-          - { class: ok, prefix: '✓ ', text: 'changed objects verified' }
+          - { class: p, prefix: '$ ', text: 'sow status -r pgsql' }
 
 principles:
   eyebrow: Operating model
-  title: Simple at the start, explicit under control
-  desc: SOW keeps the easy path rebuildable and makes every managed delivery decision visible.
+  title: Build, check, publish
+  desc: Keep package selection, local builds, and remote publication separate.
   columns: 3
   items:
     - icon: fa-solid fa-rotate
-      title: Rebuild derived state
-      desc: Plain mode rebuilds indexes from the package directory. The same package bytes and options produce the same metadata, including any explicit publication timestamp.
+      title: Rebuild local indexes
+      desc: Plain mode reads the directory each time. Run `sow create` again after adding or removing package files.
     - icon: fa-solid fa-list-check
-      title: Own managed intent
-      desc: Managed mode separates Desired Membership from immutable Built Generations, so policy and publication never become hidden side effects.
+      title: Inspect the current build
+      desc: Managed mode records package selections and completed builds. Use `sow status` to see whether a build is needed.
     - icon: fa-solid fa-shield-halved
-      title: Verify before delivery
-      desc: Verify package and metadata integrity before serving clients. Managed mode also records operations and recovers interrupted writes.
+      title: Check before publication
+      desc: Run `sow check` to validate a Managed repository. Use `sow publish TARGET` to update a configured target.
 
 faq:
   eyebrow: Common questions
-  title: Choose the smallest workflow that fits
-  desc: Plain and Managed use the same binary, but solve different operating problems.
+  title: Choose a workflow
+  desc: Use the same SOW executable for both modes.
   items:
     - question: Should I start with Plain or Managed mode?
       answer: |
-        Start with [Plain mode](docs/start/quickstart/) when the directory already contains exactly what you want to serve. Use a [Managed workspace](docs/start/workspace/) when SOW must own membership, policy, signed metadata, immutable generations, audit history, or publication targets.
+        Use [Plain mode](docs/start/quickstart/) to index an existing package directory. Use a [Managed workspace](docs/start/workspace/) to select packages per distribution, apply retention rules, sign metadata, and publish updates.
       open: true
     - question: Can I replace an existing createrepo_c workflow?
       answer: |
-        For a flat RPM directory, use `sow create` with the publication-time option added in 0.5. Keep the publication history and index-signing steps in your maintenance script, then test with clients that retain their old metadata cache. Follow the [YUM migration guide](docs/tutorial/yum-migration/); Plain does not generate legacy SQLite metadata or module streams.
+        Yes, for repositories that use RPM XML metadata. Preserve the publication timestamp with `--metadata-timestamp` and sign the final index if clients require it. See the [YUM migration guide](docs/tutorial/yum-migration/) for the steps and supported metadata formats.
     - question: Does RPM signing also sign the repository index?
       answer: |
         `--sign-with` signs unsigned RPM packages. In Plain mode, sign `repomd.xml` separately after the final metadata build. Managed mode provides configured metadata-signing policies. See [Signing](docs/tutorial/signing/) for both workflows.
     - question: Can SOW handle RPM and DEB packages together?
       answer: |
-        Yes. A Plain directory can contain both RPM and DEB packages. In Managed mode, each Dist has one format, while one Repository can expose multiple RPM and DEB Dists from its shared public tree.
+        Yes. A Plain directory can contain both RPM and DEB packages. In Managed mode, each Dist has one format. One repository can contain multiple RPM and DEB Dists.
     - question: Does SOW need a daemon or database service?
       answer: |
-        No. SOW is a self-contained CLI and emits static repository files. Managed workspaces keep their embedded state locally; serve only the generated public tree with the HTTP server you already operate.
+        No. SOW runs as a command and generates static files. Managed mode uses a local SQLite database. Serve the Repository root, which contains `pool/` and `dists/`, with a static HTTP server.
     - question: Where can a Managed repository be published?
       answer: |
-        A configured target can be a local or mounted [filesystem, or Cloudflare R2 object storage](docs/command/publish/). `sow changes` shows the delta before publication, and SOW records the target state for the next incremental run.
+        Publish to a local or mounted [filesystem, or Cloudflare R2](docs/command/publish/). Each target records its own checkpoint. `sow publish` uses that checkpoint to select the files for the next update.
 
 cta:
-  title: Build the first repository now.
-  text: Start with `sow create`; move to a Managed workspace when you need policy, snapshots, and publication history.
+  title: Build your first repository
+  text: After installation, run `sow create DIR` to index your package directory.
   actions:
     - label: Get Started
       url: docs/start/

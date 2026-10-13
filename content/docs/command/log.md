@@ -1,7 +1,7 @@
 ---
 title: "sow log"
 linkTitle: "log"
-description: "Read the Operation audit ledger, export it as JSONL, and prune eligible terminal records."
+description: "Inspect, export, and prune operation records."
 categories: [Command]
 tags: [cli, audit]
 url: "/docs/command/log/"
@@ -10,10 +10,7 @@ weight: 1900
 icon: fa-solid fa-clipboard-list
 ---
 
-Every write command inside a Repository commits an application-level Operation to that Repository's
-SQLite database *before* it produces any external file side effect. That record is what makes crash
-recovery possible — and once the Operation reaches a terminal state, the same record is your audit
-trail. `sow log` reads it.
+`sow log` lists Repository operations and shows the details of one operation. Use `log export` to archive completed records as JSONL. Use `log prune` to remove eligible old records from the database.
 
 ## Synopsis
 
@@ -23,39 +20,12 @@ sow log export [FILE] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]
 sow log prune BEFORE [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json]
 ```
 
-## Operation lifecycle
-
-Understanding the `state` field is most of understanding the log:
-
-```text
-planned → staged → applied → built → done
-                        └────────→ done_dirty
-   any nonterminal → recovering → built / done / done_dirty / rolled_back / failed
-   pre-apply error  → failed
-```
-
-| State | Meaning |
-|---|---|
-| `planned` | Command, arguments, targets and intended actions are durably recorded |
-| `staged` | New packages/metadata written to temporary locations and verified |
-| `applied` | Desired state and required private pending payloads committed |
-| `built` | The complete static Generation has been switched in |
-| `done` | Terminal — a normal successful command |
-| `done_dirty` | Terminal — Desired is ahead of Built after `--skip` (a `--skip` that leaves the Repository clean ends at `done`), or after a documented safe exit while recovering an old, unfrozen mutation |
-| `failed` | Terminal — the operation failed before `applied`, nothing was committed |
-| `rolled_back` | Terminal — recovery abandoned the operation before it changed Desired state, for example a `planned` operation left by an interrupted command |
-| `recovering` | Non-terminal; the next write command must complete or roll it back |
-
-Workspace lifecycle commands (`init`, `repo new`, `repo rm`) use the Workspace file journal instead
-and do not appear in a Repository's SQLite log. `dist new`/`dist rm` do appear — the Repository
-database already exists at that point.
-
 ## sow log
 
 With no argument, prints the 50 most recent Operations, newest first.
 
 ```console
-sow log -r pigsty
+sow log -r pigsty --json
 ```
 
 Output excerpt, one Operation object from the `operations` array:
@@ -92,15 +62,14 @@ failed Operation additionally carries `error_class` and `error_message`:
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `-d, --dist NAME` | Show only Operations touching this Dist | all |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 
 ### One Operation in detail
 
-Pass an Operation ID to get its full state transitions, timing, packages, memberships and file
-actions.
+Pass an Operation ID for a summary. Add `--json` to read the full transitions, timing, package, membership, and file records under `result.detail`.
 
 ```console
-sow log 4262183287563704350 -r pigsty
+sow log 4262183287563704350 -r pigsty --json
 ```
 
 Output excerpt:
@@ -137,9 +106,7 @@ versioned object in `detail_json`:
 }
 ```
 
-The phases are `rendering`, `promoting_payload`, `publishing_dists`,
-`normalizing_public_tree`, and `finalizing`. A progress row is durable audit data but does
-not advance the recovery state machine or force its own SQLite checkpoint.
+The phases are `rendering`, `promoting_payload`, `publishing_dists`, `normalizing_public_tree`, and `finalizing`. Use them to follow long builds.
 
 ### Filtering by Dist
 
@@ -149,6 +116,31 @@ several distributions:
 ```bash
 sow log -d trixie -r pigsty
 ```
+
+## Operation lifecycle
+
+The `state` field shows how far an operation has progressed:
+
+```text
+planned → staged → applied → built → done
+                        └────────→ done_dirty
+   any nonterminal → recovering → built / done / done_dirty / rolled_back / failed
+   pre-apply error  → failed
+```
+
+| State | Meaning |
+|---|---|
+| `planned` | Command, arguments, targets and intended actions are durably recorded |
+| `staged` | New packages/metadata written to temporary locations and verified |
+| `applied` | Desired state and required private pending payloads committed |
+| `built` | The complete static Generation has been switched in |
+| `done` | Terminal — a normal successful command |
+| `done_dirty` | Operation ended with changes that still need a build, usually after `--skip` |
+| `failed` | Terminal — the operation failed before `applied`, nothing was committed |
+| `rolled_back` | Terminal — recovery abandoned the operation before it changed Desired state, for example a `planned` operation left by an interrupted command |
+| `recovering` | Non-terminal; the next write command must complete or roll it back |
+
+The Repository log includes `dist new` and `dist rm`. Workspace operations (`init`, `repo new`, `repo rm`) use separate recovery records and do not appear here.
 
 ## sow log export
 
@@ -174,42 +166,20 @@ sow log export - -r pigsty | gzip > pigsty-ops-$(date +%F).jsonl.gz
 
 `export` has no `--json`; JSONL *is* its output format.
 
-### It refuses to clobber
+### Output path {#it-refuses-to-clobber}
 
-An existing target is a rejection, never an overwrite — an audit export must not silently destroy a
-previous one:
-
-```console
-sow log export /srv/audit/pigsty-ops.jsonl -r pigsty
-operation rejected: export target already exists: /srv/audit/pigsty-ops.jsonl
-```
-
-`export` also refuses a target whose parent is not a real directory — a symlink, or a directory that
-does not exist:
-
-```console
-sow log export /tmp/pigsty-ops.jsonl -r pigsty
-log export parent is not a real directory
-```
-
-On macOS `/tmp` is a symlink to `/private/tmp`, so that refusal fires there. Write to an explicit
-real path instead.
+Choose a new filename in an existing directory. `log export` returns `6` if the file already exists. Its immediate parent must be a real directory, not a symbolic link. On macOS, use `/private/tmp/file.jsonl` instead of `/tmp/file.jsonl`.
 
 ## sow log prune
 
-Deletes eligible terminal audit records older than `BEFORE` and attempts to reclaim database space.
-If a long-lived reader prevents compaction or the final WAL checkpoint, logical pruning still
-completes and later writes remain usable. The result reports `compaction_deferred: true`;
-close the reader and rerun prune when space reclamation is needed. Real database and I/O errors
-still fail the command.
+Deletes eligible completed operation records older than `BEFORE` and reclaims database space. If another reader is using the database, record deletion can finish while space reclamation waits. The result then reports `compaction_deferred: true`. Close the reader and rerun `prune` to reclaim the space.
 
 ```console
 sow log prune 2027-01-01 -r pigsty
 pruned log repository=pigsty operation=8150803833883584722 before=2026-12-31T16:00:00.000000000Z operations=1
 ```
 
-The absolute timestamp is echoed back (here for a workstation at UTC+8) so the local-timezone
-interpretation is never ambiguous. When a reader defers space reclamation, a second line reads
+The output shows the cutoff in UTC (this example uses a workstation at UTC+8). When a reader defers space reclamation, a second line reads
 `log deletion committed; space reclamation deferred while the database is busy`; with `--json`
 the journal ID and `compaction_deferred` appear in `result`.
 
@@ -219,10 +189,9 @@ the journal ID and `compaction_deferred` appear in `result`.
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 
-`prune` operates at Repository level and does not accept `-d` — pruning half an Operation would
-produce a meaningless record.
+`prune` applies to the whole Repository and does not accept `-d`.
 
 ### BEFORE syntax
 
@@ -234,18 +203,16 @@ sow log prune yesterday -r pigsty
 usage error: BEFORE must be YYYY-MM-DD or an RFC 3339 timestamp with timezone
 ```
 
-### What prune never deletes
+### Records kept by prune {#what-prune-never-deletes}
 
-`prune` is conservative by construction. It never removes:
+`prune` keeps:
 
 - a non-terminal Operation;
 - a record still required for recovery;
 - current Package or Membership state;
 - a Built Generation or its Changeset.
 
-The `pruned` counter tells you exactly how many records were eligible, which is normally fewer than
-the number of Operations older than the cutoff. Log and Changeset live in the same SQLite database,
-but they follow different retention rules.
+The `pruned` counter reports the number of deleted operation records.
 
 ## Examples
 
@@ -255,13 +222,13 @@ Investigate the most recent write:
 sow log -r pgsql --json | jq -r '.result.operations[0] | "\(.id)\t\(.kind)\t\(.state)"'
 ```
 
-List everything that failed:
+Find failed operations among the 50 most recent records:
 
 ```bash
 sow log -r pgsql --json | jq -r '.result.operations[] | select(.state=="failed") | "\(.id)\t\(.error_class)\t\(.error_message)"'
 ```
 
-Archive and shrink, monthly:
+Archive records, then remove those older than a chosen date:
 
 ```bash
 sow log export /srv/audit/pgsql-$(date +%Y%m).jsonl -r pgsql
@@ -295,5 +262,5 @@ sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 
 - [Observability & Audit](/docs/feature/audit/) — how `log` fits with `status`, `check` and `changes`
 - [Transactions & Recovery](/docs/feature/transactions/) — the journal that the log records
-- [sow changes](/docs/command/changes/) — the physical counterpart to a semantic Operation
+- [sow changes](/docs/command/changes/) — compare files between builds
 - [JSON Output](/docs/reference/json/) — the full log result schema

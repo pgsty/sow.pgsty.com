@@ -1,7 +1,7 @@
 ---
 title: "sow export"
 linkTitle: "export"
-description: "Export one built RPM Dist architecture as a standalone compatibility repository."
+description: "Export one RPM architecture view as a standalone repository."
 categories: [Command]
 tags: [cli, rpm, dist]
 url: "/docs/command/export/"
@@ -9,8 +9,7 @@ weight: 1800
 icon: fa-solid fa-file-export
 ---
 
-SOW provides one export subcommand: `sow export rpm-leaf`. It creates an external, standalone
-RPM repository whose repodata uses local `pool/...` hrefs.
+`sow export rpm-leaf` creates a standalone RPM repository for one Dist and architecture. It copies the packages into an external directory and rewrites metadata to use local `pool/...` paths.
 
 ## Synopsis
 
@@ -26,12 +25,10 @@ sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAM
 
 | Flag | Meaning | Default |
 |---|---|---|
-| `--hardlink` | Use hard links for trusted, same-filesystem, read-only output | copy files |
+| `--hardlink` | Use hard links for read-only output on the same filesystem | copy files |
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a Repository | selection rules |
-| `--json` | Emit the `sow.cli/v1` envelope | false |
-
-The command accepts no `--dist`, jobs, timeout, or lock option.
+| `--json` | Output JSON | false |
 
 ## Output
 
@@ -42,18 +39,14 @@ exported RPM leaf el9/x86_64 generation=00000000000000000012 method=copy package
 
 The destination contains:
 
-- rewritten RPM repodata with local payload hrefs;
+- RPM metadata with local package paths;
 - the required package subtree;
 - an export manifest;
 - `.sow-export.json` provenance.
 
-The source must be a completed Built Generation. The export is a separate artifact: it is not
-Desired Membership, a Built Generation, publication input, or a GC root.
+The source Repository must be clean, have a completed Built Generation, and have no unfinished operation. The requested RPM view must belong to that Generation. The export is independent of the Workspace and does not protect source packages from GC.
 
-A failed export can leave partial files in `DIR`; there is no export journal or automatic
-rollback. Keep that directory offline, correct the cause (for example, an unavailable signer),
-and retry into a different absent or empty directory. Do not publish a failed export or
-expect a retry to merge into its non-empty output.
+If export fails, correct the reported cause and retry into a new or empty directory. The failed destination can contain partial files.
 
 Managed RPM and `export rpm-leaf` use a fixed `0` repomd data timestamp and expose no
 `--metadata-timestamp` option. They cannot directly take over the same EL7 repository ID
@@ -64,14 +57,7 @@ continue with Plain `create` and an explicit publication time, following the
 
 ## Copy versus hard link
 
-Copying is the safe default. `--hardlink` is an explicit optimization for an output on the same
-filesystem that consumers cannot mutate. A hard-linked payload shares an inode with SOW's pool; do
-not use this mode for writable or untrusted destinations. Creating (and later removing) the
-links changes the ctime of the shared Pool files, so the next build re-hashes those payloads once
-to refresh its fast-validation fingerprints.
-
-SOW rejects output that overlaps a configured filesystem publication root. This prevents an export
-from being mistaken for, or modifying, a managed publication target.
+Copying is the default. Use `--hardlink` only for read-only output on the same filesystem. Editing a hard-linked package also changes the source package in SOW's pool.
 
 ## Exit behavior
 
@@ -85,6 +71,6 @@ from being mistaken for, or modifying, a managed publication target.
 
 ## See also
 
-- [Platforms & Integrations](/docs/reference/compatibility/) — validated and unsupported workflows
+- [Platforms & Integrations](/docs/reference/compatibility/) — client and tool compatibility
 - [Repository Layout](/docs/reference/layout/) — source tree and export boundaries
 - [`sow publish`](/docs/command/publish/) — managed delivery to configured targets

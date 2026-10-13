@@ -1,7 +1,7 @@
 ---
 title: "Signing Model"
 linkTitle: "Signing Model"
-description: "Two independent trust chains, four key-reference forms, in-process versus external signing, and safe key changes."
+description: "Configure metadata and RPM package signing, reference keys, and rotate signing identities."
 categories: [Feature]
 tags: [signing, rpm, apt]
 url: "/docs/feature/signing/"
@@ -9,83 +9,90 @@ weight: 600
 icon: fa-solid fa-key
 ---
 
-There are two different questions a client can ask about a repository, and SOW answers them with two separate mechanisms. Confusing them is the most common source of "I signed it but `dnf` still complains", so this page starts by pulling them apart.
+Configure metadata signing to let clients verify repository indexes. Configure RPM package
+signing separately when clients also need to verify signatures embedded in RPM files.
 
-## Two independent trust chains
+<span id="two-independent-trust-chains"></span>
+<span id="what-the-client-verifies"></span>
 
-| | Metadata signing | RPM package signing |
-|---|---|---|
-| Question answered | "Is this index really from you, and unmodified?" | "Is this `.rpm` file really from you?" |
-| Configured by | `signing.rpm.metadata`, `signing.deb.metadata` | `signing.rpm.packages` |
-| Produces | `repodata/repomd.xml.asc`, `InRelease`, `Release.gpg` | an OpenPGP signature embedded in the package |
-| Changes package bytes | no | yes |
-| Client setting | dnf `repo_gpgcheck=1`, apt `Signed-By` | dnf `gpgcheck=1` |
-| Available in Plain mode | no | yes, via `create -S KEY` |
+## What gets signed
 
-They are configured separately and can be used separately. Metadata signing alone is usually the right starting point: it authenticates the whole index in one place and requires no change to the packages you received from upstream.
+| Setting | Signed content | Output | Client setting |
+|---|---|---|---|
+| `signing.rpm.metadata` | RPM index manifest | `repodata/repomd.xml.asc` | DNF `repo_gpgcheck=1` |
+| `signing.deb.metadata` | APT release manifest | `InRelease`, `Release.gpg` | APT `Signed-By` |
+| `signing.rpm.packages` | RPM package | Embedded OpenPGP signature | DNF `gpgcheck=1` |
 
-Managed metadata signing is controlled entirely by `sow.yml`. There is no CLI override, no `--sign` flag on `build`, and no way to sign one build differently from the next. That is deliberate — a repository's signing identity is a property of the repository, not of the command that happened to update it.
+Metadata signing leaves package bytes unchanged. RPM package signing changes package
+bytes and therefore their SHA-256. SOW does not add signatures to DEB package files.
 
-## Configuration
+<span id="configuration"></span>
+
+## Configure metadata signing
 
 ```yaml
 repos:
-  pigsty:
+  demo:
     signing:
       rpm:
-        packages:
-          mode: never              # never | fill | always
         metadata:
-          key: "file:///secure/repo-signing.asc"
+          key: file:///secure/repo-signing.asc
       deb:
         metadata:
-          key: "file:///secure/repo-signing.asc"
+          key: file:///secure/repo-signing.asc
+    dists:
+      el9:
+        format: rpm
+      trixie:
+        format: deb
 ```
 
-RPM and DEB metadata keys are declared separately, so you can use the same key for both (as above) or split them. Each metadata block accepts an optional `passphrase` reference alongside `key`.
+RPM and DEB can use the same key or different keys. For an encrypted file or environment
+key, add a `passphrase` reference. Validate the settings, then build:
 
-With a metadata key configured, every build produces the signature files, including for an empty Dist:
+```bash
+sow config check
+sow build -r demo
+sow check -r demo
+```
 
-- RPM, per architecture view: `repodata/repomd.xml` plus an ASCII-armored `repodata/repomd.xml.asc`
-- DEB, per Dist: `Release` plus a clearsigned `InRelease` and a detached armored `Release.gpg`
+Signed empty Dists receive the same signature files as populated Dists. The signed body
+of `InRelease` matches `Release`. Without a configured key, SOW produces unsigned indexes.
+Managed signing settings come from `sow.yml`; `build` has no per-run signing override.
 
-The clearsigned body of `InRelease` is identical to `Release`. Without a metadata key, neither signature file is generated at all — you get `repomd.xml` and `Release` and nothing else.
+<span id="four-key-reference-forms"></span>
 
-RPM format v6 signatures are not supported in 0.5.0; use RPM format v4 packages for
-package-signing and verification workflows. This is an RPM container-format limitation,
-not a restriction on the metadata key-reference forms below.
+## Key and passphrase references
 
-## Four key-reference forms
-
-A key reference is a URI, and the scheme decides who does the signing:
-
-| Reference | Meaning | Signer |
+| Metadata key reference | Meaning | Signing implementation |
 |---|---|---|
-| `keys/repo-signing.asc` | an ASCII-armored key at a path relative to the Workspace root | in-process Go signer |
-| `file:///absolute/path.asc` | an ASCII-armored private key on disk | in-process Go signer |
-| `env://VAR_NAME` | the armored key material in an environment variable | in-process Go signer |
-| `agent://<fingerprint>` | a key held by the GPG agent in your environment | external `gpg` |
+| `keys/repo.asc` | OpenPGP key file relative to the workspace root | In-process |
+| `file:///secure/repo.asc` | OpenPGP key file at an absolute path | In-process |
+| `env://SOW_METADATA_KEY` | Armored key material, file path, or GPG key identifier | Depends on the value |
+| `agent://KEY_ID_OR_FINGERPRINT` | Key available through the local GPG environment | External `gpg` |
 
-`file://` and `env://` need nothing installed — SOW signs metadata itself, which is why a repository with `file://` metadata keys builds identically on macOS and inside a minimal container. `agent://` delegates to your GPG agent, which is the right choice when the private key lives on a smartcard or must never touch a file. `agent://` cannot be combined with a `passphrase` reference, because the agent owns that interaction.
+Key files support ASCII-armored and binary OpenPGP data. A GPG key identifier is a
+16-digit key ID or a 40- or 64-digit fingerprint. References that resolve to a GPG key
+identifier use external `gpg` for private-key access and prompting.
 
-A `passphrase` reference accepts a Workspace-relative path, `file://`, or `env://`; it
-does not accept `agent://`.
+For private-key material, passphrases accept path, `file://`, or `env://` references.
+GPG key identifiers use GPG passphrase handling and cannot take a `passphrase` field.
+See [Key references](/docs/reference/config/#key-references) for path and size limits.
 
-**Nothing secret is ever persisted.** Configuration, SQLite, logs, JSON output, and error text hold only the reference string, the fingerprint, and the public verifier certificate. `config show --all` prints references and fingerprints, never key material. If a key reference is unresolvable or unusable for signing, `config check` says so before you run a build.
+`config show` displays references and resolved public identities, not private-key or
+passphrase contents. `config check` resolves references and checks their suitability.
+For new metadata signatures, the selected signing key must be usable at the publication
+time and at the current time. Historical verification uses the retained certificate.
 
-Agent metadata signing probes one small message per identity and deterministic publication time,
-validates the subkey GPG actually selected, then pins its complete fingerprint for signing.
-This supports machines holding only one of a certificate's signing subkeys. GPG time is frozen;
-multiple Dists reuse the same operation-local selection. The selected key must be valid both at
-the publication time and now for new builds. Historical verification and recovery of already
-frozen trees continue to use their retained certificate and bytes.
+New APT signatures use SHA-256. A new publication requires SHA-256, SHA-384, or SHA-512 in
+both APT signature files. If upgrading a workspace with SHA-1 metadata signatures, run
+`build` before starting a new publication. An existing publication attempt resumes its
+recorded files.
 
-New APT metadata signatures use SHA-256. A new publication attempt requires SHA-256, SHA-384,
-or SHA-512 in both InRelease and Release.gpg. Historical SHA-1 signatures can still verify;
-run `sow build` after upgrading to refresh old APT metadata before starting a new publication.
-An existing frozen publication attempt resumes its original plan.
+<span id="rpm-package-signing"></span>
+<span id="trust-rings-are-verified-independently"></span>
 
-## RPM package signing
+## Configure RPM package signing
 
 ```yaml
 signing:
@@ -93,120 +100,72 @@ signing:
     packages:
       mode: fill
       key: agent://7F721C4AD40F4A9D8CA578BFAC7E4690B50CCF3B
-      trusted_keys: [keys/pgdg.asc]
+      trusted_keys: [keys/upstream.asc]
 ```
-
-Three modes:
 
 | Mode | Behavior |
 |---|---|
-| `never` | keep the input bytes exactly as given |
-| `fill` | sign when the package is unsigned or its signature is not trusted; keep the bytes when an existing signature verifies against `trusted_keys` |
-| `always` | ensure the final package is validly signed by the configured key; keep the bytes if it already is, otherwise re-sign |
+| `never` | Store the input bytes unchanged |
+| `fill` | Keep a package whose signature verifies with the configured key or trusted keys; sign other packages |
+| `always` | Keep a package already signed by the configured key; re-sign other packages |
 
-`trusted_keys` automatically includes the public half of the configured `key`. Without a key, `never` is the only legal mode. `fill` is the default when a key is present.
+With no key, the default mode is `never`. With a key, the default is `fill`.
+Both `fill` and `always` require a key.
 
-### Trust rings are verified independently
+Package signing uses the host `rpm --addsign` or `rpm --resign` command on a private
+copy. Install `rpm` and `gpg`, and make the matching private key available in the GPG
+environment used by `rpm`. A key reference identifies the signer; it does not import a
+private key into that environment. The original input file is unchanged.
 
-For a signed RPM, SOW evaluates each retained single-key ring, the current policy ring, and the
-combined `trusted_keys` ring independently. Every recognized OpenPGP signature packet must verify
-inside the same candidate ring, and at least one verified path must authenticate the payload. SOW
-never combines a packet accepted by one key with another packet accepted by a different single-key
-ring to invent a retained signer.
+SOW checks the result's signature, package coordinate, and signature-neutral payload
+digest. If an existing object has the same coordinate and payload and satisfies the
+current policy, SOW can reuse its signed bytes. In `never` mode, reuse requires an exact
+byte match.
 
-This distinction matters during a deliberate dual-signing transition: the combined trusted ring may
-accept the package, while neither individual retained key is allowed to claim it alone. Historical
-CentOS OpenPGP v3/v4 signatures remain supported. All candidate rings share one signed-byte stream,
-so adding trusted keys changes authorization but does not multiply package reads.
+Use RPM format v4 for package-signing workflows. SOW does not support the signature tag
+used by RPM format v6. This is separate from OpenPGP packet versions; historical CentOS
+OpenPGP v3 and v4 signatures are supported.
 
-Package signing always runs `rpm --addsign` or `rpm --resign` from your environment, on a
-private staged copy. Your input file is never modified in place. After signing, SOW
-re-parses the result and requires an embedded signature, unchanged signature-neutral
-digest and NEVRA, and the exact configured public-key identity. The `rpm` and `gpg`
-executables and a matching secret key in the GPG environment used by `rpm` are mandatory
-for `fill` and `always`. A key reference identifies and verifies the signer; it does not
-provision the secret key into that environment.
+<span id="key-changes-make-dists-dirty"></span>
 
-Because signatures embed a timestamp, signing is not reproducible — the same unsigned RPM signed twice gives different bytes. SOW uses a **signature-neutral payload digest** over the immutable header and payload, excluding the signature header. When the logical coordinate and neutral digest match and the existing object satisfies the current policy, SOW reuses the existing final bytes. Repeated add is a no-op only when this reuse applies; a policy change requiring re-signing can produce different bytes and a pool-path conflict. Use a new package version and filename rather than overwrite an already published URL.
+## Change keys
 
-Within one command, rendering reuses the RPM signature preflight result. Across commands, unchanged
-package bytes and an identical complete signing policy can reuse authenticated Built evidence.
-A changed policy/certificate, file fingerprint, or missing evidence requires verification again.
-The first build after the authentication-contract upgrade establishes this evidence once;
-`sow check` remains the explicit full audit. Ordinary directory/stat checks and metadata generation
-still take work proportional to the selected repository scope.
+A changed signing identity makes affected Dists dirty. For metadata keys, run `build` to
+create signatures with the new identity. Distribute the new public key to clients before
+publishing the new metadata.
 
-That reuse is narrow on purpose. `never` requires a full byte match, since that mode promises to preserve input bytes. If the payload digest differs, or the stored object does not satisfy the current signing policy, it is a hard conflict — `add` will not quietly re-sign a package in place under an existing coordinate. There is no `--replace`; if re-signing changes the bytes, bump the release, or plan a proper key-rotation workflow.
+Existing pool objects are immutable. Changing RPM package policy does not re-sign them
+in place. For a staged package-key rotation:
 
-## Key changes make Dists dirty
+1. Set the new key as current and use `mode: fill`.
+2. Keep the old public key in `trusted_keys` while old packages remain members.
+3. Add new package releases signed by the new key.
+4. Remove old trust after the old signed packages have been withdrawn or replaced.
 
-A Dist's Built configuration digest covers its format, canonical architectures, `limit`, `exclude`, and the **frozen signing identity**. Change a key reference or a fingerprint and the digest changes, so every affected Dist becomes dirty:
+Switching directly to `always` with a new key requires every Desired RPM to satisfy that
+key policy. If changed signatures would replace an existing package URL with different
+bytes, publish a new package release and filename.
 
-```console
-$ sow status
-repository=pigsty status=dirty ready_to_copy=false revision=5 generation=4 dirty_dists=el9,trixie pending=0/0 locked=false
-```
+RPM verification evaluates certificate and signing-subkey validity at the package's
+signature time. Renewing a certificate does not itself invalidate old signatures when
+the required historical self-certifications and subkey bindings remain in the certificate.
+Keep that historical public-key material when exporting renewed keys.
 
-For a **metadata** key change, `sow build` signs the indexes with the new identity and
-produces a new Generation.
+<span id="plain-mode"></span>
 
-RPM package bodies are immutable Package Objects. `build` does not silently re-sign an
-existing object under the same coordinate. If current Desired RPMs do not satisfy the new
-package-signing policy, `build` rejects the change. A staged rollover normally uses
-`fill`, makes the new key current, and keeps the old public key in `trusted_keys`; existing
-old-key packages retain their bytes while newly ingested packages use the new key. Remove
-the old trust only after those package coordinates have been withdrawn or replaced by new
-releases. Switching directly to `always` with a new key is valid only when every Desired
-RPM is already signed by that key.
-
-The exact public certificate identity of the current built metadata is recorded per Dist, and multiple certificate versions for the same primary fingerprint can coexist — so extending an expiry or adding a subkey does not invalidate what is already published.
-
-Package-signing trust in `fill` or `always` mode is stricter. Adding or rotating a signing subkey
-keeps existing package signatures valid. Extending the expiry of the primary key and re-exporting
-it creates a newer self-signature; SOW 0.5.0 then rejects packages signed before that
-self-signature, and `trusted_keys` cannot hold two versions of the same certificate. For package
-signing, prefer a primary key without expiry and rotate signing subkeys.
-
-## Plain mode
+## Plain signing
 
 ```bash
-sow create /srv/repo --sign-with 6D5C5A26C36B1F73
-sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
+sow create /srv/offline --sign-with 6D5C5A26C36B1F73
+sow create /srv/offline --sign-with 6D5C5A26C36B1F73 --overwrite
 ```
 
-Plain mode signs RPM package bodies only; it has no metadata signing. `KEY` contains exactly 16, 40, or 64 hexadecimal characters after an optional `0x` or `0X` prefix; the prefix is removed and the key is normalized to uppercase and passed to `rpm` as the `_gpg_name` macro. Without `--overwrite`, only RPMs with no parseable embedded signature are signed. With it, every retained RPM is re-signed.
+Plain mode signs RPM package files only. Without `--overwrite`, it signs packages with
+no parseable embedded signature. With `--overwrite`, it re-signs all retained RPMs.
+The key is 16, 40, or 64 hexadecimal characters, with an optional `0x` prefix.
+At least one RPM must remain after any `--pigsty` cleanup.
 
-`--sign-with` requires at least one top-level RPM retained after `--pigsty` cleanup. A DEB-only directory, a missing `rpm` binary, or an unavailable key fails before anything public changes. Signing is an explicit slow path with necessary copy, signature-verification, and final-RPM parse reads; if interrupted, rerun from the current package directory rather than replaying a Plain journal. See [Plain Flat Repositories](/docs/feature/plain/).
+See [Sign your repository](/docs/tutorial/signing/) for client setup and
+[Configuration](/docs/reference/config/) for all signing fields.
 
-## What the client verifies
-
-```ini
-[pigsty-el9]
-name=Pigsty EL9
-baseurl=https://repo.example.com/pigsty/dists/el9/$basearch/
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://repo.example.com/keys/repo-signing.asc
-```
-
-```text
-Types: deb
-URIs: https://repo.example.com/pigsty
-Suites: trixie
-Components: main
-Signed-By: /etc/apt/keyrings/repo-signing.asc
-```
-
-`repo_gpgcheck=1` makes dnf verify `repomd.xml.asc`; `gpgcheck=1` makes it verify each
-package's embedded signature. On the APT side, `Signed-By` makes apt verify `InRelease`.
-Automated checks validate generated signatures directly. Complete signed Managed dnf/APT
-acceptance must run with real clients in the target environment; see
-[Platforms & Integrations](/docs/reference/compatibility/) for the exact evidence.
-
-`sow check` verifies every declared signature and file hash as part of its normal run, so a signing misconfiguration shows up before you ship rather than on a customer's machine.
-
-## Next
-
-- [Sign Your Repository](/docs/tutorial/signing/) — generating a dedicated key and wiring up both chains
-- [`sow.yml` reference](/docs/reference/config/) — the full signing schema and key reference grammar
-- [Observability & Audit](/docs/feature/audit/) — how `check` proves the signatures
+<span id="next"></span>

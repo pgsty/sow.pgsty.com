@@ -9,81 +9,83 @@ weight: 100
 icon: fa-solid fa-download
 ---
 
-SOW is one executable: there is no service to enable and no runtime language environment.
-Release builds target Linux and macOS on `amd64` and `arm64`; Linux also gets RPM and DEB
-packages. Windows is not supported.
+SOW is one executable. It needs no daemon, database service, or language runtime. Release archives support Linux and macOS on `amd64` and `arm64`. Linux also has RPM and DEB packages.
 
-Use the [Download page](/download/) to select the archive or Linux package that matches
-your operating system and architecture. It links each published artifact, its source tag,
-and `SHA256SUMS`.
+Use the [Download page](/download/) to choose SOW 0.5.0 for your system. Download the selected artifact and `SHA256SUMS` into a separate download directory.
 
 ## Install an archive
 
-Download one archive plus `SHA256SUMS`, then verify the matching line before extraction:
+For Linux amd64, verify the archive, extract it, and install the executable:
 
 ```bash
-# Linux amd64
+set -euo pipefail
 grep '  sow_0.5.0_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
 tar -xzf sow_0.5.0_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
-On macOS, select `darwin_amd64` or `darwin_arm64` and replace `sha256sum -c -` with
-`shasum -a 256 -c -`. Without root, install to a directory already on your `PATH`, such
-as `~/.local/bin`.
+For macOS, select `darwin_amd64` or `darwin_arm64`. Substitute that archive name and use `shasum -a 256 -c -` for the checksum command.
+
+To install without root access:
+
+```bash
+mkdir -p "$HOME/.local/bin"
+install -m 0755 sow "$HOME/.local/bin/sow"
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Add the `export PATH` line to your shell profile to keep it in new sessions.
 
 ## Install a Linux package
 
-Linux packages use the `1PGSTY` release suffix:
+Verify the downloaded package against its entry in `SHA256SUMS`. Then run the command for your distribution:
 
 ```bash
+# RPM, x86_64
 sudo rpm -Uvh ./sow-0.5.0-1PGSTY.x86_64.rpm
+
+# Debian or Ubuntu, amd64
 sudo apt install ./sow_0.5.0-1PGSTY_amd64.deb
 ```
 
-Choose only the command and architecture that match the host. RPM installs the license at
-`/usr/share/licenses/sow/LICENSE`; DEB installs copyright/license metadata under
-`/usr/share/doc/sow/`.
+For ARM64, use the RPM ending in `.aarch64.rpm` or the DEB ending in `_arm64.deb`. Packages install the executable at `/usr/bin/sow`.
 
 ## Build from source
 
-The module declares Go 1.27.1. Metadata generation needs no C toolchain. Build the
-same `v0.5.0` tag used by the pinned downloads:
+Install Go 1.27.1 or newer and Git. The build uses `CGO_ENABLED=0` and needs no C compiler.
 
 ```bash
-git clone https://github.com/pgsty/sow.git
-cd sow
 set -euo pipefail
-SOW_TAG=v0.5.0
-git checkout "$SOW_TAG"
-SOW_VERSION="${SOW_TAG#v}"
+git clone --branch v0.5.0 https://github.com/pgsty/sow.git
+cd sow
+SOW_BUILD_DIR="$(mktemp -d)"
 CGO_ENABLED=0 go build -trimpath \
-  -ldflags="-s -w -X github.com/pgsty/sow/internal/v2cli.Version=${SOW_VERSION}" \
-  -o sow ./cmd/sow
-sudo install -m 0755 sow /usr/local/bin/sow
+  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.5.0' \
+  -o "$SOW_BUILD_DIR/sow" ./cmd/sow
+sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 ```
 
-This uses the release build flags and embeds the selected tag's product version.
+<span id="verify"></span>
 
-## Verify
+## Verify the installation
 
 ```bash
 sow version
 sow help
 ```
 
-`sow version` reports product version, target OS/architecture, and build Go toolchain.
-`sow help` lists the command tree. Each archive also contains `README.md`, `CHANGELOG.md`,
-the Apache-2.0 `LICENSE`, and `THIRD_PARTY_NOTICES`.
+`version` shows the product version, target operating system and architecture, and Go toolchain. `help` lists commands. Use `sow help COMMAND` for a command's options.
 
-## Upgrade from 0.4 to 0.5
+<span id="upgrade-a-03-managed-workspace"></span>
 
-Install SOW 0.5.0 using the [download page](/download/). See the
-[0.5.0 release notes](/blog/release/sow-v0.5.0/) for the changes in this version.
+## Upgrade a Managed workspace from 0.3 or 0.4 {#upgrade-from-04-to-05}
 
-SOW 0.5 uses database schema v13, adding indexes for candidate pool-path lookups. It keeps
-`sow/v3` configuration and the public layout. Stop writers and back up the whole workspace,
-then explicitly migrate each Repository before ordinary use:
+SOW 0.5.0 uses database schema v13. The `schema: sow/v3` configuration and public directory layout stay the same.
+
+1. Stop all workspace writers.
+2. Back up the complete workspace with a tool that preserves hard links, such as `rsync -aH` or `tar`. DEB `by-hash` entries use hard links.
+3. Install SOW 0.5.0.
+4. For each Repository in `sow.yml`, migrate, rebuild, and check:
 
 ```bash
 sow repo migrate REPOSITORY -C /srv/sow
@@ -91,53 +93,27 @@ sow build -r REPOSITORY -C /srv/sow
 sow check -r REPOSITORY -C /srv/sow
 ```
 
-The updated RPM authentication and APT metadata contracts require one rebuild of affected
-Dists. Afterwards, unchanged RPMs with matching Built evidence do not need repeated payload
-verification. Migration adds private database indexes and can take time and disk space on a
-large publication history; do not reopen the migrated database with an older binary.
-`sow repo migrate` reports the change, for example `schema=12->13`; a repeated run shows
-`schema=13->13`. Until a Repository is migrated, its write commands exit `5` with
-`` repository schema v12 predates this binary (v13); back up the workspace, then run
-`sow repo migrate NAME` ``.
+Replace `REPOSITORY` with its configured name. Migration updates the database; the rebuild
+applies the current RPM verification and APT metadata rules.
 
-Back up with a tool that preserves hard links, because DEB `by-hash` entries are hard links:
-GNU `cp -a` on Linux, `rsync -aH`, or `tar`. On macOS, `cp -a` does not preserve hard links.
+Keep the backup for rollback. Older SOW binaries cannot open the migrated database. See [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) and the [0.5.0 release notes](/blog/release/sow-v0.5.0/).
 
-For Plain repositories, 0.5 adds `create --metadata-timestamp`; check that the actual
-binary's `create --help` lists it. The default remains `0`, so replacing the binary alone
-does not repair a published YUM repository's timestamp. Follow the
-[YUM migration guide](/docs/tutorial/yum-migration/) before switching an existing workflow.
+## Upgrade a Plain repository
 
-## Upgrade a 0.3 Managed Workspace
+Plain mode has no database to migrate. For an existing YUM repository, follow [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/) before changing its generator. Version 0.5 adds `--metadata-timestamp`, but its default is still `0`. Set the timestamp from the repository's publication history so cached YUM clients accept the new index.
 
-SOW 0.4 introduced internal database schemas v11 and v12; 0.5 upgrades to v13. The public layout and
-`schema: sow/v3` configuration identifier stay the same, but each existing v0.3 Repository must be
-migrated explicitly before ordinary reads or writes. Stop Workspace writers before taking the
-backup:
+<span id="permissions-and-optional-tools"></span>
 
-```bash
-cp -a /srv/sow /srv/sow.backup-before-upgrade   # GNU cp; elsewhere use rsync -aH or tar
-sow repo migrate REPOSITORY -C /srv/sow
-sow build -r REPOSITORY -C /srv/sow
-sow check -r REPOSITORY -C /srv/sow
-```
+## Storage and optional tools
 
-Repeat the last three commands for every Repository named in `sow.yml`. The database transition is
-one-way; do not reopen a migrated Workspace with an older binary. See
-[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) for the repaired status, signer, and
-publication evidence.
+The SOW user needs read access to input packages and write access to the repository. Keep Managed workspaces on a local POSIX filesystem with file locks, `fsync`, and atomic rename.
 
-## Permissions and optional tools
+Package parsing and metadata generation run inside SOW. Optional signing needs these host tools:
 
-The invoking user needs read access to package inputs and write access to the Plain target
-or Managed workspace. Keep Managed workspaces on a local POSIX filesystem: locks, fsync,
-safe paths, and atomic rename are part of the correctness contract.
+| Signing method | Required tools |
+|---|---|
+| Metadata signing with an OpenPGP key file or key material | None |
+| Metadata signing with a GPG key identifier | `gpg` and `gpg-agent` |
+| RPM package signing | `rpm` with a working GPG signing setup |
 
-Repository parsing and metadata rendering are in-process. Only two optional paths need
-host tools:
-
-- RPM **package** signing requires `rpm` and a working GPG environment;
-- an `agent://` metadata key requires `gpg` and `gpg-agent`.
-
-Next: [Quick Start](/docs/start/quickstart/) for Plain mode, or
-[First Workspace](/docs/start/workspace/) for Managed mode.
+Continue with [Quick Start](/docs/start/quickstart/) for Plain mode or [First Workspace](/docs/start/workspace/) for Managed mode.

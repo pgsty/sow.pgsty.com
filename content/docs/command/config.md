@@ -1,7 +1,7 @@
 ---
 title: "sow config"
 linkTitle: "config"
-description: "Validate sow.yml without touching anything, and print the effective configuration for any scope."
+description: "Validate sow.yml and inspect the effective configuration."
 categories: [Command]
 tags: [cli, config]
 url: "/docs/command/config/"
@@ -10,12 +10,7 @@ weight: 300
 icon: fa-solid fa-file-code
 ---
 
-`sow config` has two read-only subcommands. `config check` is the full preflight over `sow.yml` —
-run it after every hand edit and in CI. `config show` prints the configuration SOW actually computed,
-which is where you confirm that defaults, inherited architectures and normalized aliases resolved the
-way you expected.
-
-Neither subcommand creates directories, touches a database, or corrects your file.
+Use `sow config check` after editing `sow.yml`. It validates the configuration, signing references, and compatibility with existing Repository state. Use `sow config show` to inspect resolved defaults and inherited settings. Both commands are read-only.
 
 ## Synopsis
 
@@ -23,8 +18,6 @@ Neither subcommand creates directories, touches a database, or corrects your fil
 sow config check [-C DIR] [--json]
 sow config show [--all] [-C DIR] [-r NAME] [-d NAME]... [--json]
 ```
-
-`sow help config` lists both.
 
 ## sow config check
 
@@ -47,12 +40,12 @@ sow config check --json
 | Flag | Description | Default |
 |---|---|---|
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 | `-h, --help` | Show help | — |
 
 ### Strict field rejection
 
-Unknown keys are errors, not warnings. A typo can't silently disable a policy:
+Unknown keys produce a configuration error:
 
 ```console
 sow config check
@@ -60,19 +53,14 @@ configuration error: load config "/srv/repo/sow.yml": parse sow.yml: yaml: unmar
   line 8: field bogus_field not found in type config.DistConfig
 ```
 
-The schema version is pinned:
+Use `schema: sow/v3`:
 
 ```console
 sow config check
 configuration error: load config "/srv/repo/sow.yml": config schema must be "sow/v3", got "invalid"
 ```
 
-The only valid value is `schema: sow/v3`. Do not change the schema string as a
-way to bypass a validation error.
-
-`check` also verifies that every declared signing key reference resolves and is usable for signing —
-without ever printing key material. If you remove an architecture from the permit list while a Dist
-config, Membership or Built Generation still uses it, `config check` rejects the configuration.
+`config check` also verifies that the signing keys are available and suitable for signing. Before removing an architecture from the Workspace list, remove its use from Dist configuration, membership, and Built state.
 
 ## sow config show
 
@@ -130,8 +118,7 @@ repos:
 ```
 
 `show` filled in `protected: false`, the inherited per-Dist `architectures`, `limit: 0` and an empty
-`exclude` list. Architectures are always printed as canonical families (`x86_64`, `aarch64`), never
-as ecosystem aliases — `amd64` and `arm64` are the DEB spellings of the same two families.
+`exclude` list. Architectures use canonical family names: `x86_64` and `aarch64`. The corresponding DEB names are `amd64` and `arm64`.
 
 ### Options
 
@@ -141,10 +128,10 @@ as ecosystem aliases — `amd64` and `arm64` are the DEB spellings of the same t
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `-d, --dist NAME` | Select a distribution; repeatable | selection rules |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 | `-h, --help` | Show help | — |
 
-### Scope projection with -r and -d
+### Select configuration with -r and -d {#scope-projection-with--r-and--d}
 
 `-r` and `-d` narrow the output to the selected objects. This is the fast way to answer "what policy
 is actually in effect for this one Dist":
@@ -172,12 +159,11 @@ repos:
         exclude: []
 ```
 
-`--all` goes the other way: it expands the entire Workspace regardless of where you are standing.
+Without `--all`, normal Repository selection applies. If the discovery start directory is inside a Dist, that Dist is selected unless you provide `-d`. Otherwise, all Dists of the selected Repository are shown. `--all` shows the entire Workspace and ignores `-r` and `-d`.
 
-### Secrets are never printed
+### Signing references {#secrets-are-never-printed}
 
-Key material and passphrases never appear in `config show`, in JSON, in the operation log, or in
-error text. Only the reference (`file://…`, `env://…`, `agent://…`) and fingerprint are shown.
+The output contains key references and resolved fingerprints. Private key contents and passphrases are omitted.
 
 ## Examples
 
@@ -185,7 +171,7 @@ Validate before a build in CI:
 
 ```bash
 sow config check -C /srv/repo || exit 1
-sow build -r pgsql
+sow build -C /srv/repo -r pgsql
 ```
 
 Diff effective policy across two Dists:
@@ -201,17 +187,17 @@ diff -u /tmp/el9.yml /tmp/beta.yml
 | Code | Trigger |
 |---|---|
 | `0` | Configuration valid, or output printed |
-| `1` | Runtime I/O error reading the config file |
-| `2` | Usage error, Workspace not found, unknown field, wrong schema, or any validation failure |
-| `6` | A named Repository or Dist does not exist |
+| `1` | Runtime or key-resolution failure |
+| `2` | Usage or discovery error, invalid YAML, unknown field, or unsupported schema |
+| `5` | Existing state, controlled paths, or recovery records are inconsistent |
+| `6` | Unknown selection, unusable signing configuration, or configuration incompatible with existing state |
 
-`config check` reports validation failures as exit `2`, not `6`: an invalid `sow.yml` is a
-configuration error, not a rejected operation.
+`config check` validates both the YAML file and its compatibility with existing Repository state.
 
 ## See also
 
 - [sow.yml Reference](/docs/reference/config/) — every key, with a complete example file
 - [Membership Policy](/docs/feature/policy/) — how `exclude` and `limit` are evaluated
 - [Signing Model](/docs/feature/signing/) — key reference grammar and the two trust chains
-- [sow init](/docs/command/init/) — converging a hand-written config
+- [sow init](/docs/command/init/) — create objects declared in a hand-written config
 - [sow check](/docs/command/check/) — the runtime counterpart that verifies bytes on disk

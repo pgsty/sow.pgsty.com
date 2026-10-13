@@ -1,7 +1,7 @@
 ---
 title: "Download SOW"
 linkTitle: "Download"
-description: "Install SOW from the Pigsty repository, a pinned RPM or DEB package, a Linux or macOS archive, or a source build — with the SHA-256 digest of every published artifact."
+description: "Install SOW from the Pigsty repository, a pinned RPM or DEB package, a Linux or macOS archive, or a source build. Check downloaded files with the release SHA-256 digests."
 url: "/download/"
 weight: 20
 icon: fa-solid fa-download
@@ -24,5 +24,5 @@ from a pinned RPM or DEB package, from a `tar.gz` archive for Linux or macOS on 
 and `arm64`, or from a source build of a tagged release. Pinned paths use SOW 0.5.0;
 the Pigsty repository is a rolling channel. Each build provides the same CLI for its target
 platform, and every published artifact carries a SHA-256 digest listed
-against `SHA256SUMS`. After installing, run `sow version` and `sow help`, then point
+in `SHA256SUMS`. After installing, run `sow version` and `sow help`, then point
 `sow create` at a directory of packages.

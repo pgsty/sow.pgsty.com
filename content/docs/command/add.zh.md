@@ -1,7 +1,7 @@
 ---
 title: "sow add"
 linkTitle: "add"
-description: "把包加入期望成员集，执行成员策略，并重建受影响的索引。"
+description: "导入软件包、应用成员策略并构建本地索引。"
 categories: [Command]
 tags: [cli, managed, policy]
 url: "/zh/docs/command/add/"
@@ -10,8 +10,7 @@ weight: 600
 icon: fa-solid fa-plus
 ---
 
-`sow add` 是主要的写入路径。它解析你指定的包，从包头推导格式与架构，执行 Dist 的成员策略，并且——
-除非你加 `--skip`——在返回前重建全部受影响的索引。命令退出码为 `0` 时，客户端已经能看到新包了。
+`sow add` 将软件包导入指定 Dist，并构建本地索引。它从包头读取格式与架构，再应用各 Dist 的成员策略。需要分批导入后统一构建时，使用 `--skip`。需要更新远程目标时，在构建后运行 [`sow publish`](/zh/docs/command/publish/)。
 
 ## 语法
 
@@ -25,22 +24,21 @@ sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|-
 |---|---|---|
 | `-R, --recursive` | 递归进入 `PATH` 目录的子目录 | 关闭（只扫顶层） |
 | `--skip` | 只更新期望状态，不构建 | 关闭 |
-| `-j, --jobs N` | 解析、哈希与渲染的并发 worker 数 | 逻辑 CPU 数 |
+| `-j, --jobs N` | 解析、哈希与渲染的并发工作线程数 | 逻辑 CPU 数 |
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
 | `-d, --dist NAME` | 选择一个 Dist；可重复 | 按选择规则 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
-| `--json` | 输出版本化 JSON envelope | false |
+| `--json` | 输出 JSON | false |
 
 ## 输入与目标
 
 `PATH` 可以是文件或目录。目录默认只扫描顶层，除非你加 `-R`。
 
-最终必须确定恰好一个仓库与至少一个目标 Dist——见[选择规则](/zh/docs/command/)。RPM 与 DEB
-混合批次是允许的：每个包只会被考虑放进格式相同的目标 Dist；一个包如果没有任何兼容目标，则该包失败。
+选择一个仓库和一个或多个 Dist。可用 `-r`、`-d` 指定，也可按[当前目录自动选择](/zh/docs/command/)。混合添加 RPM 与 DEB 时，每个包只进入格式相同的 Dist。没有兼容目标的包会被拒绝。
 
-SOW 绝不从 manifest、目录名或宿主机 OS 推断目标。
+根据软件包适用的发行版选择 Dist。SOW 检查包格式与架构，不测试操作系统或依赖兼容性。
 
 ```console
 sow add /srv/pkg/centos-release-7-2.1511.el7.centos.2.10.x86_64.rpm /srv/pkg/epel-release-7-5.noarch.rpm -r pigsty -d el9
@@ -49,7 +47,7 @@ item input="/srv/pkg/centos-release-7-2.1511.el7.centos.2.10.x86_64.rpm" status=
 item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=accepted format=rpm coordinate="epel-release-0:7-5.noarch" sha256:d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab dists=el9:accepted
 ```
 
-汇总行给出 Operation ID、逐项计数、成员增减、新的 Desired Revision、Built Generation，以及仓库是否
+汇总行给出操作记录 ID、逐项计数、成员增减、新的期望状态修订号、构建快照，以及仓库是否
 留在 dirty 状态。随后是每个输入一行 `item`，顺序稳定。
 
 ## 逐项状态
@@ -58,14 +56,14 @@ item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=accepted format=rpm coo
 
 | 状态 | 含义 |
 |---|---|
-| `accepted` | 新建 Package Object，且至少增加一条 Membership |
-| `reused` | 内容已存在于本仓库；可能只是新增了 Membership 引用 |
+| `accepted` | 新建软件包对象，且至少增加一条成员关系 |
+| `reused` | 内容已存在于本仓库；可能只是新增了成员关系引用 |
 | `excluded` | 策略把它从所有目标 Dist 中移除——看 `dists=` 区分是 `excluded` 还是 `limited` |
 | `failed` | 该包被拒绝，`error=` 字段说明原因 |
 
-`reused` 表示内容幂等：同一个文件加两次绝不会产生第二个对象或重复 Membership。默认重复执行
-`add` 时还会收敛所选 Dist；Dist 已经最新时 Generation 不变，先前 `--skip` 或配置变更留下
-dirty 状态时，则会补做构建并可能推进 Generation：
+`reused` 表示复用已有内容：同一个文件加两次不会产生第二个对象或重复成员关系。默认重复执行
+`add` 时还会构建所选 Dist。Dist 已是最新状态时，构建快照不变。先前 `--skip` 或配置变更留下
+dirty 状态时，SOW 会补做构建，并可能生成新的构建快照：
 
 ```console
 sow add /srv/pkg/epel-release-7-5.noarch.rpm -r pigsty -d el9
@@ -73,28 +71,24 @@ add repository=pigsty operation=656950149626836753 accepted=1 failed=0 membershi
 item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=reused format=rpm coordinate="epel-release-0:7-5.noarch" sha256:d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab dists=el9:accepted
 ```
 
-把同一个对象加进第二个 Dist 同样是 `reused`——包池只保留一份，只是多了一条 Membership。
-如果仍想保留 dirty 批次，应再次显式使用 `--skip`。
+把同一个对象加进第二个 Dist 同样是 `reused`——包池只保留一份，只是多了一条成员关系。
+需要继续延后构建时，再次使用 `--skip`。
 
-## 架构是读出来的，不是猜的
+## 软件包架构 {#架构是读出来的不是猜的}
 
-`add` 从包头读取格式与原生架构，再对照工作区许可表。不在许可表中的架构会让该包失败，并明确告诉你
-要改什么：
+`add` 从包头读取格式与原生架构，再对照工作区许可表。架构不受支持或不在配置的许可表中时，该包会被拒绝：
 
 ```console
 sow add /srv/pkg/centos-release-3.1-1.i386.rpm -r pigsty -d el9
 item input="/srv/pkg/centos-release-3.1-1.i386.rpm" status=failed error="managed: operation rejected: unknown rpm package architecture \"i386\"; supported rpm package architectures are [x86_64, aarch64, noarch] (canonical families [x86_64, aarch64, neutral]); use a supported package or update only supported architecture families in sow.yml"
 ```
 
-它不会创建目录，也不会修改 `sow.yml`。
-
-RPM 的 `noarch` 与 DEB 的 `all` 是架构中性（neutral）的。它们只产生一个 Package Object 与一条
-Membership，但会渲染进目标 Dist 的每个有效架构视图。它们不会自动扩散到你没有用 `-d` 选中的 Dist。
+RPM 的 `noarch` 与 DEB 的 `all` 是架构中性（neutral）的。它们只产生一个软件包对象与一条
+成员关系，但会渲染进目标 Dist 的每个有效架构视图。只有所选 Dist 会包含这些包。
 
 ## 策略：exclude 与 limit
 
-合并进目标 Membership 之后，SOW 会在完整的 Dist 候选集上重新求值 `exclude`，再求值 `limit`。被策略
-移除的包会被明确报告，不算解析失败。
+SOW 将输入包与 Dist 的现有成员合并，先执行 `exclude`，再执行 `limit`。被策略移除的包会显示为 `excluded`，不算解析失败。
 
 ```console
 sow add /srv/pkg/debs -r pgsql -d trixielim
@@ -107,15 +101,13 @@ item input="/srv/pkg/debs/pg-sample_1.17-1_all.deb" status=reused format=deb coo
 ```
 
 这里 `trixielim` 配了 `exclude: [{kind: [dbgsym]}]` 与 `limit: 1`。dbgsym 包被规则排除；
-`libpq5 18.2-1` 在版本上限下输给了 `18.3-1`，报告为 `limited`。两者的顶层状态都是 `excluded`，
-靠 `dists=` 字段区分。
+`libpq5 18.2-1` 因版本上限被移除并报告为 `limited`，`18.3-1` 被保留。两者的顶层状态都是 `excluded`，
+用 `dists=` 字段区分。
 
-limit 按 `(二进制包名, 原生架构)` 分组，因此 `18.3-1:amd64` 与 `18.3-1:arm64` 在 `limit: 1` 下都能
+`limit` 按 `(二进制包名, 规范架构)` 分组，因此 `18.3-1:amd64` 与 `18.3-1:arm64` 在 `limit: 1` 下都能
 留下。同一次运行中，一个包可以被某个 Dist 接受、被另一个 Dist 跳过。
 
-> [!WARNING] 被策略移除的成员不会复活
-> `exclude` 与 `limit` 移除的是真实的期望成员。之后放宽策略不会把它们变回来——`pool/` 里残留的字节
-> 不构成候选集。请重新执行 `sow add`。
+放宽 `exclude` 或 `limit` 后，需要重新运行 `sow add` 来恢复软件包。策略作用于期望成员，而不是 `pool/` 中的全部残留文件。
 
 ## 部分成功的批次
 
@@ -137,22 +129,16 @@ managed: batch partially succeeded
 sow add /srv/pkg/centos-release-3.1-1.i386.rpm -r pigsty -d el9
 ```
 
-没有 rejected/隔离目录。
-
 被策略排除不属于输入失败；全部被排除的批次可以正常成功，包括首次向空 Dist 添加时。
-如果取消或预检拒绝导致 Desired 尚未提交，已准备好的输入不会被报告为 accepted。取消命令
-返回 `130`，保留原始输入文件并重新执行即可；已经提交的成员变更在恢复时保持不变。
+使用 SIGINT 或 SIGTERM 中断命令时，命令返回 `130`。使用原始输入文件重新执行；恢复会保留已经提交的成员变更。
 
-一个 pool 路径不能代表两份不同的包字节。本地 GC 后，历史发布与已放弃上传记录保留的路径仍然
-受此约束。路径冲突只拒绝对应输入，无冲突的合法输入仍可提交。内容改变时，使用新的包版本与
-文件名，不要复用已经发布过的 URL。路径按大小写折叠比较：以仅大小写不同的文件名重新加入完全
-相同的字节也会被拒绝，请使用原文件名加入。在大小写不敏感的工作区文件系统上，源目录与已有目录
-仅大小写不同的包同样会被拒绝（见[平台与集成](/zh/docs/reference/compatibility/#工作区文件系统)）。
+包内容改变时，使用新的版本与文件名。本地 GC 后，已发布的包池路径仍然保留。路径冲突只拒绝对应输入，其他有效输入仍可成功。
+
+重新添加同一个包时，保持文件名大小写一致。仅大小写不同的路径会产生冲突。在大小写不敏感的文件系统上，源码包目录名也必须可以区分，详见[工作区文件系统](/zh/docs/reference/compatibility/#工作区文件系统)。
 
 ## --skip
 
-`--skip` 在期望状态提交后就停下。公开的 `pool/` 与 `dists/` 字节不变，Built Generation 保持原位，
-仓库变为 dirty。新包字节被持久保存在私有 pending 存储中，直到下一次 build 才发布。
+`--skip` 提交期望成员，保持 `pool/`、`dists/` 与构建快照不变。新包存放在私有待构建目录，供后续构建使用。期望状态与已构建状态不同时，仓库为 dirty；重复添加未变化的成员可以保持 clean。
 
 ```console
 sow add /srv/pkg/tree -R --skip -r pgsql -d trixie
@@ -164,10 +150,9 @@ sow status -r pgsql
 repository=pgsql status=dirty ready_to_copy=false revision=4 generation=3 dirty_dists=trixie pending=4/2326 locked=false
 ```
 
-`pending=4/2326` 表示私有存储里有 4 个对象、共 2326 字节在等待。它们不会出现在
-[`sow changes`](/zh/docs/command/changes/) 中——只有成功的 build 才会把它们提升进可交付树。
+`pending=4/2326` 表示有 4 个包、共 2326 字节等待构建。构建成功后，实际采用的包进入公开目录，并出现在 [`sow changes`](/zh/docs/command/changes/) 的结果中。
 
-批量导入时用 `--skip`，最后一次性收敛：
+批量导入时用 `--skip`，最后构建一次：
 
 ```bash
 sow add /srv/build/ -R -r pgsql -d el9 --skip
@@ -178,20 +163,9 @@ sow check -r pgsql
 
 ## 处理顺序
 
-一次 `add` 的执行顺序如下：
+SOW 检查软件包，并按配置为新 RPM 签名。随后执行 `exclude` 与 `limit`，记录最终成员；未设置 `--skip` 时，继续构建。
 
-1. 取得仓库写锁，并恢复任何未完成的 Operation。
-2. 在 SQLite 中提交一条 `planned` Operation。
-3. 只读解析输入，计算逻辑坐标与输入字节 SHA-256（RPM 还会计算 signature-neutral payload digest）。
-4. 校验架构许可表，并查询已有坐标。
-5. 只对确实全新的坐标，在 stage 副本上执行可选的 RPM 签名并计算最终 SHA-256，再校验内容与路径唯一
-   性。
-6. 合并目标 Membership，然后在完整 Dist 集合上执行 `exclude` 与 `limit`。
-7. 提交期望状态；新字节写入私有 pending 内容存储。
-8. 除非给了 `--skip`，把仍被需要的 pending 对象发布进 `pool/` 并渲染索引——一次命令中每个 Dist 最多
-   构建一次。
-
-任何模式下，输入文件都不会被修改、移动或删除。
+输入文件保持原样，签名在私有副本上完成。
 
 ## RPM 签名模式
 
@@ -200,31 +174,29 @@ Managed 模式的 RPM 包签名在 `sow.yml` 的 `signing.rpm.packages.mode` 中
 | 模式 | 行为 |
 |---|---|
 | `never` | 完整保留输入字节 |
-| `fill` | 无签名或签名不受信任时用配置 key 签名；已有能被 `trusted_keys` 验证的签名则保持字节。配置了 key 时的默认值 |
-| `always` | 确保最终包由配置 key 有效签名；否则对 stage 副本重签 |
+| `fill` | 无签名或签名不受信任时用配置密钥签名；已有能被 `trusted_keys` 验证的签名则保持字节。配置了密钥时的默认值 |
+| `always` | 确保最终包由配置密钥有效签名；否则对暂存副本重签 |
 
-没有配置 key 时只能用 `never`。
+没有配置密钥时只能用 `never`。
 
-由于签名包含非确定字段，SOW 无法先重签再比较最终哈希。重试幂等因此建立在坐标上：输入字节完全相同
-则直接复用；RPM signature-neutral digest 相同、且既有对象满足当前策略时也复用。payload digest 不同，
-或既有对象已不满足策略，则是硬冲突——`add` 不会静默地对同一坐标原地重签。
+重复导入时，SOW 复用内容相同的软件包。如果 RPM 只有签名不同，且已有包满足当前签名策略，也可以复用。包内容改变或已有签名不符合策略时，会产生坐标冲突。完整匹配规则见[签名模型](/zh/docs/feature/signing/)。
 
 ## 退出码
 
 | 码 | 触发条件 |
 |---|---|
-| `0` | 全部输入被接受或复用；索引已重建（或因 `--skip` 跳过） |
+| `0` | 输入处理完成，包括按策略排除的输入；构建完成或已跳过 |
 | `1` | 运行时 I/O、解析器、渲染器或签名失败 |
 | `2` | 用法错误、工作区未找到，或仓库/Dist 选择有歧义 |
 | `3` | 部分批次——至少一项已提交，至少一项失败 |
 | `4` | 仓库锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 完整性或恢复错误，包括在 `applied` 之后构建失败 |
-| `6` | 一个都没接受——架构不受支持、没有兼容的目标 Dist，或坐标/pool 路径冲突 |
+| `6` | 全部输入失败，或选择范围、签名、状态前提不允许执行操作 |
 
 ## 参见
 
 - [sow rm](/zh/docs/command/rm/) —— 反向操作
-- [sow build](/zh/docs/command/build/) —— `--skip` 之后的收敛
+- [sow build](/zh/docs/command/build/) —— `--skip` 之后构建
 - [成员策略](/zh/docs/feature/policy/) —— `exclude` 规则与 `limit` 语义详解
-- [签名模型](/zh/docs/feature/signing/) —— 两条信任链与 key 引用
-- [包引用](/zh/docs/reference/package-ref/) —— item 行上打印的坐标文法
+- [签名模型](/zh/docs/feature/signing/) —— 两条信任链与密钥引用
+- [包引用](/zh/docs/reference/package-ref/) —— item 行中坐标的写法

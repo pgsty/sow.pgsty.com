@@ -1,7 +1,8 @@
 ---
 title: Release Notes
 linkTitle: Release
-description: SOW release notes covering features, performance, correctness, packaging, and verification.
+description: Changes and upgrade instructions for each SOW release.
+url: "/blog/release/"
 weight: 20
 icon: fa-solid fa-tag
 sidebar_expanded: true
@@ -19,9 +20,8 @@ cascade:
   featured_image: wash
 ---
 
-SOW release notes cover features, performance, correctness, packaging, and verification,
-with the newest version first.
+Read the changes and upgrade steps for each SOW release, with the newest version first.
 
-[v0.5.0](/blog/release/sow-v0.5.0/) adds publication timestamps for existing Plain YUM
-repositories. For the earlier Managed verification and migration changes, see
-[v0.4.0](/blog/release/sow-v0.4.0/).
+[SOW 0.5.0](/blog/release/sow-v0.5.0/) adds Plain YUM publication timestamps, schema v13,
+and fixes for Managed recovery, signing, and package paths. Upgrade a 0.3 or 0.4 workspace
+with `sow repo migrate`, then build and check each Repository.

@@ -11,104 +11,101 @@ search_keywords: [quick start, getting started, sow create, plain repository, rp
 search_boost: 1.6
 ---
 
-Plain mode builds a flat repository in one directory. It does not read `sow.yml`, create
-a workspace, or keep a database.
+Use Plain mode to build a repository from a directory of packages. It works without a workspace or configuration file. You need SOW, Python 3 for the preview, and at least one RPM or DEB file.
 
 {{% steps %}}
 
 ## Prepare a directory {#1-prepare-a-directory}
 
-Put RPM and/or DEB files at the directory top level. `sow create` does not recurse and
-does not move or rename package files.
+Create a writable directory. Replace the input paths below and run the copy command for
+each package format you have:
 
 ```bash
-mkdir -p /srv/repo
-cp /path/to/packages/*.rpm /path/to/packages/*.deb /srv/repo/
+mkdir -p "$HOME/sow-quickstart"
+cp /path/to/example.rpm "$HOME/sow-quickstart/"
+cp /path/to/example.deb "$HOME/sow-quickstart/"
 ```
 
-If one glob has no matches, copy the formats you actually have instead.
+Keep packages at the directory top level; `sow create` does not scan subdirectories.
 
 ## Generate metadata {#2-generate-metadata}
 
 ```bash
-sow create /srv/repo
+sow create "$HOME/sow-quickstart"
 ```
 
-An illustrative mixed-format result is:
-
-```console
-created /srv/repo: rpm=1 deb=1 signed=0 removed=0 marker=false noop=false recovered=false
-```
-
-The directory now contains:
+With one RPM and one DEB, the output includes:
 
 ```text
-/srv/repo/
-├── package.rpm
-├── package.deb
-├── repodata/       # RPM: repomd.xml plus primary, filelists, other
+rpm=1 deb=1 signed=0 removed=0 marker=false noop=false recovered=false
+```
+
+The directory now has indexes beside the original packages:
+
+```text
+sow-quickstart/
+├── example.rpm
+├── example.deb
+├── repodata/       # RPM index and metadata
 ├── Packages        # DEB flat index
 └── Packages.gz
 ```
 
-Plain mode does not generate a DEB `Release`, `InRelease`, or `Release.gpg`. RPM and DEB
-metadata are generated in one operation; a parse or render failure prevents the new
-indexes from being committed.
+SOW creates indexes for the formats present. Plain mode does not create APT `Release`, `InRelease`, or `Release.gpg` files. It leaves package names and paths unchanged.
 
-## Serve the directory {#3-serve-the-directory}
+## Start a local server {#3-serve-the-directory}
 
-For a local check, any static file server is sufficient:
+Run this command in a separate terminal and leave it running:
 
 ```bash
-cd /srv/repo
-python3 -m http.server --bind 127.0.0.1 8080
+python3 -m http.server --bind 127.0.0.1 --directory "$HOME/sow-quickstart" 8080
 ```
 
-Verify the protocol entry points from another shell:
+If this host has no APT or DNF client, check the HTTP entry point for the format you added:
 
 ```bash
+# RPM
 curl --fail http://127.0.0.1:8080/repodata/repomd.xml >/dev/null
+
+# DEB
 curl --fail http://127.0.0.1:8080/Packages.gz >/dev/null
 ```
 
-Python's server is only a preview. Use a maintained HTTP server for persistent service.
+This server is reachable only from the same host. For other clients or a persistent service, follow [Serve Repositories](/docs/tutorial/serving/).
 
-## Configure a client {#4-configure-a-client}
+## Configure a local client {#4-configure-a-client}
 
-Replace `REPO_HOST` with the address clients can reach.
+On a Linux host running the preview server, create the source file for your package manager. These examples use unsigned metadata and disable client signature checks. For signed metadata, use a [Managed workspace](/docs/start/workspace/) and the [signing tutorial](/docs/tutorial/signing/).
 
 {{< tabs group="package-manager" default="dnf" label="Choose a package manager" >}}
 {{< tab label="DNF / YUM" value="dnf" >}}
+Save this as `/etc/yum.repos.d/sow-quickstart.repo`:
+
 ```ini {copy="all"}
-# /etc/yum.repos.d/sow-quickstart.repo
 [sow-quickstart]
 name=SOW Quick Start
-baseurl=http://REPO_HOST:8080/
+baseurl=http://127.0.0.1:8080/
 enabled=1
 gpgcheck=0
 repo_gpgcheck=0
 ```
-{{< /tab >}}
 
-{{< tab label="APT" value="apt" >}}
-```text {copy="all"}
-# /etc/apt/sources.list.d/sow-quickstart.list
-deb [trusted=yes] http://REPO_HOST:8080/ ./
-```
-{{< /tab >}}
-{{< /tabs >}}
+Refresh the index and install one of your packages:
 
-Then refresh and install a package:
-
-{{< tabs group="package-manager" default="dnf" label="Refresh metadata and install" >}}
-{{< tab label="DNF / YUM" value="dnf" >}}
 ```bash {copy="all"}
-sudo dnf makecache
+sudo dnf --disablerepo='*' --enablerepo=sow-quickstart makecache
 sudo dnf install PACKAGE_NAME
 ```
 {{< /tab >}}
-
 {{< tab label="APT" value="apt" >}}
+Save this as `/etc/apt/sources.list.d/sow-quickstart.list`:
+
+```text {copy="all"}
+deb [trusted=yes] http://127.0.0.1:8080/ ./
+```
+
+The final `./` selects a flat repository. Refresh the index and install one of your packages:
+
 ```bash {copy="all"}
 sudo apt update
 sudo apt install PACKAGE_NAME
@@ -116,40 +113,26 @@ sudo apt install PACKAGE_NAME
 {{< /tab >}}
 {{< /tabs >}}
 
-The APT source ends in `./` because this is a flat repository. `[trusted=yes]` and the
-disabled DNF signature checks are appropriate only for this unsigned quick start. Use a
-signed Managed repository when authenticity matters.
+Replace `PACKAGE_NAME` with a package name from its metadata, not its filename. On macOS, use the HTTP checks above; run package installation on a compatible Linux client.
 
 ## Update the repository {#5-update-the-repository}
 
-Change the package files and run the same command again:
+Add or remove package files, then regenerate the indexes:
 
 ```bash
-sow create /srv/repo
+sow create "$HOME/sow-quickstart"
 ```
 
-The directory contents are the complete Plain-mode state. With unchanged package bytes
-and options, including any explicit metadata timestamp, the generated metadata is
-deterministic and a repeat run reports `noop=true`.
+Unchanged package files and options produce the same metadata. A repeat run reports `noop=true`.
 
-For a YUM repository already used by clients, preserve its publication history when
-switching generators. SOW 0.5.0 adds `--metadata-timestamp` for that purpose;
-the default remains `0`. Follow [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/)
-for backup, signing, and acceptance with cached clients.
-
-For automation, request the versioned JSON envelope:
-
-```bash
-sow create /srv/repo --json
-```
+When replacing another YUM metadata generator, follow [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/) to preserve the timestamp that cached clients expect.
 
 {{% /steps %}}
 
-## When to use Managed mode
+When the preview is complete, stop the server with `Ctrl+C` and remove its source file from your client. Keep the package directory if you want to reuse it.
 
-Use Plain mode when the directory already contains exactly what should be published. Use
-a [Managed workspace](/docs/start/workspace/) when you need named Dists, architecture
-views, membership policy, signed metadata, generations, audit, or publication targets.
+<span id="when-to-use-managed-mode"></span>
 
-See also [`sow create`](/docs/command/create/) and
-[Plain Flat Repositories](/docs/feature/plain/).
+## Next
+
+Use a [Managed workspace](/docs/start/workspace/) for named Dists, architecture views, version limits, signed metadata, and publication targets. See [`sow create`](/docs/command/create/) for all Plain options.

@@ -1,7 +1,7 @@
 ---
 title: "Managed Workspaces"
 linkTitle: "Managed Workspaces"
-description: "The Workspace to Repository to Dist model, the fixed on-disk layout, how sow.yml drives everything, and the discovery and selection rules."
+description: "Workspace structure, package membership, configuration, discovery, and initialization."
 categories: [Feature]
 tags: [managed, repository, dist, generation]
 url: "/docs/feature/managed/"
@@ -9,269 +9,185 @@ weight: 300
 icon: fa-solid fa-sitemap
 ---
 
-Managed mode is what you use when the same repository will be updated for months: packages arrive in batches, policy decides what stays, and you need to prove afterwards what changed and when. This page explains the three-tier model, the layout it produces, and how commands figure out which repository and which Dist you meant.
+Use Managed mode for repositories that receive regular updates. SOW records package
+membership, applies Dist policy, builds metadata, and keeps operation history.
 
-## The three tiers
+<span id="the-three-tiers"></span>
+
+## Workspace, repository, and Dist
 
 ```text
-Workspace                          discovery and configuration boundary
-└── Repository                     ownership boundary: pool, dists, SQLite, lock, generations
-    └── Dist                       a named membership set in exactly one format
-        └── Architecture View      a rendered projection — not a membership
+Workspace
+└── Repository
+    └── Dist
+        └── Architecture view
 ```
 
-Each tier has one job, and the boundaries are strict:
+| Term | Purpose |
+|---|---|
+| Workspace | Holds `sow.yml`, private `.sow/` state, and the allowed architecture families |
+| Repository | Owns one package pool, Dists, a SQLite database, generations, and publication state |
+| Dist | Selects a named set of packages in one format: `rpm` or `deb` |
+| Architecture view | Presents a Dist's packages to clients of one architecture |
 
-**Workspace** owns exactly two things: the root `sow.yml` and the `.sow/` state directory. Nothing else at the workspace root belongs to SOW. It is the unit of discovery — commands find a workspace by walking up from a starting directory — and it is where the architecture permit list lives.
+A repository can contain RPM and DEB Dists. Dist names such as `el9`, `trixie`, and
+`el9-beta` are labels you choose; they do not inspect operating-system compatibility or
+create a promotion workflow.
 
-**Repository** is fixed at `<workspace>/<name>`. You cannot point it somewhere else; there is no `path` option. A Repository owns its `pool/`, `dists/`, SQLite database, lock, recovery state, generations, retained-generation roots, publication checkpoints, and GC evidence. Two Repositories never deduplicate against each other — the same package added to both is stored twice, on purpose, so that removing one Repository can never damage the other.
+One package can belong to several Dists in the same repository without another payload
+copy. An architecture-neutral package has one membership per Dist and appears in each
+applicable architecture view. Separate repositories keep separate package objects.
 
-**Dist** is an ordinary named set of memberships in exactly one format, `rpm` or `deb`. The name is an opaque string to SOW. `el9`, `trixie`, `el9-beta`, `customer-acme` — none of these create a state machine, a promotion workflow, or a snapshot. If you want a beta channel, make a Dist called `el9-beta`; the meaning lives in your head and your `.repo` files, not in SOW.
+<span id="the-layout"></span>
 
-**Architecture View** is what `build` renders. It creates no second membership. A `noarch` RPM has exactly one package object and exactly one membership, and gets projected into every applicable view. See [Pool & Metadata Views](/docs/feature/views/).
-
-One Repository can hold an RPM Dist and a DEB Dist at the same time, sharing one `pool/`.
-
-## The layout
-
-Managed paths are never assembled from user input. They are derived from the resolved real workspace root, a validated name, and a fixed relative fragment — which is why symlink substitution and path escape have no surface to attack.
+## Public files and private state
 
 ```text
 <workspace>/
-├── sow.yml                       # the only configuration file
-├── .sow/                         # private state; never serve this
+├── sow.yml
+├── .sow/
 │   ├── workspace.lock
-│   ├── workspace-ops/            # workspace lifecycle journal
+│   ├── workspace-ops/
 │   ├── repo-locks/<repo>.lock
-│   ├── <repo>.db                 # one SQLite per repository
+│   ├── <repo>.db
 │   └── <repo>/
-│       ├── stage/                # staging on the same filesystem
-│       ├── recovery/             # atomic-move target for deletions
-│       ├── pending/              # durable payload for --skip
-│       ├── retained/             # private retained-generation roots
-│       └── transitions/          # layout-transition recovery state
-└── <repo>/                       # the servable tree
-    ├── pool/                     # immutable package bytes
+│       ├── stage/
+│       ├── recovery/
+│       ├── pending/
+│       ├── retained/
+│       └── transitions/
+└── <repo>/
+    ├── pool/
     └── dists/
-        └── <dist>/               # architecture views rendered here
 ```
 
-A real workspace after two `dist new` and two `add` commands:
+Serve or publish the complete `<workspace>/<repo>/` directory. Keep `sow.yml` and `.sow/`
+private. Back up configuration, private state, and package files together when you need
+to preserve a working workspace. See [Repository layout](/docs/reference/layout/).
 
-```console
-$ find .sow | sort
-.sow
-.sow/pigsty
-.sow/pigsty.db
-.sow/pigsty.db-shm
-.sow/pigsty.db-wal
-.sow/pigsty/pending
-.sow/pigsty/recovery
-.sow/pigsty/retained
-.sow/pigsty/stage
-.sow/pigsty/transitions
-.sow/repo-locks
-.sow/repo-locks/pigsty.lock
-.sow/workspace-ops
-.sow/workspace.lock
+<span id="sowyml-drives-everything"></span>
+<span id="protected-repositories"></span>
+
+## Create and configure
+
+```bash
+sow init /srv/repo
+sow repo new demo -C /srv/repo
+sow dist new el9 --format rpm -r demo -C /srv/repo
+sow dist new trixie --format deb -r demo -C /srv/repo
 ```
 
-Everything under `<repo>/` is the public delivery tree. Serve it directly, publish it with
-SOW, or copy the whole tree through offline staging and an atomic switch. Everything under
-`.sow/` is private and must not be exposed; see the
-[serving guide](/docs/tutorial/serving/).
+The initial configuration uses `schema: sow/v3` and architecture families
+`[x86_64, aarch64]`. `init` creates no repository unless one is already declared in the
+configuration. Repository and Dist lifecycle commands update `sow.yml` for you.
 
-Names must match `[a-z0-9][a-z0-9._-]*`, and `.`, `..`, `.sow`, `pool`, `dists` and workspace-reserved names are rejected outright.
+Edit `sow.yml` to set architecture restrictions, membership policy, signing, or publication
+targets. Then validate the configuration:
 
-## State database and package facts
-
-The private SQLite database indexes Desired and Built Membership by `package_sha256`, so
-queries and builds expand a complete membership projection in bulk instead of issuing one
-query per package. It also keeps a rebuildable package-facts cache keyed by immutable
-package SHA-256. Ingest parses package facts once from an authenticated snapshot. Installing
-that snapshot into pending storage and promoting it to Pool each verify content independently
-for recovery; the complete add operation is not a single payload read. Production builds load only
-the selected digest rows in bounded, deterministic batches and lazily rebuild a missing or corrupt
-row from authenticated package bytes. Unrelated or oversized facts rows are not read.
-
-For unchanged Pool files, warm builds use device, inode, size, mtime, and ctime
-fingerprints to avoid rereading payload bodies. Fingerprint drift and a missing facts row share one
-authoritative SHA-256 pass and self-heal; [`sow check`](/docs/command/check/) remains the explicit
-full cryptographic audit and hashes every unique physical payload once regardless of fingerprints.
-
-The cache and its fingerprints are private implementation state; they do not change the
-public `pool/ + dists/` layout. Never edit the database or its `PRAGMA user_version` by
-hand. A v0.3 or v0.4 Repository must be backed up and explicitly upgraded with
-[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) before ordinary 0.5 reads or writes.
-Schema v13 indexes pool-path ownership so add queries only candidate paths instead of unrelated
-publication history. The first build refreshes affected RPM authentication and APT metadata contracts;
-unchanged packages can then reuse matching Built authentication evidence. Other maintenance runs when a
-SOW diagnostic names it.
-
-## `sow.yml` drives everything
-
-There is one configuration file, parsed with a strict decoder. Unknown fields do not get ignored — they fail. So do duplicate normalized architectures, illegal names or formats, a Dist architecture that is not a subset of the workspace permit list, an invalid glob or category, and an incomplete signing block.
-
-```yaml
-schema: sow/v3
-architectures:
-  - x86_64
-  - aarch64
-repos:
-  pigsty:
-    signing:
-      rpm:
-        packages:
-          mode: never
-    dists:
-      el9:
-        format: rpm
-      trixie:
-        format: deb
-targets:
-  local:
-    repository: pigsty
-    provider: filesystem
-    endpoint: file:///srv/mirror
-    prefix: pigsty
-    public_endpoint: file:///srv/mirror/pigsty/
-    max_cache_ttl: 0s
-    authoritative_workspace: true
-    single_writer: true
-    exclusive_write_authority: true
+```bash
+sow config check -C /srv/repo
+sow config show --all -C /srv/repo
 ```
 
-`config show --all` expands every default and normalized alias so you can see what SOW actually decided:
+The parser rejects unknown fields. `config check` also compares configuration with
+initialized state and resolves signing references. `config show --all` expands defaults.
+Configuration accepts `amd64` and `arm64` as aliases for `x86_64` and `aarch64`.
+DEB indexes use the native names `amd64` and `arm64`.
 
-```console
-$ sow config show --all
-schema: sow/v3
-architectures:
-  - x86_64
-  - aarch64
-repos:
-  pigsty:
-    protected: false
-    signing:
-      rpm:
-        packages:
-          mode: never
-    dists:
-      el9:
-        format: rpm
-        architectures:
-          - x86_64
-          - aarch64
-        limit: 0
-        exclude: []
-      trixie:
-        format: deb
-        architectures:
-          - x86_64
-          - aarch64
-        limit: 0
-        exclude: []
+To prevent removal of a repository, set `protected: true` on it. This blocks `repo rm`,
+including `-f`; package and Dist changes remain available.
+
+<span id="empty-has-a-valid-protocol-surface"></span>
+
+## Desired state and built state
+
+Desired state records which packages should belong to each Dist. Built state records the
+last completed metadata generation.
+
+By default, `add` and `rm` update membership and build the affected output. With `--skip`,
+they update membership without building. New package bytes stay in private `pending/`
+until a build promotes them to the pool.
+
+```bash
+sow add ./incoming/ -C /srv/repo -r demo -d el9 --skip
+sow status -C /srv/repo -r demo
+sow build -C /srv/repo -r demo
+sow check -C /srv/repo -r demo
 ```
 
-Architecture aliases are normalized once, at the parse boundary: `amd64 → x86_64`, `arm64 → aarch64`. Output is always the canonical family. The ecosystem names come back only in the rendered DEB view directory names (`binary-amd64`, `binary-arm64`).
+A `dirty` repository needs a build. Its public tree still represents the previous built
+generation. Policy, architecture, or signing changes can also make a Dist dirty.
+Removing an architecture still referenced by membership or built state is rejected.
 
-`config check` is not a YAML linter. It opens each initialized Repository's SQLite and compares the candidate configuration against the live Dists, architectures, memberships, built state, and signing availability. Removing an architecture family that memberships or built state still reference is an expected rejection (exit `6`); corrupt database or protocol evidence is an integrity error (exit `5`). Every write command runs the same preflight before it journals anything, so `config check` tells you in advance whether the next `add` would be refused.
+Every new Dist starts with valid empty indexes for its architectures. Metadata signing,
+when configured, applies to empty Dists too. Removing the last member leaves empty indexes.
 
-```console
-$ sow config check
-configuration valid: /data/ws repositories=1 dists=2
+<span id="discovery-which-workspace"></span>
+
+## Find the workspace
+
+Managed commands search for the nearest ancestor `sow.yml`:
+
+1. Start at `-C/--workdir DIR`, if supplied; otherwise start at the current directory.
+2. If no workspace is found, search from `$SOW_DIR`.
+3. If neither search succeeds, report a discovery error.
+
+The first configuration found is used, even if it contains an error. `--workdir` changes
+workspace discovery, not the process directory. Relative input paths still refer to your
+current directory:
+
+```bash
+sow add ./build/example.rpm -C /srv/repo -r demo -d el9
 ```
 
-The full schema, including `filesystem` and `r2` publication targets, is in the
-[`sow.yml` reference](/docs/reference/config/).
+A symlink can be a search starting point, but the search follows the supplied path's
+ancestors. A symlink within the workspace prevents implicit repository or Dist selection.
+Use the physical workspace path and explicit `-r` and `-d` when needed.
 
-## Discovery: which workspace?
+Plain `sow create` does not use workspace discovery.
 
-Managed commands look for the nearest ancestor `sow.yml`, in this order:
+<span id="selection-which-repository-which-dist"></span>
 
-1. If `-C/--workdir DIR` is given, search upward from `DIR`; this suppresses the current-directory candidate.
-2. Otherwise search upward from the current directory.
-3. If that finds nothing, search upward from `$SOW_DIR`, including after an explicit `-C` search fails.
-4. Still nothing: fail, with a hint about `sow init`, `--workdir`, and `SOW_DIR`.
+## Select a repository and Dist
 
-The first `sow.yml` found wins; SOW does not keep climbing past it looking for a better one.
-The search walks the supplied path's lexical ancestors, then resolves and binds the real
-workspace root. A symlink starting directory is accepted, but its lexical ancestors may differ
-from the target's physical ancestors. Use the physical root explicitly if an alias makes
-selection ambiguous; `sow config check` reports the resolved workspace, not just the start.
-
-`--workdir` is not `chdir`. It changes only where discovery starts. A relative `PATH` argument in `sow add` is still resolved against your real current directory, which is what you want when you run `sow add ./build/*.rpm -C /srv/ws`.
-
-`sow create` does not participate in any of this.
-
-## Selection: which repository, which Dist?
-
-Repository selection, in order:
+Repository selection uses the first available choice:
 
 1. Explicit `-r/--repo NAME`.
-2. The command's starting directory is inside `<workspace>/<repo>/`.
-3. The workspace has exactly one Repository.
-4. Otherwise fail and list the candidates.
+2. The repository containing the discovery starting directory.
+3. The only repository in the workspace.
 
-Dist selection, in order:
+`add`, `rm`, and `ls` select Dists in this order:
 
-1. One or more explicit `-d/--dist NAME` (repeatable).
-2. The starting directory is inside `<workspace>/<repo>/dists/<dist>/`.
-3. The selected Repository has exactly one Dist.
-4. Otherwise fail and list the candidates.
+1. Explicit `-d` options; repeat the option to select several Dists.
+2. The Dist containing the discovery starting directory.
+3. The only Dist in the selected repository.
 
-The important asymmetry: `build`, `check`, and `status` default to **all** Dists of the selected Repository when `-d` is absent, because operating on everything is the safe reading of "no filter". `add`, `rm`, and `ls` require a definite Dist set, because guessing where a package should land is not safe:
+If more than one choice remains, the command requires an explicit selection.
 
-```console
-$ sow ls
-workspace discovery error: managed: workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
-```
+`build`, `check`, and `status` default to all Dists in the selected repository.
+`show` searches that repository; `where` searches all repositories. Use `-d` to narrow
+commands that accept it. See [Commands](/docs/command/) for each command's selection rules.
 
-That is exit `2`. Every inference happens only after path type and symlink validation.
+<span id="state-database-and-package-facts"></span>
+<span id="init-converges-it-does-not-reset"></span>
 
-## `init` converges, it does not reset
+## Repeat initialization or upgrade
 
-`sow init` is idempotent by design, and its rules are an architectural invariant rather than a convenience:
+Rerunning `init` fills in missing declared repositories and Dists. It checks existing
+initialized state without resetting generations. After adding an architecture to an
+existing Dist, run `build` to create its new view.
 
-- **No `sow.yml`:** create one with `schema: sow/v3` and `architectures: [x86_64, aarch64]`, plus `.sow/`. No Repository is created automatically.
-- **Valid config already present:** in stable name order, fill in whatever is not initialized yet — a missing Repository shell, a missing SQLite, an entire missing Dist. A newly created Dist immediately gets all empty views for its effective architectures.
-- **Valid database state or a valid protocol pointer already present:** verify only. Never overwrite, never zero a generation, never rewrite bytes.
-- **An architecture was added to the config after a Dist was already initialized:** `init` does not render the new view and does not advance the generation. The Dist stays dirty and waits for an explicit `build`. Removing a family that memberships or built state still use is a failure.
+If initialization commits some objects and then fails, it returns exit `3` and reports
+what completed. Resolve the error and rerun `init`.
 
-```console
-$ sow init .
-initialized /data/ws: config_created=false repositories_initialized=0 dists_initialized=0
-```
+SOW 0.5 uses database schema v13. Back up older workspaces and use
+[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) for supported upgrades.
+Do not change the SQLite schema version by hand.
 
-The point of the third and fourth rules is that `init` must be safe to run on a repository holding real content. It converges toward the declared configuration; it never uses "not initialized yet" as an excuse to rebuild something that already works.
+The database also caches parsed package facts. Warm builds can reuse those facts and
+file fingerprints; `sow check` reads and hashes package bytes for a full consistency check.
 
-Objects are processed in stable order. If an early config, Repository, or Dist commits durably and a later object then fails, the committed count is preserved, the human output reports what did commit, `--json` keeps the structured result, and the command exits `3` (partial success). If nothing had committed yet, it exits with the original error class instead.
+See [Policy](/docs/feature/policy/), [Views](/docs/feature/views/), and
+[Transactions and recovery](/docs/feature/transactions/) for the next steps.
 
-## Empty has a valid protocol surface
-
-A Dist created by `dist new` has complete protocol entry points before you add a single
-package. An RPM Dist gets valid empty `repodata` per architecture family; a DEB Dist gets
-`Packages`, `Packages.gz`, by-hash entries, and a `Release`. If the Repository has a
-metadata key configured, the empty Dist is signed too.
-
-Removing the last package therefore leaves a valid signed-if-configured empty index rather
-than a missing or broken protocol entry point. Actual package-manager acceptance remains a
-separate compatibility gate.
-
-## Protected repositories
-
-```yaml
-repos:
-  pigsty:
-    protected: true
-```
-
-`protected: true` refuses `repo rm` even with `-f`, and returns exit `6`. It does not restrict anything else: `add`, `rm`, `build`, and normal Dist maintenance all work. To actually delete the Repository you must edit `sow.yml`, pass `config check`, and only then remove it — which is precisely the friction the flag exists to create.
-
-## Next
-
-- [Pool & Metadata Views](/docs/feature/views/) — what `build` actually writes
-- [Publication Model](/blog/design/publication/) — how a generation reaches a target
-- [Membership Policy](/docs/feature/policy/) — how `exclude` and `limit` decide what stays
-- [First Workspace](/docs/start/workspace/) — a ten-minute hands-on version of this page
-- [`sow.yml` reference](/docs/reference/config/) — the complete schema
+<span id="next"></span>

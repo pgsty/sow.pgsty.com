@@ -3,7 +3,7 @@ title: "SOW v0.3.0"
 linkTitle: "SOW v0.3.0"
 date: 2026-08-10
 authors: [Vonng]
-description: "SOW v0.3.0 减少 Plain 与 Managed 仓库的重复包体工作，引入软件包事实缓存与有界提交，强化持久性，并收敛发布质量门禁。"
+description: "SOW v0.3.0 减少重复软件包读取与数据库查询，批量提交包文件，并增加构建进度事件。"
 categories: [Release]
 tags: [release, plain, managed, transaction]
 weight: 5
@@ -11,77 +11,61 @@ url: "/zh/blog/release/sow-v0.3.0/"
 draft: false
 ---
 
-SOW 0.3.0 围绕性能、持久性与产品边界完成了一次集中改进：Plain 仓库生成只需一遍包体处理；
-Managed 仓库消除了逐对象成员查询，复用经过认证的软件包事实，并用有界组提交提升载荷。正式
-交付的二进制与发布流水线也统一收敛到 SOW 实际支持的仓库工作流。
+SOW 0.3.0 减少了重复包读取与数据库查询。Plain 生成只遍历一次包内容；Managed 构建缓存已解析的包数据，并批量提交新包池文件。本版还移除了已退役的运行时与发布代码。
 
-## Plain：一遍完成包体处理
+<span id="plain一遍完成包体处理"></span>
 
-默认无签名 `sow create` 路径通过 `--jobs` 控制并行度，每个 RPM 或 DEB 只做一次哈希与解析，
-随后直接利用保留的检查结果渲染元数据。发布前只做最后一次软件包集合与文件 `stat` 快照检查，
-无需再次读取和哈希所有包体，也能拒绝并发输入变更。
+## Plain：每个软件包只读一次
 
-Plain 元数据是可以重建的派生状态。实现不会创建操作日志、恢复垃圾区、回滚前镜像，也不会
-重复计算包体哈希。进程中断后重新运行 `sow create`，即可从软件包目录重建元数据。
+默认不签名的 `sow create` 流程对每个 RPM 或 DEB 只做一次哈希与解析，`--jobs` 控制并行任务数。SOW 根据解析结果生成元数据，写入索引前再次检查软件包集合与文件属性是否变化。
 
-Pigsty 预处理会保留 RPM Header 中架构为 `i386`、`i486`、`i586` 或 `i686` 的软件包，
-让它们继续进入仓库元数据与 `repo_complete` 校验清单；DEB `i386` 与精确匹配 Patroni 3.0.4
-的过滤规则仍按预期生效。
+Plain 构建中断后，从软件包目录重新运行即可。0.3 移除了 Plain 的操作日志、回滚副本与重复包哈希；Managed 恢复机制不变。
 
-## Managed：扩展规模，不放松完整性
+Pigsty 预处理现在保留包头架构为 `i386`、`i486`、`i586` 或 `i686` 的 RPM。它们继续进入仓库元数据与 `repo_complete` 校验清单。DEB `i386` 与精确匹配 Patroni 3.0.4 的过滤规则保持不变。
 
-成员关系表增加了按包体 SHA-256 的反向索引，Desired 与 Built Membership 通过一次有序批量
-投影展开，不再为每个对象单独查询。项目基准中，包含 5,000 个对象的 Dist 列表从约 4.1 秒
-缩短至 33 毫秒；50,000 个对象从超过十分钟仍未完成，缩短到约 300 毫秒。
+<span id="managed扩展规模不放松完整性"></span>
 
-以不可变包体 SHA-256 为键的软件包事实缓存可以随时重建。Ingest 对每个新 RPM 或 DEB 完整
-认证并解析一次，保留渲染元数据所需、与具体视图无关的事实。构建时批量载入这些事实并在内存中
-匹配；记录缺失或损坏时，再从经过认证的包体惰性重建。
+## Managed：减少查询与包读取
 
-对于未改变的 Pool，暖构建使用设备号、inode、size、mtime 与 ctime 指纹校验载荷，包体读取量
-降为零。指纹漂移时执行一次权威 SHA-256 校验并修复缓存路径；`sow check` 仍负责显式的完整
-密码学审计。RPM 元数据产物与 DEB 架构索引使用有界 `--jobs` 并发，Generation Manifest 与
-Changeset 行批量写入，最终规范化复用已有描述符快照，不再重新扫描 Pool。
+成员表增加了按软件包 SHA-256 的反向索引。SOW 通过一次有序查询读取期望成员与已构建成员，替代逐对象查询。项目基准中，列出含 5,000 个对象的 Dist 从约 4.1 秒降至 33 毫秒；50,000 个对象可在一秒内完成。
 
-## 有界提交与可观察构建
+Schema v10 新增可重建的包数据缓存，以软件包 SHA-256 为键。导入时校验并解析新包，保存生成元数据所需的信息。构建时批量读取缓存；条目缺失或损坏时，从已校验的包文件重建。
 
-Managed 载荷提升采用有界的单写入者组提交。每批最多处理 512 个对象或 1 GiB：先创建公开 Pool
-链接并持久化各目标目录，再移除 pending 名称并持久化共享的 pending 目录。崩溃因此只会留下
-可恢复的“仅 pending”“精确双链接”或“仅 Pool”状态；两个名称同时持久丢失仍是完整性错误。
+包池不变时，重复构建通过设备号、inode、大小、修改时间与状态变更时间识别未变化文件。指纹变化时，执行完整 SHA-256 检查。`sow check` 仍会读取并校验完整包内容。
 
-Pending 载荷在私有 `0700` 目录中直接使用最终的 `0644` 权限，因此提升只涉及命名空间变更。
-Pending 源保护记录对象身份，不会在整个构建期间为每个软件包持有一个描述符，描述符占用保持
-有界。发布载荷时也会先持久化目标目录项，再解除源名称。
+RPM 元数据与 DEB 架构索引使用受 `--jobs` 限制的并行任务。构建快照清单与变更记录改为批量写入。
 
-长时间构建会为渲染、载荷提升、Dist 发布、规范化与收尾阶段追加结构化
-`build_progress` 事件。它们可在 `sow log` 中观察，但不会为每个阶段增加数据库 checkpoint，
-因此进度记录不会让本可成功的构建失败。
+<span id="有界提交与可观察构建"></span>
 
-## 收敛发布与运行时边界
+## 批量提交与构建进度
 
-R2 发布传输只保留 SOW 实际使用的存储原语：list、head、get 与 conditional put。远端 GC
-保持只报告、不删除对象的边界。未使用的云控制、CDN、Edge Worker、迁移程序与替代运行时路径
-已从活动代码树移除，正式 CLI 只依赖统一的仓库核心；默认 `go test ./...` 因而覆盖完整的活动
-实现。
+Managed 构建将软件包分批移入公共包池，每批最多 512 个对象或 1 GiB。SOW 先持久保存目标目录，再移除 pending 名称。批次中断时，无论包位于 pending、包池还是两处，恢复流程都能处理。
 
-## 正确性与发布质量
+Pending 文件在私有 `0700` 目录中使用最终的 `0644` 权限。构建不再全程为每个 pending 包持有文件描述符，减少了大型仓库的资源占用。
 
-- 本地 GC 可以安全移除 Generation 中记录的唯一大小写折叠 Pool 别名，这对大小写不敏感的
-  文件系统尤其重要。路径、大小与摘要仍必须标识同一不可变对象；存在歧义或漂移时拒绝执行。
-- 每个归档都包含 `LICENSE`。RPM 与 DEB 声明 Apache-2.0，并分别把许可证安装到
-  `/usr/share/licenses/sow/LICENSE` 与 `/usr/share/doc/sow/copyright`。
-- CI 强制执行格式化、模块整洁、vet、静态分析、死代码检查、性能测试编译、完整测试、竞态
-  测试、干净交付检查与软件包快照检查。
-- 集成门禁覆盖正式二进制的干净环境混合 RPM/DEB 流程、Ubuntu 22.04 上无签名 Plain APT 的
-  精确安装、AlmaLinux 8/9/10 的 DNF 签名切换探针，以及固定 MinIO 环境中的 S3 条件写操作。
-- 正式发布包含 macOS 与 Linux 的 amd64/arm64 归档、两个 Linux 架构的 RPM 与 DEB，以及
-  `SHA256SUMS`。
+长时间构建会为渲染、包文件提交、Dist 发布、规范化与完成阶段记录 `build_progress` 事件。使用 `sow log` 查看进度。
 
-## 获取发布版本
+<span id="收敛发布与运行时边界"></span>
 
-通过[下载页面](/zh/download/)获取对应平台的安装命令，或在
-[GitHub Release](https://github.com/pgsty/sow/releases/tag/v0.3.0) 查看全部交付物。安装后运行
-`sow version`，确认使用的是选定的二进制。
+## 统一仓库实现
 
-完整操作契约见 [Plain 模式](/zh/docs/feature/plain/)、[Managed 模式](/zh/docs/feature/managed/)
-与[平台与集成](/zh/docs/reference/compatibility/)。
+本版移除了已退役的 V1 CLI 与运行时、云与 CDN 发布代码、Edge Worker、已完成的迁移程序及其旧测试。当前 CLI 使用统一的仓库实现。
+
+R2 发布保留 SOW 所需的存储操作：list、HEAD、GET 与条件 PUT。远端垃圾回收只报告候选对象，不执行删除。
+
+<span id="正确性与发布质量"></span>
+
+## 其他变更
+
+- 本地垃圾回收可处理大小写不敏感文件系统中记录的唯一包池路径别名，删除前检查包路径、大小与摘要。
+- 归档包含 `LICENSE`。RPM 与 DEB 分别把 Apache-2.0 协议安装到 `/usr/share/licenses/sow/LICENSE` 与 `/usr/share/doc/sow/copyright`。
+- CI 覆盖格式化、模块一致性、静态分析、死代码检查、测试、竞态检测、源码交付与软件包构建。
+- 集成测试覆盖混合 RPM/DEB 流程、Ubuntu 22.04 上未签名 Plain APT 安装、AlmaLinux 8/9 与 `pgsty/el10` 的 DNF 签名切换，以及固定 MinIO 版本上的 S3 条件操作。
+
+<span id="获取发布版本"></span>
+
+## 获取 0.3.0
+
+在 [v0.3.0 GitHub Release](https://github.com/pgsty/sow/releases/tag/v0.3.0) 下载该版本的 Linux/macOS 归档、Linux RPM/DEB 软件包与 `SHA256SUMS`。安装后执行 `sow version`。该源码标签要求 Go 1.26.5 或更新版本。
+
+现在首次安装请使用[当前下载页](/zh/download/)。当前行为见 [Plain 模式](/zh/docs/feature/plain/)、[Managed 工作区](/zh/docs/feature/managed/)与[平台与集成](/zh/docs/reference/compatibility/)。

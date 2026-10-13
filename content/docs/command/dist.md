@@ -1,7 +1,7 @@
 ---
 title: "sow dist"
 linkTitle: "dist"
-description: "List, create, inspect and remove Dists — the named single-format member set clients actually consume."
+description: "Create, list, inspect, and remove RPM or DEB distributions."
 categories: [Command]
 tags: [cli, dist, managed]
 url: "/docs/command/dist/"
@@ -10,9 +10,7 @@ weight: 500
 icon: fa-solid fa-layer-group
 ---
 
-A Dist is a named set of packages in exactly one format (`rpm` or `deb`) inside one Repository. It is
-what a client points at. A Repository can hold RPM and DEB Dists side by side; they share one `pool/`
-but render into completely separate `dists/` subtrees.
+`sow dist` manages the distributions that clients use. Each Dist contains either RPM or DEB packages. Dists in one Repository share `pool/` and have separate indexes under `dists/`.
 
 ## Synopsis
 
@@ -28,9 +26,7 @@ sow dist rm NAME [-f|--force] [-C DIR] [-r NAME] [-T DUR | -N] [--json]
 Dist names follow the same rule as Repository names: `[a-z0-9][a-z0-9._-]*`, excluding `.`, `..`,
 `.sow`, `pool` and `dists`.
 
-To SOW the name is an opaque string. `el9`, `trixie`, `el9-beta`, `customer-acme`, `2026-07-31` are
-all just names — beta channels, per-customer views and snapshots are naming conventions you impose,
-not features SOW models.
+Choose names that identify your distributions or channels, such as `el9`, `trixie`, or `el9-beta`. SOW does not infer package format or policy from the name.
 
 ## sow dist ls
 
@@ -55,18 +51,24 @@ el9	rpm	x86_64,aarch64	2	1	4	true	["Desired and Built membership sets differ"]
 |---|---|---|
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a repository | selection rules |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 
-Architectures print as canonical families. The JSON output carries both spellings, which is how you
-confirm that a DEB Dist renders `binary-amd64` and `binary-arm64`:
+The table shows architecture families. JSON also shows the package ecosystem names.
+This excerpt contains the `architectures` field from one entry in `result.dists`; the DEB
+view directories are `binary-amd64` and `binary-arm64`:
 
 ```json
-"architectures":[{"family":"x86_64","ecosystem_arch":"amd64"},{"family":"aarch64","ecosystem_arch":"arm64"}]
+{
+  "architectures": [
+    {"family": "x86_64", "ecosystem_arch": "amd64"},
+    {"family": "aarch64", "ecosystem_arch": "arm64"}
+  ]
+}
 ```
 
 ## sow dist new
 
-Creates an ordinary, still-editable Dist. The only business argument is `--format`.
+Create a Dist with `--format rpm` or `--format deb`.
 
 ```console
 sow dist new el9 --format rpm -r pigsty
@@ -85,9 +87,9 @@ created trixie: format=deb architectures=x86_64,aarch64 members=0/0 generation=2
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 
-`--format` is mandatory and closed:
+`--format` is required and accepts only `rpm` or `deb`:
 
 ```console
 sow dist new x -r alpha
@@ -99,28 +101,21 @@ sow dist new x --format zip -r alpha
 usage error: --format must be rpm or deb
 ```
 
-There is no `--arch`. Architectures are inherited from the Workspace permit list; an advanced user
-narrows them per Dist by editing `sow.yml`. Policy (`limit`, `exclude`) is likewise configured in
-`sow.yml`, never re-modelled on the command line.
+A new Dist inherits the Workspace architectures. Edit `sow.yml` to select a subset or set `limit` and `exclude`, then run `sow config check` and `sow build`.
 
-Re-running `dist new` with the same name and the same format converges and reports the current state.
-A name collision with a *different* format is rejected:
+If the name and format already exist, `dist new` reports the current state.
+Using the same name with a different format is rejected:
 
 ```console
 sow dist new el9 --format deb -r alpha
 operation rejected: managed: operation rejected: dist "el9" already exists with format rpm
 ```
 
-### The three-way transaction
+### Creation and recovery {#the-three-way-transaction}
 
-`dist new` is committed across three places at once: the `sow.yml` entry, the Repository database,
-and the on-disk tree. It goes through the SQLite Operation Journal (the Repository database already
-exists at this point, unlike `repo new`) and produces a new Built Generation with empty indexes.
+`dist new` updates `sow.yml` and builds the new Dist. If it is interrupted, run `sow build` to recover the operation.
 
-That means a fresh Dist has a protocol-complete empty surface. An RPM Dist gets an empty
-`repodata/` under every architecture view; a DEB Dist gets empty `Packages`, `Packages.gz`,
-the `by-hash/SHA256/` entries and `Release`, plus `InRelease`/`Release.gpg` when signing is
-configured.
+The new Dist has valid empty indexes. An RPM Dist gets empty `repodata/` in each architecture view. A DEB Dist gets empty `Packages` and `Packages.gz` files, `by-hash/SHA256/` entries, and a `Release` file. When signing is configured, it also gets `InRelease` and `Release.gpg`.
 
 ## sow dist show
 
@@ -143,11 +138,11 @@ dist trixielim:
 |---|---|---|
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a repository | selection rules |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 
-The JSON form additionally exposes `effective_config_sha256`, the digest of the resolved Dist
-configuration. That digest is what makes a Dist dirty when you change `limit`, `exclude` or a signing
-key — the config identity changed, so the Built Generation no longer matches Desired.
+JSON also includes `effective_config_sha256`, the digest of the resolved Dist configuration.
+Changing `limit`, `exclude`, or a signing key can make the current configuration differ
+from the Built Generation. SOW then marks the Dist dirty until it is rebuilt.
 
 ```console
 sow dist show el9 -r pgsql --json
@@ -180,12 +175,11 @@ removed dist el9 from pgsql
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 
 ### Dist removal does not delete Pool bytes
 
-Removing a Dist never deletes a package from `pool/`. The whole Dist directory is moved into the
-recovery area and removed atomically; the pool is untouched:
+SOW removes the Dist’s configuration, membership, and indexes. Package files remain in `pool/`:
 
 ```console
 sow dist rm el9 -r pgsql -f
@@ -195,23 +189,24 @@ find pgsql -type f
 pgsql/pool/e/epel-release/epel-release-7-5.noarch.rpm
 ```
 
-Orphaned pool objects remain until `sow gc` proves they are unreachable from every safety
-root: current, retained, recovery, publication, and any active maintenance operation.
+Run [`sow gc`](/docs/command/gc/) to reclaim package files when no current or retained state needs them.
+
+If a configured target has published this Dist, removal is rejected. See
+[Removing a published view](/docs/command/publish/#removing-a-published-view).
 
 A Repository's `protected: true` blocks Repository deletion only; normal Dist maintenance on a
 protected Repository continues to work.
 
 ## Examples
 
-Give one Repository an RPM and a DEB face:
+Create an RPM Dist and a DEB Dist in one Repository:
 
 ```bash
 sow dist new el9 --format rpm -r pgsql
 sow dist new trixie --format deb -r pgsql
 ```
 
-Add a beta channel with its own retention policy — create it, then set the policy in `sow.yml` and
-converge:
+Create a beta Dist, set its package-retention policy in `sow.yml`, then rebuild it:
 
 ```bash
 sow dist new el9-beta --format rpm -r pgsql
@@ -220,7 +215,7 @@ sow config check
 sow build -r pgsql -d el9-beta
 ```
 
-Which Dists are behind their Desired state:
+List Dists that need a build:
 
 ```bash
 sow dist ls -r pgsql --json | jq -r '.result.dists[] | select(.dirty) | .name'
@@ -230,10 +225,10 @@ sow dist ls -r pgsql --json | jq -r '.result.dists[] | select(.dirty) | .name'
 
 | Code | Trigger |
 |---|---|
-| `0` | Listed, created, shown or removed; or `dist new` converged an existing Dist |
+| `0` | Listed, created, shown or removed; or `dist new` reported an existing Dist |
 | `1` | Runtime I/O or renderer error creating the empty indexes |
 | `2` | Usage error — missing or invalid `--format`, Workspace not found, ambiguous Repository |
-| `4` | Repository lock held and `--no-wait` given or `--timeout` expired |
+| `4` | Workspace or Repository lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Integrity or recovery error in the Operation Journal |
 | `6` | Invalid name, unknown Dist, format conflict with an existing name, non-empty without `-f` |
 
@@ -242,5 +237,5 @@ sow dist ls -r pgsql --json | jq -r '.result.dists[] | select(.dirty) | .name'
 - [sow repo](/docs/command/repo/) — the layer above
 - [Pool & Architecture Views](/docs/feature/views/) — how one Dist becomes several client-visible views
 - [Membership Policy](/docs/feature/policy/) — configuring `limit` and `exclude`
-- [sow build](/docs/command/build/) — converging after a policy edit
+- [sow build](/docs/command/build/) — rebuild after a policy edit
 - [Repository Layout](/docs/reference/layout/) — the RPM and DEB `dists/` structures

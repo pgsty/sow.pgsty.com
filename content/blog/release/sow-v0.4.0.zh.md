@@ -3,7 +3,7 @@ title: "SOW v0.4.0"
 linkTitle: "SOW v0.4.0"
 date: 2026-08-24
 authors: [Vonng]
-description: "SOW v0.4.0 让 Managed 校验严格收敛为单遍认证，引入独立 RPM 信任环校验与安全发布目标重绑定，并强化迁移、恢复与公共交付验证。"
+description: "SOW v0.4.0 减少重复校验，独立验证 RPM 密钥集合，支持目标重绑定，并改进迁移与发布恢复。"
 categories: [Release]
 tags: [release, managed, signing, publish, migration]
 weight: 1
@@ -11,117 +11,102 @@ url: "/zh/blog/release/sow-v0.4.0/"
 draft: false
 ---
 
-SOW 0.4.0 是一次面向 Managed 仓库的完整性与恢复版本：它明确了深度校验的 I/O 契约，
-禁止跨无关密钥拼装 RPM 信任，提供可审计的发布目标可变配置修正路径，并补齐 v0.3 迁移与
-发布中断恢复的剩余缺口。
+SOW 0.4.0 改进了 Managed 仓库的校验与恢复。`check` 只对每个物理软件包计算一次内容哈希；RPM 验签分别判断各组密钥的信任结果；发布目标可通过有记录的重绑定操作修改公共 URL 或缓存时间。
 
-Plain 仓库行为与公共 `pool/ + dists/` 布局均未改变。
+Plain 行为与公共 `pool/`、`dists/` 布局保持不变。本文记录 0.4.0；升级到当前版本请按[安装指南](/zh/docs/start/install/)操作。
 
-## 从 0.3 升级
+<span id="从-03-升级"></span>
 
-> [!IMPORTANT] 必须逐个显式迁移 v0.3 Repository
-> 先停止全部 Workspace 写入并完成备份，再安装 0.4.0；在执行普通读写命令之前，对每个 Repository 运行一次
-> `sow repo migrate REPOSITORY`。迁移是显式、单向的；完成后不要再用 SOW 0.3 打开数据库。
+## 从 0.3 升级到 0.4
+
+停止工作区写入，备份完整工作区并保留硬链接。安装 0.4.0 后，先迁移每个已配置的 Repository，再继续维护：
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-0.4.0
+set -euo pipefail
+rsync -aH /srv/sow/ /srv/sow.backup-before-0.4.0/
 sow repo migrate pigsty -C /srv/sow
 sow repo migrate pgsql -C /srv/sow
 sow check -r pigsty -C /srv/sow
 sow check -r pgsql -C /srv/sow
 ```
 
-Schema v11 修复了 v0.3 的 Dist 生命周期缺陷：过去一个 Dist 变化时，另一个仍 dirty 的 Dist
-可能被遗漏，导致 Repository 错误显示为 clean；现在 Repository 状态始终在修改 Dist 的同一事务
-中派生。迁移也会修复发布与签名者证据，但不会猜测 v0.3 未记录的历史签名身份：这类身份保持
-显式未验证，不能变成 retained trust assertion。
+本例的仓库名为 `pigsty` 与 `pgsql`，请换成 `sow.yml` 中的实际名称。保留备份用于回退：SOW 0.3 无法打开迁移后的数据库。
 
-Schema v12 回填只追加的发布目标绑定账本。首次绑定、迁移回填与之后每次操作者确认的 rebind
-都会形成彼此独立、不可变的 revision。
+Schema v11 修复了 0.3 的状态错误：一个 Dist 仍为 dirty 时，Repository 可能错误显示 clean。现在，Dist 变更与仓库状态在同一事务中更新。迁移还修复发布与签名者记录；从未记录的历史签名身份仍标记为未验证。
 
-## 每个物理包体只做一次真实性认证
+Schema v12 为发布目标增加只追加的绑定历史。初次绑定、迁移回填与后续重绑定都有独立修订记录。
 
-每次 `sow check` 都会对每个唯一物理包体执行恰好一次权威内容哈希，即使缓存指纹仍然匹配也
-不会跳过。证据绑定设备号、inode、size、mtime、ctime，以及真正被读取的文件描述符。同一物理
-对象的硬链接可以共享证明；路径替换或并发身份变化会让证据失效并失败关闭。
+<span id="每个物理包体只做一次真实性认证"></span>
 
-验证 retained Generation、遍历最终 Manifest 与生成 `sow changes` 时复用同一份已认证证据。
-因此增加 retained Generation 或 Dist 不会放大包体哈希次数。DEB 与无签名 RPM 只需一遍完整
-包体流；带签名 RPM 最多再增加一遍从主 Header 到 EOF 的签名流，且与 Dist 或信任环数量无关。
+## 每个物理软件包只计算一次内容哈希
 
-软件包事实也只按本次选中的摘要集合，以有界、确定性的 SQLite 批次读取。64 MiB 包体的暖构建
-不读取包体；指纹漂移与 facts 缺失共享同一次权威包体读取，不再分别扫描。
+每次 `sow check` 对每个唯一物理软件包执行一次完整内容哈希，包括缓存指纹仍匹配的文件。同一文件的硬链接共用这个结果。校验结果绑定实际读取的文件，SOW 会检测检查期间的替换或修改。
 
-## 独立 RPM 信任环
+检查保留的构建快照、最终清单与变更时，复用同一结果。增加 Dist 或保留的构建快照不会增加包哈希次数。DEB 与未签名 RPM 需要一次完整读取；已签名 RPM 最多再从主包头读到文件末尾，验证签名。
 
-RPM 嵌入签名会在每个候选 trust ring 内独立验证：所有可识别签名 packet 必须在同一个 ring 中
-通过，且至少一条通过的路径必须认证 payload。这样既保留历史 CentOS v3/v4 签名与有意双签包的
-支持，又禁止把不同 ring 的 packet×key 成功项拼成虚假的单 key retained 信任结论。
+包缓存只查询本次选中的摘要，并按限定批次读取 SQLite。64 MiB 测试包的重复构建不读取包内容；指纹变化与缓存缺失共用一次校验。
 
-当前策略 ring、每个 retained 单 key ring 与组合 trusted ring 共用同一遍签名流。增加密钥只会
-改变授权结论，不会增加读取包体的次数。
+<span id="独立-rpm-信任环"></span>
 
-## 安全重绑定目标与公共验证
+## 分别验证 RPM 密钥集合
 
-`sow publish TARGET --rebind` 是显式、由操作者确认的修正路径：它允许修正目标的可变配置，
-同时保留原存储身份与恢复状态。
+RPM 签名包在每组候选密钥内独立检查。每个可识别签名包都必须在该组中通过验证，且至少一个通过的签名必须认证软件包载荷。
 
-| 可通过 `--rebind` 修改 | 必须配置新目标 |
+这保留了对历史 CentOS 签名与双签软件包的支持，也避免把不同密钥组中的部分成功结果拼成错误的单密钥验证结论。
+
+当前策略密钥、保留的构建快照密钥与组合受信任密钥共用同一次签名读取。增加密钥只改变信任判断，不增加包读取次数。
+
+<span id="安全重绑定目标与公共验证"></span>
+
+## 修改发布目标设置
+
+使用 `sow publish TARGET --rebind` 修改目标的可变配置，同时保留存储身份与恢复状态：
+
+| 可通过 `--rebind` 修改 | 需要配置新目标 |
 |---|---|
 | 目标名称 | Repository 身份 |
 | `public_endpoint` | Provider 或存储 `endpoint` |
-| `max_cache_ttl` | region、bucket 或 `prefix` |
+| `max_cache_ttl` | Region、bucket 或 `prefix` |
 
-普通 publish 遇到不一致时会明确提示 `--rebind`，绝不会静默接受新值。Rebind 与 publish 使用同一
-组独占锁，追加一条审计 revision，并可继续前滚处于 commit-intent 的 active attempt。目标维护
-未完成时禁止改变 TTL；filesystem 正在进行 conditional-delete 维护时禁止改变公共端点。历史
-grace deadline 永远不会被缩短。
+普通发布会报告配置变化，并提示使用 `--rebind`。重绑定取得发布锁、记录修订，也可继续执行已作出提交决定但被中断的发布。清理未完成时，TTL 与 filesystem 公共 URL 的变更受到限制。此前记录的缓存截止时间继续生效。
 
-Filesystem 与 R2 的 HTTP(S) 公共端点现在共用同一套强化 verifier。响应 Header 与 Body 空闲进度
-分别设定 Deadline，因此大对象只要持续前进，即使总传输超过两分钟也可完成。普通 canonical GET
-始终是最终权威；no-cache 请求只用于促进 revalidation。陈旧内容与 404 按 `max_cache_ttl` 等待，
-408/425/429/5xx 使用较短的有界重试窗口，超长响应失败关闭。Filesystem 公共缺失必须最终由
-canonical 404/410 证明。R2 远端删除仍明确禁用，Target GC 只报告候选。
+<span id="恢复cli-与实现收敛"></span>
 
-Filesystem 目标还会在持久绑定之前按 prospective physical path 检查别名，包括大小写不敏感
-卷上的大小写别名。预检失败不会留下 binding row，也不会创建目标 prefix。
+## 检查公共文件与恢复上传
 
-## 恢复、CLI 与实现收敛
+Filesystem 与 R2 的 HTTP(S) 检查分别限制等待响应头和响应体停止传输的时间。只要持续接收数据，大文件传输可以超过两分钟。
 
-- 增量发布恢复只接受每个指针的精确旧 Checkpoint 或目标 Generation 字节；未知或第三种身份
-  仍然失败关闭。
-- 日常发布只验证精确 Changed Object Set，不再下载完整 Public Generation。No-op 与
-  Applied-checkpoint Recovery 复用完整私有 Inventory Evidence；Target GC 只扫描所需协议 Pointer。
-- R2 操作采用分阶段 Header/Idle Deadline、有界条件式 Multipart Upload、可重试读写，并在
-  Complete Multipart 前核对整对象 SHA-256。
-- Generation signer row 成为覆盖局部构建、Dist 增删、迁移、Retention 与本地 GC 的精确
-  Manifest side table。
-- 默认重复执行 `sow add` 时，即使 Package Object 已复用，也会收敛先前 `--skip` 或配置变更
-  留下的选中 dirty Dist。
-- `sow rm --check` 与写操作共享配置门禁，返回精确、完全不写入的预览；结果不再依赖 scratch
-  文件系统是否同设备。
-- 所有 Managed 命令现在都有面向人的输出；`--json` 继续提供稳定 `sow.cli/v1` Envelope，并在
-  失败时保留已提交的部分结果及诊断性的 check/preview 结果。
-- 退役的 APT v1 Builder、External Sort、Empty-Dist 实现与 Git-tracked by-hash ledger 已移除；
-  当前 Plain/Managed APT 解析与渲染路径仍有覆盖。
+SOW 检查普通客户端 URL。过期内容与 404 最多等待 `max_cache_ttl`；临时 408、425、429 与 5xx 响应使用较短重试时间。响应过大时校验失败。Filesystem 清理在删除后检查公共端点是否返回 404 或 410；R2 清理仍只报告候选对象。
 
-## 验证与制品
+其他发布改进包括：
 
-Release 门禁覆盖完整 Go 测试、vet、staticcheck、dead-code reachability、漏洞与 RPM Fork
-Provenance 检查、Race Test、Linux amd64/arm64 构建，以及上述确定性包体/facts I/O 契约。
-Release 二进制使用 Go 1.27.0 从 `v0.4.0` 源码 Tag 构建。从源码构建现在要求 Go 1.27.0 或更新
-版本（0.3 为 1.26.5）；AWS SDK、SQLite、压缩与加密依赖同步刷新，质量门禁固定 staticcheck
-v0.8.1、deadcode v0.49.0 与 govulncheck v1.7.0。
+- 创建目标绑定前检查 filesystem 路径别名，包括大小写不敏感卷上的别名。
+- 中断的指针更新包含记录中的旧内容或新内容时，可继续执行；遇到其他内容则报告问题。
+- 每次发布只检查发生变化的公共对象，不再下载完整构建快照。
+- R2 使用可重试读写、空闲超时与限制并行数的条件式分段上传，完成上传前检查整对象 SHA-256。
 
-本次制品包含四个 Linux/macOS 归档、两个 RPM、两个 DEB 与 `SHA256SUMS`。每个归档包含
-`sow`、`README.md`、`CHANGELOG.md` 与 `LICENSE`；Linux 原生包随二进制安装 Apache-2.0
-许可证。
+## CLI 与维护修复
 
-## 获取发布版本
+- 重复执行 `sow add` 时，即使包已在包池中，也会构建此前因 `--skip` 或配置变化而处于 dirty 状态的所选 Dist。
+- `sow rm --check` 使用与删除相同的配置检查，并返回只读预览。
+- 所有 Managed 命令提供可读文本输出。`sow.cli/v1` JSON 在命令失败时保留部分结果或诊断结果。
+- 局部构建、Dist 变更、迁移、保留与垃圾回收过程保持签名者记录一致。
+- 移除已退役的 APT 构建器、外部排序、空 Dist 与 Git 跟踪的 by-hash 实现。
 
-通过[下载页面](/zh/download/)获取平台对应命令与已验证摘要，或查看
-[GitHub Release](https://github.com/pgsty/sow/releases/tag/v0.4.0)。安装后先运行 `sow version`，
-逐个迁移 v0.3 Repository，再以 `sow check` 作为发布前门禁。
+<span id="验证与制品"></span>
 
-长期维护的契约见 [Managed 工作区](/zh/docs/feature/managed/)、
-[签名模型](/zh/docs/feature/signing/)与[发布与恢复](/zh/blog/design/publication/)。
+## 构建与发布检查
+
+本版使用 Go 1.27.0，0.3 使用 Go 1.26.5。AWS SDK、SQLite、压缩与密码学依赖同步更新。构建检查固定使用 staticcheck v0.8.1、deadcode v0.49.0 与 govulncheck v1.7.0。
+
+发布检查覆盖 Go 测试、静态分析、漏洞与 RPM 分支源码检查、竞态测试、Linux amd64/arm64 构建，以及上述包读取次数限制。
+
+本版包含四个 Linux/macOS 归档、两个 RPM、两个 DEB 与 `SHA256SUMS`。归档包含 `sow`、`README.md`、`CHANGELOG.md` 与 `LICENSE`。Linux 软件包随可执行文件安装协议文件。
+
+<span id="获取发布版本"></span>
+
+## 获取 0.4.0
+
+从 [v0.4.0 GitHub Release](https://github.com/pgsty/sow/releases/tag/v0.4.0) 获取该版本制品与校验清单。安装后执行 `sow version`；0.3 工作区按上文迁移。
+
+现在首次安装请使用[当前下载页](/zh/download/)。当前行为见 [Managed 工作区](/zh/docs/feature/managed/)、[签名模型](/zh/docs/feature/signing/)与[发布与恢复](/zh/blog/design/publication/)。

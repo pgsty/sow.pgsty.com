@@ -1,7 +1,7 @@
 ---
 title: "sow rm"
 linkTitle: "rm"
-description: "Remove Desired Membership from selected Dists, with a no-write preview mode."
+description: "Remove packages from selected Dists and preview the result."
 categories: [Command]
 tags: [cli, managed, policy]
 url: "/docs/command/rm/"
@@ -10,9 +10,7 @@ weight: 700
 icon: fa-solid fa-minus
 ---
 
-`sow rm` takes packages out of the Desired Membership of the Dists you select and, by default,
-rebuilds the affected indexes immediately. It does not delete bytes from `pool/` — membership and
-content are separate concepts, and reclamation is the separate conservative `sow gc` operation.
+`sow rm` removes packages from the selected Dists and rebuilds their local indexes. Use `--check` to preview the removal, or `--skip` to postpone the build. Package files remain in `pool/` until [`sow gc`](/docs/command/gc/) can reclaim them.
 
 ## Synopsis
 
@@ -32,7 +30,7 @@ sow rm PACKAGE... [-c|--check] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|--r
 | `-d, --dist NAME` | Select a distribution; repeatable | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 
 `--check` and `--skip` are mutually exclusive:
 
@@ -54,52 +52,16 @@ usage error: --check and --skip are mutually exclusive
 | Full filename | `epel-release-7-5.noarch.rpm` |
 | Bare binary name | `epel-release` |
 
-A bare name means *every version and native architecture of that name* in the selected Dists — that
-is what makes `sow rm patroni` a useful takedown command. An ambiguous short reference that is not a
-bare name fails and lists the candidates instead of guessing.
+A bare name matches every version and architecture of that name in the selected Dists. Other reference forms must identify one object. An ambiguous reference returns an error with the matching candidates.
 
 [`sow ls`](/docs/command/ls/) prints exact `sha256:` references and canonical coordinates,
 so you never have to assemble one by hand.
 
-A reference matching nothing is a rejection, not a silent success:
+If no package matches a reference, the command returns an error:
 
 ```console
 sow rm nosuch -r pigsty -d el9
 operation rejected: managed: operation rejected: package reference not found: package reference "nosuch" matches no Desired Membership
-```
-
-There is no `--allow-empty`, no `--all`, no `--yes` and no `--source-list`.
-
-## Preview with --check
-
-`-c/--check` computes exactly what would be removed, what policy would then decide, and which files
-an immediate build would touch — and writes nothing at all. `removed` lists only the memberships
-matched by your references. A membership that policy re-evaluation removes as a consequence is not
-listed: the preview shows only the index files that removal changes, and after the write `sow log`
-counts it among the operation's memberships.
-
-```console
-sow rm centos-release -r demo -d el9 -c
-preview repository=demo operation= dists=el9 memberships=2 revision=2 generation=00000000000000000003 dirty=false changes=2
-membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
-membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64" sha256:b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead
-change op=update phase=pointer path="dists/el9/aarch64/repodata/repomd.xml" size=1509 sha256:1cfe38698967d11384f1a985618d75f5e690d1284accf951262fc663fa9afc81
-change op=update phase=pointer path="dists/el9/x86_64/repodata/repomd.xml" size=1509 sha256:1cfe38698967d11384f1a985618d75f5e690d1284accf951262fc663fa9afc81
-```
-
-Note both `centos-release` versions matched the bare name. The `change` lines are a real delivery
-plan in `payload → metadata → pointer → delete` phase order. Use `--json` when another program needs
-the corresponding `removed[]` and `changes[]` arrays.
-
-Preview uses the same candidate-configuration and integrity preflight as the mutation. A preview
-that fails that guard is not evidence that the write would succeed.
-
-`--check` deliberately does not take the write lock. Combining it with lock flags is a usage error,
-so nobody can believe a preview is queueing behind a writer:
-
-```console
-sow rm centos-release -r pigsty -d el9 -c -T 5s
-usage error: rm --check does not accept --timeout or --no-wait
 ```
 
 ## Default behavior: remove and rebuild
@@ -119,10 +81,31 @@ receive the same result as a stable standard envelope.
 Removing the last member of a Dist is fine. SOW still renders a valid, signed-if-configured empty
 index — an empty `Packages` with a verifiable `InRelease`, or empty per-architecture `repodata/`.
 
+## Preview with --check
+
+`-c/--check` previews the removal and resulting local file changes without modifying the Repository. `removed` lists memberships matched by your references. If the current policy removes additional members, their index changes appear in `changes`; their membership count appears in `sow log` after the removal runs.
+
+```console
+sow rm centos-release -r demo -d el9 -c
+preview repository=demo operation= dists=el9 memberships=2 revision=2 generation=00000000000000000003 dirty=false changes=2
+membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
+membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64" sha256:b4111ef2a51542eacc9bd1ebd080da02e53d400f9d172530c75a1e4ac06e7ead
+change op=update phase=pointer path="dists/el9/aarch64/repodata/repomd.xml" size=1509 sha256:1cfe38698967d11384f1a985618d75f5e690d1284accf951262fc663fa9afc81
+change op=update phase=pointer path="dists/el9/x86_64/repodata/repomd.xml" size=1509 sha256:1cfe38698967d11384f1a985618d75f5e690d1284accf951262fc663fa9afc81
+```
+
+Both `centos-release` versions matched the bare name. The `change` lines describe the expected local file changes in `payload → metadata → pointer → delete` order. Use `--json` to read the `removed[]` and `changes[]` arrays in a script.
+
+Preview validates the candidate configuration and existing state. It uses shared locks and can wait for a writer, but does not accept `--timeout` or `--no-wait`:
+
+```console
+sow rm centos-release -r pigsty -d el9 -c -T 5s
+usage error: rm --check does not accept --timeout or --no-wait
+```
+
 ## --skip
 
-`--skip` commits the Desired change and marks the Repository dirty without touching the public tree.
-The old Built Generation stays completely self-consistent for clients.
+`--skip` commits the Desired change and leaves the public tree unchanged. The Repository is dirty if the resulting Desired state differs from Built state. Removing a pending-only addition can return it to clean without a build.
 
 ```console
 sow rm 'rpm:centos-release-0:7-2.1511.el7.centos.2.10.x86_64' --skip -r demo -d el9
@@ -136,24 +119,22 @@ repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5 dirty
 ```
 
 `changes` is empty because nothing was built. Run [`sow build`](/docs/command/build/) to
-converge.
+build the pending changes.
 
 ## Policy interaction
 
-Removals are Desired-state edits, so policy is re-evaluated over the resulting candidate set — a
-removal will never resurrect a package that `limit` previously pushed out. If you remove `libpq5
-18.3-1` from a `limit: 1` Dist, `18.2-1` does not come back; add it again explicitly.
+After removal, SOW applies policy to the remaining members. If you remove `libpq5 18.3-1` from a `limit: 1` Dist, the previously excluded `18.2-1` stays excluded. Run `sow add` to restore it.
 
 ## Examples
 
-Safe takedown — preview first, then execute:
+Preview a removal, then apply it:
 
 ```bash
 sow rm patroni -r pgsql -d el9 -c
 sow rm patroni -r pgsql -d el9
 ```
 
-Remove one exact object from two Dists at once:
+Remove one exact object from two Dists with one command:
 
 ```bash
 sow rm sha256:d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab -r pgsql -d el9 -d el9-beta
@@ -189,6 +170,6 @@ sow rm patroni -r pgsql -d el9 -c --json | jq -r '.result.changes[] | "\(.phase)
 - [Package References](/docs/reference/package-ref/) — the full reference grammar
 - [`sow ls`](/docs/command/ls/), [`show`](/docs/command/show/), and [`where`](/docs/command/where/) — finding the exact reference to remove
 - [sow add](/docs/command/add/) — the inverse operation
-- [sow build](/docs/command/build/) — converging after `--skip`
+- [sow build](/docs/command/build/) — build after `--skip`
 - [Membership Policy](/docs/feature/policy/) — why removed members do not come back
 - [`sow retain`](/docs/command/retain/) and [`sow gc`](/docs/command/gc/) — when bytes can be reclaimed

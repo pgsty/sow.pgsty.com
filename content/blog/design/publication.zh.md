@@ -2,9 +2,9 @@
 title: "发布与恢复"
 linkTitle: "发布与恢复"
 date: 2026-08-08
-lastmod: 2026-08-24
+lastmod: 2026-10-13
 authors: [Vonng]
-description: "发布、恢复、保留与安全删除仓库对象的 target-scoped 状态机。"
+description: "SOW 如何上传仓库、继续中断的发布，以及清理不再使用的文件。"
 categories: [Design]
 tags: [publish, transaction, object-storage]
 url: "/zh/blog/design/publication/"
@@ -15,117 +15,114 @@ icon: fa-solid fa-arrows-rotate
 draft: false
 ---
 
-构建与发布是两个独立状态迁移。构建产生与 target 无关的 Generation；发布把该 Generation
-应用到一个供应商前缀，并记录足以在不猜测的前提下恢复的证据。
+构建生成本地快照（Generation）。发布把快照中的文件上传到目标，并记录进度，以便中断后继续。
+每个目标分别保存检查点，记录上次完成发布的内容。
 
-## 所有权拆分
+<span id="所有权拆分"></span>
 
-| Repository 作用域 | Target prefix 作用域 |
+## 状态归属
+
+| Repository 记录 | 目标记录 |
 |---|---|
-| Package Object | Publication Attempt |
-| Desired 与 Built 状态 | Applied Checkpoint |
-| Generation 与 Changeset | 远端 inventory |
-| retained 包体/元数据引用 | grace 与删除证据 |
+| 软件包、Desired 状态与 Built 状态 | 发布尝试与检查点 |
+| Generation 与变更集 | 远端清单 |
+| 保留的包和元数据引用 | 宽限期与删除记录 |
 
-这项拆分避免把 filesystem 发布成功当成 R2 的证据，也避免一个 target 的半完成尝试污染另一个。
+<span id="发布阶段"></span>
+<span id="指针顺序"></span>
 
-## 持久 Target Identity 与 Rebind
-
-Target 有两层嵌套身份：Storage Identity 覆盖 Provider、Endpoint、Region 与 Bucket；Target
-Identity 再加入公共树 Prefix。首次绑定后，Repository Identity、两层 Target Identity 与三个
-Authority Acknowledgement 都不可变。这样配置文件变化时，Attempt、Checkpoint、Grace 与
-Maintenance 才不会被错误解释成另一命名空间的证据。
-
-Target Name、`public_endpoint` 与 `max_cache_ttl` 只能通过显式
-[`publish --rebind`](/zh/docs/command/publish/#重绑定可变目标配置) 修改。首次绑定、迁移回填与
-每次接受的 Rebind 都追加不可变 Binding Revision。Rebind 与 Publish 使用同一组独占锁，并在
-事务内重查不可变字段；Storage 或 Prefix 变化必须使用新 Target。
-
-Target Maintenance 未完成时，TTL 无论增加还是减少都被冻结；Filesystem Conditional-delete
-Workflow 还会冻结 `public_endpoint`。改变当前 TTL 不会重写历史 Grace：删除资格时间取已存
-Deadline 与 Applied Checkpoint 加当前 Grace Minimum 中更晚的一个。
-
-## 发布阶段
+## 发布顺序
 
 ```text
-plan
-  -> 只增不删的包体
-  -> 校验和命名的元数据
-  -> 持久 commit intent
-  -> 按视图逐一写协议指针
-  -> Provider 与 Canonical Public Verification
-  -> applied checkpoint
-  -> grace
-  -> 证据门禁删除
+固定发布计划
+  -> 上传包体
+  -> 上传不可变元数据
+  -> 记录提交意图
+  -> 按视图逐一更新协议入口文件
+  -> 校验存储与公共 URL
+  -> 记录已应用检查点
 ```
 
-提交意图之前，只允许写 add-only object。`publish --abort` 可以 reconcile 并移除私有 filesystem
-stage，但不会删除远端对象。SOW 保留精确的 abandoned-object evidence，让后续尝试可以安全识别
-并复用相同字节。
+上传包体时，SOW 创建新对象或复用相同字节，不会用其他内容覆盖不可变路径。
+修改第一个可变 APT 索引别名或协议入口文件前，SOW 会先记录提交意图。
 
-首个可变 APT stable alias 或协议指针写入前，commit intent 必须已经持久化。此后唯一合法恢复
-方向是前向。对象存储没有多 key 原子提交，因此 SOW 允许一个有界 mixed-generation 窗口，
-并按确定顺序逐个把 view 前滚。
-
-## 指针顺序
-
-每个 view 都先安装不可变内容；签名伴随文件先于对应的可变指针：
+每个视图都先上传引用内容，再更新入口文件：
 
 ```text
-RPM: 校验和命名 repodata -> repomd.xml.asc -> repomd.xml
-APT: by-hash/direct indexes -> Release.gpg -> InRelease/Release
+RPM: 校验和命名的元数据 -> repomd.xml.asc -> repomd.xml
+APT: by-hash 与直接索引 -> Release.gpg -> InRelease/Release
 ```
 
-因此客户端一旦看到新指针，就一定能取到它声明的全部对象与签名。
+更新期间，各视图可能暂时使用不同构建的索引。分离签名与索引也分两次写入。
+因此，客户端可能需要重试索引刷新。公共校验完成后，SOW 才记录检查点。
 
-## 公共验证
+<span id="公共验证"></span>
 
-日常发布验证精确 Changed Closure 与所有受影响的最终 Pointer，不会从公网重新下载每个未变化
-Package。Provider Receipt 与 Public Visibility 是两种独立证明。Filesystem 与 R2 HTTP(S)
-目标共用 Canonical-GET Verifier：响应 Header 与 Body Idle 分别计时；Size+1 防止超长响应；
-408/425/429/5xx 使用短有界重试；陈旧内容或缺失对象按 Cache TTL 重试。
+## 公共访问校验
 
-No-cache 请求只是 Revalidation Hint；只有之后的普通 Canonical GET 看到期望字节，发布才能写入
-Checkpoint。Filesystem 条件删除以 HTTP 404/410 证明公共缺失；陈旧 200 会重试至 TTL。
-`file://` 则使用精确、基于描述符的缺失证明。R2 Public Absence 与远端删除仍保持禁用。
+SOW 通过 `public_endpoint` 下载变化的文件和受影响的索引入口，并核对内容。
+未变化的软件包无需重复下载。
 
-Filesystem 别名会在持久绑定前按 Prospective Canonical Path 检查，包括大小写不敏感卷上的大小写
-别名。Backend/Path Preflight 失败不会创建 Binding Row，也不会创建 Target Prefix。
+公共端点可能仍返回缓存中的旧文件。SOW 会在 `max_cache_ttl` 内等待并重试。
+校验失败时，发布不会记录新的完成检查点。
 
-## 已发布指针栅栏
+<span id="恢复结果"></span>
 
-一个 configured target 已经拥有 Applied Checkpoint 后，本地配置不能静默撤销该 target 仍拥有的
-公开 Dist、architecture 或签名指针。操作者必须先退役/解绑 target，或者用新名称和新 prefix
-发布替代品。
+## 继续或放弃发布
 
-这样，危险的“配置漏了一项”会变成显式生命周期决策。
+重新运行原来的 `sow publish TARGET` 命令即可继续。恢复沿用保存的计划，不会改用更新的本地构建。
 
-## 不复制包体的保留机制
-
-Retained Generation 保存元数据、manifest 与引用集合，不保存另一棵包体树。Repository-local
-可达性包括：
-
-- 当前 Desired/Built Membership；
-- retained Generation 引用；
-- active operation 与 recovery journal；
-- publication grace 与 recovery root。
-
-只有正典 Pool 对象位于完整 closure 之外，且当前文件身份仍与候选记录精确一致时，本地 GC
-才允许删除它。
-
-## 远端删除是一项能力
-
-远端物理删除还要求权威 inventory、target ownership、grace 到期、必要的缓存 absence evidence，
-以及原子条件删除 primitive。无法满足这些条件的供应商仍可用于发布，但 SOW 只能报告不可达
-候选，不能发出不安全的无条件删除。
-
-`r2` Provider 采用这种处理：发布路径已实现，但明确禁用远端物理删除，target GC 只报告候选。
-
-## 恢复结果
-
-| 持久边界 | 合法结果 |
+| 已保存的状态 | 下一步 |
 |---|---|
-| 没有 commit intent | reconcile 后放弃或重试 |
-| 已有 commit intent | 只能前滚 |
-| 已有 Applied Checkpoint | 收敛并进入 grace |
-| 证据互相矛盾 | 失败关闭，不虚构状态 |
+| 尚未记录提交意图 | 重试发布，或用 `--abort` 核对状态并放弃该次发布 |
+| 已记录提交意图 | 重试发布，完成保存的更新 |
+| 已记录检查点 | 完成剩余维护；目标已完成更新时无需再次上传 |
+| 文件身份冲突 | 检查报错中的文件和目标配置，再重试 |
+
+`--abort` 清理符合条件的私有文件系统暂存目录，保留远端对象，并记录已放弃的上传。
+后续发布可复用字节相同的对象。
+
+<span id="持久-target-identity-与-rebind"></span>
+
+## 目标身份
+
+存储身份由后端、端点、区域和桶组成；目标身份还包括前缀。首次发布将这些值绑定到 Repository，
+后续发布据此查找对应历史。
+
+修改目标名称、`public_endpoint` 或 `max_cache_ttl` 后，运行
+[`sow publish TARGET --rebind`](/zh/docs/command/publish/#重绑定可变目标配置)。
+SOW 会追加绑定修订记录。Repository、存储身份或前缀变化时，需要配置新目标。
+
+修改 `max_cache_ttl` 前，先完成该目标尚未结束的维护。
+文件系统目标正在执行条件删除时，需等删除流程完成后才能修改 `public_endpoint`。
+缩短 TTL 不会提前结束已记录的缓存宽限期。
+
+<span id="已发布指针栅栏"></span>
+
+## 移除已发布的视图
+
+目标仍在配置中且已有发布检查点时，SOW 会阻止撤销其现有 Dist、架构或签名入口。
+需要停用该目标时，从 `sow.yml` 的 `targets` 中删除对应条目，再运行 `sow config check`。
+这会保留旧远端文件与发布历史，不会删除远端仓库。
+
+随后可以修改本地 Dist 配置并重建。要发布删减后的视图集合，配置一个使用不同前缀的新目标，并让客户端使用新 URL。
+`--rebind` 不能修改目标前缀。配置规则见 [`sow publish`](/zh/docs/command/publish/)。
+
+<span id="不复制包体的保留机制"></span>
+<span id="远端删除是一项能力"></span>
+
+## 保留与回收软件包
+
+保留的 Generation 保存元数据、清单和指向共享 Pool 的包引用。本地垃圾回收会检查以下引用：
+
+- 当前 Desired 与 Built 成员关系；
+- 保留的 Generation；
+- 进行中的操作与恢复日志；
+- 发布恢复和宽限期。
+
+只有引用全部消失，且文件仍与记录的身份一致时，SOW 才删除包。
+因此，保留 Generation 可以保留其软件包，无需再复制一棵包目录。
+
+文件系统目标删除要求清单完整、目标由当前工作区独占且宽限期已过。
+SOW 按记录的文件身份执行条件删除，再检查公共端点是否已返回文件不存在，最后记录结果。
+R2 目标 GC 只报告候选并保留对象。

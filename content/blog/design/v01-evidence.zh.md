@@ -2,9 +2,9 @@
 title: "SOW v0.1 到底证明了什么"
 linkTitle: "v0.1 证据账本"
 date: 2026-07-31
-lastmod: 2026-08-28
+lastmod: 2026-10-13
 authors: [Vonng]
-description: "整理 v0.1 的 112 份日期化证据报告：真实客户端、规模、故障、迁移与 Provider 结论证明了什么，又从未证明什么。"
+description: "汇总 v0.1 的 112 份验证报告，涵盖客户端兼容性、规模、恢复、迁移与云存储行为。"
 categories: [Design]
 tags: [history, v0.1, evidence, compatibility, verification]
 url: "/zh/blog/design/v01-evidence/"
@@ -13,129 +13,108 @@ icon: fa-solid fa-microscope
 draft: false
 ---
 
-> [!IMPORTANT] 版本绑定的证据
-> 本页每项结果都只属于当时记录的 v0.1 源码、布局、Fixture 与环境，不能证明当前 SOW
-> 的兼容性或发布就绪。
+v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
+它们记录了客户端测试、规模测量、故障恢复、迁移和云存储实验。
+本文汇总主要结果，并链接到代表性报告。
 
-v0.1 归档包含 112 份日期化 Evidence Report，覆盖 2026-07-11 至 2026-07-31。把它们全部
-发布成博客只会降低公共站点的可用性：其中很多是窄故障闭包、重复的 Current-source Audit，
-或某个具体实现 Seam 的执行记录。
-
-但直接丢弃也会损失同样重要的信息。这些报告说明：哪些设计决定来自真实客户端与反例，哪些只
-达到 Local/Mock 层，以及团队在哪些地方拒绝把不完整证据包装成 PASS。
-
-本文保留的正是这条边界。
+每项结果对应报告中记录的源码版本、测试数据、客户端与环境。
+当前支持情况见[兼容性参考](/zh/docs/reference/compatibility/)。
 
 ## 证据时间线
 
 | 时间 | 报告数 | 主要工作 |
 |---|---:|---|
-| 2026-07-11 | 3 | 真实 APT/DNF 基线、72,310 包 Manifest 扫描、50k Upstream Streaming |
-| 2026-07-12 | 35 | APT/YUM 协议、CAS/GC、发布顺序、恢复、MinIO、性能、迁移、构建/供应链门禁与云验收夹具 |
-| 2026-07-13 | 2 | RPM Trust Closure 与 Selected-set Materialization Recovery |
-| 2026-07-14–16 | 14 | 旧拓扑、Family Migration、物理所有权、完整副本纳管与包签名 Inventory |
-| 2026-07-17–20 | 39 | Cloudflare/R2/COS/Edge Safety、Provider Attestation、Cutover Receipt、配置上限与 Checkpoint-fenced Deletion |
-| 2026-07-22 | 10 | Stage、Apply、Prune、Rollback 与 Residue Cleanup 的 Descriptor/Path Identity |
-| 2026-07-26–29 | 7 | 递归持久性、Hostile Writer、Replacement Outcome、Preserved Audit 与 Provider 修正 |
-| 2026-07-30–31 | 2 | Clean-room APT/YUM/Asset MVP 与最终 Legacy-source Baseline |
+| 2026-07-11 | 3 | 真实 APT/DNF 基线、72,310 个包的清单扫描、5 万个上游包的流式处理 |
+| 2026-07-12 | 35 | APT/YUM 协议、CAS/GC、发布顺序、恢复、MinIO、性能、迁移、构建与供应链检查、云测试工具 |
+| 2026-07-13 | 2 | RPM 信任验证与选定包集合的物化恢复 |
+| 2026-07-14–16 | 14 | 旧拓扑、仓库族迁移、物理所有权、完整副本纳管与包签名清单 |
+| 2026-07-17–20 | 39 | Cloudflare/R2/COS/边缘服务安全、服务身份验证、切换回执、配置上限与检查点约束下的删除 |
+| 2026-07-22 | 10 | 暂存、应用、清理、回滚与残留删除中的文件描述符和路径身份 |
+| 2026-07-26–29 | 7 | 递归持久化、恶意并发写入、替换结果、保留核查副本与存储服务修正 |
+| 2026-07-30–31 | 2 | 从空环境验证 APT/YUM/静态制品最小可用产品，核对最终旧版源码基线 |
 
 ## 哪些结论有较强证据
 
 ### 真实客户端与大仓库
 
-最早的证据没有只验证生成的 XML/Text，而是使用真实 APT 与 DNF，并显式测量规模：
+最早的测试使用真实 APT 与 DNF 客户端，并测量处理大仓库的成本：
 
 - [真实 APT/DNF 客户端兼容](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-11-client-compat.md)；
-- [72,310 包 Manifest 扫描](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-11-manifest-72k-performance.md)；
-- [50k Upstream Streaming](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-11-upstream-50k-streaming.md)；
-- 独立的 50k APT、YUM、Materialization、Publish Plan 与 Legacy Adoption 测试。
+- [72,310 个包的清单扫描](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-11-manifest-72k-performance.md)；
+- [5 万个上游包的流式处理](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-11-upstream-50k-streaming.md)；
+- 独立的 5 万包 APT、YUM、物化、发布计划与旧包纳管测试。
 
-这些结果支撑了 Streaming 与 Bounded Concurrency 要求，但不证明后续每种布局都自动继承同样
-的客户端行为与性能。
+这些测量支持了大仓库采用流式处理与有界并发的要求。
 
-### 协议闭包与负反例
+### 协议完整性与异常情形 {#协议闭包与负反例}
 
-有些设计修正来自负面证明，而不是乐观实现：
+失败的实验找出了协议设计的限制：
 
-- [APT Fixed-alias 负 PoC](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-12-apt-legacy-fixed-alias-negative-poc.md)
-  表明旧客户端语义限制了 Alias 原子性声明；
-- [YUM Raw-alias Signature-bridge 负 PoC](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-12-yum-raw-alias-signature-bridge-negative-poc.md)
-  区分旧 BaseURL 兼容与强 Generation-pinned Metadata；
-- [YUM Generation Atomicity](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-12-yum-generation-atomicity.md)
-  精确记录哪些 Pointer 行为能原子化，哪些不能。
+- [APT 固定别名反例](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-12-apt-legacy-fixed-alias-negative-poc.md)
+  表明旧客户端行为限制了别名切换的原子性。
+- [YUM 原始别名与签名桥接反例](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-12-yum-raw-alias-signature-bridge-negative-poc.md)
+  区分旧 BaseURL 兼容与固定到 Generation（构建快照）的元数据。
+- [YUM Generation 原子性](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-12-yum-generation-atomicity.md)
+  记录哪些协议指针操作可以原子化，哪些不能。
 
-延续下来的教训不是 V1 URL Scheme，而是：看似合规的仓库与某个客户端事务，是两个不同结论。
+这些实验说明，协议格式与客户端事务需要分别测试。
 
 ### 故障与恢复
 
-归档覆盖被中断的 Sync、Publish、Materialize、Snapshot、Archive 与 Remote Restore。后期报告
-进一步把文件操作绑定到 Descriptor 与精确 Path Identity，并覆盖 Rollback、Quarantine 与
-Preserved Evidence。
+归档测试了同步、发布、物化、快照、归档和远端恢复被中断的情况。
+后期报告进一步检查文件描述符与精确路径身份，并覆盖回滚、隔离和保留核查记录。
 
 代表性记录包括：
 
-- [Publish/Recovery 对抗审查](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-12-publish-recovery-adversarial-review.md)；
-- [Selected-set Recovery Closure](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-13-selected-set-materialization-recovery.md)；
-- [State-lock 与 Atomic Publication](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-19-state-lock-atomic-publication.md)；
-- [Derived-state Replacement Outcome](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-28-derived-state-replacement-outcome.md)。
+- [发布与恢复对抗审查](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-12-publish-recovery-adversarial-review.md)；
+- [选定包集合的物化恢复](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-13-selected-set-materialization-recovery.md)；
+- [状态锁与原子发布](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-19-state-lock-atomic-publication.md)；
+- [派生状态替换结果](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-28-derived-state-replacement-outcome.md)。
 
-这也是当前 SOW 区分 Pre-commit Abandon、Post-intent Forward Recovery 与 Contradictory
-Evidence 的原因，而不是只提供一个笼统的“重试”。
+这些测试促成了不同恢复路径：放弃未提交的工作，完成提交意图之后的工作，或在记录冲突时停止。
 
 ### 旧系统迁移
 
-迁移证据枚举旧 Make Target、物理布局、Repository Family、Consumer Config、Package-signature
-Inventory 与 Rollback，并在 Mutation 前使用 Read-only Copy 与精确 Receipt。
+迁移报告枚举了旧 Make 目标、物理布局、仓库族、客户端配置、包签名清单和回滚方式。
+修改前先使用只读副本，并核对精确回执。
 
-这证明了一条特定 Pigsty Cutover Path，却不支持把旧拓扑永久带进产品。最有价值的结果是一套
-纪律：把迁移假设变成显式数据与可执行 Gate，切换结束后再让它退役。
+这项工作验证了一条具体的 Pigsty 切换路径，也建立了一种方法：
+把迁移假设记录为数据，在每一步前检查，切换结束后移除迁移代码。
 
-### Provider 与 Edge 实验
+<span id="provider-与-edge-实验"></span>
 
-归档包含真实和模拟的 R2、MinIO、Cloudflare、COS 与 Edge 工作。较强报告都明确声明范围：
+### 云存储与边缘服务实验
 
-- [真实 R2 Storage Protocol](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-18-real-r2-storage-protocol.md)；
-- [R2 Publication Storage Transaction](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-20-r2-publication-storage-transaction.md)；
-- [Full-provider Checkpoint-fenced Delete](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-20-full-provider-checkpoint-fenced-delete.md)；
-- Cloudflare Bootstrap、Private Domain、Provider Attestation 与 Rollback 记录。
+归档包含真实和模拟的 R2、MinIO、Cloudflare、COS 与边缘服务测试。
+代表性报告包括：
 
-其中一些使用 Owner 指定的 Nonproduction Resource，另一些是 Offline 或 Mock Validation。
-一项真实 R2 结果从未证明 COS 条件替换、EdgeOne Cache 行为或当前 SOW Target State Machine。
+- [真实 R2 存储协议](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-18-real-r2-storage-protocol.md)；
+- [R2 发布存储事务](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-20-r2-publication-storage-transaction.md)；
+- [完整存储服务的检查点约束删除](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-20-full-provider-checkpoint-fenced-delete.md)；
+- Cloudflare 初始化、私有域名、服务身份验证和回滚记录。
 
-## 归档没有证明什么
+<span id="归档没有证明什么"></span>
 
-即使证据很多，原文仍保留明确开放边界：
-
-- 单个 PoC 不能证明所有 APT、DNF、Proxy、Mirror Tool 或 Provider；
-- MinIO S3 兼容不等于 Cloudflare R2 或腾讯 COS 语义；
-- Design/Adversarial Review 不是 Implementation Evidence；
-- Local/Mock Provider 结果不是生产部署；
-- PASS 始终绑定 Source Revision、Fixture、URL Layout 与环境；
-- v0.1 证据不能验证后来的 Plain/Managed 或 Single-payload 设计。
-
-这些限制是归档的优点，不应在整理历史时被“润色”掉。
+部分测试使用指定的非生产资源，另一些离线运行或使用模拟服务，报告中分别注明。
+在 R2、MinIO 或 COS 上测得的存储行为，对应具体服务与所测 API。
 
 ## 哪些做法进入了设计方法
 
-证据计划留下六条长期实践：
+这项工作形成了六条实践：
 
-1. **标明证据层。** Design、Source、Unit/Fault Test、Real Client、Provider、Artifact 与
-   Production 彼此独立。
-2. **保留负结果。** 一个反例往往比另一个 Happy Path 更能定义安全边界。
-3. **把 PASS 绑定到不可变输入。** Source Revision、Container/Client Version、Provider、
-   Route 与 Fixture 都属于结果。
-4. **把规模作为契约。** 大仓库必须测量 Memory、Call Count 与 Concurrency。
-5. **证据随模型退役。** 历史证明可以解释过去，不能静默升级新布局。
-6. **让构建与供应链检查长期存在。** Toolchain Portability、Dependency Vulnerability、
-   Static Analysis、Dead-code Closure 与 Reproducible Delivery 是持续 Release Gate，不是一次性清理。
+1. **说明测了什么。** 区分源码检查、模拟故障、客户端测试与真实服务测试。
+2. **保留失败结果。** 记录设计在什么条件下无法工作。
+3. **随结果记录输入。** 保存源码版本、容器与客户端版本、存储服务、路由和测试数据。
+4. **测量规模。** 记录大仓库的内存、调用次数与并发行为。
+5. **重新测试新布局。** 历史结果与产生它的模型一起保存。
+6. **检查每次发布构建。** 测试支持的平台，扫描依赖并运行静态分析。检查能否重现构建结果。
 
-这些实践如今写入[设计原则](/zh/blog/design/principles/)与当前
+这些实践用于当前[设计原则](/zh/blog/design/principles/)与
 [兼容性参考](/zh/docs/reference/compatibility/)。
 
 ## 第一手资料
 
-不可变的 [v0.1.0 Evidence 目录](https://github.com/pgsty/sow/tree/v0.1.0/docs/evidence)
-保留全部日期化报告。本文是维护中的解释，原文件则是审计轨迹。
+[v0.1.0 验证报告目录](https://github.com/pgsty/sow/tree/v0.1.0/docs/evidence)保留全部报告，
+包括命令、结果和测试条件。
 
-继续阅读 [v0.2 重置](/zh/blog/design/v02-reset/)，可以看到这些教训如何在产品模型大幅缩小
-后继续存在。
+继续阅读 [v0.2 重置](/zh/blog/design/v02-reset/)，了解这些经验如何用于更小的产品模型。

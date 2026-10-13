@@ -1,7 +1,7 @@
 ---
 title: "Tutorials"
 linkTitle: "Tutorials"
-description: "End-to-end walkthroughs that take a pile of packages all the way to a signed repository your clients can install from."
+description: "Build, sign, serve, and update RPM and DEB repositories."
 categories: [Tutorial]
 tags: [yum, apt, signing, publish]
 url: "/docs/tutorial/"
@@ -9,61 +9,38 @@ weight: 200
 icon: fa-solid fa-graduation-cap
 ---
 
-The tutorials cover new Managed workspaces and migration of existing Plain repositories.
-Commands are intended to be run in order;
-replace uppercase placeholders and package paths for your environment.
+These tutorials cover repository creation, signing, publication, and updates. Start with [Installation](/docs/start/install/) if you have not installed SOW.
 
-If you have not installed SOW yet, start with [Installation](/docs/start/install/) and
-[Quick Start](/docs/start/quickstart/).
+<span id="which-one-first"></span>
 
 {{< cards >}}
 {{< card title="Migrate an Existing YUM Repository" link="/docs/tutorial/yum-migration/" >}}
-Replace a flat repository's metadata generator while preserving publication time, signatures,
-and compatibility with clients that already have cached metadata.
+Replace the metadata generator for a flat RPM repository while preserving publication timestamps, signatures, and client caches.
 {{< /card >}}
 {{< card title="Build a YUM Repository" link="/docs/tutorial/yum-repo/" >}}
-A managed RPM repository with per-architecture views, `noarch` projection, debuginfo filtering,
-version limits, and a working `dnf` client configuration.
+Create RPM architecture views, filter packages, set version limits, and configure DNF.
 {{< /card >}}
 {{< card title="Build an APT Repository" link="/docs/tutorial/apt-repo/" >}}
-A managed DEB repository with a Debian-style pool, `by-hash` indexes, and a deb822 client
-configuration.
+Create a DEB pool with by-hash indexes and configure an APT client.
 {{< /card >}}
 {{< card title="Sign Your Repository" link="/docs/tutorial/signing/" >}}
-Generate a dedicated GPG key, sign repository metadata and RPM packages, and configure
-clients to reject anything unsigned.
+Sign metadata and RPM packages, then configure clients to verify signatures.
 {{< /card >}}
 {{< card title="Serve Repositories" link="/docs/tutorial/serving/" >}}
-Serve a Repository with Nginx and publish a verified Generation to a configured filesystem
-target without exposing private workspace state.
+Publish to a filesystem target and serve it with Nginx.
 {{< /card >}}
 {{< card title="Build the pigsty-infra Repository" link="/docs/tutorial/infra-repo/" >}}
-Turn existing dual-architecture infra-pkg RPMs and DEBs into a real repository, then rehearse local
-installation, rolling updates, Stable promotion, and monthly snapshots.
+Use both package formats and architectures, test installation, and maintain rolling channels, stable releases, and monthly snapshots.
 {{< /card >}}
 {{< /cards >}}
 
-## Which one first
+<span id="conventions-used-here"></span>
 
-| Your situation | Start here |
-|---|---|
-| You already maintain a flat RPM directory with createrepo_c | [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/) |
-| You ship RPMs to dnf clients | [Build a YUM Repository](/docs/tutorial/yum-repo/) |
-| You ship DEBs for Debian or Ubuntu | [Build an APT Repository](/docs/tutorial/apt-repo/) |
-| You need signed metadata or signed RPM payloads | [Sign Your Repository](/docs/tutorial/signing/) |
-| The tree is built but nothing can reach it | [Serve Repositories](/docs/tutorial/serving/) |
-| You want to turn a dual-architecture package pool into a maintained Infra repository | [Build the pigsty-infra Repository](/docs/tutorial/infra-repo/) |
+## Follow the examples
 
-The YUM and APT tutorials are independent fresh-workspace paths. A real Workspace may hold
-both RPM and DEB Dists in one Repository when that ownership boundary suits your operation.
+Run commands in order. Replace uppercase placeholders and `/path/to/` inputs with your values. Examples under `/srv` require a writable directory; you can substitute a path under your home directory.
 
-## Conventions used here
+The YUM and APT tutorials each start with a new workspace. To combine them, create the second Dist in the existing `pigsty` Repository and keep both Dist definitions in `sow.yml`.
 
-Shell blocks contain commands without a `$` prefix so you can copy a whole block at once.
-Output appears in a separate block below the command, or as a comment when it is one line.
-Where a command needs a value you must substitute, it appears in `UPPERCASE`.
-
-Every tutorial includes verification. For Managed mode, `sow check` returning `0` confirms
-that the selected Repository is complete and matches the recorded Generation. Plain mode
-uses metadata and signature checks plus real client acceptance, as described in the
-migration guide; `sow check` does not audit a flat directory.
+Each tutorial shows how to check its result. For a command error or interrupted operation,
+see [Troubleshooting](/docs/reference/troubleshooting/).

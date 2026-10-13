@@ -1,7 +1,7 @@
 ---
 title: "sow check"
 linkTitle: "check"
-description: "执行完整的只读完整性与可交付校验流水线。"
+description: "交付前校验仓库文件、索引、状态与签名。"
 categories: [Command]
 tags: [cli, audit, signing]
 url: "/zh/docs/command/check/"
@@ -9,8 +9,7 @@ weight: 1300
 icon: fa-solid fa-list-check
 ---
 
-`sow check` 是 Managed Repository 的深度只读门禁。它哈希包体、校验状态、重建期望视图并验证
-已声明签名；不会修复、构建、恢复 Operation，也不会获取写锁。
+交付 Managed 仓库前，使用 `sow check` 检查包哈希、状态、索引、签名与构建快照清单。此命令只读；如果期望状态与已构建状态不同，先运行 `sow build`。
 
 ## 语法
 
@@ -20,42 +19,33 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 
 | 参数 | 含义 | 默认值 |
 |---|---|---|
-| `-j, --jobs N` | 并行校验 Worker 数，不得小于 `1` | 逻辑 CPU 数 |
+| `-j, --jobs N` | 并行校验工作线程数，不得小于 `1` | 逻辑 CPU 数 |
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
-| `-r, --repo NAME` | 选择 Repository | [选择规则](/zh/docs/command/) |
+| `-r, --repo NAME` | 选择仓库 | [选择规则](/zh/docs/command/) |
 | `-d, --dist NAME` | 校验指定 Dist；可重复 | 全部 Dist |
-| `--json` | 输出 `sow.cli/v1` Envelope | false |
+| `--json` | 输出 JSON | false |
 
 ## 校验层
 
-稳态下，checker 按顺序报告九层校验：
+仓库没有未完成的布局迁移时，`check` 按顺序报告九层校验：
 
 | 层 | 校验内容 | `checked` 计数 |
 |---|---|---|
-| `config` | `sow.yml` 能否针对该 Repository 解析并通过校验 | 配置对象 |
+| `config` | `sow.yml` 能否针对该仓库解析并通过校验 | 配置对象 |
 | `state` | SQLite `quick_check`、外键、日志与恢复证据 | 一个状态库 |
 | `public-modes` | 服务目录中所有文件与目录权限 | 已检查路径 |
-| `retained` | 显式保留记录与冻结 Generation Manifest（损坏的保留根会使该层失败，见 [`retain rm`](/zh/docs/command/retain/#retain-rm)） | 保留记录 |
-| `package-bytes` | 包池与私有 pending 包体的 SHA-256 | Package Object |
-| `desired-membership` | Membership 能否在当前策略下解析到真实对象 | 成员关系 |
+| `retained` | 保留记录与保存的构建快照清单；损坏记录的处理方法见 [`retain rm`](/zh/docs/command/retain/#retain-rm) | 保留记录 |
+| `package-bytes` | 包池与私有待构建包文件的 SHA-256 | 软件包对象 |
+| `desired-membership` | 成员关系能否在当前策略下解析到真实对象 | 成员关系 |
 | `index` | 渲染索引是否与其声明的成员关系一致 | Dist |
 | `signature` | 所有已声明元数据/软件包签名是否有效 | 签名 |
-| `generation-manifest` | Built Generation Manifest 是否与磁盘文件一致 | 一个 Manifest |
+| `generation-manifest` | 构建快照清单是否与磁盘文件一致 | 一个清单 |
 
-Repository 处于未完成布局迁移时，`check` 改为依次报告 `config`、`state`、`public-modes` 与条件
-层 `layout-transition`，随后停止，并在诊断指定的
-[`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 完成或在 commit 前中止前返回不可交付。
+仓库存在未完成的布局迁移时，`check` 报告 `config`、`state`、`public-modes` 与 `layout-transition`，随后停止。按报告中的 [`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 指令完成或中止迁移。
 
-### 物理证据与 I/O 契约
+### 软件包校验 {#物理证据与-io-契约}
 
-`package-bytes` 绝不会把缓存指纹当作真实性证明。每次运行都会对每个唯一物理包体执行恰好一次
-哈希；证据绑定设备号、inode、size、mtime、ctime 与真正读取的文件描述符。同 inode 的硬链接
-共享证明；Retained Generation、最终 Manifest 遍历与 `changes` 复用它，不再扫描包体。
-`checked` 列统计逻辑对象，不代表全文流数量。
-
-DEB 或无签名 RPM 只需一遍完整包体流。带签名 RPM 最多再用一遍从主 Header 到 EOF 的流，
-对全部签名 Packet 与候选 Trust Ring 验证；成本不会随 Dist、Retained Generation 或 Trust Ring
-数量增加。伪造或并发替换文件会让描述符证据失效并失败关闭。
+每次运行都会重新计算包文件的哈希。同一物理文件的硬链接共用一次哈希结果。带签名的 RPM 还会进行签名校验。`checked` 统计软件包对象数量，不是文件读取次数。
 
 ```console
 sow check
@@ -73,8 +63,7 @@ generation-manifest	ok=true	checked=1
 
 ## dirty 不可交付
 
-dirty Repository 的九层校验可以分别成立：旧 Built Generation 完整，新 Desired 状态也有效；
-但二者不一致，因此整体仍未通过交付门禁：
+dirty 仓库需要先构建，才能通过 `check`。旧构建快照与新的期望状态可以分别通过校验，但二者仍有差异：
 
 ```console
 sow check
@@ -83,21 +72,21 @@ repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5
 integrity or recovery error: managed: repository is not ready to copy: repository status is dirty
 ```
 
-此时退出 `5`。运行 [`sow build`](/zh/docs/command/build/) 后重新校验，不应让发布流水线放行该状态。
+此时退出 `5`。运行 [`sow build`](/zh/docs/command/build/) 后，再运行 `sow check`。
 
 ## 退出码
 
 | 代码 | 触发条件 |
 |---|---|
-| `0` | 全部校验层通过，Repository 可复制交付 |
+| `0` | 全部校验层通过，仓库可复制交付 |
 | `1` | 校验期间发生 I/O 错误 |
-| `2` | 用法错误、未发现工作区或隐式 Repository 选择有歧义 |
-| `5` | 某个校验层失败，或 Repository 不可交付 |
-| `6` | 显式指定的 Repository 或 Dist 未配置 |
+| `2` | 用法错误、未发现工作区或隐式仓库选择有歧义 |
+| `5` | 某个校验层失败，或仓库不可交付 |
+| `6` | 显式指定的仓库或 Dist 未配置 |
 
 ## 参见
 
-- [`sow status`](/zh/docs/command/status/) —— 低成本状态查询
-- [`sow build`](/zh/docs/command/build/) —— 收敛 Desired 与 Built
+- [`sow status`](/zh/docs/command/status/) —— 快速查询状态
+- [`sow build`](/zh/docs/command/build/) —— 按期望状态构建索引
 - [退出码](/zh/docs/reference/exit-codes/) —— dirty 为什么映射到 `5`
 - [可观测与审计](/zh/docs/feature/audit/) —— 组合使用校验与审计

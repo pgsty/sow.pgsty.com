@@ -1,7 +1,7 @@
 ---
 title: "sow add"
 linkTitle: "add"
-description: "Add packages to Desired Membership, apply policy, and rebuild the affected indexes."
+description: "Import packages, apply membership policy, and build local indexes."
 categories: [Command]
 tags: [cli, managed, policy]
 url: "/docs/command/add/"
@@ -10,10 +10,7 @@ weight: 600
 icon: fa-solid fa-plus
 ---
 
-`sow add` is the main write path. It parses the packages you point at, derives their format and
-architecture from the package headers, applies the Dist's membership policy, and — unless you pass
-`--skip` — rebuilds every affected index before it returns. When the command exits `0`, clients can
-already see the new packages.
+`sow add` imports packages into the selected Dists and builds their local indexes. It reads package format and architecture from the package headers, then applies each Dist's policy. Use `--skip` to import several batches before one build. To update a remote target, run [`sow publish`](/docs/command/publish/) after the build.
 
 ## Synopsis
 
@@ -33,17 +30,15 @@ sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|-
 | `-d, --dist NAME` | Select a distribution; repeatable | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 
 ## Inputs and targets
 
 `PATH` can be a file or a directory. A directory is scanned top level only unless you pass `-R`.
 
-You must end up with exactly one Repository and at least one target Dist — see the
-[selection rules](/docs/command/). Mixed RPM/DEB batches are fine: each package is only
-considered for target Dists of its own format. A package with no compatible target fails.
+Select one Repository and one or more Dists. Use `-r` and `-d`, or the [directory-based defaults](/docs/command/). In a mixed RPM/DEB batch, each package goes only to Dists of its format. A package with no compatible target fails.
 
-SOW never infers the target from a manifest, a directory name, or the host OS.
+Choose Dists that match the package’s intended distribution. SOW checks package format and architecture; it does not test operating-system or dependency compatibility.
 
 ```console
 sow add /srv/pkg/centos-release-7-2.1511.el7.centos.2.10.x86_64.rpm /srv/pkg/epel-release-7-5.noarch.rpm -r pigsty -d el9
@@ -52,9 +47,7 @@ item input="/srv/pkg/centos-release-7-2.1511.el7.centos.2.10.x86_64.rpm" status=
 item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=accepted format=rpm coordinate="epel-release-0:7-5.noarch" sha256:d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab dists=el9:accepted
 ```
 
-The summary line reports the Operation ID, per-item counts, the membership delta, the new Desired
-Revision, the Built Generation and whether the Repository is left dirty. Then one `item` line per
-input, in stable order.
+The summary reports the Operation ID, item counts, and membership changes. It also shows the Desired Revision, Built Generation, and dirty state. Each input then has one `item` line, in stable order.
 
 ## Item statuses
 
@@ -68,9 +61,8 @@ Each `item` line carries an overall `status` plus a per-Dist verdict in `dists=`
 | `failed` | The package was rejected; the `error=` field says why |
 
 `reused` is content idempotence: adding the same file twice never creates a second object or a
-duplicate Membership. A default repeated `add` also converges the selected Dist. If it is already
-current, the Generation stays put; if an earlier `--skip` or configuration change left it dirty,
-the reused input triggers the missing build and may advance the Generation:
+duplicate Membership. A repeated `add` also builds the selected Dist by default. If it is already
+current, the Generation stays unchanged. If an earlier `--skip` or configuration change left it dirty, SOW completes the build and may advance the Generation:
 
 ```console
 sow add /srv/pkg/epel-release-7-5.noarch.rpm -r pigsty -d el9
@@ -79,23 +71,20 @@ item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=reused format=rpm coord
 ```
 
 The same object added to a second Dist is also `reused` — the pool keeps one copy and gains a second
-Membership. Use `--skip` again when the intent is to retain a dirty batch instead of converging it.
+Membership. Use `--skip` again to postpone the build.
 
-## Architecture is read, never guessed
+## Package architecture {#architecture-is-read-never-guessed}
 
 `add` reads format and native architecture from the package header, then checks the Workspace permit
-list. An architecture outside the list fails the package and tells you exactly what to edit:
+list. An unsupported architecture or one outside the configured list rejects that package:
 
 ```console
 sow add /srv/pkg/centos-release-3.1-1.i386.rpm -r pigsty -d el9
 item input="/srv/pkg/centos-release-3.1-1.i386.rpm" status=failed error="managed: operation rejected: unknown rpm package architecture \"i386\"; supported rpm package architectures are [x86_64, aarch64, noarch] (canonical families [x86_64, aarch64, neutral]); use a supported package or update only supported architecture families in sow.yml"
 ```
 
-It does not create a directory and does not modify `sow.yml`.
-
 RPM `noarch` and DEB `all` are architecture-neutral. They create one Package Object and one
-Membership, and render into every effective architecture view of the target Dist. They do not
-spread to Dists you did not select with `-d`.
+Membership, and render into every effective architecture view of the target Dist. Only the selected Dists receive them.
 
 ## Policy: exclude and limit
 
@@ -116,12 +105,10 @@ Here `trixielim` has `exclude: [{kind: [dbgsym]}]` and `limit: 1`. The dbgsym pa
 rule; `libpq5 18.2-1` lost to `18.3-1` under the version limit and is reported as `limited`. Both
 appear as `excluded` in the top-level status, and the `dists=` field distinguishes them.
 
-Limit groups by `(binary name, native architecture)`, so `18.3-1:amd64` and `18.3-1:arm64` both
+Limit groups by `(binary name, canonical architecture)`, so `18.3-1:amd64` and `18.3-1:arm64` both
 survive a `limit: 1`. A package can be accepted by one Dist and skipped by another in the same run.
 
-> [!WARNING] Policy removals do not come back
-> `exclude` and `limit` remove real Desired Memberships. Relaxing the policy later does not resurrect
-> them — leftover bytes in `pool/` are not a candidate set. Re-run `sow add`.
+To restore a package after relaxing `exclude` or `limit`, run `sow add` again. Policy applies to Desired membership, not every file left in `pool/`.
 
 ## Partial batches
 
@@ -144,27 +131,16 @@ them in `result.items`:
 sow add /srv/pkg/centos-release-3.1-1.i386.rpm -r pigsty -d el9
 ```
 
-There is no rejected/quarantine directory.
-
 Policy-excluded inputs are not input failures; an entirely excluded batch can succeed even
-when the Dist was empty. If cancellation or preflight rejection prevents Desired from committing,
-prepared inputs are not reported as accepted. A cancelled command returns `130`; keep the original
-input files and rerun it. Committed membership changes are preserved during recovery.
+when the Dist was empty. If you interrupt the command with SIGINT or SIGTERM, it returns `130`. Rerun it with the original input files; recovery preserves committed membership changes.
 
-A pool path cannot identify different package bytes, including paths retained in historical
-publication or abandoned-upload records after local GC. A collision rejects that input;
-unrelated valid inputs can still commit. Use a new package version and filename for changed
-content instead of reusing a previously published URL. Paths are compared case-insensitively:
-identical bytes re-added under a file name that differs only by case from a known path are
-rejected too, so add them under the original name. On a case-insensitive workspace filesystem,
-a package whose source directory differs only by case from an existing one is also rejected
-(see [Platforms & Integrations](/docs/reference/compatibility/#workspace-filesystem)).
+For changed package content, use a new version and filename. A previously published pool path remains reserved after local GC. A path conflict rejects that input; other valid inputs can still succeed.
+
+Keep filename capitalization consistent when adding the same package again. Paths that differ only by case conflict. On a case-insensitive filesystem, source-package directory names must also be distinct; see [Workspace filesystem](/docs/reference/compatibility/#workspace-filesystem).
 
 ## --skip
 
-`--skip` stops after the Desired state is committed. The public `pool/` and `dists/` bytes do not
-change, the Built Generation stays where it was, and the Repository becomes dirty. New package bytes
-are durably held in a private pending store until the next build publishes them.
+`--skip` commits Desired membership and leaves `pool/`, `dists/`, and the Built Generation unchanged. New package files stay in private pending storage until a build needs them. The Repository is dirty when the resulting Desired state differs from Built state; reusing an unchanged member can leave it clean.
 
 ```console
 sow add /srv/pkg/tree -R --skip -r pgsql -d trixie
@@ -180,7 +156,7 @@ repository=pgsql status=dirty ready_to_copy=false revision=4 generation=3 dirty_
 in [`sow changes`](/docs/command/changes/) — only a successful build promotes them into the
 deliverable tree.
 
-Use `--skip` for bulk imports, then converge once:
+Use `--skip` for bulk imports, then build once:
 
 ```bash
 sow add /srv/build/ -R -r pgsql -d el9 --skip
@@ -191,21 +167,9 @@ sow check -r pgsql
 
 ## Processing order
 
-For the record, one `add` executes in this order:
+SOW inspects the packages and signs new RPMs when configured. It applies `exclude` and `limit`, records the resulting membership, then builds unless `--skip` is set.
 
-1. Take the Repository write lock and recover any unfinished Operation.
-2. Commit a `planned` Operation in SQLite.
-3. Parse inputs read-only; compute logical coordinates and input SHA-256 (plus, for RPM, the
-   signature-neutral payload digest).
-4. Check the architecture permit list and look up existing coordinates.
-5. For genuinely new coordinates only, run optional RPM signing on a stage copy and compute the final
-   SHA-256, then verify content and path uniqueness.
-6. Merge target Memberships, then apply `exclude` and `limit` over the complete Dist set.
-7. Commit the Desired state; new bytes go to the private pending content store.
-8. Unless `--skip`, publish still-needed pending objects into `pool/` and render indexes — each Dist
-   is built at most once per command.
-
-Input files are never modified, moved or deleted, in any mode.
+Input files remain unchanged. Signing uses private copies.
 
 ## RPM signing modes
 
@@ -220,28 +184,24 @@ command-line override.
 
 Without a configured key only `never` is available.
 
-Because a signature embeds non-deterministic fields, SOW cannot re-sign and then compare final
-hashes. Retry idempotence works on the coordinate instead: identical input bytes are reused
-directly; an identical RPM signature-neutral digest is reused when the existing object satisfies the
-current policy. A different payload digest, or an existing object that no longer satisfies the
-policy, is a hard conflict — `add` will not silently re-sign a coordinate in place.
+Repeated imports reuse identical package content. They can also reuse an RPM whose only difference is its signature, if the stored package satisfies the current signing policy. A changed payload or an incompatible stored signature causes a coordinate conflict. See [Signing Model](/docs/feature/signing/) for the matching rules.
 
 ## Exit codes
 
 | Code | Trigger |
 |---|---|
-| `0` | Every input accepted or reused; indexes rebuilt (or skipped with `--skip`) |
+| `0` | Inputs processed, including policy-excluded inputs; build completed or skipped |
 | `1` | Runtime I/O, parser, renderer or signing failure |
 | `2` | Usage error, Workspace not found, or ambiguous Repository/Dist selection |
 | `3` | Partial batch — at least one item committed and at least one failed |
 | `4` | Repository lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Integrity or recovery error, including a build that failed after `applied` |
-| `6` | Nothing accepted — unsupported architecture, no compatible target Dist, or a coordinate/pool-path conflict |
+| `6` | Every input failed, or selection/signing/state preconditions reject the operation |
 
 ## See also
 
 - [sow rm](/docs/command/rm/) — the inverse operation
-- [sow build](/docs/command/build/) — converging after `--skip`
+- [sow build](/docs/command/build/) — build after `--skip`
 - [Membership Policy](/docs/feature/policy/) — `exclude` rules and `limit` semantics in full
 - [Signing Model](/docs/feature/signing/) — the two trust chains and key references
 - [Package References](/docs/reference/package-ref/) — the coordinate grammar printed on each item line

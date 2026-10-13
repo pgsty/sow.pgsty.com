@@ -1,7 +1,7 @@
 ---
 title: "sow init"
 linkTitle: "init"
-description: "创建工作区，并收敛 sow.yml 中已声明的 Repository 与 Dist。"
+description: "初始化工作区及 sow.yml 中声明的仓库与 Dist。"
 categories: [Command]
 tags: [cli, managed, config]
 url: "/zh/docs/command/init/"
@@ -10,9 +10,7 @@ weight: 200
 icon: fa-solid fa-seedling
 ---
 
-`sow init` 创建根级 `sow.yml` 与私有状态目录 `.sow/`，这两样东西让一个目录成为工作区（Workspace）。
-它同时也是手写配置的收敛命令：如果 `sow.yml` 里已经声明了 Repository 与 Dist，`init` 会把还不存在
-的那些实体化出来，已完成的原样跳过。
+`sow init` 创建工作区的 `sow.yml` 与私有状态目录 `.sow/`。如果配置中已声明仓库和 Dist，它会创建尚未初始化的对象。添加声明后，可再次运行此命令完成初始化。
 
 ## 语法
 
@@ -20,7 +18,7 @@ icon: fa-solid fa-seedling
 sow init [DIR] [--json]
 ```
 
-`DIR` 默认为当前目录。`init` 不接受 `-C/--workdir`——位置参数已经明确指定了目标。
+`DIR` 默认为当前目录。需要初始化其他目录时，将它的路径作为 `DIR` 传入。
 
 ## 说明
 
@@ -44,36 +42,24 @@ ls -a /srv/repo
 .  ..  .sow  sow.yml
 ```
 
-`.sow/` 里放着 `workspace.lock`、工作区生命周期命令使用的持久文件 journal `workspace-ops/`、
-`repo-locks/`，以及后续每个 Repository 一个的 SQLite 数据库。它的权限是 `0700`，绝不能对外提供
-HTTP 访问。
+`.sow/` 保存私有状态、锁和恢复记录，目录权限为 `0700`。通过 HTTP 提供仓库目录时，保留 `.sow/` 为私有目录。
 
 ## 参数
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
-| `--json` | 输出版本化 JSON envelope | false |
+| `--json` | 输出 JSON | false |
 | `-h, --help` | 显示帮助 | — |
 
 ## 幂等规则
 
-`init` 被设计成可以反复运行——无论是在 provisioning 脚本里还是手工执行：
+新配置使用 `schema: sow/v3`，默认架构为 `x86_64` 与 `aarch64`，不声明任何仓库。使用 [`sow repo new`](/zh/docs/command/repo/) 创建仓库，或先编辑 `sow.yml` 声明仓库。
 
-1. **创建新配置时写入 `schema: sow/v3` 与默认 `architectures: [x86_64, aarch64]`**。
-2. **它从不自动创建 Repository**。请用 [`sow repo new`](/zh/docs/command/repo/)，或先在
-   `sow.yml` 中声明。
-3. **它从不覆盖已存在的 `sow.yml`**。重复运行只报告现状，并列出发现了什么：
+`init` 保留已有配置，初始化尚缺的声明对象。非空目录也可以使用，但其中的文件不能与 SOW 保留路径冲突。全部声明对象都已初始化时，本次初始化计数为零。
 
-   ```console
-   sow init .
-   initialized /srv/repo: config_created=false repositories_initialized=0 dists_initialized=0
-   ```
+## 应用已声明的配置 {#收敛已声明的配置}
 
-4. **非空目录可以初始化**，但若已有文件与 SOW 保留路径冲突则失败。
-
-## 收敛已声明的配置
-
-如果 `sow.yml` 里已经描述了 Repository 与 Dist，`init` 会为它们补齐缺失的目录树、SQLite 数据库与
+如果 `sow.yml` 里已经描述了仓库与 Dist，`init` 会为它们补齐缺失的目录树、SQLite 数据库与
 空索引。已初始化的对象直接跳过，因此计数器准确反映本次运行做了什么。
 
 ```yaml
@@ -109,10 +95,10 @@ infra	true	1	1	clean	0	0
 pgsql	false	2	2	clean	0	0
 ```
 
-这样创建出来的 Dist 立刻具备协议完整的空发布面：RPM Dist 每个架构视图有一份空
+新 Dist 具有有效的空索引：RPM Dist 的每个架构视图有一份空
 `repodata/`，DEB Dist 有空的 `Packages`/`Packages.gz`、`by-hash` 与 `Release`。
 
-再跑一次什么都不会变：
+再次运行时，已有对象保持不变：
 
 ```console
 sow init . --json
@@ -121,16 +107,15 @@ sow init . --json
 
 ## 锁与恢复
 
-工作区生命周期命令——`init`、`repo new`、`repo rm`——运行在目标 Repository 数据库存在之前或被删除
-之后，因此它们使用 `.sow/workspace.lock` 加 `.sow/workspace-ops/` 里的持久文件 journal，而不是
-SQLite Operation Journal。被中断的 `init` 会由下一条工作区生命周期命令前滚完成或回滚。
+初始化中断后，对同一目录重新运行 `sow init`。SOW 先完成或回滚被中断的操作，再初始化其余声明对象。有其他工作区写操作时，它会等待该操作结束。
 
 ## 示例
 
-建好工作区后手工添加 Repository：
+建好工作区后手工添加仓库：
 
 ```bash
-mkdir -p /srv/repo && cd /srv/repo
+mkdir -p /srv/repo
+cd /srv/repo
 sow init
 sow repo new infra
 sow repo new pgsql
@@ -144,7 +129,7 @@ sow dist new trixie --format deb -r pgsql
 sow init /srv/repo
 ```
 
-从版本控制中的配置文件 provision：
+使用版本控制中的配置文件初始化：
 
 ```bash
 install -m 0644 sow.yml /srv/repo/sow.yml
@@ -156,16 +141,16 @@ sow config check -C /srv/repo
 
 | 码 | 触发条件 |
 |---|---|
-| `0` | 工作区创建成功，或已收敛（no-op） |
+| `0` | 工作区初始化成功，或已经初始化（no-op） |
 | `1` | 写配置或状态目录时的运行时 I/O 错误 |
 | `2` | 用法错误，或已存在的 `sow.yml` 解析/校验不通过 |
-| `3` | 部分成功——部分声明的 Repository/Dist 已提交，至少一个失败 |
-| `5` | 工作区 journal 无法恢复到终态 |
+| `3` | 部分成功——部分声明的仓库/Dist 已提交，至少一个失败 |
+| `5` | 工作区日志无法恢复到终态 |
 | `6` | 已有文件与 SOW 保留路径冲突 |
 
 ## 参见
 
-- [第一个工作区](/zh/docs/start/workspace/) —— 十分钟带练版本
+- [第一个工作区](/zh/docs/start/workspace/) —— 逐步操作示例
 - [Managed 工作区](/zh/docs/feature/managed/) —— 三层模型
 - [sow.yml 配置参考](/zh/docs/reference/config/) —— 全部配置键
 - [sow repo](/zh/docs/command/repo/) 与 [sow dist](/zh/docs/command/dist/)

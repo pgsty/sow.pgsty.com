@@ -1,7 +1,7 @@
 ---
 title: "签名模型"
 linkTitle: "签名模型"
-description: "两条独立信任链、四种密钥引用形态、进程内与外部签名的分工，以及安全换钥方式。"
+description: "配置元数据与 RPM 包签名、引用密钥，并轮换签名身份。"
 categories: [Feature]
 tags: [signing, rpm, apt]
 url: "/zh/docs/feature/signing/"
@@ -9,78 +9,86 @@ weight: 600
 icon: fa-solid fa-key
 ---
 
-客户端会对一个仓库提两个不同的问题,SOW 用两套彼此独立的机制分别回答。把它们混为一谈,是"我明明签了名,`dnf` 还是报错"这类问题最常见的来源 —— 所以本页先把两者拆开。
+配置元数据签名，让客户端验证仓库索引。需要客户端验证 RPM 文件内嵌签名时，
+另行配置 RPM 包签名。
 
-## 两条独立的信任链
+<span id="两条独立的信任链"></span>
+<span id="客户端验证什么"></span>
 
-| | 元数据签名 | RPM 包体签名 |
-|---|---|---|
-| 回答的问题 | "这份索引真是你出的、没被改过吗?" | "这个 `.rpm` 文件真是你出的吗?" |
-| 配置项 | `signing.rpm.metadata`、`signing.deb.metadata` | `signing.rpm.packages` |
-| 产出 | `repodata/repomd.xml.asc`、`InRelease`、`Release.gpg` | 嵌入包内的 OpenPGP 签名 |
-| 是否改变包字节 | 否 | 是 |
-| 客户端配置 | dnf `repo_gpgcheck=1`、apt `Signed-By` | dnf `gpgcheck=1` |
-| Plain 模式可用 | 否 | 是,通过 `create -S KEY` |
+## 签名对象
 
-二者分别配置、可分别使用。通常正确的起点是只做元数据签名:它在一个地方为整份索引背书,而且完全不需要改动你从上游拿到的那些包。
+| 配置 | 签名内容 | 输出 | 客户端设置 |
+|---|---|---|---|
+| `signing.rpm.metadata` | RPM 索引清单 | `repodata/repomd.xml.asc` | DNF `repo_gpgcheck=1` |
+| `signing.deb.metadata` | APT 发布清单 | `InRelease`、`Release.gpg` | APT `Signed-By` |
+| `signing.rpm.packages` | RPM 包 | 内嵌 OpenPGP 签名 | DNF `gpgcheck=1` |
 
-Managed 的元数据签名完全由 `sow.yml` 控制。没有 CLI 覆盖开关,`build` 上没有 `--sign` 参数,也没有办法让这次构建和下次构建签得不一样。这是刻意的 —— 仓库的签名身份是仓库的属性,不是"碰巧更新了它的那条命令"的属性。
+元数据签名不改变包字节。RPM 包签名会改变包字节及 SHA-256。
+SOW 不给 DEB 包文件增加签名。
 
-## 配置
+<span id="配置"></span>
+
+## 配置元数据签名
 
 ```yaml
 repos:
-  pigsty:
+  demo:
     signing:
       rpm:
-        packages:
-          mode: never              # never | fill | always
         metadata:
-          key: "file:///secure/repo-signing.asc"
+          key: file:///secure/repo-signing.asc
       deb:
         metadata:
-          key: "file:///secure/repo-signing.asc"
+          key: file:///secure/repo-signing.asc
+    dists:
+      el9:
+        format: rpm
+      trixie:
+        format: deb
 ```
 
-RPM 与 DEB 的元数据密钥分开声明,所以你可以像上面这样两边共用同一把钥匙,也可以拆开用。每个 metadata 块除 `key` 外还接受可选的 `passphrase` 引用。
+RPM 与 DEB 可使用相同或不同密钥。文件或环境变量中的密钥已加密时，增加 `passphrase` 引用。
+先检查配置，再构建：
 
-配了元数据密钥之后,每次构建都会产出签名文件 —— 空 Dist 也不例外:
+```bash
+sow config check
+sow build -r demo
+sow check -r demo
+```
 
-- RPM,每个架构视图:`repodata/repomd.xml` 加一份 ASCII-armored 的 `repodata/repomd.xml.asc`
-- DEB,每个 Dist:`Release` 加一份 clearsigned 的 `InRelease` 与一份分离式 armored 的 `Release.gpg`
+已配置签名的空 Dist 与非空 Dist 生成相同种类的签名文件。`InRelease` 的签名正文与
+`Release` 一致。未配置密钥时，SOW 生成未签名索引。
+Managed 签名设置来自 `sow.yml`，`build` 没有单次覆盖签名设置的选项。
 
-`InRelease` 的 clearsign 正文与 `Release` 完全一致。没有配元数据密钥时,这两个签名文件根本不会生成 —— 你只会得到 `repomd.xml` 和 `Release`。
+<span id="四种密钥引用形态"></span>
 
-0.5.0 暂不支持 RPM v6 包格式的签名；包体签名与验签工作流请使用 RPM v4 格式包。
-这是 RPM 容器格式的限制，不限制下面的元数据密钥引用形态。
+## 密钥与口令引用
 
-## 四种密钥引用形态
-
-密钥引用是一个 URI,scheme 决定由谁来签:
-
-| 引用 | 含义 | 签名者 |
+| 元数据密钥引用 | 含义 | 签名实现 |
 |---|---|---|
-| `keys/repo-signing.asc` | 相对 Workspace Root 的 ASCII-armored 密钥路径 | 进程内 Go signer |
-| `file:///绝对路径.asc` | 磁盘上的 ASCII-armored 私钥 | 进程内 Go signer |
-| `env://VAR_NAME` | 环境变量里的 armored 密钥材料 | 进程内 Go signer |
-| `agent://<fingerprint>` | 由环境中 GPG agent 持有的密钥 | 外部 `gpg` |
+| `keys/repo.asc` | 相对于工作区根的 OpenPGP 密钥文件 | 进程内 |
+| `file:///secure/repo.asc` | 绝对路径的 OpenPGP 密钥文件 | 进程内 |
+| `env://SOW_METADATA_KEY` | ASCII 装甲格式密钥、文件路径或 GPG 密钥标识 | 取决于变量值 |
+| `agent://KEY_ID_OR_FINGERPRINT` | 本地 GPG 环境可用的密钥 | 外部 `gpg` |
 
-`file://` 与 `env://` 不需要装任何东西 —— SOW 自己签元数据,这也是为什么用 `file://` 元数据密钥的仓库在 macOS 和最小化容器里能构建出一致的结果。`agent://` 把签名委托给你的 GPG agent,适合私钥在智能卡上、或绝不能落盘的场景。`agent://` 不能与 `passphrase` 引用同时使用,因为那次交互归 agent 管。
+密钥文件支持 ASCII 装甲格式和二进制 OpenPGP 数据。GPG 密钥标识可以是 16 位 key ID，
+或 40、64 位指纹。引用解析为 GPG 密钥标识时，使用外部 `gpg` 访问私钥和处理口令。
 
-`passphrase` 引用接受相对 Workspace Root 的路径、`file://` 或 `env://`，不接受 `agent://`。
+提供私钥内容时，口令支持路径、`file://` 或 `env://` 引用。GPG 密钥标识由 GPG 处理口令，
+不能另配 `passphrase` 字段。路径和大小限制见[密钥引用](/zh/docs/reference/config/#密钥引用)。
 
-**任何秘密都不会被持久化。** 配置、SQLite、日志、JSON 输出和错误文本里,只有引用字符串、fingerprint 和公钥验证证书。`config show --all` 打印引用与 fingerprint,绝不打印密钥材料。如果某个密钥引用无法解析或不可用于签名,`config check` 会在你执行 build 之前就告诉你。
+`config show` 显示引用和解析出的公钥身份，不显示私钥或口令内容。
+`config check` 解析引用并检查用途。创建新元数据签名时，选中的签名密钥需要在发布时间和
+当前时间都可用。历史验证使用保留的证书。
 
-Agent 元数据签名按身份与确定性发布时间探签一次小消息，检查 GPG 实际选中的子钥，再固定
-完整指纹完成签名，因此支持一台机器只持有证书中部分签名子钥的部署。GPG 时钟被冻结，
-同一操作的多个 Dist 复用选钥结果。新构建要求实际签名钥匙在发布时间和当前时间都有效；
-历史验签及已冻结树的恢复继续使用留存证书与原字节。
+新 APT 签名使用 SHA-256。新的发布尝试要求两份 APT 签名都使用 SHA-256、SHA-384 或 SHA-512。
+升级包含 SHA-1 元数据签名的工作区后，先运行 `build`，再开始新发布。
+已有发布尝试继续使用其记录的文件。
 
-新 APT 元数据使用 SHA-256 签名。创建新的发布尝试时，InRelease 与 Release.gpg 都必须使用
-SHA-256、SHA-384 或 SHA-512。历史 SHA-1 签名仍可验证；升级后执行 `sow build` 刷新旧 APT
-元数据，再开始新发布。已经冻结的发布尝试仍按原计划恢复。
+<span id="rpm-包体签名"></span>
+<span id="信任环彼此独立验证"></span>
 
-## RPM 包体签名
+## 配置 RPM 包签名
 
 ```yaml
 signing:
@@ -88,111 +96,62 @@ signing:
     packages:
       mode: fill
       key: agent://7F721C4AD40F4A9D8CA578BFAC7E4690B50CCF3B
-      trusted_keys: [keys/pgdg.asc]
+      trusted_keys: [keys/upstream.asc]
 ```
-
-三种模式:
 
 | 模式 | 行为 |
 |---|---|
-| `never` | 原样保留输入字节 |
-| `fill` | 包未签名、或签名不受信任时用配置的 key 签;已有签名能被 `trusted_keys` 验证通过则保持字节不变 |
-| `always` | 确保最终包由配置的 key 有效签名;已经是了就保持字节,否则重签 |
+| `never` | 原样保存输入字节 |
+| `fill` | 已有签名可由当前密钥或受信密钥验证时保留原包，其余包签名 |
+| `always` | 已由当前密钥签名的包保留原样，其余包重签 |
 
-`trusted_keys` 自动包含配置 `key` 的公钥部分。没有 key 时只能用 `never`;有 key 时默认 `fill`。
+没有密钥时默认 `never`，有密钥时默认 `fill`。`fill` 和 `always` 都必须配置密钥。
 
-### 信任环彼此独立验证
+包签名在私有副本上调用主机的 `rpm --addsign` 或 `rpm --resign`。
+安装 `rpm`、`gpg`，并确保 `rpm` 使用的 GPG 环境中有对应私钥。
+密钥引用只标识签名者，不会把私钥导入该环境。原始输入文件保持不变。
 
-对于带签名 RPM，SOW 会分别评估每个 Retained 单 Key Ring、当前 Policy Ring 与组合
-`trusted_keys` Ring。所有可识别 OpenPGP Signature Packet 必须在同一个候选 Ring 内验证通过，
-且至少一条通过的路径必须认证 Payload。SOW 绝不会把一个 Key 接受的 Packet 与另一个单 Key
-Ring 接受的 Packet 拼在一起，虚构出 Retained Signer。
+SOW 检查签名结果、包坐标及排除签名头后的包体摘要。已有对象的坐标和包体相同、
+且符合当前策略时，可复用已有签名字节。`never` 模式要求字节完全相同才能复用。
 
-这条区别在有意双签过渡时尤其重要：组合 Trusted Ring 可以接受该包，但任一单独 Retained Key
-都不能宣称自己独立证明了它。历史 CentOS OpenPGP v3/v4 签名继续受支持。所有候选 Ring 共享
-同一遍 Signed-byte Stream，因此增加 Trusted Key 只改变授权结论，不会放大包体读取。
+包签名工作流请使用 RPM 格式 v4。SOW 不支持 RPM 格式 v6 使用的签名标签。
+这与 OpenPGP 签名报文版本不同；历史 CentOS 的 OpenPGP v3、v4 签名受支持。
 
-包体签名总是对私有 staged 副本调用环境中的 `rpm --addsign` 或 `rpm --resign`，不会就地
-修改输入文件。签完后 SOW 会重新解析结果，要求嵌入签名存在、signature-neutral digest 与
-NEVRA 不变，并且签名身份与配置完全一致。`fill` 与 `always` 必须有 `rpm`、`gpg`，且匹配私钥
-必须存在于 `rpm` 使用的 GPG 环境中。key 引用用于标识并验证签名者，不会把私钥自动导入该环境。
+<span id="更换密钥会让-dist-变-dirty"></span>
 
-由于签名里嵌入了时间戳，同一个未签名 RPM 签两次会得到不同字节。SOW 对不可变的 header
-与 payload（排除签名头）计算 **signature-neutral payload digest**。逻辑坐标与该摘要相同，
-且既有对象满足当前策略时，才复用最终字节。重复 add 只有在满足复用条件时才是空操作；策略
-变化导致重签时，可能产生不同字节并触发包池路径冲突。此时应使用新的包版本和文件名，不能
-覆盖已经发布的 URL。
+## 更换密钥
 
-同一命令内，渲染复用 RPM 签名预检结果；跨命令时，未变化的包字节与完全一致的签名策略可
-复用已认证的 Built 证据。策略、证书、文件指纹变化或证据缺失时重新验证。认证契约升级后，
-首次构建会建立一次证据；`sow check` 仍是显式全量审计。常规目录/stat 检查与元数据生成仍然
-需要与所选仓库范围对应的工作量。
+签名身份变化会使相关 Dist 变脏。更换元数据密钥后，运行 `build` 生成新签名，
+并在发布新元数据前把新公钥分发给客户端。
 
-这种复用的口子刻意开得很窄。`never` 模式要求完整字节一致,因为该模式承诺保留输入字节。如果 payload digest 不同,或既有对象不满足当前签名策略,那就是硬冲突 —— `add` 不会悄悄地在既有坐标上就地重签一个包。这里没有 `--replace`;如果重签导致字节变化,请提高 release,或专门规划一次密钥轮换流程。
+已有包池对象不可变，修改 RPM 包签名策略不会原地重签这些对象。
+逐步轮换包签名密钥时：
 
-## 更换密钥会让 Dist 变 dirty
+1. 将新密钥设为当前密钥，使用 `mode: fill`。
+2. 旧包仍为成员时，在 `trusted_keys` 中保留旧公钥。
+3. 加入由新密钥签名的新版本包。
+4. 旧签名包退出成员集合或被新版本替代后，再移除旧信任。
 
-一个 Dist 的 Built 配置摘要覆盖它的 format、canonical 架构、`limit`、`exclude`,以及 **已冻结的签名身份**。改动密钥引用或 fingerprint 会改变这个摘要,于是所有受影响的 Dist 变 dirty:
+直接换新密钥并使用 `always`，要求所有期望成员 RPM 已符合新密钥策略。
+若重签会使同一包 URL 对应不同字节，应使用新的包发行版本和文件名。
 
-```console
-$ sow status
-repository=pigsty status=dirty ready_to_copy=false revision=5 generation=4 dirty_dists=el9,trixie pending=0/0 locked=false
-```
+RPM 验证按包的签名时间检查证书和签名子钥是否有效。证书保留了所需历史自签名与子钥绑定时，
+续期本身不会使旧包签名失效。导出续期公钥时保留这些历史公钥信息。
 
-更换 **元数据** key 后，`sow build` 会用新身份签署索引并产生新 Generation。
+<span id="plain-模式"></span>
 
-RPM 包体是不可变 Package Object；`build` 不会在同一坐标下静默重签既有对象。如果当前 Desired
-RPM 不满足新的包签名策略，`build` 会拒绝。分阶段轮换通常使用 `fill`：将新 key 设为当前 key，
-同时把旧公钥保留在 `trusted_keys`；旧 key 软件包保持字节不变，新加入的软件包使用新 key。
-只有当旧坐标已下架或被新 Release 替代后，才移除旧信任。直接切到新 key 的 `always`，要求
-每个 Desired RPM 已经由新 key 签名。
-
-当前 Built 元数据的精确公钥证书身份按 Dist 记录,同一 primary fingerprint 的多个证书版本可以共存 —— 所以延长有效期或增加子钥,不会让已经发布出去的东西失效。
-
-`fill` 或 `always` 模式下的包签名信任更严格。增加或轮换签名子钥不会影响已有包签名；但延长主钥
-有效期并重新导出后会产生更新的自签名，SOW 0.5.0 随即拒绝在该自签名之前签署的包，而且
-`trusted_keys` 不能同时容纳同一证书的两个版本。用于包签名时，建议主钥不设过期时间，改为轮换
-签名子钥。
-
-## Plain 模式
+## Plain 签名
 
 ```bash
-sow create /srv/repo --sign-with 6D5C5A26C36B1F73
-sow create /srv/repo --sign-with 6D5C5A26C36B1F73 --overwrite
+sow create /srv/offline --sign-with 6D5C5A26C36B1F73
+sow create /srv/offline --sign-with 6D5C5A26C36B1F73 --overwrite
 ```
 
-Plain 模式只签 RPM 包体,没有元数据签名。`KEY` 去掉可选的 `0x` 或 `0X` 前缀后，必须是恰好 16、40 或 64 位十六进制 GPG key ID/fingerprint；去掉前缀并规范化为大写后作为 `_gpg_name` macro 传给 `rpm`。不带 `--overwrite` 时只签没有可解析嵌入签名的 RPM;带上则对全部保留的 RPM 重签。
+Plain 模式只签 RPM 包文件。不带 `--overwrite` 时，为没有可解析内嵌签名的包签名；
+带该选项时，重签全部保留的 RPM。密钥标识为 16、40 或 64 位十六进制字符，
+可带 `0x` 前缀。执行 `--pigsty` 清理后，至少需要剩余一个 RPM。
 
-`--sign-with` 要求 `--pigsty` 清理后至少保留一个顶层 RPM。纯 DEB 目录、缺少 `rpm` 可执行文件、密钥不可用,都在任何公开变更之前失败。签名是显式慢路径，必然包含复制、签名验证与最终 RPM 解析读取；中断后按当前包目录重跑，而不是重放 Plain journal。见 [Plain 平面仓库](/zh/docs/feature/plain/)。
+客户端配置见[仓库签名](/zh/docs/tutorial/signing/)，完整字段见
+[配置参考](/zh/docs/reference/config/)。
 
-## 客户端验证什么
-
-```ini
-[pigsty-el9]
-name=Pigsty EL9
-baseurl=https://repo.example.com/pigsty/dists/el9/$basearch/
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://repo.example.com/keys/repo-signing.asc
-```
-
-```text
-Types: deb
-URIs: https://repo.example.com/pigsty
-Suites: trixie
-Components: main
-Signed-By: /etc/apt/keyrings/repo-signing.asc
-```
-
-`repo_gpgcheck=1` 让 dnf 验证 `repomd.xml.asc`；`gpgcheck=1` 让它验证每个包的嵌入签名。
-APT 侧的 `Signed-By` 让 apt 验证 `InRelease`。自动化检查会直接校验生成的签名；完整的签名
-Managed dnf/APT 验收必须在目标环境中使用真实客户端执行。确切证据见
-[平台与集成](/zh/docs/reference/compatibility/)。
-
-`sow check` 在常规运行中就会校验全部已声明的签名与文件哈希,所以签名配置出错会在发货之前暴露,而不是在客户机器上暴露。
-
-## 继续阅读
-
-- [仓库签名](/zh/docs/tutorial/signing/) —— 生成专用密钥并把两条链都接起来
-- [`sow.yml` 配置参考](/zh/docs/reference/config/) —— 完整签名 schema 与密钥引用文法
-- [可观测与审计](/zh/docs/feature/audit/) —— `check` 如何证明这些签名
+<span id="继续阅读"></span>

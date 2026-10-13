@@ -9,8 +9,7 @@ weight: 100
 icon: fa-solid fa-box-open
 ---
 
-本教程从零创建一个 Managed RPM 仓库。你需要一个可写目录，以及一个或多个
-RPM 文件。
+本教程从零创建一个 Managed RPM 仓库。先安装 SOW、Python 3，并准备适合目标客户端的 RPM 文件。使用当前用户可创建、可写入的空目录 `/srv/sow`，或换成其他可写路径。
 
 ## 1. 创建工作区
 
@@ -22,11 +21,11 @@ sow repo new pigsty
 sow dist new el9 --format rpm -r pigsty
 ```
 
-Dist 名称由你定义。SOW 不会根据 `el9` 推断操作系统版本。
+`el9` 是这个 RPM 包集合的名称，可以按需要更改。它不改变软件包的操作系统兼容性。
 
 ## 2. 配置成员策略
 
-编辑生成的 `sow.yml`。下面的配置按包名与架构各保留一个版本，并排除调试包：
+编辑生成的 `sow.yml`。下面的配置按包名与架构各保留一个版本，并排除调试包与 LLVM JIT 包：
 
 ```yaml
 schema: sow/v3
@@ -42,26 +41,22 @@ repos:
 targets: {}
 ```
 
-手工修改配置后，先校验再写仓库状态：
+检查配置：
 
 ```bash
 sow config check
-sow config show --all
 ```
 
-策略先执行 `exclude`，再执行 `limit`。`noarch` 包会投影到每个启用的架构视图，不能写进
-`architectures`。
+策略先执行 `exclude`，再执行 `limit`。SOW 把 `noarch` 包加入每个启用的架构视图。`architectures` 中只填写 CPU 架构名。
 
 ## 3. 添加 RPM
 
 ```bash
 sow add /path/to/packages/*.rpm -r pigsty -d el9
-sow status -r pigsty
 sow check -r pigsty
 ```
 
-`add` 解析包头，将每个接纳的包只保存一次，更新 Desired 成员关系并落成新 Generation。
-被策略排除的输入会逐项报告，但不算命令失败。
+把输入路径换成实际 RPM 目录。`add` 将接受的软件包存入包池，更新成员并构建索引。检查逐包输出：被排除的文件会单独报告，不会使整条命令失败。
 
 公共树如下：
 
@@ -73,36 +68,27 @@ sow check -r pigsty
     └── aarch64/repodata/...
 ```
 
-rpm-md 的 `location href` 通过相对路径访问根目录下的 `pool/`。不要只复制某个架构目录；
-它不是独立仓库。
+RPM 索引通过相对路径指向 `pool/`。服务或复制完整的 `pigsty/` 目录树，客户端才能下载软件包。
 
 ## 4. HTTP 预览
 
-本地预览可以直接使用：
+在另一个终端执行以下命令，并保持运行：
 
 ```bash
-cd /srv/sow
-python3 -m http.server --bind 127.0.0.1 8080
+python3 -m http.server --bind 127.0.0.1 --directory /srv/sow/pigsty 8080
 ```
 
-在另一个终端检查入口：
-
-```bash
-curl --fail http://127.0.0.1:8080/pigsty/dists/el9/x86_64/repodata/repomd.xml >/dev/null
-```
-
-长期服务应使用持续维护的 HTTP Server。它必须完整暴露 `pigsty/` 树，确保客户端解析后落到
-`pigsty/pool/` 的软件包 URL 可访问。
+预览只提供仓库根目录中的文件，并且只能从本机访问。长期运行或供其他主机访问时，按[对外服务](/zh/docs/tutorial/serving/)配置。
 
 ## 5. 配置 dnf
 
-将 `REPO_HOST` 替换为客户端可访问的地址：
+在运行预览的 Linux 主机上，把以下内容保存为 `/etc/yum.repos.d/pigsty.repo`。远程客户端需先发布仓库，再换成其公共地址：
 
 ```ini
 # /etc/yum.repos.d/pigsty.repo
 [pigsty-el9]
 name=Pigsty EL9
-baseurl=http://REPO_HOST:8080/pigsty/dists/el9/$basearch/
+baseurl=http://127.0.0.1:8080/dists/el9/$basearch/
 enabled=1
 gpgcheck=0
 repo_gpgcheck=0
@@ -111,44 +97,34 @@ repo_gpgcheck=0
 刷新并查询仓库：
 
 ```bash
-sudo dnf clean metadata
-sudo dnf makecache --refresh
+sudo dnf --disablerepo='*' --enablerepo=pigsty-el9 makecache --refresh
 dnf --disablerepo='*' --enablerepo=pigsty-el9 list available
 ```
 
-这里有意使用未签名配置。只有完成[仓库签名](/zh/docs/tutorial/signing/)后，才应打开客户端验签。
+本例使用未签名软件包与元数据。按[仓库签名](/zh/docs/tutorial/signing/)启用验签。预览完成后，删除此源配置文件并停止 Python 服务器。
 
 ## 6. 发布或导出
 
-交付前必须通过深度校验：
+使用 [`sow publish`](/zh/docs/tutorial/serving/) 发布到 filesystem 或 R2 目标。它按客户端所需的顺序上传软件包与元数据。隔离主机的手工交付步骤也见该教程。
 
-```bash
-sow check -r pigsty
-```
-
-向已配置的 filesystem 或 R2 目标交付时，使用 [`sow publish`](/zh/docs/tutorial/serving/)。
-只有先复制到离线 staging、再原子切换上线时，才适合整根复制；不要对在线仓库做无序原地同步。
-
-默认 `dnf reposync` 等工具会拒绝指向根包池的父级相对路径。遇到这种消费者时，导出一份
-自包含 RPM Leaf：
+默认 `dnf reposync` 等工具会拒绝指向根包池的父级相对路径。需要供这些工具使用时，导出一份
+独立 RPM 仓库：
 
 ```bash
 sow export rpm-leaf el9 x86_64 /srv/export/pigsty-el9-x86_64 -r pigsty
 ```
 
-目标目录必须不存在或为空。默认会复制包体；`--hardlink` 只适用于同一文件系统、可信且只读的
-显式优化场景。
+目标目录必须不存在或为空。导出默认复制软件包。`--hardlink` 只用于同一文件系统；导出文件与源包池共享存储，应保持只读。
 
 ## 更新仓库
 
 ```bash
 sow add /path/to/new.rpm -r pigsty -d el9
-sow rm PACKAGE_NAME -r pigsty -d el9
-sow build -r pigsty
 sow check -r pigsty
 ```
 
-`add` 与 `rm` 修改 Desired 成员关系；策略或签名配置变化后用 `build` 收敛；发布门禁是
-`check`，不能只看 `status`。
+`add` 会自动构建更新。配置 `limit: 1` 后，同包名、同架构的最新版本会替换此前成员。修改配置后执行 `sow build -r pigsty`。
 
-自动化客户端与平台覆盖见[平台与集成](/zh/docs/reference/compatibility/)。
+撤下软件包时，先用 `sow rm PACKAGE_NAME -r pigsty -d el9 --check` 预览选择结果，再去掉 `--check` 执行。包名会选中其全部版本与架构；只删除一个包对象时，使用 SHA-256 引用。
+
+已测试客户端见[平台与集成](/zh/docs/reference/compatibility/)。

@@ -10,11 +10,11 @@ icon: fa-solid fa-hammer
 ---
 
 [`pgsty/infra-pkg`](https://github.com/pgsty/infra-pkg) is the upstream build source for Pigsty Infra packages.
-This tutorial assumes the dual-architecture RPMs and DEBs already exist and covers the second half of the job: turning that pile of packages into a real, consumable, maintainable SOW repository named `infra`.
+This tutorial uses already-built RPMs and DEBs for x86-64 and ARM64. It creates an `infra` Repository with rolling channels, stable releases, and monthly snapshots. Install SOW, `jq`, and Docker first. The installation examples use `pg-exporter`; include that package and any dependencies not already in the client images.
 
 ## 1. Put the packages under ~/repo
 
-This tutorial uses the fixed path `~/repo` throughout. Copy the existing packages into two input directories:
+Use a new `~/repo` directory for this workspace. Copy packages from your `infra-pkg` checkout into two input directories:
 
 ```bash
 mkdir -p ~/repo/packages/rpm ~/repo/packages/deb
@@ -22,23 +22,8 @@ cp ~/pgsty/infra-pkg/dist/rpm/*.rpm ~/repo/packages/rpm/
 cp ~/pgsty/infra-pkg/dist/deb/*.deb ~/repo/packages/deb/
 ```
 
-Confirm that all four format-by-architecture cells contain real payloads:
-
-```bash
-find ~/repo/packages/rpm -maxdepth 1 -type f -name '*.x86_64.rpm' | wc -l
-find ~/repo/packages/rpm -maxdepth 1 -type f -name '*.aarch64.rpm' | wc -l
-find ~/repo/packages/deb -maxdepth 1 -type f -name '*_amd64.deb' | wc -l
-find ~/repo/packages/deb -maxdepth 1 -type f -name '*_arm64.deb' | wc -l
-```
-
-All four results must be greater than zero. At this point, the tree is only an input package pool:
-
-```text
-~/repo/
-└── packages/
-    ├── rpm/                         # x86_64 + aarch64 RPMs
-    └── deb/                         # amd64 + arm64 DEBs
-```
+Include both x86-64 and ARM64 packages. Step 3 checks their formats and architectures
+from package metadata.
 
 ## 2. Create the infra Repository and two Dists
 
@@ -52,15 +37,7 @@ sow dist new rpm --format rpm -r infra
 sow dist new deb --format deb -r infra
 ```
 
-The model is now fixed:
-
-```text
-Repository: infra
-├── Dist: rpm    format=rpm    policy=latest
-└── Dist: deb    format=deb    policy=latest
-```
-
-Open `~/repo/sow.yml` and reduce it to this configuration:
+Set `limit: 1` for both Dists in `~/repo/sow.yml`:
 
 ```yaml
 schema: sow/v3
@@ -81,12 +58,11 @@ Dists are therefore rolling latest channels while still retaining both x86-64 an
 
 ```bash
 sow config check
-sow config show --all -r infra
 ```
 
 ## 3. Ingest once and build once
 
-Update Desired Membership first, then build a single time:
+Import both package formats, then build their indexes together:
 
 ```bash
 cd ~/repo
@@ -96,8 +72,7 @@ sow build -r infra -d rpm -d deb
 sow check -r infra
 ```
 
-Initialization is complete only when `sow check` returns `0`. Verify the formats and architectures that SOW
-read from the package headers:
+After `sow check` succeeds, list the formats and architectures read from package metadata:
 
 ```bash
 sow ls -r infra -d rpm -d deb --json |
@@ -117,12 +92,6 @@ rpm     x86_64    ... packages
 SOW reports canonical architecture names, so DEB `amd64/arm64` appear here as `x86_64/aarch64`.
 
 ## 4. Read the generated filesystem tree
-
-Print the actual directories:
-
-```bash
-find ~/repo -maxdepth 6 -type d | LC_ALL=C sort
-```
 
 The important structure is:
 
@@ -146,10 +115,7 @@ The important structure is:
                 └── binary-arm64/
 ```
 
-One path rule is easy to miss and essential to remember: SOW always places Dists below `dists/`. The logical
-`infra/rpm` and `infra/deb` channels are therefore served from `/infra/dists/rpm/` and `/infra/dists/deb/`,
-while package payloads live in `/infra/pool/`. Always publish or mount the complete `~/repo/infra` tree, never
-an individual Dist.
+SOW places all Dists under `dists/` and packages under `pool/`. Publish or mount the complete `~/repo/infra` tree so every Dist can reach its package files.
 
 ## 5. Serve the repository read-only with Nginx
 
@@ -160,16 +126,9 @@ docker network create --internal infra-lab
 docker run --detach \
   --name infra-nginx \
   --network infra-lab \
-  --publish 8080:80 \
+  --publish 127.0.0.1:8080:80 \
   --volume "$HOME/repo/infra:/usr/share/nginx/html/infra:ro" \
   nginx:alpine
-```
-
-Check both metadata entry points directly:
-
-```bash
-curl -fsS http://127.0.0.1:8080/infra/dists/rpm/x86_64/repodata/repomd.xml | head
-curl -fsS http://127.0.0.1:8080/infra/dists/deb/Release | head
 ```
 
 Nginx can see only `~/repo/infra`; it cannot see `sow.yml` or `.sow/`, and it cannot modify the repository.
@@ -229,16 +188,15 @@ command -v pg_exporter
 UBUNTU
 ```
 
-This isolated HTTP lab temporarily disables verification. A production service should sign RPM and APT metadata
-and remove both `gpgcheck=0` and `Trusted: yes`.
+The lab uses unsigned repositories. Follow [Sign Your Repository](/docs/tutorial/signing/) to enable `repo_gpgcheck=1` for RPM metadata and `Signed-By` for APT. Use `gpgcheck=1` when RPM package signatures are also available. Remove `Trusted: yes` from the signed APT source.
 
-Docker validates the host architecture by default. To run the complete four-cell matrix, repeat each `docker run`
-once with `--platform linux/amd64` and once with `--platform linux/arm64`; cross-architecture execution requires
-Docker binfmt/QEMU support. Repository inventory and client installation are separate acceptance gates.
+Docker containers use the host architecture by default. To test the other architecture,
+add `--platform linux/amd64` or `--platform linux/arm64` to the corresponding `docker run`.
+Cross-architecture execution requires binfmt/QEMU support.
 
 ## 8. Routine maintenance: add a new version
 
-The normal update operation is `add`, not removing the old package first. Suppose the four new `pg-exporter`
+To update the repository, run `add` with the new packages. Suppose the four new `pg-exporter`
 payloads are ready:
 
 ```bash
@@ -259,12 +217,7 @@ the old membership reappear automatically.
 Rerun the EL9 and Ubuntu clients from sections 6 and 7, refresh metadata, then install or upgrade to complete
 the update acceptance test.
 
-> [!WARNING] Removal is only for hard corrections
-> Do not begin a normal release with `sow rm`. If a bad package must be withdrawn, use
-> `sow ls -r infra -d rpm --json` (or the corresponding `-d deb`) to find its exact SHA-256, run
-> `sow rm sha256:... -r infra -d rpm --check`, inspect the plan, then run the same command without
-> `--check`. `rm` removes only Dist Membership; conservative `sow gc` handles pool bytes separately. Avoid a bare
-> package name that could remove every version and architecture.
+To withdraw a bad package, use `sow ls -r infra -d rpm --json` to find its SHA-256. Preview with `sow rm sha256:DIGEST -r infra -d rpm --check`, then repeat without `--check`. Use `-d deb` for DEBs. A SHA-256 reference selects one package object; a bare name selects all its versions and architectures. `sow gc` handles unused pool files separately.
 
 ## 9. Two retention layers: latest and stable
 
@@ -275,7 +228,7 @@ Create two more Dists for that purpose:
 cd ~/repo
 sow dist new rpm-stable --format rpm -r infra
 sow dist new deb-stable --format deb -r infra
-sow config show --all -r infra -d rpm-stable -d deb-stable
+sow config show -r infra -d rpm-stable -d deb-stable
 ```
 
 The new Dists default to `limit: 0`, which means retain every version. The resulting policy is:
@@ -287,18 +240,16 @@ The new Dists default to `limit: 0`, which means retain every version. The resul
 | `rpm-stable` | RPM | 0 | Accumulate promoted RPMs |
 | `deb-stable` | DEB | 0 | Accumulate promoted DEBs |
 
-Stable does not automatically resurrect every historical object that happens to remain in the pool. It starts
-accumulating versions that you explicitly promote from this point forward.
+Stable accumulates the versions you explicitly promote after creating the Dists.
 
 ## 10. Promote latest into stable
 
-SOW does not expose a dedicated `promote` command. The reliable current procedure is to freeze writers,
-export the exact source Dist Membership, and add those objects to the target Dist. Inputs come directly from
-`infra/pool`; SOW verifies and reuses each existing Package Object without repackaging it or storing a second copy.
+Promote packages by adding the source Dist's pool files to the target Dist. SOW verifies and reuses the existing package objects, so promotion adds no second copy. Pause other repository writers before exporting the manifests. Resume them after promotion finishes.
 
 First require clean source state and save the promotion manifests:
 
 ```bash
+set -euo pipefail
 cd ~/repo
 sow check -r infra
 mkdir -p ~/repo/manifests
@@ -309,12 +260,12 @@ sow ls -r infra -d deb --json |
   jq -r '.result.packages[].pool_path' > ~/repo/manifests/deb-latest-202608.list
 ```
 
-Pause writes to `rpm` and `deb` until promotion finishes, then reuse the pool objects:
+Add the recorded pool objects to the stable Dists:
 
 ```bash
 cd ~/repo
 (
-  set -e
+  set -euo pipefail
   while IFS= read -r pool_path; do
     sow add "$HOME/repo/infra/$pool_path" -r infra -d rpm-stable --skip
   done < ~/repo/manifests/rpm-latest-202608.list
@@ -340,12 +291,13 @@ A client-visible monthly snapshot is another pair of Dists:
 cd ~/repo
 sow dist new rpm-202608 --format rpm -r infra
 sow dist new deb-202608 --format deb -r infra
-sow config show --all -r infra -d rpm-202608 -d deb-202608
+sow config show -r infra -d rpm-202608 -d deb-202608
 ```
 
-Pause stable writes during the snapshot window and first persist its exact Membership as manifests:
+Pause other repository writers while creating the snapshot. First save the stable package lists:
 
 ```bash
+set -euo pipefail
 sow check -r infra
 sow ls -r infra -d rpm-stable --json |
   jq -r '.result.packages[].pool_path' > ~/repo/manifests/rpm-stable-202608.list
@@ -358,7 +310,7 @@ Add those manifests to the corresponding snapshot Dists:
 ```bash
 cd ~/repo
 (
-  set -e
+  set -euo pipefail
   while IFS= read -r pool_path; do
     sow add "$HOME/repo/infra/$pool_path" -r infra -d rpm-202608 --skip
   done < ~/repo/manifests/rpm-stable-202608.list
@@ -372,16 +324,17 @@ cd ~/repo
 )
 ```
 
-Also retain the complete verified Repository Generation so later GC treats it as a safety root:
+To keep this build after you eventually remove the snapshot Dists, also retain the
+current Repository Generation:
 
 ```bash
 sow retain add "$(sow status -r infra --json | jq -r '.result.built_generation')" -r infra
 sow retain ls -r infra
 ```
 
-`retain` protects a whole Repository Generation for recovery and GC; the fixed client-visible URLs are still
-provided by the `rpm-202608` and `deb-202608` Dists. SOW does not enforce Dist immutability, so never running
-`add` or `rm` against snapshot Dists after creation is part of the operating contract.
+`retain` stores this build's metadata and protects its package files from garbage collection.
+Clients still use the snapshot Dists. SOW does not make these Dists read-only; keep their
+membership and effective configuration unchanged to preserve their contents.
 
 ## 12. Client address map
 
@@ -393,18 +346,9 @@ One Nginx service and one shared `infra/pool` support every channel:
 | stable | `http://infra-nginx/infra/dists/rpm-stable/$basearch/` | `http://infra-nginx/infra` / `deb-stable` |
 | 2026-08 | `http://infra-nginx/infra/dists/rpm-202608/$basearch/` | `http://infra-nginx/infra` / `deb-202608` |
 
-Run the final acceptance checks:
+Use `sow dist ls -r infra` to see all six Dists.
 
-```bash
-cd ~/repo
-sow dist ls -r infra
-sow status -r infra
-sow check -r infra
-```
-
-The result is not a disposable demo directory. It is a real Infra Repository that can continue ingesting packages,
-promoting releases, and producing monthly snapshots: `rpm/deb` move quickly, `rpm-stable/deb-stable` accumulate
-formal history, monthly Dists provide fixed endpoints, and every view reuses the same immutable package objects.
+The rolling Dists keep the latest packages, stable Dists accumulate promoted releases, and monthly Dists keep the selected snapshot. All views share the same package pool.
 
 Stop the temporary service when the lab is complete:
 

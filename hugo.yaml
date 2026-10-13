@@ -112,7 +112,7 @@ languages:
           weight: 10
           params:
             icon: fa-solid fa-compass-drafting
-            description: Dated architecture decisions and their evidence boundaries
+            description: Architecture decisions and the reasons behind them
         - identifier: release-notes
           parent: blog
           name: Release Notes
@@ -120,7 +120,7 @@ languages:
           weight: 20
           params:
             icon: fa-solid fa-tag
-            description: Version changes, upgrade notes, and delivery evidence
+            description: Version changes and upgrade instructions
         - identifier: download
           name: Download
           pageRef: /download
@@ -213,7 +213,7 @@ languages:
           weight: 10
           params:
             icon: fa-solid fa-compass-drafting
-            description: 按日期记录架构决策及其证据边界
+            description: 架构决策及其原因
         - identifier: release-notes
           parent: blog
           name: 发布注记
@@ -221,7 +221,7 @@ languages:
           weight: 20
           params:
             icon: fa-solid fa-tag
-            description: 版本变化、升级说明与交付证据
+            description: 版本变化与升级步骤
         - identifier: download
           name: 下载
           pageRef: /download
@@ -247,7 +247,7 @@ languages:
 taxonomies:
   categories: categories
   tags: tags
-  # OINK 0.6: declaring the author taxonomy is the whole switch. The term page
+  # OINK: declaring the author taxonomy is the whole switch. The term page
   # under content/authors/<name>/ becomes the profile, the blog article head
   # renders portrait + linked name + bio, and the feed emits <dc:creator>.
   author: authors

@@ -11,101 +11,100 @@ search_keywords: [快速上手, 入门, sow create, 平面仓库, 软件源, RPM
 search_boost: 1.6
 ---
 
-Plain 模式在一个目录内生成平面仓库。它不读取 `sow.yml`，不创建工作区，也不维护数据库。
+Plain 模式为一个软件包目录生成仓库，不需要工作区或配置文件。准备 SOW、用于预览的 Python 3，以及至少一个 RPM 或 DEB 文件。
 
 {{% steps %}}
 
 ## 准备目录 {#1-准备目录}
 
-把 RPM 和/或 DEB 文件放在目录顶层。`sow create` 不递归扫描，也不移动或改名包文件。
+创建可写目录。将下例输入路径换成实际文件，只执行已有格式对应的复制命令：
 
 ```bash
-mkdir -p /srv/repo
-cp /path/to/packages/*.rpm /path/to/packages/*.deb /srv/repo/
+mkdir -p "$HOME/sow-quickstart"
+cp /path/to/example.rpm "$HOME/sow-quickstart/"
+cp /path/to/example.deb "$HOME/sow-quickstart/"
 ```
 
-如果某种格式不存在，请只复制你实际拥有的软件包。
+把包放在目录顶层；`sow create` 不扫描子目录。
 
 ## 生成元数据 {#2-生成元数据}
 
 ```bash
-sow create /srv/repo
+sow create "$HOME/sow-quickstart"
 ```
 
-混合格式输出形态如下：
-
-```console
-created /srv/repo: rpm=1 deb=1 signed=0 removed=0 marker=false noop=false recovered=false
-```
-
-目录会变成：
+目录中有一个 RPM 和一个 DEB 时，输出包含：
 
 ```text
-/srv/repo/
-├── package.rpm
-├── package.deb
-├── repodata/       # RPM: repomd.xml、primary、filelists、other
+rpm=1 deb=1 signed=0 removed=0 marker=false noop=false recovered=false
+```
+
+原始软件包旁会新增索引：
+
+```text
+sow-quickstart/
+├── example.rpm
+├── example.deb
+├── repodata/       # RPM 索引与元数据
 ├── Packages        # DEB 平面索引
 └── Packages.gz
 ```
 
-Plain 模式不生成 DEB `Release`、`InRelease` 或 `Release.gpg`。RPM 与 DEB 元数据在一次
-操作中生成；任何解析或渲染错误都会阻止新索引提交。
+SOW 只为实际存在的格式生成索引。Plain 模式不生成 APT `Release`、`InRelease` 或 `Release.gpg` 文件，也不改变软件包名称与路径。
 
-## 对外服务 {#3-对外服务}
+## 启动本地服务器 {#3-对外服务}
 
-本地检查可以使用任意静态文件服务器：
+在另一个终端执行以下命令，并保持运行：
 
 ```bash
-cd /srv/repo
-python3 -m http.server --bind 127.0.0.1 8080
+python3 -m http.server --bind 127.0.0.1 --directory "$HOME/sow-quickstart" 8080
 ```
 
-在另一个终端检查两个协议入口：
+如果本机没有 APT 或 DNF 客户端，按已添加的格式检查 HTTP 入口：
 
 ```bash
+# RPM
 curl --fail http://127.0.0.1:8080/repodata/repomd.xml >/dev/null
+
+# DEB
 curl --fail http://127.0.0.1:8080/Packages.gz >/dev/null
 ```
 
-Python 服务器只适合预览；长期服务请使用正常维护的 HTTP 服务器。
+此服务器只能从本机访问。要供其他客户端访问或长期运行，请按[对外服务](/zh/docs/tutorial/serving/)配置。
 
-## 配置客户端 {#4-配置客户端}
+## 配置本机客户端 {#4-配置客户端}
 
-把 `REPO_HOST` 换成客户端能访问的地址。
+如果预览服务器运行在 Linux 上，为本机包管理器创建源配置文件。下面使用未签名元数据，并关闭客户端签名检查。需要签名元数据时，使用 [Managed 工作区](/zh/docs/start/workspace/)与[签名教程](/zh/docs/tutorial/signing/)。
 
 {{< tabs group="package-manager" default="dnf" label="选择包管理器" >}}
 {{< tab label="DNF / YUM" value="dnf" >}}
+把以下内容保存为 `/etc/yum.repos.d/sow-quickstart.repo`：
+
 ```ini {copy="all"}
-# /etc/yum.repos.d/sow-quickstart.repo
 [sow-quickstart]
 name=SOW Quick Start
-baseurl=http://REPO_HOST:8080/
+baseurl=http://127.0.0.1:8080/
 enabled=1
 gpgcheck=0
 repo_gpgcheck=0
 ```
-{{< /tab >}}
 
-{{< tab label="APT" value="apt" >}}
-```text {copy="all"}
-# /etc/apt/sources.list.d/sow-quickstart.list
-deb [trusted=yes] http://REPO_HOST:8080/ ./
-```
-{{< /tab >}}
-{{< /tabs >}}
+刷新索引并安装其中一个软件包：
 
-刷新索引并安装软件包：
-
-{{< tabs group="package-manager" default="dnf" label="刷新索引并安装" >}}
-{{< tab label="DNF / YUM" value="dnf" >}}
 ```bash {copy="all"}
-sudo dnf makecache
+sudo dnf --disablerepo='*' --enablerepo=sow-quickstart makecache
 sudo dnf install PACKAGE_NAME
 ```
 {{< /tab >}}
-
 {{< tab label="APT" value="apt" >}}
+把以下内容保存为 `/etc/apt/sources.list.d/sow-quickstart.list`：
+
+```text {copy="all"}
+deb [trusted=yes] http://127.0.0.1:8080/ ./
+```
+
+末尾的 `./` 选择平面仓库。刷新索引并安装其中一个软件包：
+
 ```bash {copy="all"}
 sudo apt update
 sudo apt install PACKAGE_NAME
@@ -113,36 +112,26 @@ sudo apt install PACKAGE_NAME
 {{< /tab >}}
 {{< /tabs >}}
 
-APT source 末尾的 `./` 表示平面仓库。`[trusted=yes]` 与关闭 DNF 签名检查只适用于这个
-未签名的快速示例；需要真实性保证时应使用已签名 Managed 仓库。
+把 `PACKAGE_NAME` 换成包内元数据中的名称，而不是文件名。macOS 用户可以完成上述 HTTP 检查；软件包安装需在兼容的 Linux 客户端上执行。
 
 ## 更新仓库 {#5-更新仓库}
 
-增删包文件后重新执行同一条命令：
+添加或删除软件包文件后，重新生成索引：
 
 ```bash
-sow create /srv/repo
+sow create "$HOME/sow-quickstart"
 ```
 
-目录内容就是 Plain 模式的全部状态。包字节与参数（包括显式指定的元数据时间戳）均不变时，
-生成的元数据具有确定性，重复运行会报告 `noop=true`。
+包文件与参数不变时，生成的元数据也不变，重复运行会报告 `noop=true`。
 
-对于已有客户端使用的 YUM 仓库，切换生成工具时应保留发布历史。SOW 0.5.0 新增
-`--metadata-timestamp` 参数用于指定发布时间，默认仍为 `0`。备份、签名与带缓存客户端
-验收的步骤见[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)。
-
-自动化场景可使用带版本的 JSON 信封：
-
-```bash
-sow create /srv/repo --json
-```
+替换其他 YUM 元数据生成工具时，按[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)保留客户端缓存所需的时间戳。
 
 {{% /steps %}}
 
-## 何时使用 Managed 模式
+预览完成后，用 `Ctrl+C` 停止服务器，并从客户端删除本例的源配置文件。软件包目录可以保留，以后继续使用。
 
-如果目录已经恰好包含要发布的全部内容，使用 Plain。需要具名 Dist、架构视图、成员策略、
-已签名元数据、Generation、审计或发布目标时，使用 [Managed 工作区](/zh/docs/start/workspace/)。
+<span id="何时使用-managed-模式"></span>
 
-另见 [`sow create`](/zh/docs/command/create/) 与
-[Plain 平面仓库](/zh/docs/feature/plain/)。
+## 下一步
+
+需要具名 Dist、架构视图、版本限制、元数据签名与发布目标时，使用 [Managed 工作区](/zh/docs/start/workspace/)。全部 Plain 参数见 [`sow create`](/zh/docs/command/create/)。

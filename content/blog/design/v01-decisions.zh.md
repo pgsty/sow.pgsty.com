@@ -2,7 +2,7 @@
 title: "SOW v0.1 决策账本：哪些被保留，哪些已退役"
 linkTitle: "v0.1 决策账本"
 date: 2026-07-12
-lastmod: 2026-08-28
+lastmod: 2026-10-13
 authors: [Vonng]
 description: "逐项整理 v0.1 现存的 44 份 ADR：当时解决什么问题，后来是延续、演化、仅服务迁移，还是随 V1 一同退役。"
 categories: [Design]
@@ -13,106 +13,101 @@ icon: fa-solid fa-list-check
 draft: false
 ---
 
-> [!IMPORTANT] 历史决策账本
-> v0.1.0 Tag 中现存 44 份 ADR，编号从 0001 到 0045，其中缺少 0006。
-> 本文保留它们的意义，但不会把每份历史实现契约重新发布成当前指南。
+v0.1.0 标签中有 44 份架构决策记录（ADR），编号为 0001 至 0045，缺少 0006。
+每份 ADR 记录一个问题、当时的决策及实现必须满足的条件。
+下表说明仓库模型变化后，各项决策的后续情况。
 
-即使实现已经退役，ADR 仍有价值：它记录团队拒绝忽略的失败模式、当时选择的边界，以及危险
-操作进入执行前必须取得的证据。
-
-下面把每项决策分为四种命运：
-
-| 命运 | 含义 |
+| 状态 | 含义 |
 |---|---|
-| **保留** | 原则以基本相同的边界继续存在于当前 SOW。 |
-| **演化** | 问题与安全规则仍在，但所有权或实现已经改变。 |
-| **迁移历史** | 决策只服务一次性的 Pigsty/V1 切换，不再是产品契约。 |
-| **退役** | 决策属于已经退出当前 SOW 的 Git/CAS/Route/Edge 产品模型。 |
+| **保留** | 原则以基本相同的范围继续用于当前 SOW。 |
+| **演化** | 问题仍在，但所有权或实现已经改变。 |
+| **迁移历史** | 决策用于 Pigsty/V1 切换。 |
+| **退役** | 决策属于已移除的 Git/CAS/Route/Edge 模型。 |
 
-主要决策日期覆盖 2026-07-11 至 2026-07-28；ADR-0035 另有 7 月 29 日与 31 日的后续修订。
-多数早期 ADR 在已经指导实现与证据工作的情况下，于 7 月 19 日集中进入 Git。v0.1.0 Tag Tree
-已经核对，包含下表所代表的同一组 44 条 ADR Path。其中一条原文包含已废弃基础设施细节，因此
-本文有意不提供直接 Deep Link。
+决策日期从 2026-07-11 到 7 月 28 日，ADR-0035 另有 7 月 29 日与 31 日的修订。
+多数早期 ADR 在实现开始后，于 7 月 19 日集中进入 Git。
+ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 
 ## 核心状态、发布与信任
 
 | ADR | 原始决策 | 后续命运 |
 |---|---|---|
-| [0001](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0001-core-contracts.md) | Git 是正典状态，SHA-256 CAS 拥有包体，Ref 表达 View/History，发布按 Target Saga 执行。 | **演化。** Git/CAS/Route 所有权退役；单一 Owner、Pointer-last、独立 Target 状态与证据门禁保留。 |
-| [0002](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0002-publication-routes-and-compatibility-gates.md) | Public Route、不可变 Generation 与 Client/Provider 兼容使用独立验收门。 | **演化。** Route 机制退役；协议、客户端与 Provider 证据仍然分开。 |
-| [0003](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0003-snapshot-generation-copy-and-retention.md) | Snapshot 需要经过验证的 Generation Copy 与 Inventory-bound Retention。 | **演化。** CopyObject Snapshot Tree 退役；Retained Generation 只保存 Metadata 与 Refset，不复制包体。 |
-| [0004](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0004-edge-token-verifier-deployment-contract.md) | Edge Token 验证与部署共享一套跨 Provider 版本化契约。 | **退役。** Edge Entitlement 不再属于 SOW Repository Engine。 |
-| [0005](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0005-legacy-make-target-dispositions.md) | 每个旧 Make Target 明确映射到 SOW、Retire 或 Policy Reject。 | **迁移历史。** 映射完成切换使命后退出活动产品。 |
-| [0007](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0007-pro-oss-unified-repository.md) | 公共包与 Gated 包共享一个正典仓库，而不是独立 Pro Bucket。 | **退役。** 商业 Edge 拓扑退出产品；更一般的单 Owner 原则保留。 |
-| [0008](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0008-gc-reachability-and-confirmation.md) | GC 服从完整 Reachability，破坏性操作需要显式确认。 | **保留。** 当前本地/Target GC 仍要求闭包、精确身份、Grace 与能力。 |
-| [0009](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0009-forward-only-remote-generation-restore.md) | Remote Generation 可见后只能前滚恢复，不能虚构回滚。 | **保留。** Commit Intent 仍是 Abandon/Reconcile 与 Forward-only 的边界。 |
-| [0010](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0010-repository-signing-identity-and-rotation-boundary.md) | Metadata Signing 绑定精确公私钥身份，轮换是 Repository-wide Transition。 | **演化。** 当前 Signer Evidence 与 Trust Ring 保留精确身份，不再使用 V1 Ref 拓扑。 |
-| [0011](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0011-evidence-bound-remote-deletion.md) | Remote Delete 必须具备 Target Ownership、Inventory、Checkpoint、Grace 与条件删除证据。 | **保留。** R2 无法满足原子条件删除，因此继续 Report-only。 |
-| [0012](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0012-private-origin-deployment-contract.md) | Private Origin、Cache Topology 与精确 Purge Mapping 都是显式部署契约。 | **退役。** CDN/Private-origin 部署不属于当前 SOW。 |
-| [0013](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0013-persisted-publication-plans-are-untrusted.md) | 持久化 Plan 只是需要重新验证的恢复输入，不能盲目重放。 | **保留。** Managed Recovery 仍会重新绑定 Plan、File、Target Identity 与公共证据。 |
-| [0014](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0014-rpm-provenance-signature-evidence-boundary.md) | RPM Provenance 记录精确 Packet Evidence，并区分 Ingestion Policy 与历史证明。 | **演化。** 当前 Package Authentication 与独立 Trust Ring 替代 V1 Receipt 编码。 |
-| [0015](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0015-target-identity-and-published-ref-state.md) | 配置只命名 Target，Published Ref 与 Checkpoint 属于正典状态。 | **保留。** Target-neutral Generation 与 Target-prefix Attempt/Checkpoint 仍是不同 Owner。 |
-| [0016](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0016-frozen-vendor-sdk-boundary.md) | Cloud Adapter 使用具体、有界 SDK/API 契约，不建立通用 Provider 抽象。 | **演化。** 具体 Provider 边界保留，V1 Edge/COS 细节退役。 |
-| [0017](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0017-rpm-package-keyring-and-cryptographic-verification.md) | 已接纳 RPM 签名必须在稳定 Repository Keyring 与已打开包体身份上闭合。 | **演化。** v0.4 独立 Multi-ring Verification 强化了同一信任边界。 |
-| [0018](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0018-selected-set-local-materialization-transaction.md) | 选定包集合按一个有界本地事务完成 Stage、Validate、Commit 与 Recovery。 | **演化。** V1 Materialization 退役；当前 Plain/Managed Pointer-last Stage 保留事务原则。 |
+| [0001](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0001-core-contracts.md) | Git 是权威状态，SHA-256 CAS 保存包体，引用表达视图与历史，发布按各目标的事务流程执行。 | **演化。** Git/CAS/Route 所有权已退役，单一所有者、协议指针最后提交、独立目标状态与执行前检查得以保留。 |
+| [0002](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0002-publication-routes-and-compatibility-gates.md) | 分别验证公共路由、不可变 Generation（构建快照）和客户端、存储服务兼容性。 | **演化。** Route 机制已退役，协议、客户端和存储服务仍分别验证。 |
+| [0003](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0003-snapshot-generation-copy-and-retention.md) | 快照需要经过验证的 Generation 副本，并按清单保留。 | **演化。** 通过 CopyObject 复制快照树的方式已退役；保留的 Generation 只保存元数据与引用集合，不复制包体。 |
+| [0004](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0004-edge-token-verifier-deployment-contract.md) | 边缘令牌验证与部署采用同一套跨服务商、带版本的接口。 | **退役。** 边缘访问权限不再由 SOW 仓库引擎管理。 |
+| [0005](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0005-legacy-make-target-dispositions.md) | 逐项决定旧 Make 目标是由 SOW 接替、退役，还是因策略限制而拒绝。 | **迁移历史。** 完成切换后退出产品。 |
+| [0007](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0007-pro-oss-unified-repository.md) | 公共包与受访问控制的包共用一个仓库。 | **退役。** 商业边缘服务拓扑退出产品，单一所有者原则保留。 |
+| [0008](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0008-gc-reachability-and-confirmation.md) | 垃圾回收计算完整引用关系，删除前要求显式确认。 | **演化。** 当前 GC 检查引用关系与精确身份，旧 `--apply --confirm` 接口已退役；远端删除还检查缓存宽限期与存储服务能力。 |
+| [0009](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0009-forward-only-remote-generation-restore.md) | 远端 Generation 可见后，通过前向恢复完成发布。 | **保留。** 提交意图仍是放弃或核对未提交操作与前向恢复之间的边界。 |
+| [0010](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0010-repository-signing-identity-and-rotation-boundary.md) | 元数据签名绑定精确公私钥身份，密钥轮换作为整个仓库的状态变化处理。 | **演化。** 当前签名者记录与信任环仍检查精确身份，不再使用 V1 引用拓扑。 |
+| [0011](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0011-evidence-bound-remote-deletion.md) | 远端删除需要目标所有权、清单、检查点、宽限期与条件删除能力。 | **保留。** R2 不满足所需的原子删除能力，因此只报告候选对象。 |
+| [0012](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0012-private-origin-deployment-contract.md) | 明确规定私有源站、缓存拓扑与缓存清理映射。 | **退役。** CDN 与私有源站部署不属于当前 SOW。 |
+| [0013](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0013-persisted-publication-plans-are-untrusted.md) | 持久化计划是恢复输入，使用前要重新验证。 | **保留。** Managed 恢复仍会重新验证计划、文件、目标身份和公共交付结果。 |
+| [0014](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0014-rpm-provenance-signature-evidence-boundary.md) | RPM 来源记录保留精确签名包数据，并区分接纳策略与历史证明。 | **演化。** 当前包认证与独立信任环替代了 V1 回执编码。 |
+| [0015](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0015-target-identity-and-published-ref-state.md) | 配置负责命名目标，已发布引用与检查点属于持久状态。 | **保留。** Generation 与目标无关；发布尝试和检查点按目标前缀保存。 |
+| [0016](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0016-frozen-vendor-sdk-boundary.md) | 云适配器使用具体、有界的 SDK/API 接口。 | **演化。** 具体存储服务接口保留，V1 Edge/COS 细节退役。 |
+| [0017](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0017-rpm-package-keyring-and-cryptographic-verification.md) | 在稳定的仓库密钥环中验证 RPM 签名，并绑定已打开包体的身份。 | **演化。** v0.4 的独立多信任环验证强化了这一规则。 |
+| [0018](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0018-selected-set-local-materialization-transaction.md) | 选定包集合在一个有界本地事务中完成暂存、验证、提交与恢复。 | **演化。** Managed 操作使用恢复日志；Plain 暂存元数据并最后替换指针，中断后重新构建。 |
 
 ## 旧拓扑、兼容性与迁移
 
 | ADR | 原始决策 | 后续命运 |
 |---|---|---|
-| [0019](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0019-frozen-el7-yum-metadata-compatibility.md) | 为旧客户端冻结 EL7 Metadata 格式与压缩行为。 | **迁移历史。** 当前平台支持以兼容性文档而非这份 Freeze 为准。 |
-| [0020](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0020-legacy-physical-topology-and-route-ownership.md) | 每条旧物理 Path 与 Selector Group 都有明确 Owner。 | **迁移历史。** 它消除了切换歧义，但不是当前仓库模型。 |
-| [0021](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0021-frozen-cross-el-yum-infra-compatibility-projection.md) | 以精确冻结证据复现跨 EL `yum/infra/{arch}` Projection。 | **迁移历史。** 这条特殊 Projection 已退出产品。 |
-| [0022](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0022-package-repository-history-continuity.md) | 物理所有权变化不能破坏 Package Repository 历史连续性。 | **演化。** Generation、Retained Ref 与 Migration Journal 在没有 V1 Route 的情况下延续连续性。 |
-| [0023](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0023-canonical-git-object-integrity.md) | 正典 Git Object 在接纳和使用前必须重新绑定精确字节。 | **演化。** Git Authority 退役；Descriptor/Path/Digest 身份检查保留。 |
-| [0024](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0024-materialized-route-read-capabilities.md) | Materialized Route Receipt 是窄化的 Read/Retirement Capability。 | **演化。** Route Receipt 退役；Capability-bound 检查与删除保留。 |
-| [0025](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0025-state-lock-process-instance-lease.md) | Lock 绑定精确 Process Instance 与稳定 inode，不按时间自动偷锁。 | **演化。** 稳定 Lock inode 与拒绝超时偷锁的原则保留，V1 Process-instance Lease 机制未保留。 |
-| [0026](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0026-offline-archive-projection-intent.md) | Offline Archive 使用 Durable Intent 与严格 Archive Admission。 | **退役。** Offline Archive Projection 已离开当前范围。 |
-| [0027](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0027-legacy-package-adoption-admission-and-canonicalization.md) | 旧包体只有通过 Path、Package 与 Provenance Admission 才进入正典状态。 | **迁移历史。** Adoption 计划结束；严格 Package Admission 以更窄形式保留。 |
-| [0028](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0028-control-only-deb-inspection.md) | DEB 只打开 Metadata 所需的 Control Archive，并拒绝歧义 Container。 | **保留。** 窄解析与有界输入仍属于 APT Package Boundary。 |
-| [0029](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0029-client-support-floor-and-el8-freeze-version.md) | Client Floor 与 EL8 Freeze 是显式 Owner Policy，不从代码猜测。 | **迁移历史。** 当前平台策略由兼容性参考与 Release Note 决定。 |
-| [0030](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0030-audit-bound-legacy-yum-missing-body-prune.md) | 旧 YUM Missing Body 只能依据已评审 Blocker-set Digest 修复。 | **迁移历史。** 这项窄 Negative Provenance 例外没有变成通用 Ignore。 |
-| [0031](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0031-legacy-pro-gated-activation-and-checksum-repair.md) | Gated 旧内容需要精确 Checksum Repair 与 Activation Evidence。 | **退役。** Pro Activation 离开范围；Fail-closed Repair 成为通用教训。 |
+| [0019](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0019-frozen-el7-yum-metadata-compatibility.md) | 为旧客户端固定 EL7 元数据格式与压缩行为。 | **迁移历史。** 当前支持平台见兼容性文档。 |
+| [0020](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0020-legacy-physical-topology-and-route-ownership.md) | 为每条旧物理路径与选择器分组指定所有者。 | **迁移历史。** 用于消除切换歧义，未进入当前仓库模型。 |
+| [0021](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0021-frozen-cross-el-yum-infra-compatibility-projection.md) | 根据固定验证结果复现跨 EL 的 `yum/infra/{arch}` 投影。 | **迁移历史。** 这项特殊投影已退出产品。 |
+| [0022](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0022-package-repository-history-continuity.md) | 物理所有权变化时保留包仓库历史。 | **演化。** Generation、保留引用与迁移日志继续保存历史，不再依赖 V1 Route。 |
+| [0023](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0023-canonical-git-object-integrity.md) | 接纳或使用保存仓库状态的 Git 对象前，重新核对其内容。 | **演化。** Git 权威状态已退役，文件描述符、路径与摘要检查保留。 |
+| [0024](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0024-materialized-route-read-capabilities.md) | 物化路由回执只授予限定范围的读取与退役权限。 | **演化。** 路由回执已退役，检查和删除仍限定对象与操作范围。 |
+| [0025](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0025-state-lock-process-instance-lease.md) | 锁绑定具体进程实例与稳定 inode，不因等待超时而夺锁。 | **演化。** 稳定锁 inode 与不按时间夺锁的规则保留，V1 进程实例租约已退役。 |
+| [0026](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0026-offline-archive-projection-intent.md) | 创建离线归档前持久化意图，并严格检查输入。 | **退役。** 离线归档投影已退出产品范围。 |
+| [0027](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0027-legacy-package-adoption-admission-and-canonicalization.md) | 旧包体通过路径、包内容与来源检查后，才纳入仓库管理。 | **迁移历史。** 旧包纳管计划已结束，包接纳检查以更小的范围保留。 |
+| [0028](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0028-control-only-deb-inspection.md) | 检查 DEB 时只打开元数据所需的 control 归档，拒绝有歧义的容器。 | **保留。** DEB 解析仍限定读取范围与输入大小。 |
+| [0029](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0029-client-support-floor-and-el8-freeze-version.md) | 由所有者明确规定最低客户端版本与 EL8 固定版本。 | **迁移历史。** 当前平台策略见兼容性参考与发布注记。 |
+| [0030](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0030-audit-bound-legacy-yum-missing-body-prune.md) | 仅依据已评审的问题集合摘要，修复旧 YUM 索引中缺失的包体引用。 | **迁移历史。** 这项来源例外没有变成通用忽略选项。 |
+| [0031](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0031-legacy-pro-gated-activation-and-checksum-repair.md) | 启用受访问控制的旧内容前，修复精确校验和并记录启用结果。 | **退役。** 商业版本启用流程退出产品，无法验证时停止修复的原则保留。 |
 
-## Provider 与 Edge 控制面
+<span id="provider-与-edge-控制面"></span>
+
+## 云端与边缘控制面
 
 | ADR | 原始决策 | 后续命运 |
 |---|---|---|
-| 0032 | 只有一个 Owner 明确指定的 Cloudflare 测试 Tuple 可例外进入。 | **退役。** 它只是窄化的历史测试例外，从未成为通用部署规则。 |
-| [0033](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0033-provider-scoped-readiness-registry.md) | Read-only Provider Readiness 拥有独立 Registry 与所有权证据。 | **退役。** Provider Bootstrap Registry 已离开当前 SOW。 |
-| [0034](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0034-cloudflare-nonproduction-worker-bootstrap.md) | Worker Bootstrap 使用 Lease、两阶段恢复、精确资源与可逆状态。 | **退役。** Cloudflare Deployment 不再由 Repository Engine 负责。 |
-| [0035](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0035-cloudflare-provider-attestation-and-log-sink-lease.md) | 使用前 Attest Provider Identity、Runtime Binding、Log Sink 与 Lease Ownership。 | **退役。** 这套 Edge 控制面退出产品。 |
-| [0036](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0036-provider-delete-capability-and-checkpoint-fenced-fallback.md) | R2 缺少 Conditional DeleteObject，因此允许在确定性 Capability Probe 与多层 Identity/Fence Proof 后，显式启用 `checkpoint-fenced` 无条件删除降级。 | **演化；降级未继承。** Capability Probe 与 Fail-closed Default 保留，但当前 SOW 禁用 R2 Remote Delete，Target GC 只报告 Candidate。 |
-| [0037](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0037-pre-upload-confidential-edge-denial-attestation.md) | Gated 发布必须在上传机密字节前证明 Edge Denial。 | **演化。** Edge 产品表面退役，暴露前证明鉴权的原则保留。 |
-| [0038](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0038-yum-consumer-preflight-receipt.md) | YUM 切换需要绑定 Endpoint、Generation 与 Trust Bytes 的短期 Receipt。 | **迁移历史。** 它让危险切换可审计，随后退役。 |
-| [0039](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0039-caret-url-wire-canonicalization.md) | Caret 在 Go、Edge、Log 与 Origin Route 中只有一种规范 URL 拼写。 | **演化。** 旧 Route 退役；Encode-once Path Canonicalization 保留。 |
+| 0032 | 只允许一组由所有者指定的 Cloudflare 测试资源例外通过。 | **退役。** 这是针对特定测试的历史例外。 |
+| [0033](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0033-provider-scoped-readiness-registry.md) | 服务就绪检查使用独立注册表与所有权记录。 | **退役。** 服务初始化注册表已退出 SOW。 |
+| [0034](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0034-cloudflare-nonproduction-worker-bootstrap.md) | Worker 初始化使用租约、两阶段恢复、精确资源身份与可逆状态。 | **退役。** Cloudflare 部署不再由仓库引擎负责。 |
+| [0035](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0035-cloudflare-provider-attestation-and-log-sink-lease.md) | 使用前验证服务身份、运行时绑定、日志接收端与租约所有权。 | **退役。** 这套边缘控制面已退出产品。 |
+| [0036](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0036-provider-delete-capability-and-checkpoint-fenced-fallback.md) | R2 缺少条件 DeleteObject；能力探测与重复身份检查通过后，可显式启用 `checkpoint-fenced` 无条件删除。 | **演化；删除降级未继承。** 能力探测和条件不足时停止的规则保留。当前 SOW 禁用 R2 远端删除，只报告 GC 候选对象。 |
+| [0037](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0037-pre-upload-confidential-edge-denial-attestation.md) | 上传机密字节前，先证明边缘服务会拒绝未授权访问。 | **退役。** 边缘访问控制现由外部部署负责。 |
+| [0038](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0038-yum-consumer-preflight-receipt.md) | YUM 切换需要有有效期的回执，绑定精确端点、Generation 与信任数据。 | **迁移历史。** 用于核对客户端切换，随后退役。 |
+| [0039](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0039-caret-url-wire-canonicalization.md) | 脱字符在 Go、边缘服务、日志与源站路由中采用唯一 URL 编码。 | **演化。** 旧路由已退役，路径只编码一次的规范保留。 |
 
 ## 有界配置与派生状态恢复
 
 | ADR | 原始决策 | 后续命运 |
 |---|---|---|
-| [0040](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0040-bounded-configuration-topology.md) | 在分配或执行前限制配置基数与展开后的拓扑。 | **保留。** 当前 Parser 与 State Wire 仍有显式 Size/Cardinality Limit。 |
-| [0041](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0041-preserved-projection-orphan-quarantine.md) | 未知 Final Projection Stage 应保留审计，不得猜测删除。 | **演化。** 当前 Recovery 仍保留矛盾证据并 Fail Closed。 |
-| [0042](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0042-derived-state-replacement-outcome.md) | Derived-state Replacement 有明确 Success、Rollback、Preserved 与 Blocked Outcome。 | **保留。** 当前 Operation 报告精确 Recovery Outcome，不折叠成简单成败。 |
-| [0043](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0043-derived-state-hostile-writer-admission.md) | 文件 Mutation 绑定 Descriptor Identity，并诚实声明 Same-UID Hostile Writer 边界。 | **保留。** Path Safety Fail Closed，但不宣称保护超出 OS Ownership Boundary 的攻击面。 |
-| [0044](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0044-preserved-projection-audit-retirement.md) | Preserved Audit Copy 只能通过精确 Capability 与 Confirmation Token 退役。 | **演化。** V1 命令退役；Capability-bound Deletion 原则保留。 |
-| [0045](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0045-generic-derived-state-residue-recovery.md) | Unjournaled Residue 必须有有界分类器，不能静默接纳或删除。 | **保留。** 当前恢复仍区分 Known State、Safe Residue 与 Contradictory Evidence。 |
+| [0040](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0040-bounded-configuration-topology.md) | 分配内存或执行前，限制配置条目数与展开后的拓扑大小。 | **保留。** 当前解析器与状态格式仍有明确大小和数量上限。 |
+| [0041](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0041-preserved-projection-orphan-quarantine.md) | 保留未知的最终投影暂存目录，以便核查。 | **演化。** 当前恢复仍保留冲突记录，并在无法核实时停止。 |
+| [0042](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0042-derived-state-replacement-outcome.md) | 派生状态替换明确区分成功、回滚、保留与阻塞结果。 | **演化。** Managed 日志记录操作阶段；记录状态与文件不一致时停止恢复。 |
+| [0043](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0043-derived-state-hostile-writer-admission.md) | 文件修改检查描述符身份，并规定同一操作系统用户恶意并发写入的保护范围。 | **保留。** 路径检查拒绝身份变化，操作系统权限仍负责隔离其他写入者。 |
+| [0044](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0044-preserved-projection-audit-retirement.md) | 只有匹配精确操作权限与确认令牌，才可删除保留的核查副本。 | **演化。** V1 命令已退役，删除前限定对象与操作权限的规则保留。 |
+| [0045](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0045-generic-derived-state-residue-recovery.md) | 对无日志残留进行有界分类，不能静默接纳或删除。 | **保留。** 当前恢复仍区分已知状态、安全残留与冲突记录。 |
 
 ## 账本背后的共同模式
 
-真正留下来的不是最复杂的 V1 机制，而是机制下面的小型不变式：
+延续下来的决策有几条共同规则：
 
-- 每个事实只有一个 Owner；
-- Mutation 前绑定精确 Identity；
-- 不可变内容先准备，Pointer 最后提交；
-- Commit Intent 之后只能前向恢复；
-- 删除前必须取得完整证据；
-- 输入有明确上限，Non-goal 必须诚实；
-- 兼容性结论绑定实际测试过的 Client/Provider。
+- 每个事实只有一个所有者。
+- 修改前检查精确身份。
+- 不可变内容就绪后，再提交协议指针。
+- 提交意图持久化后，通过前向恢复完成操作。
+- 删除前检查引用关系与删除条件。
+- 限制输入大小，明确产品范围。
+- 记录实际验证过的客户端与存储服务。
 
-Git Database、Route Graph、Edge Bootstrap 与迁移命令都可以替换，这些不变式不可以。它们如今
-维护在[设计原则](/zh/blog/design/principles/)、[系统模型](/zh/blog/design/model/)与
-[发布与恢复](/zh/blog/design/publication/)中。
+当前实现见[设计原则](/zh/blog/design/principles/)、[系统模型](/zh/blog/design/model/)与
+[发布与恢复](/zh/blog/design/publication/)。
 
 不可变的 [v0.1.0 ADR 目录](https://github.com/pgsty/sow/tree/v0.1.0/docs/adr)仍是第一手
 资料。下一篇文章继续汇总独立的 [v0.1 证据记录](/zh/blog/design/v01-evidence/)。

@@ -2,9 +2,9 @@
 title: "What SOW v0.1 Actually Proved"
 linkTitle: "v0.1 Evidence Ledger"
 date: 2026-07-31
-lastmod: 2026-08-28
+lastmod: 2026-10-13
 authors: [Vonng]
-description: "A curated account of 112 dated v0.1 evidence reports: the real clients, scale, failure, migration, and provider claims they supported—and what they never proved."
+description: "A summary of 112 dated v0.1 reports covering client compatibility, scale, recovery, migration, and cloud-provider behavior."
 categories: [Design]
 tags: [history, v0.1, evidence, compatibility, verification]
 url: "/blog/design/v01-evidence/"
@@ -13,21 +13,13 @@ icon: fa-solid fa-microscope
 draft: false
 ---
 
-> [!IMPORTANT] Version-bound evidence
-> Every result on this page belongs to the v0.1 source, layout, fixtures, and
-> environment recorded at the time. It does not establish compatibility or
-> release readiness for current SOW.
+The v0.1 archive contains 112 dated reports from 2026-07-11 through July 31. They record
+client tests, scale measurements, failure recovery, migration, and cloud-provider
+experiments. This article summarizes the main results and links to representative reports.
 
-The v0.1 archive contains 112 dated evidence reports from 2026-07-11 through
-2026-07-31. Publishing all of them as blog posts would make the public site less useful:
-many are narrow fault closures, repeated current-source audits, or transcripts for a
-specific implementation seam.
-
-Discarding them would lose something equally important. The reports show which design
-decisions came from real clients and counterexamples, which came only from local or mock
-tests, and where the team deliberately refused to turn incomplete evidence into a PASS.
-
-This ledger preserves that boundary.
+Each result belongs to the source revision, fixtures, clients, and environment recorded
+in its report. Current compatibility is listed in the
+[compatibility reference](/docs/reference/compatibility/).
 
 ## Evidence timeline
 
@@ -54,12 +46,12 @@ XML or text. It also measured scale explicitly:
 - [50k upstream streaming](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-11-upstream-50k-streaming.md);
 - separate 50k APT, YUM, materialization, publish-plan, and legacy-adoption runs.
 
-These reports justified streaming and bounded-concurrency requirements. They did not prove
-that every later layout inherited the same client behavior or performance.
+These measurements supported streaming processing and bounded concurrency for large
+repositories.
 
-### Protocol closure and negative counterexamples
+### Protocol limits found in testing {#protocol-closure-and-negative-counterexamples}
 
-Several design changes came from negative proof rather than optimistic implementation:
+Failed experiments identified limits in the proposed protocols:
 
 - [APT fixed-alias negative PoC](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-12-apt-legacy-fixed-alias-negative-poc.md)
   showed that old client semantics constrained atomic alias claims.
@@ -68,8 +60,7 @@ Several design changes came from negative proof rather than optimistic implement
 - [YUM generation atomicity](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-12-yum-generation-atomicity.md)
   recorded exactly which pointer behavior could and could not be made atomic.
 
-The lasting lesson is not the V1 URL scheme. It is that a standards-shaped repository and
-a specific client transaction are different claims.
+These experiments showed why protocol syntax and client transactions need separate tests.
 
 ### Failure and recovery
 
@@ -84,8 +75,8 @@ Representative records include:
 - [state-lock and atomic publication](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-19-state-lock-atomic-publication.md);
 - [derived-state replacement outcomes](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-28-derived-state-replacement-outcome.md).
 
-This work is why current SOW distinguishes pre-commit abandon, post-intent forward
-recovery, and contradictory evidence instead of exposing one generic “retry” path.
+These tests led to distinct recovery paths: abandon uncommitted work, complete work after
+commit intent, or stop when recorded evidence conflicts.
 
 ### Legacy migration
 
@@ -93,55 +84,40 @@ The migration evidence enumerated old Make targets, physical layouts, repository
 consumer configuration, package-signature inventory, and rollback. It used read-only
 copies and exact receipts before mutation.
 
-That program proved a particular Pigsty cutover path. It did not justify carrying legacy
-topology into the permanent product model. Its most valuable result was the discipline:
-migration assumptions become explicit data and executable gates, then retire after the
-cutover.
+This work validated a specific Pigsty cutover path. It also established a method: record
+migration assumptions as data, check them before each step, and retire the migration code
+after the cutover.
 
 ### Provider and Edge experiments
 
-The archive contains real and simulated R2, MinIO, Cloudflare, COS, and Edge work. The
-stronger reports state exact scope:
+The archive contains real and simulated R2, MinIO, Cloudflare, COS, and Edge tests.
+Representative reports include:
 
 - [real R2 storage protocol](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-18-real-r2-storage-protocol.md);
 - [R2 publication storage transaction](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-20-r2-publication-storage-transaction.md);
 - [full-provider checkpoint-fenced deletion](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-20-full-provider-checkpoint-fenced-delete.md);
 - Cloudflare bootstrap, private-domain, provider-attestation, and rollback records.
 
-Some cells used owner-designated nonproduction resources; others were offline or mock
-validation. A real R2 result never proved COS conditional replacement, EdgeOne cache
-behavior, or current SOW's target state machine.
+<span id="what-the-archive-did-not-prove"></span>
 
-## What the archive did not prove
-
-The evidence set was large, but its own documents retained open boundaries:
-
-- no one PoC established universal APT, DNF, proxy, mirror-tool, or provider compatibility;
-- MinIO S3 compatibility did not equal Cloudflare R2 or Tencent COS semantics;
-- an accepted design or adversarial review was not implementation evidence;
-- a local/mock provider result was not a production deployment;
-- a PASS remained attached to its source revision, fixture, URL layout, and environment;
-- v0.1 evidence could not validate the later Plain/Managed or single-payload designs.
-
-Those limitations are a feature of the archive, not a defect to edit away.
+Some tests used designated nonproduction resources; others ran offline or against mocks.
+The reports distinguish these environments. Storage behavior measured on R2, MinIO, or
+COS applies to that service and the API tested.
 
 ## What became part of the design method
 
-The evidence program left six durable practices:
+The work established six practices:
 
-1. **Name the evidence layer.** Design, source, unit/fault test, real client, provider,
-   artifact, and production are separate.
-2. **Retain negative results.** A counterexample often defines a safer product boundary
-   more clearly than another successful happy path.
-3. **Bind PASS to immutable inputs.** Source revision, container/client version, provider,
+1. **State what was tested.** Distinguish source checks, simulated failures, client tests,
+   and tests against a real service.
+2. **Keep failed test results.** They identify conditions where the design does not work.
+3. **Record inputs with each result.** Source revision, container/client version, provider,
    route, and fixture belong with the result.
-4. **Test scale as a contract.** Large repositories need measured memory, call count, and
+4. **Measure scale.** Large repositories need measured memory, call count, and
    concurrency behavior.
-5. **Retire evidence with its model.** Historical proof remains useful for explanation but
-   never silently upgrades a new layout.
-6. **Keep build and supply-chain checks standing.** Toolchain portability, dependency
-   vulnerability checks, static analysis, dead-code closure, and reproducible delivery are
-   continuous release gates rather than one-time cleanup tasks.
+5. **Test each new layout.** Keep historical results with the model they tested.
+6. **Check each release build.** Test supported platforms, scan dependencies, and run static analysis.
+   Check that the build can be reproduced.
 
 These practices now appear in [Design Principles](/blog/design/principles/) and the current
 [compatibility reference](/docs/reference/compatibility/).
@@ -149,8 +125,7 @@ These practices now appear in [Design Principles](/blog/design/principles/) and 
 ## Primary source
 
 The immutable [v0.1.0 evidence directory](https://github.com/pgsty/sow/tree/v0.1.0/docs/evidence)
-contains every dated report. This article is the maintained interpretation; the raw files
-remain the audit trail.
+contains every dated report, including commands, results, and test conditions.
 
 Continue with [The v0.2 Reset](/blog/design/v02-reset/) to see how those lessons were kept
 while the product model became much smaller.

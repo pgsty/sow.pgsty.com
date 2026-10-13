@@ -15,14 +15,15 @@ channels:
     title_zh: Pigsty 软件源
     icon: fa-solid fa-cloud-arrow-down
     note: >-
-      The shortest route on a Linux host: SOW ships in the Pigsty infra
-      repository, so `sow` installs and upgrades with everything else the box
-      already gets from APT or YUM. Mainland China is served by the
-      `repo.pigsty.cc` mirror.
+      On Linux, install and update SOW with APT or DNF from the Pigsty infra
+      repository. This channel follows the repository version. In mainland
+      China, use the `repo.pigsty.cc` mirror. The APT example marks the source
+      as trusted with `trusted=yes`. The DNF example disables RPM package
+      signature checks with `gpgcheck=0`.
     note_zh: >-
-      Linux 主机上最省事的一条路径：SOW 已收录进 Pigsty infra 软件源，`sow`
-      与主机上其它软件包一起用 APT / YUM 安装和升级。中国大陆可使用
-      `repo.pigsty.cc` 镜像。
+      在 Linux 上，通过 Pigsty infra 软件源用 APT 或 DNF 安装和更新 SOW。
+      此渠道跟随软件源中的版本。中国大陆可使用 `repo.pigsty.cc` 镜像。
+      APT 示例通过 `trusted=yes` 将该源标为可信；DNF 示例通过 `gpgcheck=0` 关闭 RPM 包签名检查。
     steps:
       - title: APT · Debian / Ubuntu
         title_zh: APT · Debian / Ubuntu
@@ -70,11 +71,11 @@ channels:
     icon: fa-solid fa-box-archive
     url: https://github.com/pgsty/sow/releases/tag/${tag}
     note: >-
-      Pinned native packages for an offline or promotion-gated pipeline. They
-      carry the `1PGSTY` release suffix, install the executable at
+      Use these packages to install a specific version or prepare an offline
+      installation. They carry the `1PGSTY` release suffix, install SOW at
       `/usr/bin/sow`, and ship the Apache-2.0 licence and third-party notices.
     note_zh: >-
-      适用于离线交付或需要逐级晋级的流水线。安装包带 `1PGSTY` 发布后缀，把可执行文件
+      需要固定版本或离线安装时，选择以下安装包。安装包带 `1PGSTY` 发布后缀，把可执行文件
       装到 `/usr/bin/sow`，并随包安装 Apache-2.0 许可证与第三方许可声明。
     steps:
       - title: RPM · x86_64 / aarch64
@@ -98,14 +99,12 @@ channels:
     title_zh: 二进制归档
     icon: fa-solid fa-box-open
     note: >-
-      Installer-free binaries for Linux and macOS on `amd64` and `arm64`, for
-      CI, for macOS workstations, and for hosts where you own the install path.
-      Each archive holds the `sow` executable, `README.md`, `CHANGELOG.md`,
-      the Apache-2.0 `LICENSE`, and `THIRD_PARTY_NOTICES`. Windows is not a release target.
+      Use an archive on Linux or macOS when you want to choose the installation
+      directory. Builds are available for `amd64` and `arm64`.
+      Archives include the executable, documentation, and license files.
     note_zh: >-
-      面向 Linux 与 macOS 的免安装器二进制，覆盖 `amd64` 与 `arm64`，适合 CI、macOS
-      工作站，以及由你自己决定安装路径的主机。每个归档包含 `sow` 可执行文件、
-      `README.md`、`CHANGELOG.md`、Apache-2.0 `LICENSE` 与 `THIRD_PARTY_NOTICES`。不提供 Windows 构建。
+      在 Linux 或 macOS 上自行指定安装目录时，选择二进制归档。支持 `amd64` 与 `arm64`。
+      归档包含可执行文件、文档与许可文件。
     steps:
       - title: Linux · amd64
         title_zh: Linux · amd64
@@ -126,6 +125,8 @@ channels:
           mkdir -p ~/.local/bin
           install -m 0755 sow ~/.local/bin/sow
 
+          export PATH="$HOME/.local/bin:$PATH"
+          sow version
           sow help
 
   - id: source
@@ -135,12 +136,12 @@ channels:
     icon: fa-solid fa-code-branch
     url: https://github.com/pgsty/sow/tree/${tag}
     note: >-
-      Build the tag yourself. The module declares Go 1.27.1, metadata generation
-      needs no C toolchain, and these are the flags the release pipeline uses,
-      so a source build reports the same product version as the published one.
+      Install Go 1.27.1 or newer, then build the release tag with the commands
+      below. No C compiler is required. The build flags set the version shown
+      by `sow version`.
     note_zh: >-
-      自行构建对应 Tag。模块声明 Go 1.27.1，生成元数据不需要 C 工具链；下面就是
-      Release Pipeline 使用的构建参数，因此源码构建与官方发布报告相同的产品版本。
+      先安装 Go 1.27.1 或更新版本，再按以下命令构建发布标签。无需 C 编译器。
+      构建参数会设置 `sow version` 显示的版本号。
     steps:
       - title: Clone, check out, build
         title_zh: 克隆、检出、构建
@@ -150,10 +151,11 @@ channels:
           cd sow
           git checkout ${tag}
 
+          SOW_BUILD_DIR="$(mktemp -d)"
           CGO_ENABLED=0 go build -trimpath \
             -ldflags="-s -w -X github.com/pgsty/sow/internal/v2cli.Version=${version}" \
-            -o sow ./cmd/sow
-          sudo install -m 0755 sow /usr/local/bin/sow
+            -o "$SOW_BUILD_DIR/sow" ./cmd/sow
+          sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 
   - id: assets
     kind: pinned
@@ -161,13 +163,14 @@ channels:
     title_zh: SHA256SUMS
     icon: fa-solid fa-shield-halved
     url: https://github.com/pgsty/sow/releases/download/${tag}/SHA256SUMS
+    checksums_src: release/sow-checksums.txt
     note: >-
-      The release's `SHA256SUMS` lists the exact SHA-256 digest of each archive,
-      RPM, and DEB. Download it alongside your artifact and verify the matching
-      entry before installation. Keep the file name and release version together.
+      Download `SHA256SUMS` from the same release as your package or archive.
+      Before installation, set `ASSET` to the downloaded file name and check
+      its SHA-256 digest with the command for your operating system.
     note_zh: >-
-      每个归档、RPM 与 DEB 的准确 SHA-256 摘要都记录在该 Release 的 `SHA256SUMS` 中。
-      安装前随制品下载此文件，并校验对应条目，确保文件名与 Release 版本一致。
+      从软件包或归档对应的版本下载 `SHA256SUMS`。安装前，将 `ASSET` 设为已下载的文件名，
+      用对应操作系统的命令检查 SHA-256 摘要。
     steps:
       - title: Verify one artifact
         title_zh: 校验单个制品

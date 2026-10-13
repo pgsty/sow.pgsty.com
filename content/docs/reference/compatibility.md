@@ -1,7 +1,7 @@
 ---
 title: "Platforms & Integrations"
 linkTitle: "Platforms"
-description: "Release targets, filesystem requirements, repository clients, publication Providers, and automated integration coverage."
+description: "Supported platforms, filesystem requirements, repository formats, clients, and integration coverage."
 categories: [Reference]
 tags: [rpm, deb, yum, apt, object-storage]
 url: "/docs/reference/compatibility/"
@@ -11,147 +11,128 @@ weight: 700
 icon: fa-solid fa-circle-check
 ---
 
-This page defines the environments SOW ships for, the storage semantics it requires, and
-the exact scope of its automated integrations. Repository generation happens inside the
-SOW binary; a real package manager remains the final check for a deployed repository.
+SOW builds RPM and DEB repository files on Linux and macOS. Choose a supported local
+filesystem for the workspace, then configure HTTP or storage access for clients.
 
-## Release targets
+<span id="release-targets"></span>
 
-| Operating system | `amd64` | `arm64` | Artifact |
+## Platforms
+
+| Operating system | `amd64` | `arm64` | Release formats |
 |---|---:|---:|---|
-| Linux | yes | yes | archive, RPM, DEB |
-| macOS | yes | yes | archive |
-| Windows | no | no | not supported |
+| Linux | Yes | Yes | Archive, RPM, DEB |
+| macOS | Yes | Yes | Archive |
+| Windows | No | No | — |
 
-Release binaries use `CGO_ENABLED=0` and require no language runtime. The source module requires
-Go 1.27.1 or newer. Archives include `README.md`, `CHANGELOG.md`, the Apache-2.0 `LICENSE`,
-and `THIRD_PARTY_NOTICES`. Linux packages include the same license and third-party notices
-with the binary. Use [`sow version`](/docs/command/)
-to print the product version, target OS/architecture, and build toolchain.
+Release binaries use `CGO_ENABLED=0` and need no language runtime. Source builds require
+Go 1.27.1 or later. Archives include the README, changelog, Apache-2.0 license, and
+third-party notices; Linux packages include license and notice files with the binary.
+Run `sow version` to inspect the binary version, platform, and build toolchain.
 
 ## Workspace filesystem
 
-Managed workspaces belong on a local POSIX filesystem. Correctness depends on advisory
-locks, `fsync`, descriptor-bound path checks, and atomic same-filesystem rename. NFS and
-other network filesystems are not supported workspace locations. On macOS, use APFS:
-HFS+ lacks atomic directory exchange, and SOW rejects the build.
+Use a local POSIX filesystem with advisory locks, `fsync`, and atomic same-filesystem
+rename. Network filesystems such as NFS are not supported workspace locations.
+On macOS, use APFS; SOW rejects builds when required atomic directory exchange is unavailable.
 
-The public `<workspace>/<repo>/` tree is different: it is a closed `pool/ + dists/`
-namespace designed for whole-root copying and publication. It does not depend on SQLite,
-private journals, or view-local hard-link identity. Keep the complete Repository together
-and never expose `.sow/`.
+Keep the workspace's public tree and private staging on the same filesystem.
+Serve only `<workspace>/<repo>/`. That complete `pool/ + dists/` tree can be copied to
+other storage without the private database or journal.
 
-SOW rejects symlinked control paths, unsafe regular files, overlapping filesystem targets,
-and a new pool path that collides case-insensitively with an existing or published path,
-including identical bytes added under a file name that differs only by case (add the file
-under its original name). On a case-insensitive workspace filesystem, such as the macOS
-default, SOW also rejects a new package whose source directory differs only by case from an
-existing package's (for example `CaseDemo` and `casedemo`), and `publish` to a filesystem
-target on a case-insensitive volume refuses such aliases before creating an attempt. On
-case-sensitive filesystems (Linux) those source directories stay distinct, so a Repository
-that contains both cannot be moved to a case-insensitive filesystem.
+Full pool paths that differ only in case are rejected. Source-directory case aliases are
+also rejected on case-insensitive filesystems. A repository created on a case-sensitive
+volume can contain source directories that a case-insensitive destination cannot represent;
+filesystem publication checks this before starting. See [Layout](/docs/reference/layout/).
 
-## Automated integration matrix
+<span id="repository-client-contract"></span>
 
-| Surface | Environment | Verified behavior |
+## Repository formats and clients
+
+| Output | Client entry point | Package locations |
 |---|---|---|
-| Production CLI clean room | Linux CI | Builds the shipping binary; creates mixed Plain RPM/DEB metadata; initializes `sow/v3`; creates RPM and DEB Dists; adds fixtures; runs query, build, check, changes, config, and log commands |
-| Plain APT client | Ubuntu 22.04 container | Serves `sow create` output over HTTP; runs `apt-get update`, package discovery, exact-version selection, download, and install with an explicitly trusted unsigned source |
-| RPM detached-signature transition | AlmaLinux 8, 9, and 10 containers | Runs real DNF clients against serial `repomd.xml` / `repomd.xml.asc` transition states and pins which combinations succeed or fail |
-| S3-compatible transport | Pinned PGSTY Silo container (MinIO-compatible) | Exercises bucket listing, HEAD, GET, single-part create-only/CAS PUT, replay, and object SHA-256 metadata; retries and prefix confinement are covered by local protocol tests |
-| Release packaging | Linux CI | Builds four archives, two RPMs, two DEBs, and `SHA256SUMS`; checks package paths, Apache-2.0 metadata, and packaged license bytes |
+| Plain RPM | `repodata/repomd.xml` | Beside `repodata/` |
+| Plain DEB | `Packages` or `Packages.gz` | Beside the indexes; flat APT source |
+| Managed RPM | `dists/<dist>/<arch>/repodata/repomd.xml` | Relative paths back to root `pool/` |
+| Managed DEB | `dists/<dist>/Release` or signed `InRelease` | Root-relative `pool/` paths |
 
-The current Silo integration does not validate conditional multipart completion. Multipart
-request/protocol tests are separate; they do not establish compatibility with hosted R2.
-Verify real R2 multipart behavior separately before treating that path as accepted.
+Managed APT uses component `main` and SHA-256 by-hash indexes. Metadata signing produces
+RPM `repomd.xml.asc` or APT `InRelease` and `Release.gpg`.
 
-The DNF signature-transition probe is a protocol test, not a complete Managed RPM install.
-The APT job covers an unsigned Plain repository, not Managed metadata signing. Run the
-exact dnf/APT version, repository URL, access policy, and signing policy used by your
-deployment before promoting it.
+### XML and SQLite RPM metadata
 
-## Repository client contract
+SOW generates gzip-compressed `primary`, `filelists`, and `other` XML. It does not generate
+SQLite `primary_db`, `filelists_db`, or `other_db`. These are distinct metadata formats;
+a tool that only accepts `primary_db` needs an XML input path or a separate conversion.
 
-Plain RPM repositories expose `repodata/` beside package files. Plain DEB repositories
-expose `Packages` and `Packages.gz` beside package files. They can be consumed through
-`file://` or HTTP after the client trust policy is configured.
+Missing `primary_db` does not by itself prevent YUM from reading the repository. YUM's
+upstream loader falls back to XML and creates its local cache when a suitable SQLite
+index is unavailable. See the [YUM metadata loader](https://github.com/rpm-software-management/yum/blob/master/yum/yumRepo.py).
+SOW's generated XML uses gzip, so zstd support is a separate question when comparing
+other repositories or tools.
 
-Managed clients consume the complete Repository root:
+SOW does not generate zchunk, modulemd, or source-package indexes. If your clients need
+module profiles or `dnf module install`, keep a tool that provides module metadata.
+For ordinary RPM installation from modular packages, apply the appropriate client
+`module_hotfixes` policy; see the [migration guide](/docs/tutorial/yum-migration/).
 
-- APT indexes live below `dists/<dist>/main/binary-<arch>/` and refer to the root `pool/`.
-  `Release` advertises SHA-256 by-hash indexes; configured signing adds `InRelease` and
-  `Release.gpg`.
-- RPM metadata lives below `dists/<dist>/<arch>/repodata/` and uses relative locations
-  that point back to the root `pool/`. Serve the whole Repository, not one architecture
-  directory.
+### `dnf reposync`
 
-Default `dnf reposync` rejects the canonical Managed RPM parent-relative package paths.
-For that workflow, generate a self-contained copy with
-[`sow export rpm-leaf`](/docs/command/export/). The export has local package paths and a
-completion manifest; it is not a second canonical Repository.
+Default `dnf reposync` confines downloads to one repository directory, so it rejects the
+parent-relative package locations in a canonical Managed RPM view. This follows its
+[documented safe-write path](https://dnf-plugins-core.readthedocs.io/en/latest/reposync.html).
+Use [`sow export rpm-leaf`](/docs/command/export/) to generate a self-contained directory
+for that workflow.
 
-Managed RPM and `export rpm-leaf` use a fixed `0` repomd data timestamp and expose no
-`--metadata-timestamp` option. They cannot directly take over the same EL7 repository ID
-while clients retain a positive cached timestamp; changing the base URL alone does not help.
-Use a new client repository ID or clear its metadata cache. To keep the old ID and cache,
-continue with Plain `create` and an explicit publication time, following the
-[migration guide](/docs/tutorial/yum-migration/) and re-signing repomd.
+<span id="migrating-an-existing-plain-yum-repository"></span>
 
-## Migrating an existing Plain YUM repository
+### Existing EL7 caches
 
-Plain emits the primary, filelists, and other XML streams. It does not generate legacy
-SQLite metadata or module streams. Ordinary RPMs can be served with an appropriate
-`module_hotfixes=1` policy; module profiles and `dnf module install` require a different workflow.
+EL7 YUM compares metadata data timestamps with its cached repository. Plain
+`create --metadata-timestamp SECONDS` lets you preserve and advance an existing publication
+time. The default is `0`.
 
-EL7 YUM compares the largest `repomd.xml` data timestamp with its cached copy. SOW 0.5.0
-adds `create --metadata-timestamp SECONDS`, but its default is still `0`.
-An existing online repository needs a timestamp at least as large as its historical
-maximum; actual updates should advance it. Updating revision or file mtime is insufficient.
-The caller maintains this history and signs `repomd.xml` separately. Test with the same
-repository URL and ID, retaining the old cache and the intended GPG checks. Follow the
-[migration guide](/docs/tutorial/yum-migration/) for the complete procedure.
+Managed RPM and exported RPM leaves use timestamp `0` and have no timestamp override.
+If the same client repository ID has cached a positive timestamp, use a new repository
+ID or clear that ID's metadata cache. Changing the base URL alone is insufficient.
+To retain the old ID and cache, follow the timestamp procedure with Plain mode in
+[YUM migration](/docs/tutorial/yum-migration/).
 
-RPM dependency projection follows modern createrepo_c semantics for `%pretrans` and
-`%posttrans` requirements. The 0.5 regression tests strengthen that contract without changing
-the parser. Older createrepo_c versions can emit different dependency rows or `pre="1"`
-attributes; compare dependency meaning and real client behavior rather than raw row counts.
-See [upstream PR #427](https://github.com/rpm-software-management/createrepo_c/pull/427).
+### RPM signatures
 
-RPM format v6 signatures are not supported in 0.5.0. The new signature tag can be treated
-as unsigned, so package signing or verification may reject such a package. Use RPM format v4
-packages for signing workflows; do not interpret this limitation as a promise to preserve
-or verify an RPM format v6 signature.
+Package-signing workflows support RPM format v4. RPM format v6 signature tags are not
+supported. Metadata key-reference support is separate; see [Signing](/docs/feature/signing/).
 
-## Publication Providers
+## Publication providers
 
-| Provider | Contract |
-|---|---|
-| `filesystem` | Publishes beneath a pre-existing safe `file://` endpoint. Target GC performs exact conditional deletion only after cache grace and storage/public absence evidence. |
-| `r2` | Publishes through the S3-compatible storage transport. Target GC writes exact report-only candidate records and never deletes remote objects. |
+| Provider | Publication | Target GC |
+|---|---|---|
+| `filesystem` | Writes below an existing canonical `file://` endpoint | Conditional deletion after cache grace, followed by public-absence verification |
+| `r2` | Writes through S3-compatible storage operations | Reports candidates; does not delete remote objects |
 
-Both Providers publish the same complete `pool/ + dists/` namespace beneath the configured
-prefix. `public_endpoint` is part of target verification; SOW does not create an HTTP
-server, DNS record, bucket policy, CDN, or credentials. Validate those deployment-owned
-surfaces on a nonproduction prefix before enabling production publication.
+Both publish the complete repository under the configured prefix. Configure the HTTP
+service, DNS, credentials, access policy, and cache behavior for that storage.
+`public_endpoint` tells SOW where to verify public content; it does not create the service.
+R2 public endpoints must use HTTP(S). Filesystem targets also accept `file://` verification.
 
-Filesystem and R2 HTTP(S) endpoints share the same canonical-GET content verifier. Filesystem
-targets may also use descriptor-bound `file://` verification. R2 public endpoints must be HTTP(S).
-Target name, `public_endpoint`, and `max_cache_ttl` may be changed only through explicit
-[`publish --rebind`](/docs/command/publish/#rebind-mutable-target-settings); storage identity and
-prefix are immutable.
+<span id="automated-integration-matrix"></span>
+<span id="deployment-gate"></span>
 
-## Deployment gate
+## Automated coverage
 
-Before delivery, require a clean deep check and inspect the physical change plan:
+The source tree contains these integration checks:
 
-```bash
-sow check -r REPOSITORY
-sow changes 0 -r REPOSITORY
-```
+| Check | Environment | Scope |
+|---|---|---|
+| CLI clean-room workflow | Linux CI | Shipping binary, mixed Plain output, Managed initialization, RPM/DEB Dists, queries, build, and check |
+| Plain APT client | `pgsty/u22` Ubuntu 22.04 container | HTTP update, discovery, version selection, download, and installation with an explicitly trusted unsigned source |
+| RPM detached-signature transitions | AlmaLinux 8/9 and `pgsty/el10` containers | DNF behavior while `repomd.xml` and its detached signature change |
+| S3-compatible transport | Pinned PGSTY Silo container | Bucket listing, HEAD, GET, conditional single-part PUT, replay, and object SHA-256 metadata |
+| Release packaging | Linux CI | Four archives, two RPMs, two DEBs, checksums, package paths, and license files |
 
-After publication, fetch the actual `repomd.xml` or `Release` URL and run the target package
-manager. A local build, a Provider write, HTTP reachability, and a client install are
-separate checks.
+The DNF test checks signature transitions; the APT test uses unsigned Plain output.
+Complete signed Managed installation and hosted R2 conditional multipart completion
+require checks in the deployment environment.
 
-See [Repository Layout](/docs/reference/layout/), [Signing](/docs/feature/signing/), and
-[Publication & Recovery](/blog/design/publication/) for the corresponding contracts.
+Before switching clients, run `sow check`, publish to the intended target, then use the
+actual client configuration to refresh indexes and install a package. See
+[Serving](/docs/tutorial/serving/) for client setup.

@@ -89,13 +89,31 @@ runtimes with the theme, so this repository has no Node.js or CDN build dependen
 
 ## Writing conventions
 
-- Every page ships as an English `.md` / Chinese `.zh.md` pair with aligned content.
-- Front matter must set an explicit `url:` (Chinese pages carry the `/zh/` prefix).
-- Keep whitespace between strong-emphasis delimiters and adjacent words, especially in
-  Chinese prose; `make check` rejects ambiguous `text**strong**text` boundaries.
-- Command transcripts are real executions against the repository-matched `sow` binary; do not
-  invent output.
-- This repository is the authority for maintained SOW user and design documentation.
+This repository maintains SOW's user and design documentation. Use the writing rules of
+[ASD-STE100](https://www.asd-ste100.org/about_STE.html), with SOW terms for software concepts.
+Use natural Chinese with the same meaning and sequence.
+
+- Start with the task and its result. Present the normal workflow before alternatives.
+- Introduce concepts when the reader needs them. Explain what changes, what to do next, and why.
+- Use complete, active sentences. Keep necessary articles and connecting words.
+- In English, use at most 20 words per instruction and 25 words per descriptive sentence.
+- Give one instruction per sentence. Put conditions before the action and explanations outside the steps.
+- Keep each paragraph on one topic. Remove repetition that adds no action or explanation.
+- Use one term for each concept. In Chinese, use 工作区, 仓库, 包池, and 构建快照（Generation）.
+  Keep command and field names unchanged. Dist is a named package set; Desired and Built identify its selected and built states.
+- Keep local builds, HTTP serving, and target publication distinct. Put a limit next to the operation it affects.
+- Use sentence case in English headings. Prefer concrete verbs to abstract nouns.
+
+## Content maintenance
+
+- Update English `.md` and Chinese `.zh.md` pages together. Set explicit `url:` values, with `/zh/` for Chinese.
+- Preserve existing heading anchors when renaming sections. Keep historical release facts tied to their tags.
+- Verify commands, defaults, configuration, and examples against SOW source and `sow help`.
+  Use actual output from the matching binary for command transcripts.
+- At release updates, set `params.version` and update the homepage and download notes.
+  Copy the published `SHA256SUMS` to `assets/release/sow-checksums.txt`. Check that all listed filenames match the release.
+- Keep whitespace around strong-emphasis delimiters next to Chinese prose.
+  Run `make check` to check Markdown, modules, the production build, and internal links.
 
 ## License
 

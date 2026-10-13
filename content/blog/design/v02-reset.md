@@ -2,7 +2,7 @@
 title: "The v0.2 Reset: Plain and Managed Instead of a Universal Control Plane"
 linkTitle: "v0.2 Plain/Managed Reset"
 date: 2026-07-31
-lastmod: 2026-08-28
+lastmod: 2026-10-13
 authors: [Vonng]
 description: "How SOW replaced the v0.1 Git/CAS/Edge platform with two small execution modes, explicit ownership, SQLite state, and a repository-focused release."
 categories: [Design]
@@ -13,25 +13,17 @@ icon: fa-solid fa-arrows-rotate
 draft: false
 ---
 
-> [!IMPORTANT] Development-line versus release version
-> The archived “v0.2” design line initially used C2 view-local RPM hardlinks.
-> That was a real development implementation, but it was replaced by the
-> single-payload design before the final v0.2.0 tag. The released v0.2.0 layout
-> already used one canonical Pool and metadata-only views.
->
-> Several archived v0.2/v0.3 files nevertheless say “v0.2.0” used C2 hardlinks.
-> They were written before the tag existed and used “v0.2.0” for the planned
-> build. The delivered boundary is defined by the final 0.2.0 Changelog, release
-> note, and source tag, all of which record one canonical Pool and metadata-only
-> views.
+On 2026-07-31, after sealing the v0.1 source baseline, SOW began a product reset. The goal
+was a small repository engine that could replace Pigsty's daily package-build workflow.
+It kept the earlier lessons about integrity and recovery while removing much of the
+control plane.
 
-On 2026-07-31, immediately after sealing the v0.1 source baseline, SOW began a product
-reset. The objective was not to salvage every V1 subsystem. It was to identify the smallest
-repository product that could replace Pigsty's daily package-build workflow while keeping
-the safety lessons already learned.
+The result was the split still used today: **Plain** rebuilds caller-owned directories;
+**Managed** maintains repositories and their history.
 
-The result was a boundary that still defines SOW: **Plain** for rebuildable directories,
-and **Managed** for long-lived repository ownership.
+The development design initially used C2 hardlinks inside RPM views. These were replaced
+before the v0.2.0 release on August 8. Some archived plans called the C2 build “v0.2.0,” but
+the released tag already had one canonical Pool and metadata-only views.
 
 ## Why reset instead of incrementally simplifying V1
 
@@ -46,20 +38,20 @@ The v0.1 model had coupled five different jobs:
 Removing one feature at a time would leave the same Git/CAS/Route ownership model in
 place. The reset instead asked which facts the core repository engine truly needed to own.
 
-The initial phase-one boundary was as important as the feature list:
+The first phase excluded:
 
-- no V1 Git database, Route/Manifest/Quarantine model, or global content-addressed
+- the V1 Git database, Route/Manifest/Quarantine model, or global content-addressed
   product layer;
-- no upstream sync, pull/push/copy/move/promote surface, Edge entitlement, CDN bootstrap,
+- upstream sync, pull/push/copy/move/promote surface, Edge entitlement, CDN bootstrap,
   or commercial topology;
-- no remote publication/state, object storage, GC, snapshot/freeze, Managed export, or
+- remote publication/state, object storage, GC, snapshot/freeze, Managed export, or
   serving in the first phase;
-- no modulemd, source-package building, Web UI, cross-Repository deduplication, or
+- modulemd, source-package building, Web UI, cross-Repository deduplication, or
   multi-writer operation.
 
 Upstream synchronization and channel promotion were deliberately removed even though V1
 had real streaming, fuzz, and deterministic-proof evidence for them. Package acquisition
-is an input boundary, not a second owner inside the repository engine. Operators can
+became an external task. Operators can
 prepare package sets with dedicated mirror or download tooling, then let SOW own admission,
 membership, build, and publication. Some phase-one exclusions—publication, retention, GC,
 and external export—returned before the final v0.2.0 tag under the smaller Repository
@@ -69,7 +61,7 @@ ownership model.
 
 ### Plain: rebuild what the caller owns
 
-Plain mode operates on a caller-owned directory of RPM and DEB files:
+Plain mode operates on a caller-owned directory of RPM or DEB files:
 
 ```bash
 sow create /srv/repo
@@ -90,7 +82,7 @@ Managed mode introduces a Workspace with independent Repositories:
 ```text
 Workspace
 ├── sow.yml
-├── .sow/                    private config, locks, SQLite, journals
+├── .sow/                    private state, locks, SQLite, journals
 └── <repository>/
     ├── pool/                canonical package bytes
     └── dists/               client protocol views
@@ -111,7 +103,7 @@ applicable architecture without duplicating logical membership.
 | Git commit/ref as canonical state | Per-Repository SQLite plus explicit filesystem/journal evidence |
 | Global CAS and Route materialization | Repository-owned Pool and protocol views |
 | View/Snapshot/Stable ref graph | Dist membership, Desired revision, Built Generation, retained state |
-| One universal command surface | Closed Plain and Managed CLI contracts |
+| One universal command interface | Separate Plain and Managed commands |
 | Implicit legacy topology | Strict `sow.yml` plus explicit names and selectors |
 | Cross-product publication saga | Repository build kept separate from target publication |
 | Reuse V1 packages directly | Narrow parser/renderer/version/signing ports only |
@@ -128,11 +120,9 @@ Managed mode made interrupted state explicit:
   successfully.
 - **Changeset** is the exact delta between two built states.
 
-Desired may advance while Built remains valid. A failed build therefore does not require
-pretending that the public tree changed or that the request never happened. Operation
-journals and status expose the difference.
-
-This distinction survived every later release.
+Desired can advance before a new Built Generation completes. The operation journal
+records unfinished work, and status shows the difference between Desired and Built.
+Recovery uses the recorded operation phase to decide what remains to be completed.
 
 ## P0 through P3
 
@@ -146,8 +136,7 @@ The work was intentionally sequenced:
 | P3 | Check, Changeset, handoff, scale, compatibility, and clean-delivery evidence |
 
 Each phase had an API contract, implementation specification, adversarial review, and
-traceability/acceptance record. Those documents were useful while building the release;
-their lasting decisions are summarized here rather than published as separate authorities.
+acceptance record.
 
 ## The C2 hardlink detour
 
@@ -164,8 +153,7 @@ The design had a hidden deployment cost:
 - retention and GC risk depending on inode/link-count behavior;
 - the whole Repository no longer maps one-to-one to static object keys.
 
-The pre-release design snapshot on 2026-08-05 accurately records C2 implementation and
-local acceptance. It is not the final v0.2.0 release contract.
+The 2026-08-05 snapshot records this C2 implementation and its local test results.
 
 The single-payload contract was written on 2026-08-05, committed as the “next” design on
 August 7, and implemented before the August 8 release tag. The final release therefore
@@ -192,25 +180,18 @@ ownership assumptions:
 - selected client fixtures and fault patterns;
 - exact package identity and provenance checks.
 
-Git state, Route receipts, Edge components, legacy migration machinery, and cloud control
-plane code were reference material or removal candidates, not dependencies of the new
-core.
+The new core had no dependency on Git state, Route receipts, Edge components, legacy migration, or cloud control code.
+Those components were kept for reference or removed.
 
-## Release evidence boundary
+## From acceptance tests to release {#release-evidence-boundary}
 
 The development line recorded P0/P1 acceptance on August 1, P1–P3 acceptance on August 2,
 and a local release-gate run on August 5. The final v0.2.0 source was tagged on August 8
 after the single-payload implementation, packaging, and CI corrections landed.
 
 The final release also shipped filesystem and R2 publication, retained generations,
-external RPM leaf export, and local GC. R2 remote deletion was disabled from the start and
-target GC retained/reporting candidates instead.
-
-That distinction matters:
-
-- an August 5 C2 PASS proves the development snapshot that produced it;
-- the August 8 v0.2.0 tag and release note define what actually shipped;
-- later v0.3/v0.4 tests do not rewrite either historical result.
+external RPM leaf export, and local GC. R2 remote deletion was disabled from the start;
+GC for R2 only reported candidates.
 
 ## What still defines SOW
 
@@ -218,10 +199,10 @@ That distinction matters:
 - Workspace is configuration/discovery scope; Repository is package/history scope.
 - Package Object identity is immutable; Membership is logical and many-to-many.
 - Desired and Built states are distinct.
-- writes use stable locks, bounded journals, pointer-last installation, and fail-closed
-  recovery;
-- CLI syntax, JSON envelopes, and exit classes form a closed automation contract;
-- protocol, client, mirror-tool, and provider compatibility are reported separately.
+- Writers use stable lock files and install protocol pointers last. Managed journals
+  record interrupted operations; Plain recovers by rebuilding.
+- CLI syntax, JSON envelopes, and exit classes provide a defined automation interface.
+- Protocol, client, mirror-tool, and provider compatibility are reported separately.
 
 The current forms are documented in [Get Started](/docs/start/),
 [System Model](/blog/design/model/), and [Design Principles](/blog/design/principles/).
@@ -231,10 +212,10 @@ The current forms are documented in [Get Started](/docs/start/),
 - [v0.2 development design snapshot](https://github.com/pgsty/sow/tree/1e7eb5493cc349372fa40c2f8e6e44d8ddb7801b/design/v0.2)
   — PRD, API, C2 architecture, reviews, and local acceptance.
 - [single-payload “next” design](https://github.com/pgsty/sow/tree/8625f5090f5668c69c20f2f17b6466d1228d2fbe/design/next)
-  — the contract adopted before the release tag.
+  — the design adopted before the release tag.
 - [v0.2.0 release note](/blog/release/sow-docs-launch/) and
   [v0.2.0 source tag](https://github.com/pgsty/sow/tree/v0.2.0)
-  — the delivered product boundary.
+  — the released implementation.
 
-Continue with [Design Evolution](/blog/design/evolution/) for the v0.3 and v0.4
-hardening that followed.
+Continue with [Design Evolution](/blog/design/evolution/) for the v0.3 through v0.5
+changes that followed.

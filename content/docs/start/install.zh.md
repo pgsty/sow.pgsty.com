@@ -9,76 +9,83 @@ weight: 100
 icon: fa-solid fa-download
 ---
 
-SOW 只有一个可执行文件，不需要启用服务，也不依赖语言运行时。Release 构建目标是 Linux 与
-macOS 的 `amd64`、`arm64`；Linux 另外提供 RPM 与 DEB 安装包。不支持 Windows。
+SOW 是一个可执行文件，不依赖守护进程、数据库服务或语言运行时。发布归档支持 Linux 与 macOS 的 `amd64`、`arm64` 架构。Linux 另有 RPM 与 DEB 安装包。
 
-在[下载页](/zh/download/)选择匹配操作系统与架构的归档或 Linux 安装包。页面同时提供每个
-已发布制品、对应源码 Tag 与 `SHA256SUMS` 的链接。
+在[下载页](/zh/download/)选择适合本机的 SOW 0.5.0 制品。把制品与 `SHA256SUMS` 下载到独立的下载目录。
 
 ## 安装归档
 
-下载一个归档与 `SHA256SUMS`，解压前只校验对应条目：
+以 Linux amd64 为例，先校验归档，再解压并安装：
 
 ```bash
-# Linux amd64
+set -euo pipefail
 grep '  sow_0.5.0_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
 tar -xzf sow_0.5.0_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
-macOS 选择 `darwin_amd64` 或 `darwin_arm64`，并把 `sha256sum -c -` 换成
-`shasum -a 256 -c -`。没有 root 时，把二进制装到已经加入 `PATH` 的目录，例如
-`~/.local/bin`。
+macOS 选择 `darwin_amd64` 或 `darwin_arm64`，替换上述归档名称，并使用 `shasum -a 256 -c -` 校验。
+
+没有 root 权限时，安装到用户目录：
+
+```bash
+mkdir -p "$HOME/.local/bin"
+install -m 0755 sow "$HOME/.local/bin/sow"
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+把 `export PATH` 这一行加入 shell 配置文件，让新终端也能找到 SOW。
 
 ## 安装 Linux 软件包
 
-Linux 软件包使用 `1PGSTY` Release 后缀：
+先用 `SHA256SUMS` 中对应的条目校验下载的软件包，再执行适合本机发行版的命令：
 
 ```bash
+# RPM，x86_64
 sudo rpm -Uvh ./sow-0.5.0-1PGSTY.x86_64.rpm
+
+# Debian 或 Ubuntu，amd64
 sudo apt install ./sow_0.5.0-1PGSTY_amd64.deb
 ```
 
-只执行符合本机发行版与架构的那条命令。RPM 把 License 安装到
-`/usr/share/licenses/sow/LICENSE`；DEB 把版权/协议文件安装到 `/usr/share/doc/sow/`。
+ARM64 主机使用以 `.aarch64.rpm` 或 `_arm64.deb` 结尾的软件包。安装后的可执行文件位于 `/usr/bin/sow`。
 
 ## 从源码构建
 
-Go Module 声明使用 Go 1.27.1，元数据生成不需要 C 工具链。使用与固定版本下载一致的
-`v0.5.0` 源码 Tag：
+安装 Go 1.27.1 或更新版本，以及 Git。构建使用 `CGO_ENABLED=0`，不需要 C 编译器。
 
 ```bash
-git clone https://github.com/pgsty/sow.git
-cd sow
 set -euo pipefail
-SOW_TAG=v0.5.0
-git checkout "$SOW_TAG"
-SOW_VERSION="${SOW_TAG#v}"
+git clone --branch v0.5.0 https://github.com/pgsty/sow.git
+cd sow
+SOW_BUILD_DIR="$(mktemp -d)"
 CGO_ENABLED=0 go build -trimpath \
-  -ldflags="-s -w -X github.com/pgsty/sow/internal/v2cli.Version=${SOW_VERSION}" \
-  -o sow ./cmd/sow
-sudo install -m 0755 sow /usr/local/bin/sow
+  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.5.0' \
+  -o "$SOW_BUILD_DIR/sow" ./cmd/sow
+sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 ```
 
-这组命令使用 Release 构建参数，并把所选 Tag 的产品版本写入二进制。
+<span id="校验"></span>
 
-## 校验
+## 验证安装
 
 ```bash
 sow version
 sow help
 ```
 
-`sow version` 输出产品版本、目标 OS/架构与构建 Go 工具链；`sow help` 列出命令树。
-归档中还包含 `README.md`、`CHANGELOG.md`、Apache-2.0 `LICENSE` 与 `THIRD_PARTY_NOTICES`。
+`version` 显示产品版本、目标操作系统与架构，以及 Go 工具链版本。`help` 列出命令；用 `sow help COMMAND` 查看某条命令的参数。
 
-## 从 0.4 升级到 0.5
+<span id="升级-03-managed-workspace"></span>
 
-通过[下载页](/zh/download/)安装 SOW 0.5.0，本次变更见
-[0.5.0 发布注记](/zh/blog/release/sow-v0.5.0/)。
+## 从 0.3 或 0.4 升级 Managed 工作区 {#从-04-升级到-05}
 
-SOW 0.5 使用数据库 Schema v13，新增候选包池路径的查询索引，`sow/v3` 配置与公共布局保持
-不变。先停止写入并备份整个工作区，再在普通使用前逐个迁移 Repository：
+SOW 0.5.0 使用数据库 Schema v13。`schema: sow/v3` 配置与公共目录布局不变。
+
+1. 停止工作区的全部写入任务。
+2. 用保留硬链接的工具备份完整工作区，例如 `rsync -aH` 或 `tar`。DEB 的 `by-hash` 条目使用硬链接。
+3. 安装 SOW 0.5.0。
+4. 对 `sow.yml` 中每个仓库执行迁移、构建与检查：
 
 ```bash
 sow repo migrate REPOSITORY -C /srv/sow
@@ -86,45 +93,26 @@ sow build -r REPOSITORY -C /srv/sow
 sow check -r REPOSITORY -C /srv/sow
 ```
 
-更新后的 RPM 认证与 APT 元数据契约需要对受影响的 Dist 重建一次。之后，未变化且具有匹配
-Built 证据的 RPM 不必反复读取包体验签。迁移会增加私有数据库索引，发布历史较大时需要时间
-和磁盘空间；迁移后不要再使用旧版本二进制打开数据库。`sow repo migrate` 会报告变化，例如
-`schema=12->13`；重复执行显示 `schema=13->13`。Repository 迁移之前，其写命令以 `5` 退出并提示
-`` repository schema v12 predates this binary (v13); back up the workspace, then run
-`sow repo migrate NAME` ``。
+把 `REPOSITORY` 换成配置中的仓库名。迁移更新数据库，重建应用当前的 RPM 验签与 APT 元数据规则。
 
-备份工具必须保留硬链接，因为 DEB 的 `by-hash` 条目是硬链接：Linux 上可用 GNU `cp -a`、
-`rsync -aH` 或 `tar`；macOS 的 `cp -a` 不保留硬链接。
+保留备份用于回退。旧版 SOW 无法打开迁移后的数据库。详情见 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 与 [0.5.0 发布说明](/zh/blog/release/sow-v0.5.0/)。
 
-Plain 仓库新增 `create --metadata-timestamp`，请检查实际二进制的 `create --help` 是否包含
-该参数。默认值仍为 `0`，因此仅升级二进制不会修复已发布 YUM 仓库的时间戳。替换已有维护
-流程前，请按 [YUM 迁移指南](/zh/docs/tutorial/yum-migration/)操作。
+## 升级 Plain 仓库
 
-## 升级 0.3 Managed Workspace
+Plain 模式没有数据库需要迁移。更换现有 YUM 仓库的生成工具前，按[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)操作。0.5 新增 `--metadata-timestamp`，但默认值仍为 `0`。根据仓库发布历史设置时间戳，才能让带缓存的 YUM 客户端接受新索引。
 
-SOW 0.4 引入了内部数据库 Schema v11 与 v12，0.5 升级到 v13。公共布局和 `schema: sow/v3` 配置标识均不改变，
-但每个既有 v0.3 Repository 都必须在普通读写前显式迁移。备份前先停止 Workspace 全部写入：
+<span id="权限与可选工具"></span>
 
-```bash
-cp -a /srv/sow /srv/sow.backup-before-upgrade   # GNU cp；其他平台请用 rsync -aH 或 tar
-sow repo migrate REPOSITORY -C /srv/sow
-sow build -r REPOSITORY -C /srv/sow
-sow check -r REPOSITORY -C /srv/sow
-```
+## 存储与可选工具
 
-对 `sow.yml` 中的每个 Repository 重复最后三条命令。数据库 Transition 是单向的；迁移完成后
-不要再用旧版本二进制打开 Workspace。状态、Signer 与 Publication Evidence 的修复范围见
-[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。
+执行 SOW 的用户需要读取输入软件包，并能写入仓库目录。Managed 工作区应放在支持文件锁、`fsync` 与原子重命名的本地 POSIX 文件系统上。
 
-## 权限与可选工具
+软件包解析与元数据生成由 SOW 完成。可选签名功能需要以下主机工具：
 
-执行用户需要读取输入软件包，并能写入 Plain 目标目录或 Managed 工作区。Managed 工作区
-应放在本地 POSIX 文件系统上；锁、fsync、安全路径与原子 rename 都属于正确性契约。
+| 签名方式 | 所需工具 |
+|---|---|
+| 使用 OpenPGP 密钥文件或密钥内容签署元数据 | 无 |
+| 使用 GPG 密钥标识签署元数据 | `gpg` 与 `gpg-agent` |
+| RPM 软件包签名 | `rpm` 及可用的 GPG 签名环境 |
 
-软件包解析与元数据渲染都在进程内完成。只有两条可选路径需要主机工具：
-
-- RPM **包签名** 需要 `rpm` 与可用的 GPG 环境；
-- `agent://` 元数据密钥需要 `gpg` 与 `gpg-agent`。
-
-接下来可用[快速上手](/zh/docs/start/quickstart/)进入 Plain 模式，或用
-[第一个工作区](/zh/docs/start/workspace/)进入 Managed 模式。
+接下来用[快速上手](/zh/docs/start/quickstart/)进入 Plain 模式，或用[第一个工作区](/zh/docs/start/workspace/)进入 Managed 模式。

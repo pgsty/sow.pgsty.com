@@ -1,7 +1,7 @@
 ---
 title: "sow show"
 linkTitle: "show"
-description: "Inspect one Package Object, including identity, normalized facts, storage, signature, and membership."
+description: "Inspect one package and its storage and membership."
 categories: [Command]
 tags: [cli, managed, signing]
 url: "/docs/command/show/"
@@ -9,8 +9,7 @@ weight: 900
 icon: fa-solid fa-file-lines
 ---
 
-`sow show` resolves one package reference in the selected Repository and prints the complete Package
-Object. It is read-only and takes no write lock.
+`sow show` displays one package in the selected Repository. The text output summarizes its identity, storage, and membership. Add `--json` for the complete stored package record.
 
 ## Synopsis
 
@@ -23,7 +22,7 @@ sow show PACKAGE [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a Repository | [selection rules](/docs/command/#repository-selection) |
 | `-d, --dist NAME` | Narrow candidates to these Dists; repeatable | Repository scope |
-| `--json` | Wrap the result in the `sow.cli/v1` envelope | false |
+| `--json` | Output JSON | false |
 
 ## Package reference
 
@@ -54,7 +53,7 @@ pool=pool/c/centos-release/centos-release-6-0.el6.centos.5.x86_64.rpm
 dists=el9 built_dists=el9
 ```
 
-Adding `--json` returns the complete Package Object under `result` in the standard envelope,
+Adding `--json` returns the complete Package Object under `result.package` in the standard envelope,
 including the normalized fields below.
 
 | Field | Meaning |
@@ -64,10 +63,10 @@ including the normalized fields below.
 | `source` | Normalized source-package name |
 | `payload_sha256` | RPM signature-neutral digest used for re-signing idempotence |
 | `signature_key` | Embedded package-signature key ID, when present |
-| `storage` | `pending` before build; `pool` once published into the repository tree |
+| `storage` | `pending` before build; `pool` once placed in the local package pool |
 | `dists` / `built_dists` | Desired and current Built Membership |
 
-`-d` narrows candidate resolution; it does not alter package identity.
+Without `-d`, lookup includes stored objects with no current membership. With `-d`, candidates must be Desired members of a selected Dist. The returned `dists` and `built_dists` lists cover the entire Repository.
 
 ## Exit codes
 

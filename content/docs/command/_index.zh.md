@@ -1,7 +1,7 @@
 ---
 title: "命令"
 linkTitle: "命令"
-description: "SOW CLI 的完整语法、参数、行为、输出与退出码。"
+description: "SOW 命令语法、选项、选择规则与退出码。"
 categories: [Command]
 tags: [cli]
 url: "/zh/docs/command/"
@@ -16,39 +16,35 @@ search_keywords: [CLI, 命令参考, sow help, 参数, 子命令]
 search_boost: 1.5
 ---
 
-每条顶层命令单独成页；`config`、`repo`、`dist`、`retain`、
-`export`、`log` 等命令组在同一页说明其子命令。
+本节列出命令语法、选择规则、输出与示例。使用 `sow help COMMAND` 或 `sow help COMMAND SUBCOMMAND` 查看已安装版本的选项。
 
-二进制内置的 `sow help` 是语法权威。本手册在此基础上补充选择规则、状态变化、输出契约、
-失败行为与可直接使用的示例。
+本文用 Desired 表示期望状态，用 Built 表示已构建状态。构建快照（Generation）是一次已完成构建的结果。
 
 ## 命令索引
 
-`sow create` 是 Plain 模式的仓库命令，直接作用于目录。`sow init` 用于启动 Managed 模式，
-必要时会创建 `sow.yml`；其余有状态命令发现既有工作区。`help` 与 `version` 是工具命令，
-不需要进入任何模式。
+`sow create` 直接在目录中构建平面仓库。需要通过工作区管理软件包时，先运行 `sow init`。其他 Managed 命令使用已有工作区。`help` 与 `version` 可以在任意目录运行。
 
 | 命令 | 模式 | 用途 |
 |---|---|---|
 | [`sow create [DIR]`](/zh/docs/command/create/) | Plain | 就地生成平面 RPM/DEB 仓库 |
-| [`sow init [DIR]`](/zh/docs/command/init/) | Managed | 初始化工作区并收敛已声明的 Repository/Dist |
+| [`sow init [DIR]`](/zh/docs/command/init/) | Managed | 初始化工作区并创建已声明的仓库/Dist |
 | [`sow config check\|show`](/zh/docs/command/config/) | Managed | 校验配置或打印有效配置 |
-| [`sow repo ls\|new\|show\|migrate\|rm`](/zh/docs/command/repo/) | Managed | 管理 Repository；`migrate` 是专用维护命令 |
+| [`sow repo ls\|new\|show\|migrate\|rm`](/zh/docs/command/repo/) | Managed | 创建、查看、升级或删除仓库 |
 | [`sow dist ls\|new\|show\|rm`](/zh/docs/command/dist/) | Managed | 管理 Dist |
-| [`sow add PATH...`](/zh/docs/command/add/) | Managed | 将软件包加入期望成员集 |
-| [`sow rm PACKAGE...`](/zh/docs/command/rm/) | Managed | 从期望成员集中移除软件包 |
-| [`sow ls`](/zh/docs/command/ls/) | Managed | 列出期望成员与已构建成员 |
-| [`sow show PACKAGE`](/zh/docs/command/show/) | Managed | 查看一个 Package Object |
-| [`sow where PACKAGE`](/zh/docs/command/where/) | Managed | 在整个工作区定位 Package Object |
-| [`sow status`](/zh/docs/command/status/) | Managed | 快速读取 Repository 状态 |
-| [`sow build`](/zh/docs/command/build/) | Managed | 将 Desired 状态收敛为 Built Generation |
-| [`sow check`](/zh/docs/command/check/) | Managed | 校验配置、状态、包体、视图、签名与清单 |
-| [`sow changes [BASE_GENERATION]`](/zh/docs/command/changes/) | Managed | 将 Generation 差异输出为文件交付计划 |
-| [`sow publish TARGET`](/zh/docs/command/publish/) | Managed | 将已验证 Generation 发布到配置目标 |
-| [`sow retain add\|ls\|rm`](/zh/docs/command/retain/) | Managed | 管理显式保留的 Generation 根 |
-| [`sow gc [TARGET]`](/zh/docs/command/gc/) | Managed | 回收本地不可达包体，或维护发布目标 |
-| [`sow export rpm-leaf`](/zh/docs/command/export/) | Managed | 生成独立的 RPM 兼容 leaf |
-| [`sow log [OPERATION]`](/zh/docs/command/log/) | Managed | 查询、导出与裁剪 Operation 审计账本 |
+| [`sow add PATH...`](/zh/docs/command/add/) | Managed | 添加软件包并重建索引 |
+| [`sow rm PACKAGE...`](/zh/docs/command/rm/) | Managed | 移除软件包并重建索引 |
+| [`sow ls`](/zh/docs/command/ls/) | Managed | 列出期望成员及其已构建位置 |
+| [`sow show PACKAGE`](/zh/docs/command/show/) | Managed | 查看一个软件包 |
+| [`sow where PACKAGE`](/zh/docs/command/where/) | Managed | 在工作区中查找软件包 |
+| [`sow status`](/zh/docs/command/status/) | Managed | 快速读取仓库状态 |
+| [`sow build`](/zh/docs/command/build/) | Managed | 按期望状态生成构建快照 |
+| [`sow check`](/zh/docs/command/check/) | Managed | 在交付前校验仓库 |
+| [`sow changes [BASE_GENERATION]`](/zh/docs/command/changes/) | Managed | 比较两个构建快照的文件差异 |
+| [`sow publish TARGET`](/zh/docs/command/publish/) | Managed | 将构建快照发布到配置目标 |
+| [`sow retain add\|ls\|rm`](/zh/docs/command/retain/) | Managed | 保留旧构建快照所需的包文件 |
+| [`sow gc [TARGET]`](/zh/docs/command/gc/) | Managed | 回收不再需要的本地包，或维护发布目标 |
+| [`sow export rpm-leaf`](/zh/docs/command/export/) | Managed | 导出独立 RPM 仓库 |
+| [`sow log [OPERATION]`](/zh/docs/command/log/) | Managed | 查询、导出和裁剪操作记录 |
 
 ## 全局语法
 
@@ -57,10 +53,9 @@ sow [OPTIONS] COMMAND [ARGS]
 ```
 
 不带参数运行 `sow` 会打印命令列表并退出 `0`。用 `sow help COMMAND` 或
-`sow help COMMAND SUBCOMMAND` 查看内置帮助。`sow version` 与 `sow --version` 打印二进制身份。
+`sow help COMMAND SUBCOMMAND` 查看内置帮助。`sow version` 与 `sow --version` 打印版本与构建信息。
 
-SOW 没有全局 `--format`、`--yes`、`--dry-run`、`-q`、`-v` 或 `--config`。未知参数直接按
-用法错误处理。
+选项只适用于列出该选项的命令。位置参数以 `-` 开头时，在它前面加 `--`。未知选项或重复的单值选项返回退出码 `2`。
 
 ## 工作区发现
 
@@ -77,16 +72,16 @@ Managed 命令按以下规则寻找最近的 `sow.yml`：
 
 ## Repository 选择
 
-需要唯一 Repository 的命令按以下顺序选择：
+需要唯一仓库的命令按以下顺序选择：
 
 1. 显式 `-r/--repo NAME`；
-2. 发现起点所在的 Repository；
-3. 工作区中唯一的 Repository；
+2. 发现起点所在的仓库；
+3. 工作区中唯一的仓库；
 4. 否则退出 `2` 并列出候选项。
 
 `repo new` 与 `repo rm` 用位置参数接收 `NAME`，不接受 `-r`。`sow where` 默认搜索所有
-Repository，`-r` 只用于收窄范围。发布目标自身绑定 Repository，因此 `publish TARGET` 与
-`gc TARGET` 不再接受额外的 Repository 选择。
+仓库，`-r` 只用于收窄范围。发布目标自身绑定仓库，因此 `publish TARGET` 与
+`gc TARGET` 不再接受额外的仓库选择。
 
 ## Dist 选择
 
@@ -94,24 +89,23 @@ Repository，`-r` 只用于收窄范围。发布目标自身绑定 Repository，
 
 1. 一个或多个 `-d/--dist NAME`；
 2. 发现起点所在的 Dist；
-3. 所选 Repository 中唯一的 Dist；
+3. 所选仓库中唯一的 Dist；
 4. 否则退出 `2` 并列出候选项。
 
-其他命令有意采用不同规则：
+其他命令采用以下默认范围：
 
 - 未指定 `-d` 时，`build`、`check`、`status` 默认作用于全部 Dist；
-- `show` 默认搜索所选 Repository，`-d` 只用于收窄；
+- `show` 默认搜索所选仓库，`-d` 只用于收窄；
 - `where` 默认跨工作区搜索全部匹配 Dist，`-r`/`-d` 用于收窄；
-- `changes` 作用于整个 Repository，明确拒绝 `-d`。
+- `changes` 作用于整个仓库，不接受 `-d`。
 
 ## 锁
 
-除 `init` 外，写命令接受 `-T/--timeout DUR` 与 `-N/--no-wait`。`init` 获取 Workspace 锁，且不提供
-命令行超时覆盖；其他锁均为 Repository 级，但 `repo new` 与 `repo rm` 同样使用 Workspace 锁。
-`--timeout 0` 表示无限等待；正数使用 Go duration，例如 `500ms`、`30s`、`5m`。`--no-wait`
-立即失败；它与正数 timeout 互斥。获取锁失败退出 `4`。
+`create` 锁定目标目录。Managed 写操作通过工作区锁和仓库锁协调。`init` 会等待锁，不提供命令行超时选项。
 
-只读命令不获取写锁；`status` 仍会报告 Repository 是否正被写者持锁。
+其他写命令接受 `-T/--timeout DUR` 与 `-N/--no-wait`。默认 `--timeout 0` 表示无限等待。正数时长使用 `ms`、`s`、`m` 或 `h`，例如 `500ms`、`30s`、`5m`。`--no-wait` 在锁被占用时立即失败，不能与正数超时同时使用。无法获取锁时返回 `4`。
+
+大多数 Managed 只读命令使用共享锁，会等待冲突的写操作完成；这些命令不接受等锁选项。`status` 通常只探测仓库锁，因此可以查看正在运行的写操作。按 Ctrl-C 可以取消等待。
 
 ## 并发
 
@@ -120,7 +114,7 @@ Repository，`-r` 只用于收窄范围。发布目标自身绑定 Repository，
 
 ## JSON 输出
 
-支持 `--json` 的命令在 stdout 输出一个带版本的 Envelope，诊断信息仍写入 stderr：
+支持 `--json` 的命令在 stdout 输出一个带版本的封装，诊断信息仍写入 stderr：
 
 ```json
 {
@@ -137,8 +131,7 @@ Repository，`-r` 只用于收窄范围。发布目标自身绑定 Repository，
 任何非零退出都会令 `ok` 为 false；部分成功的批处理仍会返回已提交项与失败项。完整结果结构见
 [JSON 输出](/zh/docs/reference/json/)。
 
-不带 `--json` 时，每条 Managed 命令都有稳定的人类可读 renderer，适合交互使用，但不属于机器
-协议。需要结构化字段的脚本应始终使用 `--json`；它也是唯一受支持的机器接口。
+交互操作使用文本输出，脚本使用 `--json`。`config show` 默认输出 YAML。`log export` 是例外：它直接输出 JSONL，不接受 `--json`。
 
 ## 退出码
 
@@ -150,6 +143,7 @@ Repository，`-r` 只用于收窄范围。发布目标自身绑定 Repository，
 | `3` | 批处理部分成功 |
 | `4` | 写锁不可用 |
 | `5` | 完整性/恢复失败，或 `check` 判定目录不可交付 |
-| `6` | 可预期拒绝：冲突、受保护对象、无匹配或架构不兼容 |
+| `6` | 操作被拒绝：冲突、受保护对象、无匹配或架构不兼容 |
+| `130` | 命令被 SIGINT 或 SIGTERM 中断 |
 
 各命令的精确触发条件见[退出码](/zh/docs/reference/exit-codes/)。

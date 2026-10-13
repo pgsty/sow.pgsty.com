@@ -1,7 +1,7 @@
 ---
 title: "sow log"
 linkTitle: "log"
-description: "读取操作审计账本、导出为 JSONL，并清理符合条件的终态记录。"
+description: "查看、导出和裁剪操作记录。"
 categories: [Command]
 tags: [cli, audit]
 url: "/zh/docs/command/log/"
@@ -10,9 +10,7 @@ weight: 1900
 icon: fa-solid fa-clipboard-list
 ---
 
-仓库内的每条写命令，都会*先*在该仓库的 SQLite 中提交一条应用级 Operation，然后才产生任何外部文件
-副作用。这条记录让崩溃恢复成为可能——而当 Operation 进入终态之后，同一条记录就是你的审计轨迹。
-`sow log` 读的就是它。
+`sow log` 列出仓库操作记录，并查看单次操作的详情。使用 `log export` 将已结束的操作导出为 JSONL，使用 `log prune` 从数据库中删除符合条件的旧记录。
 
 ## 语法
 
@@ -22,41 +20,15 @@ sow log export [FILE] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]
 sow log prune BEFORE [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json]
 ```
 
-## Operation 生命周期
-
-读懂 `state` 字段，日志就读懂了一大半：
-
-```text
-planned → staged → applied → built → done
-                        └────────→ done_dirty
-   any nonterminal → recovering → built / done / done_dirty / rolled_back / failed
-   pre-apply error  → failed
-```
-
-| 状态 | 含义 |
-|---|---|
-| `planned` | 命令、参数、目标与预期动作已持久化 |
-| `staged` | 新包/元数据已写入临时位置并校验通过 |
-| `applied` | 期望状态与所需的私有 pending 载荷已提交 |
-| `built` | 完整的静态 Generation 已切换 |
-| `done` | 终态——一次正常成功的命令 |
-| `done_dirty` | 终态——`--skip` 后 Desired 领先于 Built（`--skip` 后仓库仍干净则以 `done` 收尾），或恢复旧的未冻结操作时通过文档所述安全出口收尾 |
-| `failed` | 终态——在 `applied` 之前失败，什么都没提交 |
-| `rolled_back` | 终态——恢复在 Operation 改变 Desired 之前放弃了它，例如被中断命令留下的 `planned` Operation |
-| `recovering` | 非终态；下一条写命令必须先完成或回滚它 |
-
-工作区生命周期命令（`init`、`repo new`、`repo rm`）走的是工作区文件 journal，不会出现在仓库的
-SQLite 日志中。`dist new`/`dist rm` 会出现——那时仓库数据库已经存在。
-
 ## sow log
 
-不带参数时，按由新到旧打印最近 50 条 Operation。
+不带参数时，按由新到旧打印最近 50 条操作记录。
 
 ```console
-sow log -r pigsty
+sow log -r pigsty --json
 ```
 
-输出节选，`operations` 数组中的一个 Operation 对象：
+输出节选，`operations` 数组中的一个操作记录对象：
 
 ```json
 {
@@ -70,8 +42,8 @@ sow log -r pigsty
 }
 ```
 
-`payload_json` 记录意图——包括当时生效配置的摘要 `config_sha256`，以及结果 Generation 的
-`manifest_sha256`。`result_json` 记录结果。失败的 Operation 还会带 `error_class` 与
+`payload_json` 记录意图——包括当时生效配置的摘要 `config_sha256`，以及生成的构建快照的
+`manifest_sha256`。`result_json` 记录结果。失败的操作记录还会带 `error_class` 与
 `error_message`：
 
 ```json
@@ -89,15 +61,15 @@ sow log -r pigsty
 |---|---|---|
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
-| `-d, --dist NAME` | 只显示触及该 Dist 的 Operation | 全部 |
-| `--json` | 输出版本化 JSON envelope | false |
+| `-d, --dist NAME` | 只显示触及该 Dist 的操作记录 | 全部 |
+| `--json` | 输出 JSON | false |
 
 ### 查看单条 Operation
 
-给出 Operation ID，就能得到它的完整状态迁移、耗时、包、成员与文件动作。
+传入操作记录 ID 查看摘要。加上 `--json` 后，可在 `result.detail` 中读取完整状态变化、耗时、软件包、成员与文件记录。
 
 ```console
-sow log 4262183287563704350 -r pigsty
+sow log 4262183287563704350 -r pigsty --json
 ```
 
 输出节选：
@@ -124,7 +96,7 @@ sow log 4262183287563704350 -r pigsty
 `files` 数组使用与 [`sow changes`](/zh/docs/command/changes/) 相同的 `phase` 词表：`payload`、
 `metadata`、`pointer`、`delete`。
 
-Build Operation 还会包含进度事件。它们保持当前 state，并把版本化对象放入 `detail_json`：
+Build 操作记录还会包含进度事件。它们保持当前 state，并把版本化对象放入 `detail_json`：
 
 ```json
 {
@@ -133,21 +105,44 @@ Build Operation 还会包含进度事件。它们保持当前 state，并把版�
 }
 ```
 
-阶段包括 `rendering`、`promoting_payload`、`publishing_dists`、
-`normalizing_public_tree` 与 `finalizing`。进度行是持久审计数据，但不会推进恢复状态机，也不会
-单独触发 SQLite checkpoint。
+阶段包括 `rendering`、`promoting_payload`、`publishing_dists`、`normalizing_public_tree` 与 `finalizing`。可用这些记录查看长时间构建的进度。
 
 ### 按 Dist 过滤
 
-`-d` 把列表限制为触及该 Dist 的 Operation——一个仓库服务多个发行版时很有用：
+`-d` 把列表限制为触及该 Dist 的操作记录——一个仓库服务多个发行版时很有用：
 
 ```bash
 sow log -d trixie -r pigsty
 ```
 
+## 操作状态 {#operation-生命周期}
+
+`state` 字段表示操作进行到哪一步：
+
+```text
+planned → staged → applied → built → done
+                        └────────→ done_dirty
+   any nonterminal → recovering → built / done / done_dirty / rolled_back / failed
+   pre-apply error  → failed
+```
+
+| 状态 | 含义 |
+|---|---|
+| `planned` | 命令、参数、目标与预期动作已持久化 |
+| `staged` | 新包/元数据已写入临时位置并校验通过 |
+| `applied` | 期望状态与所需的私有待构建包文件已提交 |
+| `built` | 已切换到新构建快照 |
+| `done` | 终态——一次正常成功的命令 |
+| `done_dirty` | 操作已结束，仍有变化需要构建，通常出现在 `--skip` 之后 |
+| `failed` | 终态——在 `applied` 之前失败，什么都没提交 |
+| `rolled_back` | 终态——恢复在操作记录改变 Desired 之前放弃了它，例如被中断命令留下的 `planned` 操作记录 |
+| `recovering` | 非终态；下一条写命令必须先完成或回滚它 |
+
+仓库日志包含 `dist new` 和 `dist rm`。工作区操作 `init`、`repo new`、`repo rm` 使用独立的恢复记录，不出现在这里。
+
 ## sow log export
 
-把终态 Operation 以 JSONL 写出——每行一条完整的 Operation 明细记录——用于归档或送入日志管道。
+将已结束的操作导出为 JSONL，每行包含一次操作的完整记录，可用于归档或日志分析。
 
 ```console
 sow log export /srv/audit/pigsty-ops.jsonl -r pigsty
@@ -164,41 +159,24 @@ sow log export - -r pigsty | gzip > pigsty-ops-$(date +%F).jsonl.gz
 |---|---|---|
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
-| `-d, --dist NAME` | 只导出触及该 Dist 的 Operation | 全部 |
+| `-d, --dist NAME` | 只导出触及该 Dist 的操作记录 | 全部 |
 
-`export` 没有 `--json`——JSONL *就是*它的输出格式。
+`export` 直接输出 JSONL，不需要 `--json`。
 
-### 它拒绝覆盖
+### 输出路径 {#它拒绝覆盖}
 
-目标已存在属于拒绝，绝不覆盖——审计导出不能静默毁掉上一份：
-
-```console
-sow log export /srv/audit/pigsty-ops.jsonl -r pigsty
-operation rejected: export target already exists: /srv/audit/pigsty-ops.jsonl
-```
-
-`export` 同样拒绝父目录不是真实目录的目标——符号链接，或根本不存在的目录：
-
-```console
-sow log export /tmp/pigsty-ops.jsonl -r pigsty
-log export parent is not a real directory
-```
-
-macOS 上 `/tmp` 是指向 `/private/tmp` 的符号链接，所以在那里会触发这条拒绝。请写到明确的真实路径。
+在已有目录中选择一个新文件名。文件已存在时，`log export` 返回 `6`。直接父目录必须是真实目录，不能是符号链接。在 macOS 上使用 `/private/tmp/file.jsonl`，不要使用 `/tmp/file.jsonl`。
 
 ## sow log prune
 
-删除早于 `BEFORE` 且符合条件的终态审计记录，并尝试回收数据库空间。如果长读连接阻止压缩
-或最后的 WAL checkpoint，逻辑裁剪仍会完成，后续写入保持可用。结果以
-`compaction_deferred: true` 表示延期；关闭读连接后，需要回收空间时再执行 prune。
-真实数据库或 I/O 错误仍会使命令失败。
+删除早于 `BEFORE` 且符合条件的已结束操作记录，并回收数据库空间。如果其他读连接正在使用数据库，记录可以先删除，空间回收会延后。此时结果显示 `compaction_deferred: true`。关闭读连接后，再运行 `prune` 回收空间。
 
 ```console
 sow log prune 2027-01-01 -r pigsty
 pruned log repository=pigsty operation=8150803833883584722 before=2026-12-31T16:00:00.000000000Z operations=1
 ```
 
-绝对时间戳会被回显（此处为 UTC+8 的工作站），这样本地时区的解释永远不含糊。若有读者使空间回收
+输出以 UTC 显示截止时间（此处工作站时区为 UTC+8）。若有读者使空间回收
 被推迟，输出会多一行 `log deletion committed; space reclamation deferred while the database is busy`；
 使用 `--json` 时，日志 ID 与 `compaction_deferred` 位于 `result` 中。
 
@@ -208,9 +186,9 @@ pruned log repository=pigsty operation=8150803833883584722 before=2026-12-31T16:
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
-| `--json` | 输出版本化 JSON envelope | false |
+| `--json` | 输出 JSON | false |
 
-`prune` 在仓库级工作，不接受 `-d`——清掉半条 Operation 只会留下毫无意义的记录。
+`prune` 作用于整个仓库，不接受 `-d`。
 
 ### BEFORE 语法
 
@@ -221,17 +199,16 @@ sow log prune yesterday -r pigsty
 usage error: BEFORE must be YYYY-MM-DD or an RFC 3339 timestamp with timezone
 ```
 
-### prune 永不删除什么
+### prune 保留的记录 {#prune-永不删除什么}
 
-`prune` 在设计上是保守的。它绝不会删除：
+`prune` 保留以下记录：
 
-- 非终态的 Operation；
+- 非终态的操作记录；
 - 当前恢复仍需要的记录；
-- 当前的 Package 或 Membership 状态；
-- Built Generation 或其 Changeset。
+- 当前的软件包或成员状态；
+- 构建快照及其文件差异记录。
 
-`pruned` 计数准确告诉你有多少条记录符合条件——通常少于截止时间之前的 Operation 总数。日志与
-Changeset 位于同一个 SQLite 数据库，但保留规则不同。
+`pruned` 显示已删除的操作记录数。
 
 ## 示例
 
@@ -241,20 +218,20 @@ Changeset 位于同一个 SQLite 数据库，但保留规则不同。
 sow log -r pgsql --json | jq -r '.result.operations[0] | "\(.id)\t\(.kind)\t\(.state)"'
 ```
 
-列出所有失败：
+从最近 50 条记录中筛选失败的操作：
 
 ```bash
 sow log -r pgsql --json | jq -r '.result.operations[] | select(.state=="failed") | "\(.id)\t\(.error_class)\t\(.error_message)"'
 ```
 
-每月归档并收缩：
+归档记录，再删除指定日期之前的旧记录：
 
 ```bash
 sow log export /srv/audit/pgsql-$(date +%Y%m).jsonl -r pgsql
 sow log prune 2026-05-01 -r pgsql
 ```
 
-哪条 Operation 最后触碰了某个 Dist：
+查看最后修改某个 Dist 的操作：
 
 ```bash
 sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
@@ -265,9 +242,9 @@ sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 | 命令 | 码 | 触发条件 |
 |---|---|---|
 | `log` | `0` | 记录已打印，包括空账本 |
-| `log` | `2` | 用法错误（包括非数字的 Operation ID）、工作区未找到，或选择有歧义 |
+| `log` | `2` | 用法错误（包括非数字的操作记录 ID）、工作区未找到，或选择有歧义 |
 | `log` | `5` | 状态数据库不可读 |
-| `log` | `6` | 给定的 Operation ID 不存在，或给出了多个不同的 `-d` |
+| `log` | `6` | 给定的操作记录 ID 不存在，或给出了多个不同的 `-d` |
 | `log export` | `0` | 导出成功 |
 | `log export` | `1` | 写目标时 I/O 失败，或父目录不是真实目录 |
 | `log export` | `2` | 用法错误或选择有歧义 |
@@ -280,6 +257,6 @@ sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 ## 参见
 
 - [可观测与审计](/zh/docs/feature/audit/) —— `log` 与 `status`、`check`、`changes` 的配合
-- [事务与恢复](/zh/docs/feature/transactions/) —— 日志所记录的那个 journal
-- [sow changes](/zh/docs/command/changes/) —— 语义 Operation 的物理对照物
-- [JSON 输出](/zh/docs/reference/json/) —— 完整的 log result 结构
+- [事务与恢复](/zh/docs/feature/transactions/) —— 中断后的恢复过程
+- [sow changes](/zh/docs/command/changes/) —— 比较构建前后的文件差异
+- [JSON 输出](/zh/docs/reference/json/) —— 完整的日志结果结构

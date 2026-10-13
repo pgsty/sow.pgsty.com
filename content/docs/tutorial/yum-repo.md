@@ -9,8 +9,7 @@ weight: 100
 icon: fa-solid fa-box-open
 ---
 
-This tutorial creates a new Managed RPM repository. You need a writable
-directory, and one or more RPM files.
+This tutorial creates a new Managed RPM repository. Install SOW and Python 3, and prepare RPM files built for your clients. Use an empty `/srv/sow` directory that your user can create and write to, or substitute another writable path.
 
 ## 1. Create the workspace
 
@@ -22,13 +21,13 @@ sow repo new pigsty
 sow dist new el9 --format rpm -r pigsty
 ```
 
-The Dist name is an identifier chosen by you. SOW does not infer an operating-system
-release from `el9`.
+`el9` names this RPM package set. You can choose another name; it does not change which
+operating systems the packages support.
 
 ## 2. Set membership policy
 
 Edit the generated `sow.yml`. This example keeps one version per package and architecture
-and excludes debug packages:
+and excludes debug and LLVM JIT packages:
 
 ```yaml
 schema: sow/v3
@@ -44,27 +43,22 @@ repos:
 targets: {}
 ```
 
-Validate every manual edit before writing repository state:
+Check the configuration:
 
 ```bash
 sow config check
-sow config show --all
 ```
 
-`exclude` runs before `limit`. Neutral `noarch` packages are projected into every enabled
-architecture view; they are not listed in `architectures`.
+`exclude` runs before `limit`. SOW includes `noarch` packages in every enabled architecture view. Keep only CPU architecture names in `architectures`.
 
 ## 3. Add RPMs
 
 ```bash
 sow add /path/to/packages/*.rpm -r pigsty -d el9
-sow status -r pigsty
 sow check -r pigsty
 ```
 
-`add` parses the package headers, stores each accepted package once in the canonical pool,
-updates Desired membership, and materializes a new Generation. Excluded inputs are reported
-per item and are not command failures.
+Replace the input path with your RPM directory. `add` stores accepted packages in the pool, updates membership, and builds the indexes. Review its per-package output: excluded files are reported without failing the whole command.
 
 The public tree has this shape:
 
@@ -76,36 +70,27 @@ The public tree has this shape:
     └── aarch64/repodata/...
 ```
 
-The rpm-md `location href` entries reach package bytes in the root `pool/` by relative
-paths. Do not copy an architecture directory by itself: it is not a standalone repository.
+RPM indexes point back to `pool/` through relative paths. Serve or copy the complete `pigsty/` tree so clients can download the packages.
 
 ## 4. Preview over HTTP
 
-For a local preview:
+Run this in a separate terminal and leave it running:
 
 ```bash
-cd /srv/sow
-python3 -m http.server --bind 127.0.0.1 8080
+python3 -m http.server --bind 127.0.0.1 --directory /srv/sow/pigsty 8080
 ```
 
-Check the entry point from another shell:
-
-```bash
-curl --fail http://127.0.0.1:8080/pigsty/dists/el9/x86_64/repodata/repomd.xml >/dev/null
-```
-
-Use a maintained HTTP server for persistent service. It must expose the whole `pigsty/`
-tree so client-resolved package URLs under `pigsty/pool/` remain reachable.
+The preview serves only the Repository root and is reachable from the same host. For a persistent service or clients on other hosts, use [Serve Repositories](/docs/tutorial/serving/).
 
 ## 5. Configure dnf
 
-Replace `REPO_HOST` with an address the client can reach:
+On the Linux host running the preview, save this as `/etc/yum.repos.d/pigsty.repo`. For a remote client, first publish the Repository and substitute its public base URL:
 
 ```ini
 # /etc/yum.repos.d/pigsty.repo
 [pigsty-el9]
 name=Pigsty EL9
-baseurl=http://REPO_HOST:8080/pigsty/dists/el9/$basearch/
+baseurl=http://127.0.0.1:8080/dists/el9/$basearch/
 enabled=1
 gpgcheck=0
 repo_gpgcheck=0
@@ -114,25 +99,15 @@ repo_gpgcheck=0
 Then refresh and query the repository:
 
 ```bash
-sudo dnf clean metadata
-sudo dnf makecache --refresh
+sudo dnf --disablerepo='*' --enablerepo=pigsty-el9 makecache --refresh
 dnf --disablerepo='*' --enablerepo=pigsty-el9 list available
 ```
 
-This configuration is deliberately unsigned. Enable client verification only after
-following [Sign Your Repository](/docs/tutorial/signing/).
+This example uses unsigned packages and metadata. Follow [Sign Your Repository](/docs/tutorial/signing/) to enable verification. After the preview, remove this source file and stop the Python server.
 
 ## 6. Publish or export
 
-Before delivery, require a successful deep check:
-
-```bash
-sow check -r pigsty
-```
-
-Use [`sow publish`](/docs/tutorial/serving/) for a configured filesystem or R2 target. A
-whole-root copy is acceptable only into an offline staging location that is switched into
-service atomically; do not run an unordered in-place sync against a live repository.
+Use [`sow publish`](/docs/tutorial/serving/) for a filesystem or R2 target. It uploads package files and metadata in the order clients need. That guide also covers manual delivery to isolated hosts.
 
 Some mirroring tools, including default `dnf reposync`, reject rpm-md package locations
 that traverse to the root pool. Export a self-contained RPM leaf when such a consumer is
@@ -142,20 +117,17 @@ required:
 sow export rpm-leaf el9 x86_64 /srv/export/pigsty-el9-x86_64 -r pigsty
 ```
 
-The destination must be absent or empty. The export duplicates package bytes by default;
-`--hardlink` is an explicit same-filesystem, trusted, read-only optimization.
+The destination must be absent or empty. Export copies package files by default. Use `--hardlink` only on the same filesystem, and keep exported files read-only because they share storage with the source pool.
 
 ## Update the repository
 
 ```bash
 sow add /path/to/new.rpm -r pigsty -d el9
-sow rm PACKAGE_NAME -r pigsty -d el9
-sow build -r pigsty
 sow check -r pigsty
 ```
 
-`add` and `rm` change Desired membership. `build` is useful after policy or signing
-configuration changes. `check` is the publication gate; `status` alone is not.
+`add` builds the update automatically. With `limit: 1`, the newest version replaces the previous member for each package and architecture. Run `sow build -r pigsty` after changing configuration.
 
-The automated client and platform scope is listed under
-[Platforms & Integrations](/docs/reference/compatibility/).
+To withdraw a package, preview the selection with `sow rm PACKAGE_NAME -r pigsty -d el9 --check`, then repeat without `--check`. A package name selects all its versions and architectures; use a SHA-256 reference for one package object.
+
+See [Platforms & Integrations](/docs/reference/compatibility/) for tested clients.

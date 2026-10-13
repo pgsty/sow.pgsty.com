@@ -9,8 +9,7 @@ weight: 200
 icon: fa-solid fa-cube
 ---
 
-本教程从零创建一个 Managed DEB 仓库。你需要一个可写目录，以及一个或多个
-DEB 文件。
+本教程从零创建一个 Managed DEB 仓库。先安装 SOW、Python 3，并准备适合目标客户端的 DEB 文件。使用当前用户可创建、可写入的空目录 `/srv/sow`，或换成其他可写路径。
 
 ## 1. 创建工作区
 
@@ -22,7 +21,7 @@ sow repo new pigsty
 sow dist new trixie --format deb -r pigsty
 ```
 
-Dist 名称会成为 APT Suite。它由你定义；SOW 不会根据 `trixie` 推断发行版语义。
+Dist 名称 `trixie` 对应客户端配置中的 `Suites`，可以按需要更改。它不改变软件包的发行版兼容性。
 
 ## 2. 配置成员策略
 
@@ -46,21 +45,19 @@ targets: {}
 
 ```bash
 sow config check
-sow config show --all
 ```
 
-配置中保存规范架构名，渲染时使用 Debian 生态名称：`x86_64` 对应 `amd64`，`aarch64`
-对应 `arm64`；中立架构 `all` 包会进入两个视图。
+配置中的 `x86_64`、`aarch64` 分别生成 Debian 的 `amd64`、`arm64` 索引。
+架构无关的 `all` 包进入两个视图。
 
 ## 3. 添加 DEB
 
 ```bash
 sow add /path/to/packages/*.deb -r pigsty -d trixie
-sow status -r pigsty
 sow check -r pigsty
 ```
 
-接纳的包体只保存一次。公共树如下：
+把输入路径换成实际 DEB 目录。`add` 将接受的软件包保存一次，并构建索引。公共目录树如下：
 
 ```text
 /srv/sow/pigsty/
@@ -75,35 +72,26 @@ sow check -r pigsty
         └── binary-arm64/...
 ```
 
-`pool/` 下的路径按规范化源码包名分组；`Packages` 中的 `Filename` 相对 Archive Root；
-SOW 会写入 SHA-256 by-hash 副本，并在 `Release` 中声明。
+`Packages` 中的 `Filename` 相对于仓库根目录。保留完整目录树，客户端才能找到软件包。SOW 生成 `by-hash` 索引，供 APT 按内容哈希获取元数据。
 
 ## 4. HTTP 预览
 
-本地预览可以直接使用：
+在另一个终端执行以下命令，并保持运行：
 
 ```bash
-cd /srv/sow
-python3 -m http.server --bind 127.0.0.1 8080
+python3 -m http.server --bind 127.0.0.1 --directory /srv/sow/pigsty 8080
 ```
 
-检查协议入口：
-
-```bash
-curl --fail http://127.0.0.1:8080/pigsty/dists/trixie/Release >/dev/null
-curl --fail http://127.0.0.1:8080/pigsty/dists/trixie/main/binary-amd64/Packages.gz >/dev/null
-```
-
-长期服务应使用持续维护的 HTTP Server，并完整暴露 `pigsty/` 树。
+预览只提供仓库根目录中的文件，并且只能从本机访问。长期运行或供其他主机访问时，按[对外服务](/zh/docs/tutorial/serving/)配置。
 
 ## 5. 配置 APT
 
-将 `REPO_HOST` 替换为客户端可访问的地址。未签名测试仓库可使用显式信任的 deb822 配置：
+在运行预览的 Linux 主机上，把以下内容保存为 `/etc/apt/sources.list.d/pigsty.sources`。ARM64 客户端将 `Architectures` 改为 `arm64`。远程客户端需先发布仓库，再换成其公共地址：
 
 ```ini
 # /etc/apt/sources.list.d/pigsty.sources
 Types: deb
-URIs: http://REPO_HOST:8080/pigsty
+URIs: http://127.0.0.1:8080
 Suites: trixie
 Components: main
 Architectures: amd64
@@ -117,40 +105,25 @@ sudo apt update
 apt-cache policy
 ```
 
-`Trusted: yes` 会关闭真实性校验，只适合受控测试。签名仓库应删除该行并配置 Keyring：
+输出中应出现 `trixie/main` 的软件包来源。`Trusted: yes` 用于本例的未签名仓库。
+需要签名时，按[仓库签名](/zh/docs/tutorial/signing/)生成签名、安装公钥并配置 `Signed-By`。
+预览完成后，删除测试源配置文件并停止 Python 服务器。
 
-```ini
-Types: deb
-URIs: https://repo.example.com/pigsty
-Suites: trixie
-Components: main
-Architectures: amd64
-Signed-By: /usr/share/keyrings/pigsty-archive-keyring.gpg
-```
+<span id="6-安全发布"></span>
 
-打开 `Signed-By` 前，请先完成[仓库签名](/zh/docs/tutorial/signing/)。
+## 6. 发布仓库
 
-## 6. 安全发布
-
-交付前必须通过深度校验：
-
-```bash
-sow check -r pigsty
-```
-
-向已配置的 filesystem 或 R2 目标交付时，使用 [`sow publish`](/zh/docs/tutorial/serving/)。
-如果使用其他传输方式，应把完整仓库复制到离线 staging，再原子切换上线。不要逐文件更新在线
-`dists/` 树，否则客户端可能同时看到不同 Generation 的元数据与包体。
+使用 [`sow publish`](/zh/docs/tutorial/serving/) 发布到 filesystem 或 R2 目标。它先上传软件包与索引，再更新 `Release` 及其签名。隔离主机的手工交付步骤也见该教程。
 
 ## 更新仓库
 
 ```bash
 sow add /path/to/new.deb -r pigsty -d trixie
-sow rm PACKAGE_NAME -r pigsty -d trixie
-sow build -r pigsty
 sow check -r pigsty
 ```
 
-策略或签名配置变化后用 `build` 收敛；发布门禁是 `check`，不能只看 `status`。
+`add` 会自动构建更新。配置 `limit: 1` 后，同包名、同架构的最新版本会替换此前成员。修改配置后执行 `sow build -r pigsty`。
 
-自动化客户端与平台覆盖见[平台与集成](/zh/docs/reference/compatibility/)。
+撤下软件包时，先用 `sow rm PACKAGE_NAME -r pigsty -d trixie --check` 预览选择结果，再去掉 `--check` 执行。包名会选中其全部版本与架构；只删除一个包对象时，使用 SHA-256 引用。
+
+已测试客户端见[平台与集成](/zh/docs/reference/compatibility/)。

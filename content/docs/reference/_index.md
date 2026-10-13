@@ -1,7 +1,7 @@
 ---
 title: "Reference"
 linkTitle: "Reference"
-description: "Configuration schema, package references, on-disk layout, exit codes, JSON output, platforms, and integrations."
+description: "Look up configuration, package references, file paths, command results, and troubleshooting steps."
 categories: [Reference]
 tags: [config, cli]
 url: "/docs/reference/"
@@ -9,45 +9,41 @@ weight: 400
 icon: fa-solid fa-book-open
 ---
 
-This section is the stable contract for configuration fields, package references, paths,
-exit codes, JSON, platforms, and integrations. CLI syntax and state transitions live in
-[Commands](/docs/command/); use [Get Started](/docs/start/) for the operating model.
-
-Output examples show shape; identifiers, paths, hashes, timestamps, and counts vary by
-workspace. The built-in `sow help` remains the exact syntax authority.
+Use these pages to look up configuration fields, package references, file paths, and
+script interfaces. For command syntax, see [Commands](/docs/command/) or run
+`sow help COMMAND`.
 
 {{< cards >}}
-{{< card title="sow.yml Reference" link="/docs/reference/config/" >}}
-The complete configuration schema: workspace, repository, distribution, membership
-policy, signing, and publication targets.
+{{< card title="Configuration" link="/docs/reference/config/" >}}
+Fields, defaults, validation rules, signing references, and publication targets in `sow.yml`.
 {{< /card >}}
-{{< card title="Package References" link="/docs/reference/package-ref/" >}}
-The five ways to name a package on the command line, how ambiguity is resolved, and
-which forms `rm`, `show`, and `where` accept.
+{{< card title="Package references" link="/docs/reference/package-ref/" >}}
+Select packages by digest, coordinate, filename, or name. Resolve ambiguous matches.
 {{< /card >}}
-{{< card title="Repository Layout" link="/docs/reference/layout/" >}}
-Every path SOW creates in plain and managed mode, the pool grouping rule, name
-constraints, and which directories must never be exposed over HTTP.
+{{< card title="Repository layout" link="/docs/reference/layout/" >}}
+Locate package files, indexes, private state, and publication output.
 {{< /card >}}
-{{< card title="Exit Codes" link="/docs/reference/exit-codes/" >}}
-Exit codes 0–6, interruption code 130, and what each means.
+{{< card title="Exit codes" link="/docs/reference/exit-codes/" >}}
+Interpret command results and choose the next action in scripts.
 {{< /card >}}
-{{< card title="JSON Output" link="/docs/reference/json/" >}}
-The `sow.cli/v1` envelope, the meaning of each top-level field, and result shapes for the
-primary command families.
+{{< card title="JSON output" link="/docs/reference/json/" >}}
+Read the `sow.cli/v1` response and command result fields.
 {{< /card >}}
-{{< card title="Platforms & Integrations" link="/docs/reference/compatibility/" >}}
-Release targets, filesystem requirements, repository-client checks, publication Providers,
-and the exact scope of each automated integration.
+{{< card title="Platforms and integrations" link="/docs/reference/compatibility/" >}}
+Check supported systems, filesystems, client formats, and integration coverage.
+{{< /card >}}
+{{< card title="Troubleshooting" link="/docs/reference/troubleshooting/" >}}
+Find the next step for configuration, build, signing, and publication errors.
 {{< /card >}}
 {{< /cards >}}
 
-## Conventions
+<span id="conventions"></span>
 
-Command examples are written without a `$` prompt so you can copy a whole block. Output
-blocks are representative; variable values and long structures may be shortened where
-marked. The built-in `sow help` remains the exact syntax authority shipped with a binary.
+## Example conventions
 
-Placeholders in syntax blocks are uppercase (`NAME`, `DIR`, `PACKAGE`); literal text is
-lowercase. Square brackets mark optional arguments, `...` marks a repeatable one, and a
-vertical bar separates alternatives — the same convention `sow help` uses.
+Command blocks omit the shell prompt so you can copy them. Uppercase words such as `NAME`
+and `DIR` in syntax descriptions are placeholders. Square brackets mean optional arguments;
+`...` means repeatable arguments; `|` separates alternatives.
+
+Output paths, IDs, hashes, timestamps, and counts depend on the workspace. Keep operation
+and generation IDs as strings; see [JSON output](/docs/reference/json/).

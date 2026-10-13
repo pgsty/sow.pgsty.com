@@ -16,23 +16,20 @@ cascade:
   sidebar_expanded: true
 ---
 
-SOW is Pigsty's self-contained package repository manager. `sow create` turns the RPM and
-DEB files in a directory into a usable flat repository. Managed workspaces add package
-membership, policy, signing, immutable generations, audit history, and publication targets.
+SOW creates RPM/YUM and DEB/APT software repositories. Run `sow create DIR` to index
+packages in a directory. Use a Managed workspace when you need to organize packages into
+Dists, limit versions, sign metadata, or publish updates.
 
 These docs cover **SOW 0.5.0**. See the [release notes](/blog/release/sow-v0.5.0/) for
-the new publication-time option and the [upgrade guide](/docs/start/install/#upgrade-from-04-to-05)
+version changes and the [upgrade guide](/docs/start/install/#upgrade-from-04-to-05)
 for an existing Managed workspace.
-
-Press {{< kbd "Ctrl" "K" >}} (or {{< kbd "⌘" "K" >}} on macOS) to search this
-site. Press {{< kbd "/" >}} outside an input to open command mode directly.
 
 - [Get Started](/docs/start/) — Install SOW, create a flat repository, and build the first Managed workspace.
 - [Tutorials](/docs/tutorial/) — Complete YUM, APT, signing, serving, and publication walkthroughs.
-- [Features](/docs/feature/) — Plain and Managed execution, pool projections, policy, signing, transactions, and audit.
-- [Design Records](/blog/design/) — Dated ownership, layout, publication, recovery, and compatibility decisions.
-- [Commands](/docs/command/) — Syntax, selection rules, output, state transitions, and exit behavior for every command.
-- [Reference](/docs/reference/) — Configuration, package references, layouts, JSON, exit codes, platforms, and integration coverage.
+- [Features](/docs/feature/) — How package storage, filtering, signing, and recovery work.
+- [Design Records](/blog/design/) — The reasons behind the architecture and its history.
+- [Commands](/docs/command/) — Options, examples, output, and exit codes for every command.
+- [Reference](/docs/reference/) — Configuration fields, package names, directory layouts, and compatibility.
 {.cards}
 
 ## Choose a path
@@ -44,5 +41,6 @@ site. Press {{< kbd "/" >}} outside an input to open command mode directly.
 | Maintain a curated long-lived repository | [First Workspace](/docs/start/workspace/) |
 | Build a complete YUM or APT repository | [Tutorials](/docs/tutorial/) |
 | Look up exact CLI behavior | [Commands](/docs/command/) |
+| Resolve an error or interrupted command | [Troubleshooting](/docs/reference/troubleshooting/) |
 | Check a field, path, or compatibility claim | [Reference](/docs/reference/) |
 | Understand an architecture decision | [Design Records](/blog/design/) |

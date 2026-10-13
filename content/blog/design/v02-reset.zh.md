@@ -2,9 +2,9 @@
 title: "v0.2 重置：用 Plain 与 Managed 取代万能控制面"
 linkTitle: "v0.2 Plain/Managed 重置"
 date: 2026-07-31
-lastmod: 2026-08-28
+lastmod: 2026-10-13
 authors: [Vonng]
-description: "SOW 如何用两条小型执行路径、明确所有权、SQLite 状态与仓库核心，替换 v0.1 的 Git/CAS/Edge 平台。"
+description: "SOW 如何用 Plain 与 Managed 两条执行路径、明确所有权和 SQLite 状态，替换 v0.1 的 Git/CAS/Edge 平台。"
 categories: [Design]
 tags: [history, v0.2, plain, managed, architecture, decision]
 url: "/zh/blog/design/v02-reset/"
@@ -13,205 +13,184 @@ icon: fa-solid fa-arrows-rotate
 draft: false
 ---
 
-> [!IMPORTANT] 开发设计线不等于发布版本
-> 归档中的“v0.2”设计线最初使用 C2 View-local RPM Hardlink。这是一条真实实现过的开发线，
-> 但在最终 v0.2.0 Tag 之前已经被单包体设计替换。正式发布的 v0.2.0 已经使用唯一正典 Pool
-> 与纯元数据 View。
->
-> 归档中仍有数份 v0.2/v0.3 文件声称“v0.2.0”使用 C2 Hardlink；它们写于 Tag 产生之前，
-> 当时的“v0.2.0”指计划中的 Build。实际交付边界由最终 0.2.0 Changelog、Release Note
-> 与源码 Tag 决定，三者都记录唯一正典 Pool 与纯元数据 View。
+2026-07-31，v0.1 源码基线封存后，SOW 开始了一次产品重置。
+目标是构建一个小型仓库引擎，替代 Pigsty 日常软件包构建工作流。
+重置保留了已有的完整性与恢复经验，同时移除了大部分控制面。
 
-2026-07-31，v0.1 源码基线刚刚封存，SOW 就开始了一次产品重置。目标不是挽救每个 V1 子系统，
-而是找出能够替代 Pigsty 日常软件包构建，同时保留既有安全教训的最小 Repository 产品。
+最终形成的分工沿用至今：**Plain** 重建调用者拥有的目录，**Managed** 管理仓库及其历史。
 
-最终形成的边界沿用至今：**Plain** 负责可重建目录，**Managed** 负责长期 Repository 所有权。
+开发设计最初在 RPM 视图内使用 C2 硬链接，随后在 8 月 8 日发布 v0.2.0 前被替换。
+部分归档计划曾把 C2 构建称为“v0.2.0”，但正式标签已经采用单一包池与纯元数据视图。
 
 ## 为什么不在 V1 上逐步删功能
 
-v0.1 把五类不同任务耦合在一起：
+v0.1 把五类任务耦合在一起：
 
-1. 构建有效 APT/YUM/Asset Repository；
-2. 维护 Package History 与 Snapshot；
-3. 迁移庞大的 Pigsty 旧拓扑；
-4. 发布到多套 Cloud/CDN Target；
-5. 执行商业 Edge Access Control。
+1. 构建有效的 APT/YUM/静态制品仓库。
+2. 维护包历史与快照。
+3. 迁移庞大的 Pigsty 旧拓扑。
+4. 发布到多个云存储与 CDN 目标。
+5. 执行商业边缘访问控制。
 
-逐项删除功能仍会保留 Git/CAS/Route 所有权模型。重置则直接追问：Repository Engine 真正需要
-拥有哪些事实？
+逐项删除功能仍会保留 Git/CAS/Route 所有权模型。
+重置直接重新确定仓库引擎需要管理哪些事实。
 
-最初 Phase One 的边界与功能列表同样重要：
+第一阶段排除了：
 
-- 不使用 V1 Git Database、Route/Manifest/Quarantine 模型或全局 Content-addressed
-  Product Layer；
-- 不提供 Upstream Sync、Pull/Push/Copy/Move/Promote、Edge Entitlement、CDN Bootstrap
-  或商业拓扑；
-- 第一阶段不提供 Remote Publication/State、Object Storage、GC、Snapshot/Freeze、
-  Managed Export 或 Serving；
-- 不提供 Modulemd、Source-package Build、Web UI、跨 Repository 去重或 Multi-writer。
+- V1 Git 数据库、Route/Manifest/Quarantine 模型与全局内容寻址存储层；
+- 上游同步、拉取、推送、复制、移动、晋级、边缘权限、CDN 初始化与商业拓扑；
+- 远端发布与状态、对象存储、垃圾回收、快照与冻结、Managed 导出和托管服务；
+- modulemd、源码包构建、Web 界面、跨仓库去重与多写入者操作。
 
-即使 V1 已经为 Upstream Sync 与 Channel Promotion 留下真实 Streaming、Fuzz 与确定性 Proof
-证据，重置仍有意把它们移出产品。Package Acquisition 是输入边界，不应成为 Repository Engine
-中的第二个 Owner。运维者可以用专门 Mirror/Download 工具准备包集合，再由 SOW 负责 Admission、
-Membership、Build 与 Publication。部分 Phase-one 排除项——Publication、Retention、GC 与
-External Export——在最终 v0.2.0 Tag 前，以更小的 Repository 所有权模型重新进入。
+V1 已经为上游同步和渠道晋级积累了流式处理、模糊测试与确定性验证结果，重置仍将它们移出产品。
+包获取改为外部任务。运维者可以用专门的镜像或下载工具准备包集合，
+再由 SOW 负责接纳、成员关系、构建与发布。
+发布、保留、垃圾回收和外部导出后来在 v0.2.0 正式标签前回归，并遵循更小的仓库所有权模型。
 
 ## 两条隔离的执行路径
 
 ### Plain：重建调用者拥有的目录
 
-Plain 模式处理调用者拥有的 RPM/DEB 目录：
+Plain 模式处理调用者拥有的 RPM 或 DEB 目录：
 
 ```bash
 sow create /srv/repo
 ```
 
-它扫描 Package、渲染协议 Metadata、验证结果并最后安装 Pointer。Plain 只拥有生成的 Metadata，
-不拥有 Workspace、Repository Database、Generation History 或长期 Membership。
+它扫描包、生成协议元数据、验证结果，最后替换协议指针。
+Plain 负责生成的元数据，不维护工作区、仓库数据库、Generation（构建快照）历史或长期成员关系。
 
-因为 Desired State 就是“当前目录里的 Package”，正确恢复方法是重新运行构建。后续版本进一步
-贯彻这一原则，删除 Plain Journal 与重复包体读取。
+期望状态就是当前目录中的包，因此中断后重新运行构建即可恢复。
+后续版本进一步简化了这条路径，移除了 Plain 日志与重复包体读取。
 
 ### Managed：拥有生命周期与历史
 
-Managed 模式引入包含多个独立 Repository 的 Workspace：
+Managed 模式引入包含多个独立仓库的工作区：
 
 ```text
 Workspace
 ├── sow.yml
-├── .sow/                    私有配置、锁、SQLite、Journal
+├── .sow/                    私有状态、锁、SQLite、操作日志
 └── <repository>/
-    ├── pool/                正典包体
+    ├── pool/                包体原件
     └── dists/               客户端协议视图
 ```
 
-每个 Repository 拥有自己的 Pool、Package Object、Membership、Desired State、Built
-Generation、Changeset、Lock、Database 与 Recovery State。不同 Repository 不会暗中去重
-或共享计数器。
+每个仓库管理自己的包池、包对象、成员关系、期望状态、已构建 Generation、变更集、锁、数据库与恢复状态。
+仓库之间不自动去重，也不共享计数器。
 
-Dist 是具名 RPM/DEB Membership Set。Architecture View 是 Membership 的投影，不是新的 Owner。
-Neutral Package（`noarch` / `all`）会进入每个适用架构，但不会复制逻辑 Membership。
+Dist 是具名的 RPM 或 DEB 包成员集合。架构视图是成员集合的投影。
+架构无关包（`noarch` / `all`）会进入每个适用架构，而逻辑成员关系只有一份。
 
 ## 哪些决定替换了 V1 概念
 
 | V1 概念 | v0.2 替代项 |
 |---|---|
-| Git Commit/Ref 正典状态 | Per-Repository SQLite 加显式 Filesystem/Journal Evidence |
-| 全局 CAS 与 Route Materialization | Repository-owned Pool 与 Protocol View |
-| View/Snapshot/Stable Ref Graph | Dist Membership、Desired Revision、Built Generation、Retained State |
-| 一套万能命令面 | 封闭的 Plain 与 Managed CLI 契约 |
-| 隐式旧拓扑 | 严格 `sow.yml`、显式 Name 与 Selector |
-| 跨产品 Publication Saga | Repository Build 与 Target Publication 分离 |
-| 直接复用 V1 Package | 只复用窄 Parser/Renderer/Version/Signing Port |
+| 作为权威状态的 Git 提交与引用 | 每仓库 SQLite，加显式文件系统记录与操作日志 |
+| 全局 CAS 与 Route 物化 | 仓库自己的包池与协议视图 |
+| View/Snapshot/Stable 引用图 | Dist 成员、期望状态版本、已构建 Generation 与保留状态 |
+| 一套通用控制命令 | 分开的 Plain 与 Managed 命令接口 |
+| 隐式旧拓扑 | 严格的 `sow.yml`、显式名称与选择器 |
+| 跨产品发布流程 | 仓库构建与目标发布分离 |
+| 直接复用 V1 模块 | 只移植解析、生成、版本比较和签名等独立组件 |
 
-最关键的简化是：不借助 Git 或 Edge Router，也能完整解释私有控制状态与公共 Repository Byte。
+简化后，不借助 Git 或边缘路由器，也能解释私有控制状态与公共仓库内容。
 
 ## Desired 与 Built
 
-Managed 模式把中断状态变成显式事实：
+Managed 模式明确记录中断状态：
 
-- **Desired State** 是 SQLite 中当前 Package 与 Membership 意图；
-- **Built Generation** 是最近一次完整渲染并验证成功的公共树；
-- **Changeset** 是两份 Built State 的精确差异。
+- **期望状态（Desired）**：SQLite 中当前的包与成员关系。
+- **已构建 Generation（Built）**：最近一次完整生成并验证成功的公共树。
+- **变更集（Changeset）**：两次已构建状态的精确差异。
 
-Desired 可以前进，而 Built 继续保持有效。因此 Build 失败时，不需要假装公共树已经变化，也
-不需要假装请求从未发生。Operation Journal 与 Status 会显示两者差异。
-
-这个区别在后续所有版本中都保留。
+新的 Built Generation 完成前，Desired 可以先变化。
+操作日志记录未完成的工作，状态查询显示 Desired 与 Built 的差异。
+恢复过程根据记录的操作阶段决定还需要完成哪些步骤。
 
 ## P0 到 P3
 
 实现按依赖顺序推进：
 
-| 阶段 | 契约 |
+| 阶段 | 内容 |
 |---|---|
-| P0 | Plain `create`、真实 RPM/DEB Metadata、签名、Pigsty Filter、Pointer-last Replacement |
-| P1 | Workspace/Repository/Dist Lifecycle、严格 Config、Package Identity、Membership 与 Query |
-| P2 | Add/Remove/Policy/Build、Journal、Crash Recovery 与 Safe Mutation |
-| P3 | Check、Changeset、Handoff、规模、兼容性与 Clean-delivery Evidence |
+| P0 | Plain `create`、真实 RPM/DEB 元数据、签名、Pigsty 过滤、最后替换协议指针 |
+| P1 | 工作区、仓库与 Dist 生命周期，严格配置，包身份、成员关系与查询 |
+| P2 | 添加、移除、策略与构建操作，日志、崩溃恢复与安全修改 |
+| P3 | 检查、变更集、交付、规模、兼容性与发布验证 |
 
-每个阶段都有 API Contract、Implementation Spec、Adversarial Review 与 Traceability/
-Acceptance Record。这些文档在构建 Release 时有用；其中长期有效的决定由本文提炼，不再分别
-成为公共权威。
+每个阶段都有 API 契约、实现规格、对抗评审与验收记录。
 
 ## C2 Hardlink 绕路
 
-最初的 Managed RPM 布局在 Root Pool 保存正典文件，并在每个 Architecture View 下创建
-Hardlink。Metadata 使用安全的本地 `pool/...` href。这套 C2 布局让固定的 AlmaLinux 9
-`reposync` 流程通过，而且 Alias 共享 inode，因此本地字节没有重复。
+最初的 Managed RPM 布局在根包池保存包文件原件，并在每个架构视图下创建硬链接。
+元数据使用本地 `pool/...` 路径。
+这套 C2 布局通过了固定版本的 AlmaLinux 9 `reposync` 测试。
+别名共享 inode，因此不占用重复的本地包体空间。
 
-隐藏代价出现在交付边界：
+部署时，这种布局产生了额外成本：
 
-- Object Storage 会把每条 Path 展开成独立完整对象；
-- Archive 与跨文件系统 Copy 可能丢失 Hardlink 身份；
-- 每个 Dist/Architecture Alias 都看起来像另一份正典 Payload；
-- Retention 与 GC 容易依赖 inode/link-count；
-- 完整 Repository 无法一对一映射到 Static Object Key。
+- 对象存储会将每条路径保存为独立的完整对象。
+- 归档与跨文件系统复制可能丢失硬链接关系。
+- 每个 Dist 与架构下的别名都表现为独立包文件。
+- 保留与垃圾回收容易依赖 inode 和链接计数。
+- 完整仓库无法一对一映射为静态对象键。
 
-2026-08-05 的发布前设计快照准确记录了 C2 实现与本地验收，但它不是最终 v0.2.0 Release
-Contract。
+2026-08-05 的快照记录了这套 C2 实现与本地测试结果。
 
-单包体契约起草于 8 月 5 日，8 月 7 日以“next”设计提交，并在 8 月 8 日 Tag 前完成实现。
-因此正式 Release 已经交付：
+单包体契约起草于 8 月 5 日，8 月 7 日以“next”设计提交，8 月 8 日正式标签前完成实现。
+最终发布的布局是：
 
 ```text
 <repository>/
-  pool/       每个 Package Object 一份正典包体
-  dists/      纯元数据 APT/RPM View
+  pool/       每个包对象一份包体原件
+  dists/      纯元数据 APT/RPM 视图
 ```
 
-默认 EL `reposync` 成为已接受兼容性限制；独立 RPM Leaf 改为显式外部 Export。完整理由见
-[单包体仓库](/zh/blog/design/single-payload/)。
+默认 EL `reposync` 因而成为已知兼容性限制，独立 RPM 叶目录改为显式外部导出。
+完整理由见[单包体仓库](/zh/blog/design/single-payload/)。
 
 ## 重置复用了什么
 
-团队没有从空代码开始，而只保留不携带 V1 所有权假设的窄组件：
+重置保留了不依赖 V1 所有权模型的独立组件：
 
-- RPM/DEB Parsing 与原生 Version Comparison；
-- Metadata Rendering、Compression、Signing 与 Validation；
-- Safe Filesystem Primitive；
-- 选定 Client Fixture 与 Fault Pattern；
-- 精确 Package Identity 与 Provenance Check。
+- RPM/DEB 解析与原生版本比较；
+- 元数据生成、压缩、签名与验证；
+- 安全文件系统操作；
+- 部分客户端测试数据与故障测试；
+- 精确包身份与来源检查。
 
-Git State、Route Receipt、Edge Component、旧迁移机制与 Cloud Control Plane 只是参考材料或
-删除候选，不是新 Core 的依赖。
+Git 状态、Route 回执、边缘组件、旧迁移机制与云控制面只作为参考或待移除代码，
+不再是新核心的依赖。
 
-## Release 证据边界
+## 从验收到发布 {#release-证据边界}
 
-开发线在 8 月 1 日记录 P0/P1 Acceptance，8 月 2 日记录 P1–P3 Acceptance，8 月 5 日完成
-一次本地 Release-gate Run。最终 v0.2.0 源码在单包体实现、Packaging 与 CI 修正进入后，于
-8 月 8 日打 Tag。
+开发线在 8 月 1 日记录 P0/P1 验收，8 月 2 日记录 P1–P3 验收，8 月 5 日运行本地发布检查。
+单包体实现、打包和 CI 修正进入后，最终 v0.2.0 源码于 8 月 8 日打标签。
 
-最终 Release 还交付 Filesystem/R2 Publication、Retained Generation、外部 RPM Leaf Export
-与本地 GC；R2 Remote Delete 从一开始就被禁用，Target GC 只保留并报告 Candidate。
-
-这个区别非常重要：
-
-- 8 月 5 日 C2 PASS 只证明产生它的开发快照；
-- 8 月 8 日 v0.2.0 Tag 与 Release Note 定义实际交付；
-- 后续 v0.3/v0.4 测试不会改写任何一项历史结果。
+正式版本还交付了文件系统与 R2 发布、Generation 保留、外部 RPM 叶目录导出和本地垃圾回收。
+R2 远端删除从一开始就被禁用，针对 R2 的 GC 只报告候选对象。
 
 ## 哪些东西仍在定义 SOW
 
-- Plain 与 Managed 是隔离模式，恢复成本不同；
-- Workspace 是 Config/Discovery Scope，Repository 是 Package/History Scope；
-- Package Object Identity 不可变，Membership 是逻辑多对多关系；
-- Desired 与 Built State 分离；
-- 写入使用稳定 Lock、有界 Journal、Pointer-last Install 与 Fail-closed Recovery；
-- CLI Syntax、JSON Envelope 与 Exit Class 构成封闭 Automation Contract；
-- Protocol、Client、Mirror Tool 与 Provider 兼容性分别报告。
+- Plain 与 Managed 是隔离模式，恢复成本不同。
+- 工作区负责配置与发现，仓库负责包与历史。
+- 包对象身份不可变，成员关系是逻辑多对多关系。
+- Desired 与 Built 状态分开记录。
+- 写入使用稳定锁文件，最后替换协议指针。Managed 日志记录中断操作，Plain 通过重新构建恢复。
+- 命令语法、JSON 输出格式与退出码提供明确的自动化接口。
+- 协议、客户端、镜像工具和存储服务分别验证兼容性。
 
 当前形态见[上手文档](/zh/docs/start/)、[系统模型](/zh/blog/design/model/)与
 [设计原则](/zh/blog/design/principles/)。
 
 ## 第一手设计快照
 
-- [v0.2 开发设计快照](https://github.com/pgsty/sow/tree/1e7eb5493cc349372fa40c2f8e6e44d8ddb7801b/design/v0.2)
-  —— PRD、API、C2 Architecture、Review 与本地 Acceptance；
-- [Single-payload “next” 设计](https://github.com/pgsty/sow/tree/8625f5090f5668c69c20f2f17b6466d1228d2fbe/design/next)
-  —— 正式 Tag 前采纳的合同；
+- [v0.2 开发设计快照](https://github.com/pgsty/sow/tree/1e7eb5493cc349372fa40c2f8e6e44d8ddb7801b/design/v0.2)：
+  产品需求、API、C2 架构、评审与本地验收。
+- [单包体“next”设计](https://github.com/pgsty/sow/tree/8625f5090f5668c69c20f2f17b6466d1228d2fbe/design/next)：
+  正式标签前采纳的设计。
 - [v0.2.0 发布注记](/zh/blog/release/sow-docs-launch/)与
-  [v0.2.0 源码 Tag](https://github.com/pgsty/sow/tree/v0.2.0)
-  —— 实际交付边界。
+  [v0.2.0 源码标签](https://github.com/pgsty/sow/tree/v0.2.0)：正式发布内容。
 
-后续 v0.3 与 v0.4 的强化过程见[设计演进](/zh/blog/design/evolution/)。
+后续 v0.3 到 v0.5 的改进见[设计演进](/zh/blog/design/evolution/)。

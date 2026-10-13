@@ -1,7 +1,7 @@
 ---
 title: "sow repo"
 linkTitle: "repo"
-description: "列出、创建、查看与删除仓库 —— 锁、事务与 Generation 的边界。"
+description: "创建、列出、查看、迁移和删除仓库。"
 categories: [Command]
 tags: [cli, repository, managed]
 url: "/zh/docs/command/repo/"
@@ -10,9 +10,7 @@ weight: 400
 icon: fa-solid fa-box-archive
 ---
 
-一个仓库（Repository）独占一份 `pool/`、一份 `dists/`、一个 SQLite 数据库与一个私有状态目录。它是
-锁、事务恢复、Generation 编号与 Changeset 的边界——跨仓库不去重，也不承诺跨仓库原子提交。
-`sow repo` 管理的就是这条边界。
+`sow repo` 用于创建、列出、查看、升级和删除仓库。每个仓库在 `pool/` 中保存包文件，在 `dists/` 中保存索引。同一仓库的 Dist 共用包文件。
 
 ## 语法
 
@@ -34,7 +32,7 @@ sow repo new .sow
 operation rejected: managed: operation rejected: name ".sow" must match [a-z0-9][a-z0-9._-]*
 ```
 
-路径不可指定。仓库永远位于 `<workspace>/<NAME>/`。
+SOW 在 `<workspace>/<NAME>/` 创建仓库。
 
 ## sow repo ls
 
@@ -50,15 +48,15 @@ pgsql	false	2	2	clean	0	0
 | 参数 | 说明 | 默认 |
 |---|---|---|
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
-| `--json` | 输出版本化 JSON envelope | false |
+| `--json` | 输出 JSON | false |
 
 `STATUS` 取值为 `clean`、`dirty`、`recovering` 或 `error`。各状态对客户端意味着什么，见
 [事务与恢复](/zh/docs/feature/transactions/)。
 
 ## sow repo new
 
-原子更新 `sow.yml`，然后创建 `<workspace>/<NAME>/{pool,dists}`、SQLite 数据库与私有状态目录。新仓库
-处于 Generation 0、clean 状态。
+更新 `sow.yml`，然后创建 `<workspace>/<NAME>/{pool,dists}`、SQLite 数据库与私有状态目录。新仓库
+尚未构建，构建快照编号为 0，状态为 clean。
 
 ```console
 sow repo new pigsty
@@ -70,12 +68,11 @@ created pigsty: path=/srv/repo/pigsty protected=false dists=0 generation=0 statu
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
-| `--json` | 输出版本化 JSON envelope | false |
+| `--json` | 输出 JSON | false |
 
-`repo new` 取的是工作区锁而不是仓库锁——此时仓库数据库还不存在。它不接受 `-r`，位置参数已经指明了
-目标。
+用 `NAME` 指定新仓库的名称。
 
-对已存在的仓库再跑一次是收敛型 no-op，只报告当前状态，因此在 provisioning 脚本里是安全的。
+对已存在的仓库再次运行时，命令报告当前状态，不会创建第二个仓库。
 
 ## sow repo show
 
@@ -102,9 +99,9 @@ repository pigsty:
 |---|---|---|
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-r, --repo NAME` | 省略 `NAME` 时用它选择仓库 | 按选择规则 |
-| `--json` | 输出版本化 JSON envelope | false |
+| `--json` | 输出 JSON | false |
 
-同时给出 `NAME` 与 `-r` 时两者必须一致；不一致会在读取任何状态前失败：
+同时给出 `NAME` 与 `-r` 时，使用相同名称：
 
 ```console
 sow repo show demo -r empty
@@ -113,54 +110,41 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-这是专用维护命令，不属于全新的 0.5 Managed 工作流。新建的 0.5 Repository 使用 Schema v13
-与当前单包体布局。从既有 v0.3 或 v0.4 Workspace 升级时必须显式迁移：先停止全部写入并备份，再在
-执行普通读写之前逐个迁移所有已配置 Repository。
+将既有 v0.3 或 v0.4 工作区升级到 SOW 0.5 时，使用 `repo migrate`。新建的 0.5 仓库已使用 schema v13，无需迁移。
+
+1. 停止工作区写操作。
+2. 备份整个工作区，并保留硬链接。
+3. 逐个迁移已配置的仓库。
+4. 对每个仓库运行 `build` 与 `check`。
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-0.5.0   # GNU cp；其他平台请用 rsync -aH 或 tar
+rsync -aH /srv/sow/ /srv/sow.backup-before-0.5.0/
 sow repo migrate pigsty -C /srv/sow
-sow repo migrate pgsql -C /srv/sow
+sow build -r pigsty -C /srv/sow
+sow check -r pigsty -C /srv/sow
 ```
 
-备份必须保留硬链接（DEB 的 `by-hash` 条目是硬链接），macOS 的 `cp -a` 不保留硬链接。输出会报告
-Schema 变化，例如 `migrated repository pigsty: single-payload-v1 -> single-payload-v1 schema=12->13 …`；
-JSON 中有 `schema_from` 与 `schema_to`，重复迁移报告 `schema=13->13`。Repository 迁移之前，
-其写命令以 `5` 退出并提示
-`` repository schema v12 predates this binary (v13); back up the workspace, then run
-`sow repo migrate NAME` ``。
+对其他仓库重复后三条命令。迁移结果包含 `schema_from` 与 `schema_to`；重复迁移报告 `13 -> 13`。Schema v13 增加包池路径查询索引。从 v0.3 迁移时，还会应用中间版本的状态与发布记录修复。
 
-Schema v13 为候选包池路径归属查询增加索引，避免每次 add 全表扫描发布历史。迁移时创建索引
-需要一次性的时间与私有数据库空间。随后执行 `sow build`、`sow check`，刷新受影响的 RPM 认证
-与 APT 元数据契约。v0.3 数据库还会获得 v11/v12 的修复：按全部 Dist 重新派生 Repository 状态；在不猜测缺失
-历史签名者的前提下修复 Publication 与 Generation Signer Projection；移除陈旧 abandoned-object
-evidence；并回填 append-only publication-target binding ledger 的 Revision 1。v0.3 未记录的历史
-Signer 保持显式未验证，不能进入 Current Head，也不能成为 retained trust assertion。
+写操作要求当前 schema。兼容的只读命令可以查看旧状态，但不会升级数据库。迁移后使用 SOW 0.5 或更新版本；需要返回旧 schema 时，恢复备份。
 
-Schema Transition 完成后不可逆，不要再用旧版本 SOW 二进制打开数据库，也不要手工修改
-`PRAGMA user_version`。`--abort` 只适用于诊断出的 pre-commit layout-maintenance attempt，不能
-撤销已经完成的 Schema Migration。除升级或 SOW 明确诊断外，不要试探性执行 migrate。
-
-不支持从开发期 C2 布局启动新的转换。请保留原文件并用受支持的发布版重建。已经记录的布局
-迁移仍可按绑定的原计划完成，但结果不是受支持的 0.5 Repository：之后的下一次写入仍可能构建出
-一个 Generation，随后 Repository 即处于 `status=error`。请用原始包重建。
+`--abort` 只能在提交决策前放弃未完成的布局迁移，不能撤销已完成的 schema 升级。开发期 C2 布局需要从原始软件包重新建仓。
 
 | 参数 | 含义 | 默认值 |
 |---|---|---|
-| `-j, --jobs N` | 并行校验/渲染 worker | 逻辑 CPU 数 |
+| `-j, --jobs N` | 并行校验/渲染工作线程 | 逻辑 CPU 数 |
 | `--abort` | 在提交决策前放弃维护尝试 | false |
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
 | `-r, --repo NAME` | 省略 `NAME` 时选择仓库 | 选择规则 |
-| `-T, --timeout DUR` | 最长锁等待;`0` 无限等待 | `0` |
+| `-T, --timeout DUR` | 最长锁等待；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
-| `--json` | 输出版本化 JSON envelope | false |
+| `--json` | 输出 JSON | false |
 
 ## sow repo rm
 
-删除一个仓库：它在 `sow.yml` 中的条目、数据库、`pool/`、`dists/` 与私有状态。绝不跟随符号链接，
-也绝不越出固定的仓库路径。
+删除整个仓库，包括 `sow.yml` 条目、数据库、`pool/` 中的包文件、`dists/` 中的索引与私有状态。
 
-不加 `-f` 时，只能删除空仓库——没有 Dist、没有 Membership、没有 Package Object：
+不加 `-f` 时，只能删除空仓库——没有 Dist、没有成员关系、没有软件包对象：
 
 ```console
 sow repo rm infra
@@ -179,31 +163,28 @@ removed repository pgsql
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
-| `-f, --force` | 删除非空的、未 protected 的仓库 | false |
+| `-f, --force` | 删除非空的、未受保护的仓库 | false |
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
-| `--json` | 输出版本化 JSON envelope | false |
+| `--json` | 输出 JSON | false |
 
-### -f 到底降级了什么
+### 强制删除 {#-f-到底降级了什么}
 
-`-f` 只放宽*为空*这一个前置条件。它不绕过路径安全检查、不绕过符号链接拒绝、也不绕过 `protected`
-门禁。
+使用 `-f` 删除非空仓库。设置了 `protected: true` 的仓库仍然受到保护。
 
 ## protected
 
-`sow.yml` 中的 `protected: true` 直接封死仓库删除，加 `-f` 也不行：
+`sow.yml` 中的 `protected: true` 阻止删除仓库，包括使用 `-f` 的情况：
 
 ```console
 sow repo rm alpha -f
 operation rejected: managed: operation rejected: repository "alpha" is protected
 ```
 
-要删除受保护的仓库，必须先改 `sow.yml`，通过
-[`sow config check`](/zh/docs/command/config/)，再重试。没有 `--yes`，也没有临时覆盖开关。
+需要删除受保护仓库时，在 `sow.yml` 中将它的 `protected` 设为 `false`。运行 [`sow config check`](/zh/docs/command/config/)，再重试删除。
 
-`protected` 只作用于仓库删除。受保护仓库上的包级操作不受影响——`add`、`rm`、`build`，乃至
-`dist rm` 都照常工作：
+`protected` 只作用于仓库删除。`add`、`rm`、`build` 与 `dist rm` 照常工作：
 
 ```console
 sow dist rm el9 -r alpha -f
@@ -219,13 +200,13 @@ sow repo new infra
 sow repo new pgsql
 ```
 
-在 cron 任务中快速失败，而不是排队等另一个写者：
+创建仓库时不等待已被占用的锁：
 
 ```bash
-sow repo new nightly -N || echo "另一个写者持有工作区锁"
+sow repo new nightly -N
 ```
 
-一行一个仓库地做审计：
+逐行显示仓库名称、状态与构建快照编号：
 
 ```bash
 sow repo ls --json | jq -r '.result.repositories[] | "\(.name)\t\(.status)\tgen=\(.generation)"'
@@ -235,11 +216,11 @@ sow repo ls --json | jq -r '.result.repositories[] | "\(.name)\t\(.status)\tgen=
 
 | 码 | 触发条件 |
 |---|---|
-| `0` | 列出、创建、显示、迁移、放弃 pre-commit transition 或删除成功；或 `repo new` 收敛了已存在的仓库 |
+| `0` | 列出、创建、显示、迁移、放弃提交前的布局转换或删除成功；或 `repo new` 报告已存在的仓库 |
 | `1` | 创建或删除目录树时的运行时 I/O 错误 |
 | `2` | 用法错误、工作区未找到，或仓库选择有歧义 |
 | `4` | 工作区锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
-| `5` | 工作区 journal 的完整性或恢复错误 |
+| `5` | 工作区日志的完整性或恢复错误 |
 | `6` | 名称非法、仓库不存在、非空但未给 `-f`、`protected`，或 `NAME` 与 `-r` 冲突 |
 
 ## 参见

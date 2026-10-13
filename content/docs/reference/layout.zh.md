@@ -1,7 +1,7 @@
 ---
 title: "仓库布局"
 linkTitle: "仓库布局"
-description: "SOW 的公共与私有路径，包括唯一规范包池与纯元数据视图。"
+description: "查找包文件、仓库索引、私有状态和发布输出的位置。"
 categories: [Reference]
 tags: [repository, pool, dist]
 url: "/zh/docs/reference/layout/"
@@ -9,17 +9,17 @@ weight: 400
 icon: fa-solid fa-folder-tree
 ---
 
-SOW 的 Managed 布局只有一种：软件包体在 `pool/` 下只存一份，`dists/`
-只保存客户端视图元数据。对外服务、复制或发布时,单位始终是完整仓库目录。
+对外服务完整的 Managed 仓库目录：`pool/` 加 `dists/`。
+工作区配置与 `.sow/` 状态应位于 Web 服务根目录之外。
 
-## Plain 模式
+<span id="plain-模式"></span>
 
-`sow create` 在现有软件包旁写入索引,不修改无关文件:
+## Plain 目录
 
 ```text
 /srv/offline/
-├── blackbox_exporter-0.28.0-1.x86_64.rpm
-├── libpq5_18.3-1.pgdg12+1_amd64.deb
+├── example-1.0-1.x86_64.rpm
+├── example_1.0-1_amd64.deb
 ├── repodata/
 │   ├── <sha256>-primary.xml.gz
 │   ├── <sha256>-filelists.xml.gz
@@ -27,19 +27,19 @@ SOW 的 Managed 布局只有一种：软件包体在 `pool/` 下只存一份，`
 │   └── repomd.xml
 ├── Packages
 ├── Packages.gz
-└── repo_complete                         # 仅 --pigsty 生成
+└── repo_complete                     # 使用 --pigsty 时
 ```
 
-平面 RPM 元数据引用裸文件名，平面 DEB 元数据使用 `./<filename>`。构建期间
-`.sow-plain-stage-*` 保存私有生成输出。Plain 没有持久 journal 或 recovery 状态；下次
-create 会丢弃保留命名空间里的陈旧临时路径并重建。不得服务或复制这些临时路径。
+`sow create` 在存在 RPM 时生成 RPM 元数据，存在 DEB 时生成 DEB 元数据。
+RPM 位置使用文件名，DEB 使用 `./<文件名>`。构建期间使用私有 `.sow-plain-stage-*` 目录，
+对外服务和复制时应排除这些目录。后续 `create` 会清理过时的 SOW 临时路径并重建索引。
 
 ## Managed 工作区
 
 ```text
 <workspace>/
-├── sow.yml                               # 配置,保持私有
-├── .sow/                                 # 数据库、锁、stage/recovery,保持私有
+├── sow.yml                           # 工作区配置
+├── .sow/                             # 私有状态
 │   ├── workspace.lock
 │   ├── workspace-ops/
 │   ├── repo-locks/<repo>.lock
@@ -50,84 +50,76 @@ create 会丢弃保留命名空间里的陈旧临时路径并重建。不得服�
 │       ├── retained/
 │       ├── transitions/
 │       └── pending/
-└── <repo>/                               # 发布这个完整目录
+└── <repo>/                           # 公开仓库根
     ├── pool/
     └── dists/
 ```
 
-去重不跨仓库边界。`.sow/` 与 pending 目录权限为 `0700`。Pending 包体文件直接使用最终
-公开权限 `0644`，因此提升只需修改命名空间。私有状态
-可能包含尚未发布的包体、从凭据派生的状态与恢复数据。
+数据库旁可能有 SQLite WAL 和共享内存文件。`.sow/` 与 pending 目录权限为私有的 `0700`。
+待构建包文件使用 `0644`，进入公开路径时无需改变权限。
 
-`<repo>.db` 与可重建的软件包事实缓存都属于私有状态，不改变公共仓库布局或
-`sow/v3` 配置标识。
+SOW 0.5 使用数据库 schema v13 和配置 schema `sow/v3`，两者是独立的版本标识。
+执行 [`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 前备份完整工作区。
+数据库应与匹配的私有、公开状态一起保存；不要手动修改 schema 版本或可重建缓存。
 
-SOW 0.5 使用内部数据库 Schema v13。v0.3 或 v0.4 数据库必须先备份，再显式执行
-`sow repo migrate`；v13 新增索引，让包池路径归属检查只查询候选路径。Append-only
-Publication-target Binding Revision、Package Facts、Signer Projection 与 Recovery Evidence
-均只存在于 `<repo>.db`。绝不要手工修改 `PRAGMA user_version`，也不要脱离匹配的公共/私有
-Repository 状态单独复制数据库。
+<span id="规范包池"></span>
 
-## 规范包池
-
-每个包体只有一条规范路径：
+## 包池
 
 ```text
 pool/<prefix>/<source>/<filename>
 ```
 
-源码名取自 RPM `SOURCERPM` 或 DEB `Source`;缺失时回落到二进制包名。
-前缀是首个小写字符,以 `lib` 开头时取前四个字符:
+`source` 来自 RPM `SOURCERPM` 或 DEB `Source` 字段，规范化为源码包名。
+字段缺失时使用二进制包名。前缀为首字符的小写形式；源码名以小写 `lib` 开头时，
+取前四个字符并转为小写，不足四个字符则取全名。
 
-| Source | 示例 |
+| 源码名 | 示例路径 |
 |---|---|
-| `postgresql-18` | `pool/p/postgresql-18/libpq5_18.3-1.pgdg12+1_amd64.deb` |
-| `blackbox_exporter` | `pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm` |
+| `postgresql-18` | `pool/p/postgresql-18/libpq5_18.3-1_amd64.deb` |
+| `example` | `pool/e/example/example-1.0-1.x86_64.rpm` |
 | `libfoo` | `pool/libf/libfoo/libfoo1_1.0-1_amd64.deb` |
 
-Pool 对象不可变。从 Dist 删除成员关系不会立即删除字节；`sow gc` 只有在检查当前、保留、
-恢复、发布以及活动维护操作等全部安全根后，才会处理不可达包体。
+包对象不可变。移除成员关系后，字节仍可被构建、保留、恢复和发布记录使用。
+这些记录都不再需要某个对象后，[`gc`](/zh/docs/command/gc/) 才会删除它。
+每个仓库有独立包池。
 
-## RPM 纯元数据视图
+<span id="rpm-纯元数据视图"></span>
+
+## RPM Dist
 
 ```text
-<repo>/
-├── pool/
-│   ├── b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm
-│   └── p/pev2/pev2-1.23.0-1.noarch.rpm
-└── dists/el9/
-    ├── x86_64/repodata/
-    │   ├── <sha256>-primary.xml.gz
-    │   └── repomd.xml
-    └── aarch64/repodata/
-        ├── <sha256>-primary.xml.gz
-        └── repomd.xml
+dists/el9/
+├── x86_64/repodata/
+│   ├── <sha256>-primary.xml.gz
+│   ├── <sha256>-filelists.xml.gz
+│   ├── <sha256>-other.xml.gz
+│   ├── repomd.xml
+│   └── repomd.xml.asc                # 配置元数据签名时
+└── aarch64/repodata/
+    └── ...
 ```
 
-这里没有 `dists/<dist>/<arch>/pool/`。原生包只出现在匹配架构的元数据中,`noarch`
-出现在每个架构视图中。rpm-md 回指规范包池:
+架构视图只包含元数据，包位置指向根包池：
 
 ```xml
-<location href="../../../pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm"/>
+<location href="../../../pool/e/example/example-1.0-1.x86_64.rpm"/>
 ```
 
-该布局要求客户端在完整 Repository Root 内正确处理 rpm-md 相对路径。默认 `dnf reposync`
-会拒绝父级跳转 href，因为下载目标逃出
-View Root。下游工具需要自包含 Leaf 时，请显式导出：
+原生架构包只出现在对应视图，`noarch` 包出现在全部配置视图。
+旧的校验和命名元数据可能与当前文件共存，`repomd.xml` 选择当前生效的一组。
 
-```bash
-sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
-```
+需要包路径都在目录内的独立副本时，使用 [`export rpm-leaf`](/zh/docs/command/export/)。
 
-导出目录有自己的 `pool/` 和改写后的 href;它是兼容性产物,不是规范 Managed 仓库。
+<span id="deb-视图"></span>
 
-## DEB 视图
+## DEB Dist
 
 ```text
 dists/trixie/
 ├── Release
-├── InRelease                         # 配置元数据签名时生成
-├── Release.gpg                       # 配置元数据签名时生成
+├── InRelease                         # 配置元数据签名时
+├── Release.gpg                       # 配置元数据签名时
 └── main/
     ├── binary-amd64/
     │   ├── Packages
@@ -137,18 +129,16 @@ dists/trixie/
         └── ...
 ```
 
-`Packages` 从 archive 根引用同一规范包池:
+`Packages` 使用相对仓库根的路径，如
+`Filename: pool/e/example/example_1.0-1_amd64.deb`。
+`Release` 包含 SHA-256 清单与 `Acquire-By-Hash: yes`。
+架构为 `all` 的包进入每个适用索引。
 
-```text
-Filename: pool/p/postgresql-18/libpq5_18.3-1.pgdg12+1_amd64.deb
-```
+<span id="发布目标"></span>
 
-`Release` 使用 SHA256 清单并声明 `Acquire-By-Hash: yes`。校验和命名的 rpm-md 文件与
-APT by-hash 条目让上一组元数据在可变指针最后替换时仍然可达。
+## 发布路径
 
-## 发布目标
-
-`filesystem` 与 `r2` 目标都会在配置前缀下得到同一棵逻辑公共树:
+两种发布 Provider 都接收相同公开布局：
 
 ```text
 <prefix>/
@@ -156,24 +146,22 @@ APT by-hash 条目让上一组元数据在可变指针最后替换时仍然可�
 └── dists/
 ```
 
-发布单位始终是完整仓库命名空间。不要只发布某一个 RPM 架构目录,它的 href 会有意回指
-根包池。
+导出拥有自己的包文件、元数据、清单和 `.sow-export.json` 完成标记。
+它是独立交付制品，不是另一个 Managed 仓库。
 
-## 名称与服务边界
+<span id="名称与服务边界"></span>
 
-仓库名与 Dist 名必须匹配 `[a-z0-9][a-z0-9._-]*`。`.`、`..`、`.sow`、`pool`、
-`dists`、`sow.yml`、`workspace.lock`、`workspace-ops` 与 `repo-locks` 在相应位置为
-保留名。与已知路径在大小写折叠后冲突的新池路径会被拒绝，字节完全相同也不例外。在大小写
-不敏感的工作区文件系统上（macOS 默认配置），源目录与已有目录仅大小写不同时同样会被拒绝；
-在 Linux 上两者彼此独立，因此这样的 Repository 不能迁移到大小写不敏感的文件系统。详见
-[平台与集成](/zh/docs/reference/compatibility/#工作区文件系统)。
+## 名称与大小写
 
-> [!WARNING] 绝不要暴露 .sow
-> Web 服务器应指向 `<workspace>/<repo>/`,而不是工作区根目录。公共仓库需要同时包含
-> `pool/` 与 `dists/`;私有 `.sow/` 必须隐藏。
+仓库、Dist 和目标名称使用 `[a-z0-9][a-z0-9._-]*`。
+保留名称包括 `.`、`..`、`.sow`、`pool`、`dists`、`sow.yml`、`workspace.lock`、
+`workspace-ops`、`repo-locks`。
 
-## 延伸阅读
+新包池完整路径与已知路径仅大小写不同时会被拒绝，即使字节相同。
+在大小写不敏感文件系统上，仅大小写不同的源码目录也会冲突；
+在大小写敏感文件系统上，这些源码目录可以共存，因此迁移到大小写不敏感卷前应先检查。
 
-- [视图与单副本存储](/zh/docs/feature/views/)
-- [发布模型](/zh/blog/design/publication/)
-- [对外服务](/zh/docs/tutorial/serving/)
+继续阅读[视图](/zh/docs/feature/views/)、[对外服务](/zh/docs/tutorial/serving/)和
+[平台](/zh/docs/reference/compatibility/)。
+
+<span id="延伸阅读"></span>

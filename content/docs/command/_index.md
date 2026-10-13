@@ -1,7 +1,7 @@
 ---
 title: "Commands"
 linkTitle: "Commands"
-description: "Complete SOW CLI syntax, options, behavior, output, and exit codes."
+description: "SOW command syntax, options, selection rules, and exit codes."
 categories: [Command]
 tags: [cli]
 url: "/docs/command/"
@@ -16,39 +16,33 @@ search_keywords: [cli, command reference, sow help, options, subcommands]
 search_boost: 1.5
 ---
 
-Each top-level command has its own page. Command groups
-such as `config`, `repo`, `dist`, `retain`, `export`, and `log` document their subcommands together.
-
-The built-in `sow help` output is the syntax authority. These pages add selection rules, state
-transitions, output contracts, failure behavior, and practical examples.
+Use these pages for command syntax, selection rules, results, and examples. Run `sow help COMMAND` or `sow help COMMAND SUBCOMMAND` to check the options in your installed version.
 
 ## Command index
 
-`sow create` is the Plain-mode repository command and operates directly on a directory. `sow init`
-bootstraps Managed mode and may create `sow.yml`; the remaining stateful commands discover an
-existing Workspace. `help` and `version` are utility commands and need neither mode.
+`sow create` builds a flat repository directly in a directory. To manage packages in a Workspace, start with `sow init`. All other Managed commands use an existing Workspace. `help` and `version` can run anywhere.
 
 | Command | Mode | Purpose |
 |---|---|---|
 | [`sow create [DIR]`](/docs/command/create/) | Plain | Generate a flat RPM/DEB repository in place |
-| [`sow init [DIR]`](/docs/command/init/) | Managed | Initialize a Workspace and converge declared Repositories/Dists |
+| [`sow init [DIR]`](/docs/command/init/) | Managed | Initialize a Workspace and create declared Repositories/Dists |
 | [`sow config check\|show`](/docs/command/config/) | Managed | Validate or print the effective configuration |
-| [`sow repo ls\|new\|show\|migrate\|rm`](/docs/command/repo/) | Managed | Manage Repositories; `migrate` is specialized maintenance |
+| [`sow repo ls\|new\|show\|migrate\|rm`](/docs/command/repo/) | Managed | Create, inspect, upgrade, or remove Repositories |
 | [`sow dist ls\|new\|show\|rm`](/docs/command/dist/) | Managed | Manage Dists |
-| [`sow add PATH...`](/docs/command/add/) | Managed | Add packages to Desired Membership |
-| [`sow rm PACKAGE...`](/docs/command/rm/) | Managed | Remove packages from Desired Membership |
-| [`sow ls`](/docs/command/ls/) | Managed | List Desired and Built Membership |
-| [`sow show PACKAGE`](/docs/command/show/) | Managed | Inspect one Package Object |
-| [`sow where PACKAGE`](/docs/command/where/) | Managed | Locate a Package Object across the Workspace |
-| [`sow status`](/docs/command/status/) | Managed | Read Repository state without deep verification |
-| [`sow build`](/docs/command/build/) | Managed | Converge Desired state into a Built Generation |
-| [`sow check`](/docs/command/check/) | Managed | Verify configuration, state, bytes, views, signatures, and manifest |
-| [`sow changes [BASE_GENERATION]`](/docs/command/changes/) | Managed | Diff Built Generations as a file delivery plan |
+| [`sow add PATH...`](/docs/command/add/) | Managed | Add packages and rebuild indexes |
+| [`sow rm PACKAGE...`](/docs/command/rm/) | Managed | Remove packages and rebuild indexes |
+| [`sow ls`](/docs/command/ls/) | Managed | List Desired packages with their Built locations |
+| [`sow show PACKAGE`](/docs/command/show/) | Managed | Inspect one package |
+| [`sow where PACKAGE`](/docs/command/where/) | Managed | Find a package across the Workspace |
+| [`sow status`](/docs/command/status/) | Managed | Show Repository state and pending changes |
+| [`sow build`](/docs/command/build/) | Managed | Build a Generation from Desired state |
+| [`sow check`](/docs/command/check/) | Managed | Verify a Repository before delivery |
+| [`sow changes [BASE_GENERATION]`](/docs/command/changes/) | Managed | Compare files in two Built Generations |
 | [`sow publish TARGET`](/docs/command/publish/) | Managed | Publish a verified Generation to a configured target |
-| [`sow retain add\|ls\|rm`](/docs/command/retain/) | Managed | Manage explicit retained-Generation roots |
-| [`sow gc [TARGET]`](/docs/command/gc/) | Managed | Collect unreachable local payloads or maintain a publication target |
-| [`sow export rpm-leaf`](/docs/command/export/) | Managed | Build a standalone RPM compatibility leaf |
-| [`sow log [OPERATION]`](/docs/command/log/) | Managed | Read, export, and prune the Operation audit ledger |
+| [`sow retain add\|ls\|rm`](/docs/command/retain/) | Managed | Protect a Generation’s package files from local GC |
+| [`sow gc [TARGET]`](/docs/command/gc/) | Managed | Reclaim unused local packages or maintain a publication target |
+| [`sow export rpm-leaf`](/docs/command/export/) | Managed | Export a standalone RPM repository |
+| [`sow log [OPERATION]`](/docs/command/log/) | Managed | Read, export, and prune operation records |
 
 ## Global syntax
 
@@ -57,11 +51,9 @@ sow [OPTIONS] COMMAND [ARGS]
 ```
 
 Running `sow` with no arguments prints the command list and exits `0`. Use `sow help COMMAND` or
-`sow help COMMAND SUBCOMMAND` for built-in usage. `sow version` and `sow --version` print the binary
-identity.
+`sow help COMMAND SUBCOMMAND` for built-in usage. `sow version` and `sow --version` print version and build information.
 
-There is no global `--format`, `--yes`, `--dry-run`, `-q`, `-v`, or `--config`. Unknown flags are
-usage errors.
+Options apply only to the commands that list them. Use `--` before a positional argument that starts with `-`. Unknown or repeated single-value options return exit code `2`.
 
 ## Workspace discovery
 
@@ -100,7 +92,7 @@ Repository, so `publish TARGET` and `gc TARGET` do not accept an additional Repo
 3. the only Dist in the selected Repository;
 4. otherwise fail with exit `2` and list the candidates.
 
-Other commands deliberately differ:
+Other commands use these defaults:
 
 - `build`, `check`, and `status` default to all Dists when `-d` is absent;
 - `show` searches the whole selected Repository unless `-d` narrows it;
@@ -109,15 +101,11 @@ Other commands deliberately differ:
 
 ## Locking
 
-Write commands other than `init` accept `-T/--timeout DUR` and `-N/--no-wait`. `init` takes the
-Workspace lock and waits without a CLI timeout override. Other locks are Repository-scoped except
-for `repo new` and `repo rm`, which also use the Workspace lock. `--timeout 0` waits indefinitely;
-a positive timeout uses Go duration syntax such as `500ms`, `30s`, or `5m`. `--no-wait` fails
-immediately. A positive timeout and `--no-wait` are mutually exclusive. Lock acquisition failure
-exits `4`.
+`create` locks its target directory. Managed mutations coordinate through Workspace and Repository locks. `init` waits for its locks without a CLI timeout option.
 
-Read-only commands take no write lock. `status` still reports whether a writer holds the Repository
-lock.
+Other write commands accept `-T/--timeout DUR` and `-N/--no-wait`. The default `--timeout 0` waits indefinitely. Positive durations use `ms`, `s`, `m`, or `h`, for example `500ms`, `30s`, or `5m`. `--no-wait` fails immediately if a lock is held. It cannot be combined with a positive timeout. Lock acquisition failure returns `4`.
+
+Most read-only Managed commands use shared locks and wait for a conflicting writer. They do not accept lock wait options. `status` normally probes the Repository lock so you can inspect an active writer. Cancel a waiting command with Ctrl-C.
 
 ## Parallelism
 
@@ -144,9 +132,7 @@ Commands with `--json` emit one versioned envelope on stdout; diagnostics remain
 `ok` is false for every non-zero exit. A partial batch still returns its committed and failed items.
 See [JSON Output](/docs/reference/json/) for complete result shapes.
 
-Without `--json`, every Managed command has a stable human-readable renderer. Use it for
-interactive work, not as a machine protocol. `--json` always selects the standard envelope and is
-the only supported interface for scripts that need structured fields.
+Use text output for interactive work and `--json` for scripts. `config show` prints YAML by default. `log export` is the exception: it writes JSONL directly and does not accept `--json`.
 
 ## Exit codes
 
@@ -158,6 +144,7 @@ the only supported interface for scripts that need structured fields.
 | `3` | Partial batch success |
 | `4` | Write lock unavailable |
 | `5` | Integrity/recovery failure, or `check` ruling the tree not deliverable |
-| `6` | Expected rejection: conflict, protected object, no match, or incompatible architecture |
+| `6` | Rejected operation: conflict, protected object, no match, or incompatible architecture |
+| `130` | Command interrupted by SIGINT or SIGTERM |
 
 See [Exit Codes](/docs/reference/exit-codes/) for command-specific triggers.

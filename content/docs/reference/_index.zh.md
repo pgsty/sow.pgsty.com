@@ -1,7 +1,7 @@
 ---
 title: "参考"
 linkTitle: "参考"
-description: "配置 Schema、包引用、磁盘布局、退出码、JSON 输出、平台与集成。"
+description: "查阅配置、包引用、文件路径、命令结果与故障处理方法。"
 categories: [Reference]
 tags: [config, cli]
 url: "/zh/docs/reference/"
@@ -9,38 +9,39 @@ weight: 400
 icon: fa-solid fa-book-open
 ---
 
-这一部分记录配置字段、包引用、路径、退出码、JSON、平台与集成等稳定契约。CLI 语法和状态变化
-见[命令](/zh/docs/command/)，使用模型见[上手](/zh/docs/start/)。
-
-输出示例只说明形态；标识符、路径、哈希、时间戳与计数会随工作区变化。二进制自带的
-`sow help` 始终是精确语法权威。
+这些页面用于查阅配置字段、包引用、文件路径和脚本接口。
+命令语法见[命令参考](/zh/docs/command/)，也可运行 `sow help COMMAND`。
 
 {{< cards >}}
 {{< card title="配置参考" link="/zh/docs/reference/config/" >}}
-完整配置 schema：工作区、仓库、Dist、成员策略、签名与发布目标。
+`sow.yml` 的字段、默认值、校验规则、签名引用和发布目标。
 {{< /card >}}
 {{< card title="包引用" link="/zh/docs/reference/package-ref/" >}}
-命令行上指代一个软件包的五种写法、歧义如何裁决,以及 `rm` / `show` / `where` 各自接受哪些形态。
+按摘要、坐标、文件名或包名选择软件包，解决匹配歧义。
 {{< /card >}}
 {{< card title="仓库布局" link="/zh/docs/reference/layout/" >}}
-Plain 与 Managed 两种模式下 SOW 创建的每一条路径、包池分组规则、名称约束,
-以及绝对不能通过 HTTP 暴露的目录。
+查找包文件、索引、私有状态和发布输出的位置。
 {{< /card >}}
 {{< card title="退出码" link="/zh/docs/reference/exit-codes/" >}}
-退出码 0–6 与中断码 130 分别代表什么。
+解释命令结果，并在脚本中选择下一步操作。
 {{< /card >}}
 {{< card title="JSON 输出" link="/zh/docs/reference/json/" >}}
-`sow.cli/v1` Envelope、各顶层字段含义与主要命令族的 Result 形态。
+读取 `sow.cli/v1` 响应和各命令的结果字段。
 {{< /card >}}
 {{< card title="平台与集成" link="/zh/docs/reference/compatibility/" >}}
-Release 目标、文件系统要求、仓库客户端检查、发布 Provider，以及各项自动化集成的确切范围。
+检查系统、文件系统、客户端格式和集成测试覆盖。
+{{< /card >}}
+{{< card title="故障排查" link="/zh/docs/reference/troubleshooting/" >}}
+处理配置、构建、签名和发布错误，找到下一步操作。
 {{< /card >}}
 {{< /cards >}}
 
-## 约定
+<span id="约定"></span>
 
-命令示例不带 `$` 提示符，方便整块复制。输出块只代表结构，可变值与长结构会在标注处省略。
-二进制自带的 `sow help` 始终是精确语法权威。
+## 示例约定
 
-语法块中占位符用大写(`NAME`、`DIR`、`PACKAGE`),字面量用小写。方括号表示可选参数,
-`...` 表示可重复,竖线分隔互斥项 —— 与 `sow help` 的写法一致。
+命令代码块省略 shell 提示符，便于复制。语法说明中的 `NAME`、`DIR` 等大写词是占位符。
+方括号表示可选参数，`...` 表示可重复参数，`|` 分隔备选项。
+
+输出中的路径、ID、摘要、时间和计数随工作区变化。操作 ID 和构建快照 ID 保持字符串类型，
+详见 [JSON 输出](/zh/docs/reference/json/)。

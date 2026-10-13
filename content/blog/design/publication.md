@@ -2,9 +2,9 @@
 title: "Publication & Recovery"
 linkTitle: "Publication & Recovery"
 date: 2026-08-08
-lastmod: 2026-08-24
+lastmod: 2026-10-13
 authors: [Vonng]
-description: "The target-scoped state machine for publishing, recovering, retaining, and safely deleting repository objects."
+description: "How SOW uploads a repository, resumes interrupted publication, and removes unused files."
 categories: [Design]
 tags: [publish, transaction, object-storage]
 url: "/blog/design/publication/"
@@ -15,131 +15,119 @@ icon: fa-solid fa-arrows-rotate
 draft: false
 ---
 
-Building and publishing are separate state transitions. A build produces a target-neutral
-Generation. Publication applies that Generation to one provider prefix and records enough
-evidence to recover without guessing.
+A build creates a local snapshot (Generation). Publication uploads its files to a target and records progress for recovery.
+Each target keeps a checkpoint that identifies its last completed publication.
 
-## Ownership split
+<span id="ownership-split"></span>
 
-| Repository-scoped | Target-prefix-scoped |
+## State ownership
+
+| Repository records | Target records |
 |---|---|
-| Package Object | Publication Attempt |
-| Desired and Built state | Applied Checkpoint |
-| Generation and Changeset | Remote inventory |
-| Retained payload/metadata references | Grace and deletion evidence |
+| Packages, Desired state, and Built state | Publication attempts and checkpoints |
+| Generations and changesets | Remote inventory |
+| Retained package and metadata references | Grace periods and deletion records |
 
-The split prevents a successful filesystem publication from being treated as proof about
-R2, and prevents one target's partial attempt from contaminating another target.
+<span id="publication-phases"></span>
+<span id="pointer-order"></span>
 
-## Durable target identity and rebind
-
-A target has two nested identities. Storage identity covers provider, endpoint, region, and bucket;
-target identity adds the public-tree prefix. Repository identity, both target identities, and the
-three authority acknowledgements are immutable after the first bind. This is what lets attempts,
-checkpoints, grace, and maintenance survive a configuration-file edit without being reinterpreted
-as evidence for another namespace.
-
-Target name, `public_endpoint`, and `max_cache_ttl` are mutable only through explicit
-[`publish --rebind`](/docs/command/publish/#rebind-mutable-target-settings). Initial bind, migration
-backfill, and every accepted rebind append an immutable binding revision. Rebind holds the same
-exclusive locks as publish and rechecks immutable fields inside the transaction; changing storage
-or prefix requires a new target.
-
-Pending target maintenance freezes TTL in both directions. A filesystem conditional-delete
-workflow also freezes `public_endpoint`. Changing the current TTL never rewrites historical grace:
-deletion eligibility is the later of the stored deadline and the applied checkpoint plus the
-current grace minimum.
-
-## Publication phases
+## Publication order
 
 ```text
-plan
-  -> create-only payload
-  -> checksum-addressed metadata
-  -> durable commit intent
-  -> protocol pointers, one view at a time
-  -> provider and canonical public verification
-  -> applied checkpoint
-  -> grace
-  -> evidence-gated deletion
+freeze the plan
+  -> upload packages
+  -> upload immutable metadata
+  -> record commit intent
+  -> update protocol pointers, one view at a time
+  -> verify storage and public URLs
+  -> record the applied checkpoint
 ```
 
-Before commit intent, only add-only objects may be written. `publish --abort` may reconcile
-and remove private filesystem staging, but it does not delete remote objects. Exact
-abandoned-object evidence is retained so a later attempt can safely recognize and reuse
-matching bytes.
+Package uploads create new objects or reuse identical bytes. They cannot overwrite an
+immutable path with different content. SOW records commit intent before it changes the
+first mutable APT index alias or protocol pointer.
 
-Commit intent is persisted before the first mutable APT stable alias or protocol pointer.
-After that point, the only recovery direction is forward. Object stores do not provide a
-multi-key atomic commit, so SOW permits a bounded mixed-generation window while it rolls
-individual views forward in a deterministic order.
-
-## Pointer order
-
-Within a view, immutable content is installed first. Signature companions are installed
-before their corresponding mutable pointer. Examples:
+Within a view, referenced content is uploaded before the pointer:
 
 ```text
-RPM: checksum-named repodata -> repomd.xml.asc -> repomd.xml
-APT: by-hash/direct indexes -> Release.gpg -> InRelease/Release
+RPM: checksum-named metadata -> repomd.xml.asc -> repomd.xml
+APT: by-hash and direct indexes -> Release.gpg -> InRelease/Release
 ```
 
-A client that sees a new pointer can therefore reach every object and signature it names.
+During an update, views can briefly use indexes from different builds. A detached signature and its index also change in separate writes.
+Clients can therefore need to retry an index refresh. Public verification completes before SOW records the checkpoint.
 
 ## Public verification
 
-Routine publication verifies the exact changed closure and every affected final pointer; it does
-not publicly download every unchanged package. Provider receipts and public visibility are separate
-proofs. Filesystem and R2 HTTP(S) targets share a canonical-GET verifier with independent response
-header and body-idle deadlines, a size-plus-one oversize guard, short bounded retries for transient
-408/425/429/5xx responses, and cache-TTL retries for stale content or missing objects.
+SOW downloads changed files and affected index entry points through `public_endpoint`, then checks their contents.
+Unchanged packages do not need another download.
 
-No-cache requests are revalidation hints only. A later ordinary canonical GET must observe the
-expected bytes before publication can checkpoint. For filesystem conditional deletion, HTTP 404 or
-410 proves public absence; a stale 200 is retried through the TTL. `file://` instead uses exact,
-descriptor-bound absence. R2 public absence and remote deletion remain disabled.
+The public endpoint can still return cached files. SOW waits and retries within `max_cache_ttl`.
+If verification fails, SOW does not record a new completed checkpoint.
 
-Filesystem aliases are checked on prospective canonical paths before durable bind, including case
-aliases on case-insensitive volumes. A failed backend/path preflight creates no binding row and no
-target prefix.
+<span id="recovery-outcomes"></span>
 
-## Published-pointer fence
+## Resume or abandon an attempt
 
-Once a configured target has an Applied Checkpoint, local configuration cannot silently
-withdraw a public Dist, architecture, or signing pointer that target still owns. The
-operator must first retire or unbind the target, or publish a replacement under a new name
-and prefix.
+Rerun the original `sow publish TARGET` command to resume. Recovery follows the saved plan
+rather than starting from a newer local build.
 
-This turns a dangerous omission into an explicit lifecycle decision.
-
-## Retention without payload copies
-
-A retained Generation stores metadata, manifests, and reference sets — not another package
-tree. Repository-local reachability includes:
-
-- current Desired/Built memberships;
-- retained Generation references;
-- active operation and recovery journals;
-- publication grace and recovery roots.
-
-Local garbage collection may remove a canonical Pool object only when it is outside that
-complete closure and the exact file identity still matches the recorded candidate.
-
-## Remote deletion is a capability
-
-Remote physical deletion additionally requires authoritative inventory, target ownership,
-grace expiry, cache-absence evidence when applicable, and an atomic conditional delete
-primitive. A provider that cannot satisfy the primitive can still publish, but SOW must
-report unreachable candidates rather than issue an unsafe unconditional delete.
-
-The `r2` provider is handled this way: publication is implemented, while remote physical
-deletion is deliberately disabled and target GC remains report-only.
-
-## Recovery outcomes
-
-| Durable boundary | Legal outcome |
+| Saved state | Next action |
 |---|---|
-| No commit intent | reconcile, then abort or retry |
-| Commit intent present | roll forward only |
-| Applied checkpoint present | converge and enter grace |
-| Evidence contradicts | fail closed; do not invent state |
+| Before commit intent | Retry publication, or use `--abort` to reconcile and abandon the attempt |
+| After commit intent | Retry publication to complete the saved update |
+| Checkpoint recorded | Finish remaining maintenance; a completed target needs no update |
+| Conflicting file identity | Inspect the named file and target configuration before retrying |
+
+`--abort` removes eligible private filesystem staging. It keeps remote objects and records
+abandoned uploads so a later attempt can reuse matching bytes.
+
+<span id="durable-target-identity-and-rebind"></span>
+
+## Target identity
+
+Storage identity consists of the provider, endpoint, region, and bucket. Target identity
+also includes the prefix. The first publication binds these values to the Repository.
+Later attempts use that binding to find the correct history.
+
+To change the target name, `public_endpoint`, or `max_cache_ttl`, edit `sow.yml` and run
+[`sow publish TARGET --rebind`](/docs/command/publish/#rebind-mutable-target-settings).
+SOW appends a binding revision. Changes to the Repository, storage identity, or prefix require a new target.
+
+Before changing `max_cache_ttl`, complete pending target maintenance.
+For filesystem targets, finish conditional deletion before changing `public_endpoint`.
+A shorter TTL does not shorten an already recorded grace period.
+
+<span id="published-pointer-fence"></span>
+
+## Remove a published view
+
+A configured target with an applied checkpoint prevents withdrawal of its existing Dist,
+architecture, or signature pointers. To retire that target, remove its entry from `targets`
+in `sow.yml`, then run `sow config check`. This keeps the old remote files and publication
+history; it does not delete the remote repository.
+
+You can then change the local Dist configuration and rebuild. To publish the reduced set
+of views, configure a new target with a different prefix and update clients to its URL.
+`--rebind` cannot change a target prefix. See [`sow publish`](/docs/command/publish/) for
+the configuration rules.
+
+<span id="retention-without-payload-copies"></span>
+<span id="remote-deletion-is-a-capability"></span>
+
+## Retain and collect packages
+
+A retained Generation stores metadata, manifests, and references to packages in the shared
+Pool. Local garbage collection checks all of these references:
+
+- current Desired and Built membership;
+- retained Generations;
+- active operations and recovery journals;
+- publication recovery and grace periods.
+
+It removes a package only when no reference remains and the file still matches the recorded
+identity. Keeping a Generation therefore keeps its packages without making another package tree.
+
+Filesystem target deletion requires a known inventory, exclusive ownership, and an expired
+grace period. SOW conditionally deletes the recorded file, checks public absence, then
+records the result. R2 target GC reports candidates and keeps the objects.

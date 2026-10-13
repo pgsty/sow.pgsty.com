@@ -2,9 +2,9 @@
 title: "系统模型"
 linkTitle: "系统模型"
 date: 2026-08-08
-lastmod: 2026-08-24
+lastmod: 2026-10-13
 authors: [Vonng]
-description: "连接软件包、Dist、Generation 与发布目标的对象模型和状态迁移。"
+description: "工作区、仓库、发行版与构建快照如何组织软件包和发布记录。"
 categories: [Design]
 tags: [repository, dist, pool, generation]
 url: "/zh/blog/design/model/"
@@ -15,96 +15,99 @@ icon: fa-solid fa-diagram-project
 draft: false
 ---
 
-SOW 刻意把模型分层：配置表达意图，数据库记录有主状态，公共树是确定性投影。
-任何一层都不能悄悄替代另一层。
+SOW 用配置文件保存仓库设置，用 SQLite 记录托管状态，用公共目录向客户端提供文件。
+模型分别记录选中的软件包、已完成的构建，以及已发布的内容。
 
-## 对象层级
+<span id="对象层级"></span>
+
+## 对象
 
 ```text
-Workspace
-├── Repository
-│   ├── Package Object
-│   ├── Dist
-│   │   └── Membership -> Package Object
-│   ├── Desired 状态
-│   ├── Built Generation
-│   └── Retained Generation 引用
-└── Publication Target
-    └── Repository + provider + prefix
+Workspace（工作区）
+├── Repository（仓库）
+│   ├── Pool：包对象
+│   ├── Dist：成员关系与策略
+│   ├── Desired（期望状态）
+│   ├── Built Generation（已构建快照）
+│   └── 保留的 Generation
+└── 发布目标
+    └── Repository + 存储后端 + 前缀
 ```
 
 ### Workspace
 
-Workspace 提供发现、配置与协调，拥有 `sow.yml`、私有 `.sow/` 目录和稳定锁路径；
-它不是包体去重域。
+工作区包含 `sow.yml`、私有 `.sow/` 目录和稳定的锁文件。
+它集中保存配置，让命令可以找到所选仓库。
 
 ### Repository
 
-Repository 是最小的自包含公共归档，也是软件包身份的作用域。它拥有一份 `pool/`、一组
-`dists/`、一个状态数据库和一条 Generation 序列。即使输入相同，两个 Repository 也不共享
-包体与计数器。
+一个仓库拥有一份 `pool/`、一棵 `dists/` 目录、一个状态数据库和一条 Generation 序列。
+包去重只在该仓库内进行。两个仓库即使输入相同，也各自保存一份包副本。
 
-### Package Object
+<span id="package-object"></span>
 
-Package Object 由完成全部包签名后的最终 SHA-256 标识。名称、版本、release 与架构等逻辑坐标
-只是元数据，digest 才是字节身份。重复加入同一 digest 是幂等操作；同一正典 Pool 路径出现
-不同字节则是硬冲突。
+### 包对象
 
-### Dist 与 Membership
+SOW 使用包签名完成后的 SHA-256 标识包对象。名称、版本、release 和架构描述软件包，摘要标识实际字节。
+重复加入同一对象会复用已有文件。同一包池路径对应不同内容时，SOW 报告冲突。
 
-Dist 是一套 APT 或 RPM 发布策略及其成员集合。Membership 是多对多关系：一个 Package Object
-可以属于多个 Dist，但不会因此多出一份正典包体。中性包（`all` / `noarch`）会投影到每个
-适用架构视图中，逻辑上仍只有一条成员关系。
+<span id="dist-与-membership"></span>
+
+### Dist 与成员关系
+
+一个 Dist 为一种格式（RPM 或 DEB）选择软件包和设置。
+同一个包可以属于多个 Dist，但只保存一个 Pool 文件。
+架构中性包（`noarch` 或 `all`）出现在每个适用架构的视图中，无需复制包体。
 
 ### Desired、Built 与 Generation
 
-Desired 是配置和包操作想要的状态；Built 是最后一次完整渲染并校验通过的公共树。
-Generation 是该 Built 状态的不可变清单，Changeset 则是两份清单之间的精确差异。
+Desired 状态记录所选软件包和配置，Built 状态记录上一次完成的构建。
+Generation 是该次构建的不可变清单，变更集则比较两份清单。
 
-Desired 与 Built 分离后，中断状态可以被诚实描述：意图可能已经改变，但上一次提交的公共树
-仍然有效。
+`add --skip` 会修改 Desired 状态而不重建索引。构建中断也可能留下未完成的操作。
+用 `sow status` 查看差异，用 `sow build` 应用待构建变更或完成恢复。
 
-### Publication Target
+<span id="publication-target"></span>
 
-target 把一个 Repository 绑定到供应商 endpoint 与 prefix。发布尝试、已应用 checkpoint、
-远端 inventory、grace 与删除证据都属于 target。构建 Repository 与目标无关，发布则不是。
+### 发布目标
 
-Storage Identity（Provider/Endpoint/Region/Bucket）、Target Identity（Storage 加 Prefix）与
-Repository Identity 都是持久身份。只有 Target Name、Public Endpoint 与 Cache TTL 可通过操作者
-确认的 Rebind 修改；每次接受的变化都会追加不可变 Binding Revision。
+目标将一个仓库连接到存储后端和前缀。每个目标分别记录发布尝试、检查点、清单和清理状态。
+
+目标身份与配置变更规则见[发布与恢复](/zh/blog/design/publication/#目标身份)。
 
 ## 状态流
 
 ```text
 软件包输入
-    -> 检查/签名/哈希
-    -> Package Object + Membership
+    -> 检查、按配置签名、计算哈希
+    -> 包对象与成员关系
     -> Desired 状态
     -> 渲染并校验
-    -> Built Generation + Changeset
-    -> target 发布尝试
-    -> applied checkpoint
+    -> Built Generation 与变更集
+    -> 目标发布尝试
+    -> 已应用检查点
 ```
 
-每一条箭头都受 journal 或事务保护；后一阶段消费前一阶段的不可变身份，不重新解释可变路径。
+Managed 操作用事务和日志记录进度。恢复时，SOW 根据记录完成或回滚中断的步骤。
 
-## 公共状态与私有状态
+<span id="公共状态与私有状态"></span>
 
-| 公共：必须整体复制 | 私有：绝不能对外服务 |
+## 公共文件与私有文件
+
+| 作为完整仓库提供访问 | 留在私有工作区中 |
 |---|---|
 | `<repo>/pool/` | `sow.yml` |
-| `<repo>/dists/` | `.sow/` 数据库与 journal |
-| 协议签名与索引 | 锁、stage、恢复前镜像 |
-| Generation 描述的常规文件 | 凭据与供应商回执 |
+| `<repo>/dists/` | `.sow/` 数据库与日志 |
+| 生成的索引与签名 | 锁、暂存和恢复文件 |
 
-只复制公共树可以得到一个有效的静态仓库，但它不是权威写入者：缺少匹配的私有状态时，
-它无法安全续接发布历史、保留策略或垃圾回收。
+公共目录副本可以提供软件下载。要继续管理仓库，还需保留匹配的私有工作区。
+只有公共副本时，无法恢复成员关系、保留记录或发布历史。
 
-## 锁边界
+<span id="锁边界"></span>
 
-Workspace 生命周期操作取得 Workspace 锁；Repository 变更取得稳定 Repository 锁。
-两者都需要时，固定先 Workspace、后 Repository，释放顺序相反。稳定锁路径避免 rename 或恢复
-操作在新 inode 上意外形成第二个写入者。
+## 锁与写入者
 
-模型假设每个配置 target prefix 只有一个权威 Workspace 且写权限独占；多个独立 Workspace
-之间的分布式仲裁不在目标范围内。
+工作区和仓库各有自己的锁。多数读操作使用共享锁，写操作使用独占锁，避免多个进程同时修改同一份状态。
+`sow status` 直接查询锁状态，便于查看正在进行的写入。
+
+每个目标前缀必须由一个工作区负责写入。这些锁协调本地进程，不协调不同主机上的独立工作区。

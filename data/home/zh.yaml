@@ -9,16 +9,16 @@ hero:
   eyebrow: Software Object Warehouse
   title_lines:
     - 构建软件仓库
-    - 同步增量变化
+    - 增量发布更新
   title_size: 4rem
-  lead: 从本地 RPM 与 DEB 软件包生成 YUM、APT 索引。已有软件包目录可直接使用 Plain 模式；需要管理软件包策略、快照、签名与增量发布时，使用 Managed 模式。
+  lead: 从本地 RPM 与 DEB 文件构建 YUM、APT 仓库。用 `sow create` 索引已有目录；用托管工作区（Managed）筛选软件包、签署元数据、保留快照并发布更新。
   note: SOW 0.5.0 · Linux + macOS · RPM + DEB · Apache-2.0
   image:
     light: img/sow-architecture-zh-light.svg
     dark: img/sow-architecture-zh-dark.svg
     alt: >-
-      SOW Managed 模式：本地 .rpm 与 .deb 文件进入统一包池，每个软件包包体只存一份；
-      包池再投影为只含元数据的 YUM 与 APT 仓库视图；发布时只把发生变化的对象上传到
+      SOW Managed 模式：本地 .rpm 与 .deb 文件进入仓库包池，每个仓库内的软件包只存一份；
+      多个 YUM 与 APT 视图共用包池，各自保存元数据；发布时只把发生变化的对象上传到
       文件系统或 Cloudflare R2 目标。
   media:
     # Hero 放的是架构图而不是图标：媒体列要足够宽才读得清，同时文案列仍能容纳不换行的
@@ -41,37 +41,35 @@ hero:
       style: ghost
 
 capabilities:
-  eyebrow: 核心价值
-  title: 从平面仓库起步，按需升级为托管交付
-  text: 先用一条命令生成本地仓库；需要治理时，再由 Managed 工作区维护成员关系、不可变 Generation 与发布历史。
+  eyebrow: 两种建库方式
+  title: 选择平面模式或托管模式
+  text: Plain 模式索引目录内的软件包。Managed 模式管理软件包选择、构建记录与发布历史。
   items:
     - ref: 01 / 快速创建
-      title: 一条命令创建可用仓库
+      title: 索引软件包目录
       url: docs/command/create/
       motto: 直接把装有软件包的目录交给 SOW
       bullets:
         - '`sow create` 就地索引目录顶层的 RPM 与 DEB 文件'
         - 生成 rpm-md 元数据与 APT Packages 索引
-        - 显式发布时间参数兼容已有 YUM 客户端
-      value: 不需要守护进程或元数据工具链，从软件包直接得到仓库索引。
+        - 替换已有 YUM 索引时，可指定元数据时间戳
+      value: 用静态 HTTP 服务器提供生成后的目录。
       visual:
         type: code
         aria_label: 创建平面 RPM 与 DEB 仓库
         title: create.sh
         lines:
           - { class: p, prefix: '$ ', text: 'sow create /srv/repo --jobs 8' }
-          - { class: ok, prefix: '✓ ', text: 'repodata/repomd.xml' }
-          - { class: ok, prefix: '✓ ', text: Packages }
-          - { class: ok, prefix: '✓ ', text: Packages.gz }
+          - { class: p, prefix: '$ ', text: 'python3 -m http.server 8080 --bind 127.0.0.1 --directory /srv/repo' }
     - ref: 02 / 托管模式
       title: 一份包体，多个托管视图
       url: docs/feature/managed/
       motto: 统一管理 Enterprise Linux、Debian 与 Ubuntu 仓库
       bullets:
-        - 每个 Repository 的 live 软件包只存一份，各 Dist 只投影元数据视图
-        - 避免对象存储上的重复 object key 与冗余上传
-        - 用不可变 Built Generation manifest 保留快照，并组织不同仓库变体
-      value: 成员关系、筛选策略、签名与快照都有明确状态和审计记录。
+        - 每个仓库内，每个软件包只保存一份包体
+        - 多个发行版与架构视图共用同一份包体
+        - 记录构建历史，保留指定快照
+      value: 为各个发行版选择软件包，并构建索引。
       visual:
         type: components
         aria_label: 托管仓库模型
@@ -80,21 +78,21 @@ capabilities:
           - { icon: fa-brands fa-redhat, title: EL, detail: rpm-md 视图, url: docs/tutorial/yum-repo/ }
           - { icon: fa-brands fa-debian, title: Debian, detail: APT 视图, url: docs/tutorial/apt-repo/ }
           - { icon: fa-brands fa-ubuntu, title: Ubuntu, detail: APT 视图, url: docs/tutorial/apt-repo/ }
-          - { icon: fa-solid fa-box-archive, title: 唯一包池, detail: 包体去重, url: docs/feature/views/ }
-          - { icon: fa-solid fa-camera, title: Generation, detail: 不可变 manifest, url: docs/feature/transactions/ }
-          - { icon: fa-solid fa-code-branch, title: 仓库变体, detail: Dist 与 target, url: docs/reference/config/ }
+          - { icon: fa-solid fa-box-archive, title: 共享包池, detail: 包体去重, url: docs/feature/views/ }
+          - { icon: fa-solid fa-camera, title: 构建快照, detail: Generation, url: docs/feature/transactions/ }
+          - { icon: fa-solid fa-code-branch, title: 软件包集合, detail: Dist, url: docs/reference/config/ }
     - ref: 03 / 开箱即用
-      title: 自包含构建，校验后交付
+      title: 一个可执行文件
       url: download/
       motto: macOS 与 Linux 使用一致的命令接口
       bullets:
-        - 为 `amd64` 与 `arm64` 提供自包含 `CGO_ENABLED=0` 归档
-        - Release Pipeline 为 Linux 生成 RPM 与 DEB 安装包
-        - 校验生成的元数据；Managed 模式支持中断后的写入恢复
-      value: 不需要运营仓库守护进程，也不需要额外语言运行时。
+        - 提供 Linux、macOS 的 `amd64` 与 `arm64` 归档
+        - 提供 Linux 的 RPM 与 DEB 安装包
+        - 内置软件包解析与元数据生成功能
+      value: 直接运行 SOW 命令。Managed 状态保存在内嵌 SQLite 数据库中。
       visual:
         type: components
-        aria_label: Release 构建目标
+        aria_label: 支持的发布平台
         columns: 2
         items:
           - { icon: fa-brands fa-linux, title: Linux, detail: amd64 · arm64 }
@@ -102,69 +100,67 @@ capabilities:
           - { icon: fa-solid fa-box, title: RPM, detail: x86_64 · aarch64 }
           - { icon: fa-solid fa-box-open, title: DEB, detail: amd64 · arm64 }
     - ref: 04 / 增量同步
-      title: 只发布本次变更集
-      url: docs/command/changes/
-      motto: 先查看，再同步
+      title: 发布仓库更新
+      url: docs/command/publish/
+      motto: 发布到文件系统或 Cloudflare R2
       bullets:
-        - '`sow changes` 列出包体、元数据、指针与删除记录'
-        - Operation Log 保留谁在何时修改了什么
-        - 发布只上传差异，而不是所有仓库对象
-      value: 无论同步到文件系统还是云端，小改动都只产生小批量传输。
+        - '`sow changes` 列出两次本地构建之间的文件变化'
+        - 发布时比较当前构建与目标上次发布的内容
+        - 上传变化文件，并保存发布记录
+      value: 在 `sow.yml` 中配置目标，然后运行 `sow publish TARGET`。
       visual:
         type: code
-        aria_label: 查看并发布增量变更集
+        aria_label: 检查本地变更并发布仓库
         title: publish.sh
         lines:
           - { class: p, prefix: '$ ', text: 'sow changes -r pgsql' }
-          - { class: ok, prefix: '+ ', text: 'pool/p/postgresql-18/...' }
-          - { class: ok, prefix: '~ ', text: 'dists/el9/x86_64/repodata/...' }
           - { class: p, prefix: '$ ', text: 'sow publish prod' }
-          - { class: ok, prefix: '✓ ', text: '变更对象已校验' }
+          - { class: p, prefix: '$ ', text: 'sow status -r pgsql' }
 
 principles:
   eyebrow: 运行模型
-  title: 起步时保持简单，托管后保持显式
-  desc: SOW 让轻量路径随时可重建，并让每个托管交付决策都可见。
+  title: 构建、检查、发布
+  desc: 分别管理软件包选择、本地构建和远端发布。
   columns: 3
   items:
     - icon: fa-solid fa-rotate
-      title: 重建派生状态
-      desc: Plain 模式根据软件包目录重建索引。包字节与参数相同，元数据输出就相同，显式指定的发布时间也属于参数。
+      title: 重建本地索引
+      desc: Plain 模式每次读取目录。添加或删除软件包文件后，再运行 `sow create`。
     - icon: fa-solid fa-list-check
-      title: 显式管理意图
-      desc: Managed 模式分离 Desired Membership 与不可变 Built Generation，避免策略和发布沦为隐式副作用。
+      title: 查看构建状态
+      desc: Managed 模式记录软件包选择与已完成的构建。运行 `sow status` 查看是否需要构建。
     - icon: fa-solid fa-shield-halved
-      title: 交付前先验证
-      desc: 对外服务前校验软件包与元数据完整性；Managed 模式还会记录操作，并恢复中断的写入。
+      title: 发布前检查
+      desc: 运行 `sow check` 校验 Managed 仓库。运行 `sow publish TARGET` 更新已配置的目标。
 
 faq:
   eyebrow: 常见问题
-  title: 选择刚好满足需求的最小流程
-  desc: Plain 与 Managed 使用同一个二进制，但解决不同的运行问题。
+  title: 选择适合的流程
+  desc: 两种模式使用同一个 SOW 可执行文件。
   items:
     - question: 我应该从 Plain 还是 Managed 模式开始？
       answer: |
-        如果目录已经恰好包含需要对外服务的全部内容，从 [Plain 模式](docs/start/quickstart/) 开始。需要由 SOW 管理成员关系、策略、已签名元数据、不可变 Generation、审计历史或发布目标时，使用 [Managed 工作区](docs/start/workspace/)。
+        索引已有软件包目录时，使用 [Plain 模式](docs/start/quickstart/)。需要按发行版选择软件包、设置版本保留规则、签署元数据或发布更新时，使用 [Managed 工作区](docs/start/workspace/)。
       open: true
     - question: 可以替换现有的 createrepo_c 工作流吗？
       answer: |
-        平面 RPM 目录可以使用 `sow create`，并通过 0.5 新增参数指定发布时间。维护脚本继续负责保存发布历史与签署索引，再用保留旧缓存的客户端验收。完整步骤见 [YUM 迁移指南](docs/tutorial/yum-migration/)；Plain 不生成旧式 SQLite 元数据或模块流。
+        使用 RPM XML 元数据的仓库可以替换。通过 `--metadata-timestamp` 保持发布时间递增；如果客户端要求索引签名，构建后签署最终索引。操作步骤与元数据格式见 [YUM 迁移指南](docs/tutorial/yum-migration/)。
     - question: 签署 RPM 包时，也会签署仓库索引吗？
       answer: |
         `--sign-with` 为未签名 RPM 包补签。Plain 模式需要在最后一次建库后单独签署 `repomd.xml`；Managed 模式通过配置管理元数据签名策略。两种流程见[仓库签名](docs/tutorial/signing/)。
     - question: SOW 能同时处理 RPM 与 DEB 软件包吗？
       answer: |
-        可以。Plain 目录可同时放置 RPM 与 DEB 软件包。在 Managed 模式中，每个 Dist 只有一种格式，但同一个 Repository 可从公共交付树中对外提供多个 RPM 与 DEB Dist。
+        可以。Plain 目录可同时放置 RPM 与 DEB 软件包。在 Managed 模式中，每个 Dist 只有一种格式，同一个仓库可以包含多个 RPM 与 DEB Dist。
     - question: SOW 需要守护进程或数据库服务吗？
       answer: |
-        不需要。SOW 是自包含 CLI，生成静态仓库文件。Managed 工作区把嵌入式状态保存在本地；只需使用现有 HTTP 服务器对外提供生成的公共树。
+        不需要。SOW 通过命令生成静态文件，Managed 模式使用本地 SQLite 数据库。用静态 HTTP 服务器提供包含 `pool/` 与 `dists/` 的仓库根目录。
     - question: Managed 仓库可以发布到哪里？
       answer: |
-        配置好的目标可以是本地或挂载的 [filesystem，也可以是 Cloudflare R2 对象存储](docs/command/publish/)。`sow changes` 会在发布前展示差异，SOW 记录的 target 状态会用于下一次增量发布。
+        可以发布到本地或挂载的[文件系统，也可以发布到 Cloudflare R2](docs/command/publish/)。每个目标单独记录发布检查点，`sow publish` 据此选择下次需要更新的文件。
 
 cta:
-  title: 现在就构建第一个仓库。
-  text: 从 `sow create` 开始；需要筛选策略、快照与发布历史时，再进入 Managed 工作区。
+  title: 构建第一个仓库
+  text: 安装 SOW 后，用 `sow create DIR` 为软件包目录生成索引。
   actions:
     - label: 上手
       url: docs/start/

@@ -1,7 +1,7 @@
 ---
 title: "sow where"
 linkTitle: "where"
-description: "Locate one Package Object across Repositories and Dists in a Workspace."
+description: "Find a package across the Workspace."
 categories: [Command]
 tags: [cli, managed]
 url: "/docs/command/where/"
@@ -9,8 +9,7 @@ weight: 1000
 icon: fa-solid fa-location-dot
 ---
 
-`sow where` answers which Dists in the Workspace still carry one Package Object. It is read-only,
-searches every Repository by default, and takes no write lock.
+`sow where` finds the Desired membership locations of one package across a Workspace. It searches all Repositories by default. Use `-r` or `-d` to limit the search.
 
 ## Synopsis
 
@@ -23,16 +22,14 @@ sow where PACKAGE [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--jso
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Restrict the search to one Repository | all Repositories |
 | `-d, --dist NAME` | Restrict the search to named Dists; repeatable | all Dists |
-| `--json` | Emit the `sow.cli/v1` envelope | false |
+| `--json` | Output JSON | false |
 
 ## Reference resolution
 
 `PACKAGE` uses the same grammar as [`sow show`](/docs/command/show/): SHA-256 identity, canonical
 RPM/DEB coordinate, full filename, or bare name.
 
-Resolution happens across the complete selected scope. A bare name must identify one Package Object;
-different objects with the same binary name are ambiguous even when they live in different
-Repositories. Use `-r`/`-d`, or supply an exact coordinate or SHA-256.
+The reference must identify one package: the same format, coordinate, and SHA-256. That package can exist in several Repositories. If different packages match, use `-r` or `-d` to narrow the search, or supply an exact coordinate or SHA-256.
 
 ## Output
 
@@ -44,11 +41,9 @@ reference="rpm:centos-release-0:6-0.el6.centos.5.x86_64" locations=1
 repository=demo coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16 dists=el9 built_dists=el9
 ```
 
-Each location reports both Desired `dists` and current `built_dists`. This makes the command useful
-for answering whether a removed or superseded build is still client-visible anywhere.
+Each location reports Desired `dists` and current `built_dists` across its Repository. Candidate lookup uses Desired membership. A package removed from every selected Dist is no longer found, even if a previous Built index still contains it. Use `sow show PACKAGE -r NAME` without `-d` to inspect such a stored object.
 
-With `--json`, the same object appears under `result`. A missing reference is an expected rejection,
-not an empty success:
+With `--json`, the locations appear in `result.locations`. If no package matches, the command returns an error:
 
 ```console
 sow where nosuchpkg
@@ -57,7 +52,7 @@ operation rejected: managed: operation rejected: package reference "nosuchpkg" w
 
 ## Example
 
-List every location still serving an exact build:
+List the Dists that include this package in Desired state:
 
 ```bash
 sow where 'rpm:patroni-0:3.0.4-1.noarch' --json |

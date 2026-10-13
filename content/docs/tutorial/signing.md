@@ -9,7 +9,7 @@ weight: 300
 icon: fa-solid fa-key
 ---
 
-SOW has two independent signing paths:
+Repository signing has two layers: metadata signatures and RPM package signatures. Configure each layer separately:
 
 | Path | Output | Client control |
 |---|---|---|
@@ -17,14 +17,13 @@ SOW has two independent signing paths:
 | APT metadata | `InRelease` and `Release.gpg` | `Signed-By` |
 | RPM package body | embedded RPM signature | `gpgcheck=1` |
 
-APT trusts package hashes through the signed `Release`; SOW does not re-sign DEB package
-bodies. Start with metadata signing. Add RPM package signing only when you own the signing
-policy for those package bytes.
+APT verifies package hashes through the signed `Release` file, so DEBs need no separate package signature. Start with metadata signing. Add RPM package signing when clients require `gpgcheck=1`.
+
+This guide uses the `pigsty` Repository from the [YUM](/docs/tutorial/yum-repo/) or [APT](/docs/tutorial/apt-repo/) tutorial. Run only the commands for the formats and Dists you created.
 
 ## 1. Create a dedicated key
 
-The commands below create an unencrypted example key. Use a protected key and a
-`passphrase` reference for production; see the [configuration reference](/docs/reference/config/#passphrase-references).
+Install GPG first. These commands create an unencrypted test key and export it to a private directory. For an existing protected key, use a `passphrase` reference as described below.
 
 ```bash
 SIGNING_UID='SOW Repository <repo@example.com>'
@@ -43,14 +42,11 @@ gpg --armor --export "$FPR" > /srv/sow-secrets/repo-signing.pub
 chmod 600 /srv/sow-secrets/repo-signing.asc
 ```
 
-Keep the secret key outside the Workspace's public Repository tree and outside every web
-root. If a dedicated service account runs SOW, make that account—not the interactive
-user—the directory owner. Distribute only `repo-signing.pub` to clients.
+SOW reads the private key from `/srv/sow-secrets`, outside the public Repository. Give the SOW service account access to this directory if it differs from your user. Distribute `repo-signing.pub` to clients.
 
 ## 2. Configure metadata signing
 
-In `/srv/sow/sow.yml`, add the relevant blocks under the Repository. Omit the ecosystem
-you do not use:
+In `/srv/sow/sow.yml`, merge these metadata entries into the Repository's existing `signing` block. Keep its package policy and Dist definitions. Include only the formats you use:
 
 ```yaml
 repos:
@@ -66,7 +62,7 @@ repos:
       # existing Dist definitions remain here
 ```
 
-Validate the key reference, rebuild, and run the publication gate:
+Validate the configuration, rebuild, and check:
 
 ```bash
 cd /srv/sow
@@ -75,13 +71,12 @@ sow build -r pigsty
 sow check -r pigsty
 ```
 
-For a protected key, add `passphrase: env://SOW_METADATA_PASSPHRASE` or a bounded file
-reference next to `key`. SOW never writes key or passphrase material into configuration,
-SQLite, JSON, or logs.
+For a protected key, add `passphrase: env://SOW_METADATA_PASSPHRASE` next to `key`, then supply that environment variable to SOW. You can also use a passphrase file or `agent://FINGERPRINT` to sign through GPG. See [passphrase references](/docs/reference/config/#passphrase-references). Configuration stores references, not secret values.
 
-## 3. Verify metadata manually
+## 3. Optional: inspect the metadata signer {#3-verify-metadata-manually}
 
-Use the exact paths for your Dists and architectures:
+The preceding `sow check` verifies metadata signatures. To inspect the signer with GPG,
+run the commands for your Dists:
 
 ```bash
 gpg --verify \
@@ -94,12 +89,11 @@ gpg --verify \
   pigsty/dists/trixie/Release
 ```
 
-`sow check` verifies the configured signing identity as part of its deeper consistency
-checks. Manual verification is still useful when establishing a client trust root.
+Compare the displayed fingerprint with the public key you distribute to clients.
 
 ## 4. Optional: sign RPM package bodies
 
-Add `rpm.packages` only if clients require embedded package signatures:
+For a new repository, configure package signing before importing RPMs. Add this block under the existing `signing.rpm` configuration:
 
 ```yaml
 repos:
@@ -113,38 +107,32 @@ repos:
           key: file:///srv/sow-secrets/repo-signing.asc
 ```
 
-Replace the placeholder with the 40-hex fingerprint printed in `$FPR`. For this operation:
+Replace the placeholder with the 40-hex fingerprint in `$FPR`. Install `rpm` and `gpg`,
+and make the secret key available in the GPG keyring used by `rpm`.
 
-- `rpm` and `gpg` must be installed;
-- the matching secret key must be available in the ambient GPG environment used by `rpm`;
-- `fill` preserves packages already signed by the configured or `trusted_keys` identities;
-- `always` re-signs everything not already signed by the configured identity;
-- `never` leaves input bytes unchanged.
+`fill` signs newly imported packages unless their signatures already verify against the
+configured key or `trusted_keys`. See [RPM signing policy](/docs/reference/config/) for
+other modes.
 
-SOW invokes `rpm --addsign` or `rpm --resign` on a private staged copy, not on the input
-file. These rules apply to newly imported packages: `build` never re-signs an
-existing immutable object. Before enabling `fill` or changing its key, check that
-**every existing RPM** is signed by the configured key or a trusted identity.
-Checking only for an empty `signature_key` is insufficient: an existing third-party
-signature may also be untrusted. Add the appropriate public key to `trusted_keys`
-when that trust is intended; otherwise prepare correctly signed packages outside the
-repository and import them with a new package version and filename, or rebuild a fresh
-repository from the original packages. Keep the old policy until that preparation is
-complete. A policy rejection leaves the existing Desired projection intact.
+SOW signs a private copy during `add`; the input file stays unchanged. `build` checks stored RPMs against the policy but does not re-sign them.
 
-After confirming existing package compatibility, revalidate and rebuild:
+If you already imported RPMs, check their signatures before enabling `fill`. Keep trusted upstream public keys in `trusted_keys`. For unsigned or untrusted stored packages, prepare correctly signed packages with new versions and filenames. Alternatively, configure signing in a new repository, then import the originals.
+
+After configuring the policy, import a new package and check the result:
 
 ```bash
 sow config check
-sow build -r pigsty
+sow add /path/to/new.rpm -r pigsty -d el9
 sow check -r pigsty
 ```
 
-Inspect a resulting package with `rpmkeys --checksig /path/to/package.rpm`.
+To inspect a resulting package independently, run `rpmkeys --checksig` on its file in
+`pigsty/pool/`.
 
 ## 5. Enable dnf verification
 
-Transfer the public key to the client through a trusted channel:
+First [publish the signed Repository](/docs/tutorial/serving/). Then transfer the public
+key to the client through a trusted channel:
 
 ```bash
 sudo install -m 0644 /path/to/repo-signing.pub /etc/pki/rpm-gpg/RPM-GPG-KEY-pigsty
@@ -163,16 +151,17 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-pigsty
 ```
 
-Set `gpgcheck=0` if package-body signing is not configured. Do not disable
-`repo_gpgcheck` after configuring metadata signing.
+If you sign only metadata, use `repo_gpgcheck=1` and `gpgcheck=0`. With package checking enabled, install each trusted upstream package key as well as your own key. Then run `sudo dnf makecache --refresh` and install a package.
 
 ## 6. Enable APT verification
 
-Install the public key as a dedicated keyring:
+After [publishing the signed Repository](/docs/tutorial/serving/), install its public key
+on the client as a dedicated keyring:
 
 ```bash
 sudo gpg --dearmor --yes \
   --output /usr/share/keyrings/pigsty-archive-keyring.gpg /path/to/repo-signing.pub
+sudo chmod 0644 /usr/share/keyrings/pigsty-archive-keyring.gpg
 ```
 
 Reference it from deb822 configuration and do not set `Trusted: yes`:
@@ -186,8 +175,7 @@ Architectures: amd64
 Signed-By: /usr/share/keyrings/pigsty-archive-keyring.gpg
 ```
 
-Run `apt update` and treat any signature error as a failed deployment, not as a reason to
-weaken the client configuration.
+Run `sudo apt update` and install a package. If verification fails, compare the client keyring fingerprint with the signer shown by `gpg --verify`. For ARM64 clients, change `Architectures` to `arm64`.
 
 ## Plain-mode RPM signing
 
@@ -198,32 +186,18 @@ an APT `Release`:
 sow create /srv/flat --sign-with 0123456789ABCDEF
 ```
 
-The key must contain exactly 16, 40, or 64 hexadecimal characters after an optional `0x` or
-`0X` prefix. SOW removes that prefix and normalizes the key to uppercase. The
-matching private key must be usable by the ambient `rpm`/GPG setup. Without `--overwrite`,
-already signed RPMs keep their bytes; adding `--overwrite` explicitly re-signs every RPM.
-SOW signs private staged copies before replacing package bytes and metadata.
+Replace `0123456789ABCDEF` with your key ID or fingerprint. The matching private key must
+be available to `rpm` and GPG. Existing signatures, including upstream signatures, are
+preserved. To replace all RPM signatures with your key, use `--overwrite` on a separate
+working copy. See [`sow create`](/docs/command/create/#signing-rpms) for key formats.
 
-An existing signature does not mean the RPM is signed by the key passed to `--sign-with`.
-If every package must use your key, verify all RPMs against that key and selectively re-sign
-mismatches in a candidate copy, or deliberately use `--overwrite` for the whole set.
-
-For an existing online YUM repository, also preserve publication time. SOW 0.5.0
-adds `--metadata-timestamp`; after the final `create`, sign and verify the new
-`repomd.xml` separately before exposing it. Package signing and index signing are independent
-checks. The [YUM migration guide](/docs/tutorial/yum-migration/) gives the full sequence,
-including acceptance with cached clients.
+For an existing YUM repository, follow the [migration guide](/docs/tutorial/yum-migration/)
+to preserve publication time and sign `repomd.xml` after the final `create` run.
 
 ## Key changes
 
-In Managed mode, changing a key reference or resolved fingerprint marks affected Dists dirty. A metadata
-key can be changed by distributing the new public key, rebuilding, checking, and then
-switching client enforcement. RPM package keys need a staged rollover: Package Objects
-are immutable, and `build` rejects stored RPMs that do not satisfy the new policy instead
-of re-signing them in place. Use `fill` with the old public key in `trusted_keys` until old
-package coordinates have been withdrawn or replaced. Finish with a real client acceptance
-test in the target environment.
+To rotate a metadata key, distribute the new public key, update the key reference, then run `build`, `check`, and `publish`. Changing the reference or resolved fingerprint marks affected Dists dirty.
 
-Run the final signed repository through the exact dnf/APT versions and trust policy used
-in production. The automated scope is listed under
-[Platforms & Integrations](/docs/reference/compatibility/).
+For RPM package keys, use `fill` and keep the old public key in `trusted_keys` until packages signed by it are withdrawn or replaced. Keep the corresponding client key available during this period. Existing package objects remain unchanged.
+
+Test the final repository with the DNF or APT versions your users run. See [Platforms & Integrations](/docs/reference/compatibility/) for automated coverage.

@@ -1,7 +1,7 @@
 ---
 title: "sow changes"
 linkTitle: "changes"
-description: "Diff Built Generations as a deterministic Repository-relative file delivery plan."
+description: "Compare the files in two Built Generations."
 categories: [Command]
 tags: [cli, publish, generation]
 url: "/docs/command/changes/"
@@ -9,8 +9,7 @@ weight: 1400
 icon: fa-solid fa-code-compare
 ---
 
-`sow changes` compares Built Generations. It reports physical Repository-relative file changes; it
-does not show unbuilt Desired changes and is not a remote transaction protocol.
+`sow changes` lists file differences between a base Generation and the current Built Generation. Paths are relative to the Repository root. Build first to include pending Desired changes.
 
 ## Synopsis
 
@@ -22,7 +21,7 @@ sow changes [BASE_GENERATION] [-C|--workdir DIR] [-r|--repo NAME] [--json]
 |---|---|---|
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a Repository | [selection rules](/docs/command/#repository-selection) |
-| `--json` | Emit the `sow.cli/v1` envelope | false |
+| `--json` | Output JSON | false |
 
 The command is Repository-wide and rejects `-d/--dist`.
 
@@ -44,9 +43,7 @@ Columns are operation, phase, Repository-relative path, size, and SHA-256.
 | operation | `add`, `update`, `delete` |
 | phase | `payload`, `metadata`, `pointer`, `delete` |
 
-Phases describe how SOW constructed the local Generation. Do not replay individual rows into a live
-remote tree. Use [`sow publish`](/docs/command/publish/), or stage and atomically switch a complete
-copy.
+Use this plan to inspect the local file delta. To deliver it, use [`sow publish`](/docs/command/publish/) or stage a complete copy and switch it into service.
 
 ## Base Generation
 
@@ -67,8 +64,7 @@ operation rejected: managed: operation rejected: base generation 99 is outside 0
 When Desired state is dirty, the header says `dirty=true`, but the plan still ends at the current
 Built Generation. Private pending payloads are excluded because they are not deliverable yet.
 
-When the Repository is `recovering` or `error`, `changes` refuses to emit a plan: pending file
-actions must not be mistaken for a completed Generation.
+When the Repository is `recovering` or `error`, follow the diagnostic to recover or repair it before running `changes`.
 
 ## Examples
 
@@ -99,5 +95,5 @@ sow changes -r pgsql --json |
 
 - [`sow build`](/docs/command/build/) — create the next Generation
 - [`sow publish`](/docs/command/publish/) — apply the supported publication protocol
-- [`sow log`](/docs/command/log/) — semantic Operations and their file actions
+- [`sow log`](/docs/command/log/) — operation records and their file changes
 - [Repository Layout](/docs/reference/layout/) — public and private path boundaries

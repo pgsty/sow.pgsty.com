@@ -1,7 +1,7 @@
 ---
 title: "sow check"
 linkTitle: "check"
-description: "Run the full read-only integrity and delivery-readiness verification pipeline."
+description: "Verify repository files, indexes, state, and signatures before delivery."
 categories: [Command]
 tags: [cli, audit, signing]
 url: "/docs/command/check/"
@@ -9,9 +9,7 @@ weight: 1300
 icon: fa-solid fa-list-check
 ---
 
-`sow check` is the deep read-only gate for a managed Repository. It hashes bytes, validates state,
-reconstructs expected views, and verifies declared signatures. It never repairs, builds, recovers an
-Operation, or takes the write lock.
+`sow check` verifies a managed Repository before delivery. It checks package hashes, stored state, indexes, signatures, and the Generation manifest. The command is read-only; run `sow build` first if Desired state differs from the Built Generation.
 
 ## Synopsis
 
@@ -25,41 +23,29 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a Repository | [selection rules](/docs/command/#repository-selection) |
 | `-d, --dist NAME` | Verify named Dists; repeatable | all Dists |
-| `--json` | Emit the `sow.cli/v1` envelope | false |
+| `--json` | Output JSON | false |
 
 ## Verification layers
 
-In steady state, the checker reports nine ordered layers:
+For a Repository with no unfinished layout migration, `check` reports nine layers:
 
 | Layer | Verification | `checked` counts |
 |---|---|---|
 | `config` | `sow.yml` parses and validates for the Repository | configuration objects |
 | `state` | SQLite `quick_check`, foreign keys, journal, and recovery evidence | one state database |
 | `public-modes` | File and directory permissions across the served tree | inspected paths |
-| `retained` | Explicit retained records and frozen Generation manifests (a damaged retained root fails this layer; see [`retain rm`](/docs/command/retain/#retain-rm)) | retained records |
+| `retained` | Retained records and their saved Generation manifests; see [`retain rm`](/docs/command/retain/#retain-rm) to handle a damaged record | retained records |
 | `package-bytes` | SHA-256 of pool and private pending payloads | Package Objects |
 | `desired-membership` | Membership rows resolve under current policy | memberships |
 | `index` | Rendered indexes match the membership they claim | Dists |
 | `signature` | Every declared metadata and package signature verifies | signatures |
 | `generation-manifest` | Built Generation manifest matches files on disk | one manifest |
 
-During a non-terminal Repository layout transition, `check` instead reports `config`, `state`,
-`public-modes`, then a conditional `layout-transition` layer and stops. It returns not-ready until
-the diagnosed [`repo migrate`](/docs/command/repo/#sow-repo-migrate) operation completes or is
-aborted before commit.
+During an unfinished layout migration, `check` reports `config`, `state`, `public-modes`, and `layout-transition`, then stops. Follow the reported [`repo migrate`](/docs/command/repo/#sow-repo-migrate) instruction to complete or abort that migration.
 
-### Physical evidence and I/O contract
+### Package verification {#physical-evidence-and-io-contract}
 
-`package-bytes` never trusts a cached fingerprint as a substitute for authenticity. Each run hashes
-every unique physical payload exactly once, using descriptor-bound evidence keyed by device, inode,
-size, mtime, and ctime. Hard links to the same inode share that proof; retained Generations, final
-manifest traversal, and `changes` reuse it without another payload scan. The `checked` column counts
-logical objects, not the number of full-file streams.
-
-A DEB or unsigned RPM needs one complete payload stream. A signed RPM uses at most one additional
-main-header-to-EOF stream to verify every signature packet against all candidate trust rings; the
-cost does not grow with Dist, retained Generation, or trust-ring count. A forged or concurrently
-replaced file invalidates the descriptor evidence and fails closed.
+Each run hashes the package files again. Hard links to the same physical file share one hash check. Signed RPMs also undergo signature verification. The `checked` count refers to package objects, not file reads.
 
 ```console
 sow check
@@ -77,8 +63,7 @@ generation-manifest	ok=true	checked=1
 
 ## Dirty is not deliverable
 
-A dirty Repository can have nine individually valid layers: the old Built Generation is intact and
-the new Desired state is valid. It still fails the delivery gate because the two do not match:
+A dirty Repository needs a build before it can pass `check`. The old Built Generation and new Desired state can each pass their own checks while differing from each other:
 
 ```console
 sow check
@@ -87,8 +72,7 @@ repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5
 integrity or recovery error: managed: repository is not ready to copy: repository status is dirty
 ```
 
-The exit code is `5`. Run [`sow build`](/docs/command/build/) and check again. Do not weaken a release
-pipeline to accept this state.
+The exit code is `5`. Run [`sow build`](/docs/command/build/), then run `sow check` again.
 
 ## Exit codes
 
@@ -103,6 +87,6 @@ pipeline to accept this state.
 ## See also
 
 - [`sow status`](/docs/command/status/) — cheap state query
-- [`sow build`](/docs/command/build/) — converge Desired and Built state
+- [`sow build`](/docs/command/build/) — build indexes from Desired state
 - [Exit Codes](/docs/reference/exit-codes/) — why a dirty Repository maps to `5`
 - [Observability & Audit](/docs/feature/audit/) — operating checks and audit together

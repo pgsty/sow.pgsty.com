@@ -1,7 +1,7 @@
 ---
 title: "Repository Layout"
 linkTitle: "Layout"
-description: "Public and private paths, including the canonical pool and metadata-only views."
+description: "Locate package files, repository indexes, private state, and publication output."
 categories: [Reference]
 tags: [repository, pool, dist]
 url: "/docs/reference/layout/"
@@ -9,19 +9,17 @@ weight: 400
 icon: fa-solid fa-folder-tree
 ---
 
-SOW has one fixed Managed layout: package payloads live once under `pool/`, while
-`dists/` contains metadata-only client views. The complete repository directory is the
-unit to serve, copy, or publish.
+Serve the complete Managed repository directory: `pool/` plus `dists/`.
+Keep workspace configuration and `.sow/` state outside the web server's document root.
 
-## Plain mode
+<span id="plain-mode"></span>
 
-`sow create` writes indexes next to existing packages and leaves every unrelated file
-unchanged:
+## Plain directory
 
 ```text
 /srv/offline/
-├── blackbox_exporter-0.28.0-1.x86_64.rpm
-├── libpq5_18.3-1.pgdg12+1_amd64.deb
+├── example-1.0-1.x86_64.rpm
+├── example_1.0-1_amd64.deb
 ├── repodata/
 │   ├── <sha256>-primary.xml.gz
 │   ├── <sha256>-filelists.xml.gz
@@ -29,20 +27,20 @@ unchanged:
 │   └── repomd.xml
 ├── Packages
 ├── Packages.gz
-└── repo_complete                         # only with --pigsty
+└── repo_complete                     # with --pigsty
 ```
 
-Flat RPM metadata uses a bare package basename; flat DEB metadata uses `./<filename>`.
-While a build is active, `.sow-plain-stage-*` contains private generated output. Plain has no
-durable journal or recovery state; a later create discards stale reserved temporary paths and
-rebuilds. Never serve or copy those temporary paths.
+`sow create` writes RPM metadata only when RPMs are present and DEB metadata only when
+DEBs are present. RPM locations use a bare basename; DEB locations use `./<basename>`.
+A running build uses private `.sow-plain-stage-*` directories. Exclude them from serving
+and copying. A later `create` removes stale SOW temporary paths and rebuilds the indexes.
 
 ## Managed workspace
 
 ```text
 <workspace>/
-├── sow.yml                               # configuration; keep private
-├── .sow/                                 # database, locks, stage/recovery; keep private
+├── sow.yml                           # workspace configuration
+├── .sow/                             # private state
 │   ├── workspace.lock
 │   ├── workspace-ops/
 │   ├── repo-locks/<repo>.lock
@@ -53,91 +51,81 @@ rebuilds. Never serve or copy those temporary paths.
 │       ├── retained/
 │       ├── transitions/
 │       └── pending/
-└── <repo>/                               # publish this complete directory
+└── <repo>/                           # public repository root
     ├── pool/
     └── dists/
 ```
 
-Repositories do not deduplicate across repository boundaries. `.sow/` and the pending
-directory are private (`0700`). Pending payload files use their final public mode (`0644`),
-so promotion can be a namespace-only operation. Private state may contain unpublished bytes,
-credentials-derived state, and recovery data.
+The database can have SQLite WAL and shared-memory sidecar files.
+`.sow/` and pending directories are private (`0700`). Pending payload files use `0644`
+so they can be promoted to public paths without changing their mode.
 
-`<repo>.db` and its rebuildable package-facts cache are private. Neither changes the public
-repository layout or the `sow/v3` configuration identifier.
+SOW 0.5 uses database schema v13 and configuration schema `sow/v3`. These are separate
+version identifiers. Back up the complete workspace before
+[`repo migrate`](/docs/command/repo/#sow-repo-migrate). Keep the database with its matching
+private and public state; do not edit its schema version or rebuildable cache by hand.
 
-SOW 0.5 uses internal database schema v13. Upgrading a v0.3 or v0.4 database requires a backup
-and explicit `sow repo migrate`; v13 adds indexes so pool-path ownership checks only visit
-candidate paths. Append-only publication-target binding revisions, package facts, signer
-projections, and recovery evidence all remain inside `<repo>.db`. Never edit `PRAGMA user_version`
-or copy the database without its matching public/private Repository state.
+<span id="canonical-pool"></span>
 
-## Canonical pool
-
-Each package payload has one canonical path:
+## Package pool
 
 ```text
 pool/<prefix>/<source>/<filename>
 ```
 
-The source comes from RPM `SOURCERPM` or DEB `Source`; SOW falls back to the binary
-package name when the source is absent. The prefix is the first lower-case character,
-or the first four characters for names beginning with `lib`:
+`source` comes from the RPM `SOURCERPM` or DEB `Source` field, normalized to a source
+package name. If absent, SOW uses the binary package name. The prefix is the first
+character converted to lowercase. If the source starts with lowercase `lib`, use its first
+four characters, or the whole name when it is shorter, converted to lowercase.
 
-| Source | Example |
+| Source | Example path |
 |---|---|
-| `postgresql-18` | `pool/p/postgresql-18/libpq5_18.3-1.pgdg12+1_amd64.deb` |
-| `blackbox_exporter` | `pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm` |
+| `postgresql-18` | `pool/p/postgresql-18/libpq5_18.3-1_amd64.deb` |
+| `example` | `pool/e/example/example-1.0-1.x86_64.rpm` |
 | `libfoo` | `pool/libf/libfoo/libfoo1_1.0-1_amd64.deb` |
 
-Pool objects are immutable. Removing distribution membership does not immediately remove
-their bytes; unreachable payloads are handled by `sow gc` only after every safety root —
-current, retained, recovery, publication, and any active maintenance operation — has been
-considered.
+Package objects are immutable. Membership removal leaves the bytes available to built,
+retained, recovery, and publication records. [`gc`](/docs/command/gc/) removes them when
+those records no longer need them. Each repository owns its own pool.
 
-## RPM metadata-only views
+<span id="rpm-metadata-only-views"></span>
+
+## RPM Dist
 
 ```text
-<repo>/
-├── pool/
-│   ├── b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm
-│   └── p/pev2/pev2-1.23.0-1.noarch.rpm
-└── dists/el9/
-    ├── x86_64/repodata/
-    │   ├── <sha256>-primary.xml.gz
-    │   └── repomd.xml
-    └── aarch64/repodata/
-        ├── <sha256>-primary.xml.gz
-        └── repomd.xml
+dists/el9/
+├── x86_64/repodata/
+│   ├── <sha256>-primary.xml.gz
+│   ├── <sha256>-filelists.xml.gz
+│   ├── <sha256>-other.xml.gz
+│   ├── repomd.xml
+│   └── repomd.xml.asc                # with metadata signing
+└── aarch64/repodata/
+    └── ...
 ```
 
-There is no `dists/<dist>/<arch>/pool/`. Native packages appear only in their matching
-architecture metadata; `noarch` packages appear in every architecture view. rpm-md
-points back to the canonical pool:
+Architecture views contain metadata only. Each package location points back to the root pool:
 
 ```xml
-<location href="../../../pool/b/blackbox_exporter/blackbox_exporter-0.28.0-1.x86_64.rpm"/>
+<location href="../../../pool/e/example/example-1.0-1.x86_64.rpm"/>
 ```
 
-The layout requires a client that honors relative rpm-md locations across the complete
-Repository root. Default `dnf reposync` rejects the parent-traversing href because its
-download destination escapes the view root. When a downstream tool requires a
-self-contained leaf, create one explicitly with:
+Native packages appear in their matching architecture view. `noarch` packages appear in
+all configured views. Previous checksum-named metadata can remain alongside the current
+files; `repomd.xml` selects the active set.
 
-```bash
-sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
-```
+For a self-contained directory with local package paths, use
+[`export rpm-leaf`](/docs/command/export/).
 
-The export has a local `pool/` and rewritten hrefs; it is a compatibility artifact, not
-the canonical managed repository.
+<span id="deb-views"></span>
 
-## DEB views
+## DEB Dist
 
 ```text
 dists/trixie/
 ├── Release
-├── InRelease                         # when metadata signing is configured
-├── Release.gpg                       # when metadata signing is configured
+├── InRelease                         # with metadata signing
+├── Release.gpg                       # with metadata signing
 └── main/
     ├── binary-amd64/
     │   ├── Packages
@@ -147,20 +135,16 @@ dists/trixie/
         └── ...
 ```
 
-`Packages` records refer to the same canonical pool from the archive root:
+`Packages` entries use root-relative archive paths such as
+`Filename: pool/e/example/example_1.0-1_amd64.deb`.
+`Release` contains SHA-256 manifests and `Acquire-By-Hash: yes`.
+Architecture `all` packages appear in each applicable index.
 
-```text
-Filename: pool/p/postgresql-18/libpq5_18.3-1.pgdg12+1_amd64.deb
-```
+<span id="publication-targets"></span>
 
-`Release` uses SHA256 manifests and advertises `Acquire-By-Hash: yes`. Checksum-named
-rpm-md files and APT by-hash entries keep the preceding metadata reachable while the
-mutable pointer is replaced last.
+## Publication paths
 
-## Publication targets
-
-Both `filesystem` and `r2` targets receive the same logical public tree beneath their
-configured prefix:
+Both target providers receive the same public layout:
 
 ```text
 <prefix>/
@@ -168,26 +152,23 @@ configured prefix:
 └── dists/
 ```
 
-The published unit is always the whole repository namespace. Do not publish only one
-RPM architecture directory because its hrefs deliberately refer to the root pool.
+An export has its own package files, metadata, manifest, and `.sow-export.json` completion
+marker. It is a separate delivery artifact and is not another Managed repository.
 
-## Names and serving boundary
+<span id="names-and-serving-boundary"></span>
 
-Repository and distribution names must match `[a-z0-9][a-z0-9._-]*`. `.`, `..`, `.sow`,
-`pool`, `dists`, `sow.yml`, `workspace.lock`, `workspace-ops`, and `repo-locks` are
-reserved where applicable. A new pool path that collides case-insensitively with a known
-path is rejected, even for identical bytes. On a case-insensitive workspace filesystem
-(the macOS default) a source directory that differs only by case from an existing one is
-rejected too; on Linux both stay distinct, so such a Repository cannot move to a
-case-insensitive filesystem. See
-[Platforms & Integrations](/docs/reference/compatibility/#workspace-filesystem).
+## Names and case sensitivity
 
-> [!WARNING] Never expose .sow
-> Point your web server at `<workspace>/<repo>/`, not at the workspace root. The public
-> repository needs both `pool/` and `dists/`; the private `.sow/` directory must stay hidden.
+Repository, Dist, and target names use `[a-z0-9][a-z0-9._-]*`.
+Reserved names include `.`, `..`, `.sow`, `pool`, `dists`, `sow.yml`, `workspace.lock`,
+`workspace-ops`, and `repo-locks`.
 
-## See also
+A new pool path that differs only in case from a known full path is rejected, even for
+identical bytes. On a case-insensitive filesystem, source directories that differ only
+in case also conflict. On a case-sensitive filesystem those source directories can remain
+distinct, so check them before moving a repository to a case-insensitive volume.
 
-- [Views and One-Copy Storage](/docs/feature/views/)
-- [Publication Model](/blog/design/publication/)
-- [Serve Repositories](/docs/tutorial/serving/)
+See [Views](/docs/feature/views/), [Serving](/docs/tutorial/serving/), and
+[Platforms](/docs/reference/compatibility/).
+
+<span id="see-also"></span>

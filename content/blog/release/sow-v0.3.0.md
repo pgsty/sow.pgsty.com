@@ -3,7 +3,7 @@ title: "SOW v0.3.0"
 linkTitle: "SOW v0.3.0"
 date: 2026-08-10
 authors: [Vonng]
-description: "SOW v0.3.0 reduces package work across Plain and Managed repositories, adds cached package facts and bounded commits, tightens durability, and consolidates release quality gates."
+description: "SOW v0.3.0 reduces repeated package reads and database queries, batches package commits, and adds build progress events."
 categories: [Release]
 tags: [release, plain, managed, transaction]
 weight: 5
@@ -11,100 +11,62 @@ url: "/blog/release/sow-v0.3.0/"
 draft: false
 ---
 
-SOW 0.3.0 is a performance, durability, and product-focus release. Plain repository
-generation completes with one package-content pass. Managed repositories avoid
-per-object membership queries, reuse authenticated package facts, and promote payloads
-in bounded group commits. The shipping binary and its release pipeline are also
-consolidated around the repository workflows that SOW supports.
+SOW 0.3.0 reduced repeated package reads and database queries. Plain generation uses one pass over package content. Managed builds cache parsed package data and commit new pool files in batches. This release also removed retired runtime and publication code.
 
-## Plain: one package-content pass
+<span id="plain-one-package-content-pass"></span>
 
-The default unsigned `sow create` path hashes and parses each RPM or DEB once, with
-parallelism controlled by `--jobs`. Metadata is rendered from the retained inspection
-result. Before publication, SOW performs one final package-set and file-`stat` snapshot
-check, catching concurrent input changes without reading and hashing every package again.
+## Plain: read each package once
 
-Plain metadata is rebuildable derived state. The implementation does not create an
-operation journal, recovery trash, rollback pre-images, or repeated package hashes. If a
-run is interrupted, rerun `sow create` and SOW reconstructs the metadata from the package
-directory.
+The default unsigned `sow create` path hashes and parses each RPM or DEB once. `--jobs` controls parallel work. SOW renders metadata from the parsed results, then checks that the package set and file attributes still match before writing the indexes.
 
-Pigsty preprocessing retains RPMs whose headers report `i386`, `i486`, `i586`, or
-`i686`, so those packages remain in repository metadata and the `repo_complete` checksum
-manifest. The intended DEB `i386` and exact Patroni 3.0.4 filters still apply.
+An interrupted Plain build can be rerun from the package directory. Version 0.3 removed its operation journal, rollback copies, and repeated package hashing; Managed recovery remained unchanged.
 
-## Managed: scale without relaxing integrity
+Pigsty preprocessing now keeps RPMs whose headers report `i386`, `i486`, `i586`, or `i686`. They remain in the repository metadata and `repo_complete` checksum manifest. The DEB `i386` and exact Patroni 3.0.4 filters remain in place.
 
-Membership tables have reverse indexes by package SHA-256, and Desired and Built
-Membership are expanded with one ordered bulk projection instead of one query per
-object. In the project benchmark, listing a 5,000-object Dist fell from about 4.1
-seconds to 33 milliseconds. A 50,000-object Dist completes in roughly 300 milliseconds
-instead of exceeding ten minutes.
+<span id="managed-scale-without-relaxing-integrity"></span>
 
-A rebuildable package-facts cache is keyed by immutable package SHA-256. Ingest
-authenticates and parses each new RPM or DEB once and retains the view-independent facts
-needed to render metadata. Builds bulk-load those facts, match them in memory, and lazily
-rebuild missing or corrupt rows from authenticated package bytes.
+## Managed: fewer queries and package reads
 
-On an unchanged Pool, warm builds validate payloads with device, inode, size, mtime, and
-ctime fingerprints and avoid package-body reads. Fingerprint drift triggers one
-authoritative SHA-256 pass and repairs the cache path. `sow check` remains the explicit
-full cryptographic audit. RPM metadata artifacts and DEB architecture indexes use
-bounded `--jobs` concurrency, Generation manifest and changeset rows are inserted in
-batches, and final normalization reuses its descriptor snapshot instead of scanning the
-Pool again.
+Membership tables gained reverse indexes by package SHA-256. SOW now loads Desired and Built membership in one ordered query instead of querying each object. In the project's benchmark, listing a 5,000-object Dist fell from about 4.1 seconds to 33 milliseconds. A 50,000-object Dist completed in under a second.
 
-## Bounded commits and observable builds
+Schema v10 added a rebuildable cache of parsed package data, keyed by package SHA-256. Import verifies and parses a new package, then saves the data needed to render its metadata. Builds load this data in batches. Missing or damaged cache entries are rebuilt from verified package files.
 
-Managed payload promotion is a bounded, single-writer group commit. Each batch handles
-at most 512 objects or 1 GiB: SOW creates the public Pool links, persists the distinct
-target directories, removes the pending names, and then persists the shared pending
-directory. A crash therefore leaves a recoverable pending-only, exact dual-link, or
-Pool-only state; durable loss of both names remains an integrity failure.
+For an unchanged pool, warm builds use device, inode, size, modification time, and change time to recognize unchanged files. A changed fingerprint triggers a full SHA-256 check. `sow check` continues to read and verify the complete package content.
 
-Pending payloads use their final `0644` mode inside the private `0700` pending
-directory, making promotion a namespace operation. The pending-source guard records
-object identity without holding one descriptor per package for the whole build, keeping
-descriptor use bounded. Publication also persists each target directory entry before
-unlinking its source name.
+RPM metadata and DEB architecture indexes use bounded `--jobs` concurrency. Generation manifests and change records are written in batches.
 
-Long builds append structured `build_progress` events for rendering, payload promotion,
-Dist publication, normalization, and finalization. These events are visible in
-`sow log` and do not add a database checkpoint to each phase, so progress reporting
-cannot turn a successful build into a failed one.
+<span id="bounded-commits-and-observable-builds"></span>
 
-## Focused publication and runtime
+## Batch commits and build progress
 
-The R2 publication transport is limited to the storage primitives SOW uses:
-list, head, get, and conditional put. Remote garbage collection remains report-only and
-does not delete objects. Unused cloud-control, CDN, Edge-worker, migration-program, and
-alternate runtime paths have been removed from the active tree, leaving one repository
-core behind the production CLI. The default `go test ./...` run therefore covers the
-complete active implementation.
+Managed builds move packages into the public pool in batches of up to 512 objects or 1 GiB. SOW persists each destination directory before removing pending names. Recovery handles an interrupted batch whether a package exists in the pending directory, the pool, or both.
 
-## Correctness and release quality
+Pending files use their final `0644` mode inside a private `0700` directory. Builds no longer hold a file descriptor for every pending package throughout the operation, which reduces resource use in large repositories.
 
-- Local GC safely removes a unique case-folded Pool alias recorded by a Generation,
-  which matters on case-insensitive filesystems. Path, size, and digest must still
-  identify the same immutable object; ambiguous or drifted aliases fail closed.
-- Every archive includes `LICENSE`. RPM and DEB packages declare Apache-2.0 and install
-  the license at `/usr/share/licenses/sow/LICENSE` and
-  `/usr/share/doc/sow/copyright`.
-- CI enforces formatting, module tidiness, vet, static analysis, dead-code checks,
-  performance-test compilation, the full test suite, race tests, clean-delivery checks,
-  and package snapshots.
-- Integration gates exercise the production binary in a clean-room mixed RPM/DEB
-  workflow, an exact unsigned Plain APT install on Ubuntu 22.04, DNF signature-transition
-  probes on AlmaLinux 8/9/10, and conditional S3 operations against pinned MinIO.
-- The published release contains macOS and Linux archives for amd64 and arm64, RPM and
-  DEB packages for both Linux architectures, and `SHA256SUMS`.
+Long builds write `build_progress` events for rendering, package promotion, Dist publication, normalization, and finalization. Use `sow log` to inspect this progress.
 
-## Get the release
+<span id="focused-publication-and-runtime"></span>
 
-Use the [download page](/download/) for platform-specific commands, or inspect every
-asset on the [GitHub release](https://github.com/pgsty/sow/releases/tag/v0.3.0). After
-installation, run `sow version` to verify the selected binary.
+## One active repository implementation
 
-The operating contracts are documented in [Plain Mode](/docs/feature/plain/),
-[Managed Mode](/docs/feature/managed/), and
-[Platforms & Integrations](/docs/reference/compatibility/).
+The release removed the retired V1 CLI and runtime, cloud/CDN publication code, Edge worker, completed migration program, and their obsolete tests. The active CLI uses one repository implementation.
+
+R2 publication keeps the storage operations SOW needs: list, HEAD, GET, and conditional PUT. Remote garbage collection reports candidates without deleting them.
+
+<span id="correctness-and-release-quality"></span>
+
+## Other changes
+
+- Local garbage collection handles a unique recorded pool-path alias on case-insensitive filesystems. It checks the package path, size, and digest before removal.
+- Archives include `LICENSE`. RPM and DEB packages install Apache-2.0 license files at `/usr/share/licenses/sow/LICENSE` and `/usr/share/doc/sow/copyright`.
+- CI covers formatting, module consistency, static analysis, dead-code checks, tests, race detection, source delivery, and package builds.
+- Integration tests cover mixed RPM/DEB workflows and an unsigned Plain APT installation on Ubuntu 22.04.
+  They also test DNF signature transitions on AlmaLinux 8/9 and `pgsty/el10`, plus conditional S3 operations against a pinned MinIO version.
+
+<span id="get-the-release"></span>
+
+## Get version 0.3.0
+
+Use the [v0.3.0 GitHub release](https://github.com/pgsty/sow/releases/tag/v0.3.0) for that version's Linux/macOS archives, Linux RPM/DEB packages, and `SHA256SUMS`. Run `sow version` after installation. The source tag requires Go 1.26.5 or newer.
+
+For a new installation today, use the [current download page](/download/). Current behavior is documented in [Plain Mode](/docs/feature/plain/), [Managed Workspaces](/docs/feature/managed/), and [Platforms & Integrations](/docs/reference/compatibility/).

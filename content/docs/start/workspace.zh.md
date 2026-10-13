@@ -1,7 +1,7 @@
 ---
 title: "第一个工作区"
 linkTitle: "第一个工作区"
-description: "创建工作区，建立 RPM/DEB Dist，添加软件包并校验公共树。"
+description: "创建工作区，组织 RPM 与 DEB 软件包，并检查仓库。"
 categories: [Start]
 tags: [managed, repository, dist, generation]
 url: "/zh/docs/start/workspace/"
@@ -9,7 +9,8 @@ weight: 300
 icon: fa-solid fa-layer-group
 ---
 
-Managed 模式会持久保存配置、成员关系、Generation 与审计状态。下面从空目录开始。
+本例创建一个 Managed 仓库，包含两个具名软件包集合，称为 Dist：
+`el9` 存放 RPM，`bookworm` 存放 DEB。使用可写的空目录 `/srv/sow`，或换成其他路径。
 
 {{% steps %}}
 
@@ -25,15 +26,13 @@ cd /srv/sow
 ```text
 /srv/sow/
 ├── sow.yml   # 配置；schema: sow/v3
-└── .sow/     # SQLite 状态、锁、staging、恢复与操作日志
+└── .sow/     # SOW 管理的私有状态
 ```
 
-不要编辑或对外服务 `.sow/`。`init` 是幂等操作：重复执行会校验并收敛已声明的 Repository
-与 Dist，不会重置有效工作区。
+需要调整配置时，编辑 `sow.yml`。私有目录 `.sow/` 由 SOW 管理。
+重复执行 `init` 不会重置已有软件包或状态。
 
-默认架构族是 `x86_64` 与 `aarch64`。配置接受 `amd64`、`arm64` 别名，并规范化为上述族名。
-
-## 创建 Repository 与两个 Dist {#2-创建-repository-与两个-dist}
+## 创建仓库与两个 Dist {#2-创建-repository-与两个-dist}
 
 ```bash
 sow repo new local
@@ -41,8 +40,8 @@ sow dist new el9 --format rpm
 sow dist new bookworm --format deb
 ```
 
-一个 Repository 拥有一棵公共 `pool/ + dists/` 树和一份私有状态数据库。每个 Dist 只有
-一种格式。`dist new` 会立即生成合法空视图，客户端读取空 Dist 时得到空索引而不是 404。
+每个 Dist 只有一种包格式。`dist new` 默认创建 `x86_64` 与 `aarch64` 的空索引。
+两个 Dist 共用仓库的 `pool/` 目录。
 
 此时公共布局为：
 
@@ -69,18 +68,7 @@ sow add /path/to/packages/*.rpm -d el9
 sow add /path/to/packages/*.deb -d bookworm
 ```
 
-SOW 从包本身读取身份与架构，把接受的字节存入 `local/pool/`，更新 Desired Membership，
-并在返回前构建受影响的 Dist。输入路径只用于导入；后续构建使用 Managed 包池。
-
-需要合并多次成员变更时，用 `--skip` 暂不构建，最后统一收敛：
-
-```bash
-sow add /path/to/more/*.rpm -d el9 --skip
-sow build
-```
-
-Desired Membership 领先于 Built Generation 时，Repository 状态为 `dirty`，且
-`ready_to_copy=false`。
+把输入路径换成实际软件包文件。SOW 读取包身份与架构，将接受的文件存入 `local/pool/`，更新成员并构建受影响的 Dist。后续构建使用包池，SOW 不再依赖原始输入文件。
 
 ## 查看与校验 {#4-查看与校验}
 
@@ -91,37 +79,34 @@ sow ls -d bookworm
 sow check
 ```
 
-`status` 是低成本状态读取。`check` 是交付门禁：它校验配置、状态、公共文件权限、保留根、
-包字节、Desired Membership、索引、签名与 Generation manifest，且不写入任何内容。
-只有 clean 且所有层都通过的 Repository 才返回成功。
+`ls` 列出各 Dist 中的软件包。`status` 应显示 `clean` 与 `ready_to_copy=true`。
+`check` 成功表示文件与记录的构建结果一致。
 
-查看规范化配置与默认值：
+## 对外提供仓库 {#5-对外服务-repository}
 
-```bash
-sow config show --all
-```
+发布完整的 `/srv/sow/local` 目录，让客户端能同时访问索引与软件包。工作区配置和 `.sow/` 保留在服务器根目录之外。
 
-## 对外服务 Repository {#5-对外服务-repository}
-
-公共交付单元是 `/srv/sow/local`，不是工作区根。把这个目录挂到稳定 URL 前缀；不要暴露
-`sow.yml` 或 `.sow/`。
-
-- DNF base URL：`https://repo.example.com/local/dists/el9/x86_64/`
-- APT source：`deb https://repo.example.com/local bookworm main`
-
-安全的 Nginx 与 filesystem 发布流程见[对外服务](/zh/docs/tutorial/serving/)。
+按[对外服务](/zh/docs/tutorial/serving/)配置 Nginx 发布。[YUM](/zh/docs/tutorial/yum-repo/) 与 [APT](/zh/docs/tutorial/apt-repo/) 教程提供客户端配置，包括未签名仓库所需的信任设置。
 
 {{% /steps %}}
 
+## 批量更新
+
+以后要连续添加多批软件包时，给 `add` 加上 `--skip`，最后构建一次：
+
+```bash
+sow add /path/to/more/*.rpm -d el9 --skip
+sow build
+```
+
+有待构建的成员变更时，`sow status` 显示 `dirty` 与 `ready_to_copy=false`。
+
+
 ## 选择规则
 
-- Workspace：给了 `-C DIR` 就从该目录向上找，否则从当前目录找；未找到工作区时再尝试 `SOW_DIR`。显式 `-C` 不会禁用这条回退。
-- Repository：`-r NAME`、当前路径所属 Repository，或唯一已配置 Repository。
-- Dist：`-d NAME`，可重复；只有命令能够唯一确定范围时才可省略。
-
-`-C` 指定的是发现起点，不保证该目录本身就是最终 Workspace Root。用 `sow config check -C DIR`
-查看解析后的工作区；必须固定操作对象的脚本应指定明确的物理工作区根及 `-r NAME`。
-存在歧义时直接报错；SOW 不会随便挑选 Repository 或 Dist。
+上例从当前目录找到工作区，并选择其中唯一的仓库。
+在其他目录运行时，加上 `-C /srv/sow`；工作区内有多个仓库时，加上 `-r local`。
+使用 `-d NAME` 选择 Dist，可重复指定多个。完整的发现规则与默认值见[选择规则](/zh/docs/command/#repository-选择)。
 
 ## 下一步
 

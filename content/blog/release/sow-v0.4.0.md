@@ -3,7 +3,7 @@ title: "SOW v0.4.0"
 linkTitle: "SOW v0.4.0"
 date: 2026-08-24
 authors: [Vonng]
-description: "SOW v0.4.0 makes Managed verification single-pass, adds independently verified RPM trust rings and safe publication-target rebinding, and hardens migration, recovery, and public delivery checks."
+description: "SOW v0.4.0 reduces repeated verification, verifies RPM key sets independently, adds target rebinding, and improves migration and publication recovery."
 categories: [Release]
 tags: [release, managed, signing, publish, migration]
 weight: 1
@@ -11,143 +11,102 @@ url: "/blog/release/sow-v0.4.0/"
 draft: false
 ---
 
-SOW 0.4.0 is an integrity and recovery release for Managed repositories. It makes
-the deep checker's I/O contract explicit, prevents RPM trust from being assembled
-across unrelated keys, adds an audited way to correct mutable publication-target
-settings, and closes the remaining v0.3 migration and interrupted-publication gaps.
+SOW 0.4.0 improved Managed repository verification and recovery. `check` reads each physical package once for its content hash. RPM verification keeps separate trust decisions for separate key sets. Publication targets can change their public URL or cache lifetime through an audited rebind operation.
 
-Plain repository behavior and the public `pool/ + dists/` layout do not change.
+Plain behavior and the public `pool/` and `dists/` layout stayed the same. This page describes version 0.4.0; use the [installation guide](/docs/start/install/) to upgrade to the current release.
 
-## Upgrade from 0.3
+<span id="upgrade-from-03"></span>
 
-> [!IMPORTANT] Migrate every v0.3 Repository explicitly
-> Stop all Workspace writers, back up the Workspace, install 0.4.0, and run
-> `sow repo migrate REPOSITORY`
-> once for each Repository before ordinary reads or writes. The migration is
-> explicit and one-way; do not reopen a migrated database with SOW 0.3.
+## Upgrade from 0.3 to 0.4
+
+Stop workspace writers and back up the complete workspace, preserving hard links. Install 0.4.0, then migrate each configured Repository before continuing maintenance:
 
 ```bash
-cp -a /srv/sow /srv/sow.backup-before-0.4.0
+set -euo pipefail
+rsync -aH /srv/sow/ /srv/sow.backup-before-0.4.0/
 sow repo migrate pigsty -C /srv/sow
 sow repo migrate pgsql -C /srv/sow
 sow check -r pigsty -C /srv/sow
 sow check -r pgsql -C /srv/sow
 ```
 
-Schema v11 repairs the v0.3 Dist lifecycle case that could leave a Repository marked
-clean while another Dist remained dirty. Repository status is now derived in the same
-transaction that changes its Dists. The migration also repairs publication and signer
-evidence without inventing a historical signing identity: an identity that v0.3 never
-recorded remains explicitly unverified and cannot become a retained trust assertion.
+The example has repositories named `pigsty` and `pgsql`; use the names from your `sow.yml`. Keep the backup for rollback because SOW 0.3 cannot open the migrated database.
 
-Schema v12 backfills an append-only publication-target binding ledger. Initial binds,
-migration backfills, and later operator-confirmed rebinds are separate immutable
-revisions.
+Schema v11 fixed a 0.3 status bug: a Repository could appear clean while one of its Dists remained dirty. Status is now updated in the transaction that changes the Dists. Migration also repairs recorded publication and signer information. A historical signing identity that was never recorded remains unverified.
 
-## One authenticity pass per physical payload
+Schema v12 added an append-only history of publication-target bindings. Initial bindings, migration backfills, and later rebinds have separate revisions.
 
-Every `sow check` now performs exactly one authoritative content hash for each unique
-physical package payload, even when its cached fingerprint still matches. Evidence is
-bound to device, inode, size, mtime, and ctime, and to the descriptor that was actually
-read. Hard links to the same physical object can share the proof; a replacement or
-concurrent identity change invalidates it and fails closed.
+<span id="one-authenticity-pass-per-physical-payload"></span>
 
-The same authenticated evidence is reused while validating retained Generations, walking
-the final manifest, and producing `sow changes`. Retaining several Generations or adding
-more Dists therefore does not multiply payload hashing. DEBs and unsigned RPMs require
-one full payload stream; a signed RPM uses at most one additional main-header-to-EOF
-signature stream, independent of the number of Dists or trust rings.
+## One content hash per physical package
 
-Package-facts reads are likewise scoped to the selected digest set in bounded,
-deterministic SQLite batches. A warm 64 MiB build performs no package-body read.
-Fingerprint drift and a missing facts row share one authoritative payload pass instead
-of triggering separate scans.
+Each `sow check` performs one complete content hash for each unique physical package, including files whose cached fingerprint still matches. Hard links to the same file share that result. SOW ties verification to the file it read and detects replacements or changes during the check.
 
-## Independent RPM trust rings
+The same result is reused when checking retained generations, the final manifest, and changes. Adding Dists or retained generations does not multiply package hashing. DEBs and unsigned RPMs need one full read. A signed RPM uses at most one additional read from the main header to the end of the file for signature verification.
 
-Embedded RPM signatures are verified against each candidate trust ring independently.
-Every recognized signature packet must verify inside one ring, and at least one verified
-path must authenticate the payload. This preserves support for historical CentOS v3/v4
-signatures and deliberately dual-signed packages while preventing a retained single-key
-claim from being assembled out of packet-by-key successes from different rings.
+Package-cache queries are limited to the selected digests and run in bounded SQLite batches. A warm build of the 64 MiB test package reads no package content. A changed fingerprint and missing cache row share one verification pass.
 
-The current policy ring, each retained single-key ring, and the combined trusted ring all
-consume the same signature stream. Adding keys changes authorization decisions, not the
-number of package reads.
+<span id="independent-rpm-trust-rings"></span>
 
-## Safe target rebind and public verification
+## Verify each RPM trust set separately
 
-`sow publish TARGET --rebind` is the explicit operator-confirmed path for correcting a
-target's mutable configuration while preserving its storage identity and recovery state.
+RPM signature packets are checked against each candidate key set independently. Every recognized packet must verify within that set, and at least one verified signature must authenticate the payload.
+
+This supports historical CentOS signatures and deliberately dual-signed packages. It also prevents SOW from combining partial successes across unrelated key sets into a false single-key verification result.
+
+The current policy keys, retained-generation keys, and combined trusted keys use the same signature read. Additional keys change trust decisions without adding package reads.
+
+<span id="safe-target-rebind-and-public-verification"></span>
+
+## Update publication-target settings
+
+Use `sow publish TARGET --rebind` to update mutable target settings while preserving its storage identity and recovery state:
 
 | May change with `--rebind` | Requires a new target |
 |---|---|
-| target name | Repository identity |
-| `public_endpoint` | provider or storage `endpoint` |
-| `max_cache_ttl` | region, bucket, or `prefix` |
+| Target name | Repository identity |
+| `public_endpoint` | Provider or storage `endpoint` |
+| `max_cache_ttl` | Region, bucket, or `prefix` |
 
-An ordinary publish reports the mismatch and points to `--rebind`; it never silently
-adopts the new values. Rebind uses the same exclusive locks as publish, appends an audit
-revision, and can resume an active commit-intent attempt forward. TTL changes are refused
-while target maintenance is pending, and a filesystem public endpoint cannot change
-during conditional-delete maintenance. Historical grace deadlines are never shortened.
+A normal publish reports changed settings and requests `--rebind`. Rebind takes the publication locks, records a revision, and can resume an interrupted publication after its commit decision. Pending cleanup restricts TTL and filesystem public-URL changes. Previously recorded cache deadlines remain in effect.
 
-Filesystem and R2 HTTP(S) public endpoints now share one hardened verifier. Response
-headers and body idle progress have separate deadlines, so a large body may stream for
-longer than two minutes as long as it continues making progress. Ordinary canonical GETs
-remain authoritative; no-cache requests only prompt revalidation. Stale content and 404s
-honor `max_cache_ttl`, 408/425/429/5xx responses get a short bounded retry window, and an
-oversized response fails closed. Filesystem absence requires canonical 404/410 visibility.
-R2 remote deletion remains deliberately disabled and report-only.
+<span id="recovery-cli-and-implementation-cleanup"></span>
 
-Prospective filesystem target paths are also checked for aliases before a durable bind,
-including case aliases on case-insensitive volumes. A failed preflight leaves no binding
-row and creates no target prefix.
+## Check public files and recover interrupted uploads
 
-## Recovery, CLI, and implementation cleanup
+Filesystem and R2 HTTP(S) checks now use separate deadlines for response headers and stalled bodies. Large files can take more than two minutes as long as data continues to arrive.
 
-- Incremental publication recovery accepts only the exact old checkpoint or target
-  Generation bytes at each pointer. Unknown or third identities still fail closed.
-- Routine publication verifies the exact changed object set rather than downloading the full
-  public Generation. No-op and applied-checkpoint recovery reuse complete private inventory
-  evidence, while target GC scans only the protocol pointers it needs.
-- R2 operations use phase-specific header/idle deadlines, bounded conditional multipart
-  upload, retryable reads and writes, and a whole-object SHA-256 check before multipart
-  completion.
-- Generation signer rows are now an exact manifest side table across partial builds,
-  Dist changes, migration, retention, and local GC.
-- Repeating a default `sow add` converges a selected Dist left dirty by an earlier
-  `--skip` or configuration change, even when the package object itself is reused.
-- `sow rm --check` shares the mutating configuration guard and returns an exact no-write
-  preview; its result no longer depends on the scratch filesystem device.
-- Every Managed command now has a human-readable renderer. `--json` retains the stable
-  `sow.cli/v1` envelope, including committed partial results and diagnostic check/preview
-  results on failure.
-- The retired APT v1 builder, external sort, empty-Dist implementation, and Git-tracked
-  by-hash ledger have been removed. Current Plain and Managed APT parsing/rendering remain
-  covered.
+SOW checks the ordinary client URL. Stale content and 404 responses wait up to `max_cache_ttl`; temporary 408, 425, 429, and 5xx responses use a shorter retry window. Oversized responses fail verification. Filesystem cleanup checks for a public 404 or 410 after deletion. R2 cleanup remains report-only.
 
-## Verification and artifacts
+Other publication changes include:
 
-The release gates cover the full Go test suite, vet, staticcheck, dead-code reachability,
-vulnerability and RPM-fork provenance checks, race tests, Linux amd64/arm64 builds, and
-the deterministic payload/facts I/O contracts above. The release binaries were built
-with Go 1.27.0 from source tag `v0.4.0`. Building from source now requires Go 1.27.0 or
-newer, up from 1.26.5 in 0.3. The AWS SDK, SQLite, compression, and cryptography
-dependencies were refreshed alongside it, and the quality gates pin staticcheck v0.8.1,
-deadcode v0.49.0, and govulncheck v1.7.0.
+- Check filesystem path aliases before creating a target binding, including case aliases on case-insensitive volumes.
+- Resume an interrupted pointer update when it contains the recorded old or new bytes. Report unexpected content for investigation.
+- Verify the changed public objects instead of downloading the complete generation on every publication.
+- Use retryable reads and writes, idle timeouts, and bounded conditional multipart uploads for R2. Check the whole-object SHA-256 before completing an upload.
 
-The release set contains four Linux/macOS archives, two RPMs, two DEBs, and
-`SHA256SUMS`. Every archive contains `sow`, `README.md`, `CHANGELOG.md`, and `LICENSE`;
-native Linux packages install the Apache-2.0 license with the binary.
+## CLI and maintenance fixes
 
-## Get the release
+- Repeating `sow add` builds a selected Dist left dirty by `--skip` or a configuration change, even if the package is already in the pool.
+- `sow rm --check` uses the same configuration checks as removal and returns a read-only preview.
+- Every Managed command has readable text output. The `sow.cli/v1` JSON format preserves partial or diagnostic results when a command fails.
+- Signer records stay consistent through partial builds, Dist changes, migration, retention, and garbage collection.
+- Retired APT builder, external-sort, empty-Dist, and Git-tracked by-hash code was removed.
 
-Use the [download page](/download/) for platform-specific commands and verified digests,
-or inspect the [GitHub release](https://github.com/pgsty/sow/releases/tag/v0.4.0).
-After installation, run `sow version`, migrate each v0.3 Repository, and finish with
-`sow check` before publication.
+<span id="verification-and-artifacts"></span>
 
-The maintained contracts are documented in [Managed Workspaces](/docs/feature/managed/),
-[Signing Model](/docs/feature/signing/), and
-[Publication & Recovery](/blog/design/publication/).
+## Build and release checks
+
+The release used Go 1.27.0, up from Go 1.26.5 in 0.3. AWS SDK, SQLite, compression, and cryptography dependencies were updated. Build checks pinned staticcheck v0.8.1, deadcode v0.49.0, and govulncheck v1.7.0.
+
+Release checks covered Go tests, static analysis, vulnerability and RPM-fork source checks, race tests, Linux amd64/arm64 builds, and the package-read limits described above.
+
+The release includes four Linux/macOS archives, two RPMs, two DEBs, and `SHA256SUMS`. Archives contain `sow`, `README.md`, `CHANGELOG.md`, and `LICENSE`. Linux packages install the license with the executable.
+
+<span id="get-the-release"></span>
+
+## Get version 0.4.0
+
+Use the [v0.4.0 GitHub release](https://github.com/pgsty/sow/releases/tag/v0.4.0) for this version's artifacts and checksums. Run `sow version` after installation, then follow the migration steps above for a 0.3 workspace.
+
+For a new installation today, use the [current download page](/download/). Current behavior is documented in [Managed Workspaces](/docs/feature/managed/), [Signing Model](/docs/feature/signing/), and [Publication & Recovery](/blog/design/publication/).

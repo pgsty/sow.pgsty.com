@@ -1,5 +1,5 @@
-# /zh/download/ 页面：Hero、安装矩阵与后续入口。
-# 安装矩阵本身不在这里描述 —— `download` 小节读取 data/download/sow.yaml，
+# /zh/download/ 页面：Hero、安装方式与后续入口。
+# 安装方式本身不在这里描述 —— `download` 小节读取 data/download/sow.yaml，
 # 因此与版本绑定的命令、链接与制品摘要只有一个来源，不会与它们指向的制品脱节。
 #
 # 本页唯一与版本相关的字符串是 Hero 的 note；发布新版时随 hugo.yaml 的
@@ -15,9 +15,9 @@ sections:
   - cta
 
 hero:
-  eyebrow: 下载矩阵
+  eyebrow: Linux 与 macOS 版本
   title: 下载 SOW
-  desc: '**一个自包含 CLI，五条安装路径。** 按操作系统与架构选择安装包、归档，或从源码构建。固定版本产物在对应 GitHub Release 公开后启用；Pigsty 软件源按自己的更新节奏提供版本。'
+  desc: '从 Pigsty 软件源安装，下载指定版本的软件包或归档，或自行编译源码。请按操作系统与架构选择文件。'
   note: SOW 0.5.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
@@ -34,50 +34,50 @@ hero:
       style: ghost
 
 download:
-  eyebrow: 安装矩阵
-  title: 选择与主机相匹配的安装路径
-  desc: '命令与链接使用统一的版本号，下载后按同一 Release 的 SHA256SUMS 校验文件。Pigsty 软件源属于滚动渠道，其余安装路径固定到上方版本。'
+  eyebrow: 安装方式
+  title: 选择安装方式
+  desc: '以下安装包与归档使用 SOW 0.5.0。Pigsty 软件源提供最新打包版本。'
   keys: [sow]
 
 next:
   eyebrow: 接下来
-  title: 装好之后去哪里
+  title: 创建仓库并提供访问
   columns: 3
   link_label: 阅读
   items:
     - title: 快速上手
       meta: 上手
       icon: fa-solid fa-bolt
-      desc: 五步把装有 RPM 与 DEB 文件的目录变成可直接使用的平面仓库。
+      desc: 用装有 RPM 与 DEB 文件的目录构建平面仓库。
       url: docs/start/quickstart/
     - title: 第一个工作区
       meta: 上手
       icon: fa-solid fa-folder-tree
-      desc: 从 Plain 目录进入 Managed 工作区，管理成员关系、筛选策略与 Generation。
+      desc: 创建托管工作区，选择软件包并记录构建历史。
       url: docs/start/workspace/
     - title: CLI 命令参考
       meta: 参考
       icon: fa-solid fa-terminal
-      desc: 每条命令的语法、选择规则、输出、状态迁移与退出行为。
+      desc: 查阅命令语法、选项、输出与退出码。
       url: docs/command/
     - title: 对外提供仓库
       meta: 教程
       icon: fa-solid fa-server
-      desc: 用你已经在运维的 HTTP 服务器，对外提供生成好的公共交付树。
+      desc: 配置 HTTP 服务器，让客户端下载软件包。
       url: docs/tutorial/serving/
     - title: 兼容性
       meta: 参考
       icon: fa-solid fa-table-list
-      desc: 覆盖了哪些发行版、包管理客户端与对象存储目标。
+      desc: 查看支持的平台、仓库格式、客户端与存储目标。
       url: docs/reference/compatibility/
     - title: 发布说明
       meta: 历史
       icon: fa-solid fa-clock-rotate-left
-      desc: 每个 Tag 改了什么，中英双语，附带制品与升级说明。
+      desc: 查看各版本变化与升级步骤。
       url: blog/release/
 
 cta:
-  title: 装好了？现在构建第一个仓库。
+  title: 构建第一个仓库
   actions:
     - label: 上手
       url: docs/start/

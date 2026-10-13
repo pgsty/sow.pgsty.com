@@ -1,7 +1,7 @@
 ---
 title: "sow init"
 linkTitle: "init"
-description: "Create a Workspace, and converge whatever Repositories and Dists sow.yml already declares."
+description: "Initialize a Workspace and the Repositories and Dists declared in sow.yml."
 categories: [Command]
 tags: [cli, managed, config]
 url: "/docs/command/init/"
@@ -10,10 +10,7 @@ weight: 200
 icon: fa-solid fa-seedling
 ---
 
-`sow init` creates the root `sow.yml` and the private `.sow/` state directory that make a directory a
-Workspace. It is also the convergence command for a config you wrote by hand: if `sow.yml` already
-declares Repositories and Dists, `init` materializes the ones that don't exist yet and leaves the
-finished ones alone.
+`sow init` creates a Workspace with `sow.yml` and private `.sow/` state. If the configuration already declares Repositories and Dists, it creates the missing ones. Run it again to complete initialization after adding declarations.
 
 ## Synopsis
 
@@ -21,8 +18,7 @@ finished ones alone.
 sow init [DIR] [--json]
 ```
 
-`DIR` defaults to the current directory. `init` takes no `-C/--workdir` — the positional argument
-already names the target unambiguously.
+`DIR` defaults to the current directory. To initialize another directory, pass its path as `DIR`.
 
 ## Description
 
@@ -46,37 +42,22 @@ ls -a /srv/repo
 .  ..  .sow  sow.yml
 ```
 
-`.sow/` holds `workspace.lock`, the `workspace-ops/` durable file journal used by Workspace lifecycle
-commands, `repo-locks/`, and later one SQLite database per Repository. It is mode `0700` and must
-never be served over HTTP.
+`.sow/` stores private state, locks, and recovery records with directory permissions `0700`. Serve the Repository directories over HTTP; keep `.sow/` private.
 
 ## Options
 
 | Flag | Description | Default |
 |---|---|---|
-| `--json` | Emit the versioned JSON envelope | false |
+| `--json` | Output JSON | false |
 | `-h, --help` | Show help | — |
 
 ## Idempotence rules
 
-`init` is designed to be safe to run repeatedly, in a provisioning script or by hand:
+A new configuration uses `schema: sow/v3` and architectures `x86_64` and `aarch64`. It declares no Repository. Add one with [`sow repo new`](/docs/command/repo/) or edit `sow.yml` first.
 
-1. **It writes `schema: sow/v3` and the default `architectures: [x86_64, aarch64]`** when creating a
-   new config.
-2. **It never creates a Repository on its own.** Use [`sow repo new`](/docs/command/repo/), or
-   declare one in `sow.yml` first.
-3. **It never overwrites an existing `sow.yml`.** A repeat run reports the current state and lists
-   what it found:
+`init` preserves an existing configuration and initializes missing declared objects. It can use a non-empty directory if no file conflicts with a reserved SOW path. When all declared objects are already initialized, the counters are zero.
 
-   ```console
-   sow init .
-   initialized /srv/repo: config_created=false repositories_initialized=0 dists_initialized=0
-   ```
-
-4. **A non-empty directory can be initialized**, but the run fails if an existing file collides with
-   a SOW reserved path.
-
-## Converging a declared configuration
+## Apply a declared configuration {#converging-a-declared-configuration}
 
 If `sow.yml` already describes Repositories and Dists, `init` creates the missing directory trees,
 SQLite databases and empty indexes for them. Already-initialized objects are skipped, so the counters
@@ -115,9 +96,7 @@ infra	true	1	1	clean	0	0
 pgsql	false	2	2	clean	0	0
 ```
 
-Every Dist created this way has a protocol-complete empty surface: an RPM Dist gets an empty
-`repodata/` per architecture view, and a DEB Dist gets empty `Packages`/`Packages.gz` with
-`by-hash` plus a `Release`.
+Every Dist created this way has valid empty indexes. An RPM Dist gets empty `repodata/` in each architecture view. A DEB Dist gets empty `Packages` and `Packages.gz` files, `by-hash` entries, and a `Release` file.
 
 Running it a second time changes nothing:
 
@@ -128,17 +107,15 @@ sow init . --json
 
 ## Locking and recovery
 
-Workspace lifecycle commands — `init`, `repo new`, `repo rm` — run before the target Repository
-database exists or after it is deleted, so they use `.sow/workspace.lock` plus the durable file
-journal in `.sow/workspace-ops/` rather than a SQLite Operation Journal. An interrupted `init` is
-completed or rolled back by the next Workspace lifecycle command.
+If initialization is interrupted, rerun `sow init` for the same directory. SOW first completes or rolls back the interrupted operation, then initializes any remaining declared objects. It waits for other Workspace writers to finish.
 
 ## Examples
 
 Bootstrap a Workspace and add Repositories by hand:
 
 ```bash
-mkdir -p /srv/repo && cd /srv/repo
+mkdir -p /srv/repo
+cd /srv/repo
 sow init
 sow repo new infra
 sow repo new pgsql
@@ -152,7 +129,7 @@ Initialize a directory other than the current one:
 sow init /srv/repo
 ```
 
-Provision from a config file under version control:
+Initialize from a config file under version control:
 
 ```bash
 install -m 0644 sow.yml /srv/repo/sow.yml
@@ -164,7 +141,7 @@ sow config check -C /srv/repo
 
 | Code | Trigger |
 |---|---|
-| `0` | Workspace created, or already converged (no-op) |
+| `0` | Workspace initialized, or already initialized (no-op) |
 | `1` | Runtime I/O error writing the config or state directory |
 | `2` | Usage error, or an existing `sow.yml` that fails to parse or validate |
 | `3` | Partial success — some declared Repositories/Dists were committed and at least one failed |

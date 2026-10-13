@@ -9,8 +9,7 @@ weight: 200
 icon: fa-solid fa-cube
 ---
 
-This tutorial creates a new Managed DEB repository. You need a writable
-directory, and one or more DEB files.
+This tutorial creates a new Managed DEB repository. Install SOW and Python 3, and prepare DEB files built for your clients. Use an empty `/srv/sow` directory that your user can create and write to, or substitute another writable path.
 
 ## 1. Create the workspace
 
@@ -22,8 +21,8 @@ sow repo new pigsty
 sow dist new trixie --format deb -r pigsty
 ```
 
-The Dist name becomes the APT suite. It is an identifier chosen by you; SOW does not infer
-distribution semantics from `trixie`.
+The Dist name `trixie` becomes the client's `Suites` value. You can choose another name;
+it does not change which distributions the packages support.
 
 ## 2. Set membership policy
 
@@ -47,22 +46,19 @@ Then validate it:
 
 ```bash
 sow config check
-sow config show --all
 ```
 
-SOW stores canonical architecture families in configuration and renders Debian names in
-the repository: `x86_64` becomes `amd64`, `aarch64` becomes `arm64`, and neutral `all`
-packages are included in both views.
+Use `x86_64` and `aarch64` in configuration. They generate Debian indexes for `amd64`
+and `arm64`. Architecture-independent `all` packages enter both views.
 
 ## 3. Add DEBs
 
 ```bash
 sow add /path/to/packages/*.deb -r pigsty -d trixie
-sow status -r pigsty
 sow check -r pigsty
 ```
 
-Accepted package bytes are stored once. The public tree is:
+Replace the input path with your DEB directory. `add` stores accepted packages once and builds the indexes. The public tree is:
 
 ```text
 /srv/sow/pigsty/
@@ -77,38 +73,27 @@ Accepted package bytes are stored once. The public tree is:
         └── binary-arm64/...
 ```
 
-Package paths beneath `pool/` are grouped by normalized source package. `Packages` uses
-archive-root-relative `Filename` values. SOW writes SHA-256 by-hash copies and advertises
-them from `Release`.
+Paths in `Packages` are relative to the Repository root. Serve the complete `pigsty/`
+directory so APT can reach both the indexes and the package files.
 
 ## 4. Preview over HTTP
 
-For a local preview:
+Run this in a separate terminal and leave it running:
 
 ```bash
-cd /srv/sow
-python3 -m http.server --bind 127.0.0.1 8080
+python3 -m http.server --bind 127.0.0.1 --directory /srv/sow/pigsty 8080
 ```
 
-Check the entry points:
-
-```bash
-curl --fail http://127.0.0.1:8080/pigsty/dists/trixie/Release >/dev/null
-curl --fail http://127.0.0.1:8080/pigsty/dists/trixie/main/binary-amd64/Packages.gz >/dev/null
-```
-
-Use a maintained HTTP server for persistent service and expose the complete `pigsty/`
-tree.
+The preview serves only the Repository root and is reachable from the same host. For a persistent service or clients on other hosts, use [Serve Repositories](/docs/tutorial/serving/).
 
 ## 5. Configure APT
 
-Replace `REPO_HOST` with an address the client can reach. For an unsigned test repository,
-use a deb822 source with explicit trust:
+On the Linux host running the preview, save this as `/etc/apt/sources.list.d/pigsty.sources`. Use `arm64` in `Architectures` for ARM64 clients. For a remote client, first publish the Repository and substitute its public URL:
 
 ```ini
 # /etc/apt/sources.list.d/pigsty.sources
 Types: deb
-URIs: http://REPO_HOST:8080/pigsty
+URIs: http://127.0.0.1:8080
 Suites: trixie
 Components: main
 Architectures: amd64
@@ -122,44 +107,26 @@ sudo apt update
 apt-cache policy
 ```
 
-`Trusted: yes` disables authenticity checking and is suitable only for a controlled test.
-For a signed repository, remove that line and configure a keyring:
+The output should include `trixie/main` as a package source. `Trusted: yes` is used for
+this unsigned example. To add signatures, follow [Sign Your Repository](/docs/tutorial/signing/)
+to sign metadata, install the public key, and configure `Signed-By`. After the preview,
+remove the test source file and stop the Python server.
 
-```ini
-Types: deb
-URIs: https://repo.example.com/pigsty
-Suites: trixie
-Components: main
-Architectures: amd64
-Signed-By: /usr/share/keyrings/pigsty-archive-keyring.gpg
-```
+<span id="6-publish-safely"></span>
 
-Follow [Sign Your Repository](/docs/tutorial/signing/) before enabling `Signed-By`.
+## 6. Publish the repository
 
-## 6. Publish safely
-
-Require a successful deep check before delivery:
-
-```bash
-sow check -r pigsty
-```
-
-Use [`sow publish`](/docs/tutorial/serving/) for a configured filesystem or R2 target. If
-you use another transport, copy the entire repository into an offline staging location and
-switch it into service atomically. Do not update a live `dists/` tree file by file: clients
-may observe metadata and package state from different generations.
+Use [`sow publish`](/docs/tutorial/serving/) for a filesystem or R2 target. It uploads packages and indexes before updating `Release` and its signatures. That guide also covers manual delivery to isolated hosts.
 
 ## Update the repository
 
 ```bash
 sow add /path/to/new.deb -r pigsty -d trixie
-sow rm PACKAGE_NAME -r pigsty -d trixie
-sow build -r pigsty
 sow check -r pigsty
 ```
 
-Use `build` after policy or signing configuration changes. Use `check`, not `status` alone,
-as the publication gate.
+`add` builds the update automatically. With `limit: 1`, the newest version replaces the previous member for each package and architecture. Run `sow build -r pigsty` after changing configuration.
 
-The automated client and platform scope is listed under
-[Platforms & Integrations](/docs/reference/compatibility/).
+To withdraw a package, preview the selection with `sow rm PACKAGE_NAME -r pigsty -d trixie --check`, then repeat without `--check`. A package name selects all its versions and architectures; use a SHA-256 reference for one package object.
+
+See [Platforms & Integrations](/docs/reference/compatibility/) for tested clients.

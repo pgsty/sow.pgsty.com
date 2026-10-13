@@ -2,9 +2,9 @@
 title: "为什么 SOW 每个仓库只保留一棵包体树"
 linkTitle: "单包体仓库"
 date: 2026-08-05
-lastmod: 2026-08-28
+lastmod: 2026-10-13
 authors: [Vonng]
-description: "用唯一正典 Pool 与纯元数据视图，替代 RPM 视图内包体硬链接的设计决策。"
+description: "每个仓库共用一个包池，各发行版视图只保存元数据，避免重复包副本。"
 categories: [Design]
 tags: [repository, pool, rpm, apt, compatibility, decision]
 url: "/zh/blog/design/single-payload/"
@@ -15,53 +15,57 @@ icon: fa-solid fa-layer-group
 draft: false
 ---
 
-这项决策起草于 2026-08-05 的 v0.2 发布前设计收敛阶段，并在 2026-08-08 随 SOW v0.2.0
-正式交付，随后延续为 v0.3 与 v0.4 的布局契约。它记录的是架构选择，不是笼统的兼容性
-PASS：协议闭包、普通软件包客户端、镜像工具、静态托管与对象存储始终属于彼此独立的证据层。
+这项决策起草于 2026-08-05，随 2026-08-08 的 SOW v0.2.0 发布。SOW 0.5.0 仍使用这一布局：
+每个仓库保存一棵包体树，各发行版视图引用同一棵树。
 
-## 最终决策
+<span id="最终决策"></span>
 
-每个 SOW Repository 只拥有一棵公共树：
+## 决策
+
+每个 Repository 的公共目录如下：
 
 ```text
 <repository>/
-  pool/                         # 正典包体
+  pool/                         # 包体
   dists/
     <dist>/
-      <architecture>/           # 只有协议元数据
+      <architecture>/           # RPM 元数据
 ```
 
-一个 Package Object 在一个 Repository 内只有一个正典包体路径。把同一对象加入多个 Dist
-或架构视图，只会增加 Membership 与元数据引用，不会再创建一份正典包文件。
+上图展示 RPM 视图。APT 索引位于 `dists/<dist>/main/binary-<architecture>/`，
+`Release` 文件位于 `dists/<dist>/`。
 
-完整的 `pool/ + dists/` 根目录才是受支持的复制、静态托管、鉴权与发布单元。单个架构
-Leaf 只是客户端视图，不是独立拥有状态的仓库。
+一个包对象在一个仓库内只有一个包体路径。将同一个包加入多个 Dist 或架构视图，只增加成员关系和元数据引用。
+
+复制、静态托管、鉴权和发布都以完整的 `pool/ + dists/` 根目录为单位。
+单个架构目录是客户端视图，不是完整的软件仓库。
 
 ## 从 C2 开发线到 v0.2.0
 
-早期发布前 C2 开发线已经把每个包在根 Pool 中存一份，但会在每个 RPM View 内再创建包体
-硬链接。这套布局可以让选定的 `reposync` 客户端得到自包含 Leaf，同时避免在本地复制字节。
+早期 C2 开发线在根包池中保存一份包体，再在每个 RPM 视图内创建包体硬链接。
+这让部分 `reposync` 客户端可以直接使用独立的架构目录，同时节省本地空间。
 
-问题在于，这种 inode 优化无法穿过完整交付边界：
+硬链接在其他环节带来几个问题：
 
-- 对象存储会把每条路径展开成独立 Key，别名重新变成重复包体；
-- 归档与跨文件系统复制可能展开或丢失硬链接身份；
-- View 内包路径看起来像正典数据，但所有权其实仍属于 Repository；
-- Retention 与 GC 容易误把 link count 当作产品状态；
-- 为迁就单个镜像工具，会迫使正典树服从它的本地输出假设。
+- 对象存储把每条路径存为独立对象，重新产生包副本。
+- 归档和跨文件系统复制可能丢失硬链接关系。
+- 视图内的包路径看起来像独立文件，实际仍由仓库管理。
+- 保留与回收容易依赖链接计数，而不是实际包引用。
+- 仓库布局需要迁就特定镜像工具的输出目录要求。
 
-在 v0.2.0 打 Tag 之前，最终单包体设计已经从正典 RPM View 中删除包体别名。归档中的 C2
-文档仍准确描述那条开发线，但不能用来描述正式 v0.2.0 Release Tag。
+v0.2.0 发布前，最终布局删除了 RPM 视图中的包体别名。归档中的 C2 文档描述的是该开发线。
 
-## 元数据如何引用 Pool
+<span id="元数据如何引用-pool"></span>
 
-APT 的 `Filename` 本来就是相对 Archive Root 的路径，因此软件包条目直接写正典路径：
+## 元数据如何引用包池
+
+APT 的 `Filename` 是相对仓库根目录的路径，因此可以直接引用包体：
 
 ```text
 Filename: pool/p/pkg/pkg_1.0_amd64.deb
 ```
 
-RPM 则根据实际 View 目录与正典 Pool 路径计算每个 `<location href>`：
+RPM 的 `<location href>` 使用从视图目录到包池的相对路径：
 
 ```text
 view:    dists/el9/x86_64/
@@ -69,45 +73,44 @@ payload: pool/p/pkg/pkg-1.0-1.x86_64.rpm
 href:    ../../../pool/p/pkg/pkg-1.0-1.x86_64.rpm
 ```
 
-Renderer 与 Checker 复用同一个路径函数：先规范化 Repository-relative Path，再计算字面父级
-导航，对数据字节恰好转义一次，基于目录 URI 解析结果，并要求 Round Trip 精确回到原 Pool
-路径、且不能离开 Repository。
+渲染器和检查器使用同一个路径函数。函数计算相对路径、转义文件名，再检查解析结果是否仍指向仓库内的原包路径。
 
-这样公共树仍然可搬迁：只要 `pool/` 与 `dists/` 的相对关系不变，同一份字节无需改写
-元数据，就可以复制到另一目录、HTTP Origin、Bucket 或 Prefix。
+只要 `pool/` 与 `dists/` 的相对位置不变，就可以把整个公共目录复制到其他目录、HTTP 站点、桶或前缀，
+无需改写元数据。
 
-## 被否决的方案
+<span id="被否决的方案"></span>
 
-| 方案 | 为什么不进入正典布局 |
+## 其他方案
+
+| 方案 | 未采用的原因 |
 |---|---|
-| 每个 RPM View 放包体硬链接或副本 | 制造路径别名与重复对象 Key，把文件系统优化伪装成持久所有权 |
-| 包体 Symlink | 无法移植到对象存储，在静态服务、归档与信任边界上也不安全 |
-| 使用 `/pool/...` 绝对 href | 不同客户端会把它解释成 Host Root 或 Repository-relative，也会破坏非根 Prefix |
-| 绝对 URL 或 `xml:base` | 把元数据绑定到单一 Origin，无法原样搬迁 |
-| 依赖 CDN Rewrite 或 Redirect Object | 把外部 Router 变成仓库正确性的一部分 |
-| Workspace 或 Bucket 全局 CAS | 引入 SOW 并不承诺的跨 Repository 所有权、锁、Retention 与删除协调 |
+| 每个 RPM 视图放包体硬链接或副本 | 产生路径别名和重复对象存储键 |
+| 包体符号链接 | 对象存储不支持，静态服务与归档的处理也不一致 |
+| 使用 `/pool/...` 绝对路径 | 客户端可能从站点根目录解析，破坏带前缀的仓库 URL |
+| 绝对 URL 或 `xml:base` | 将元数据绑定到一个站点，搬迁时需要修改 |
+| CDN 改写或重定向对象 | 仓库依赖额外的路由配置 |
+| 工作区或桶级共享包池 | 需要跨仓库协调锁、保留与删除 |
 
-## 镜像工具兼容属于导出问题
+<span id="镜像工具兼容属于导出问题"></span>
 
-普通软件包客户端只需解析元数据引用并取得包体；镜像工具还可能强制要求每个包都位于它收到的
-View 目录之下。这是两种不同契约。
+## 为镜像工具导出独立目录
 
-SOW 不会为了覆盖所有镜像工具而扭曲正典 Repository。需要独立 RPM Leaf 时，
-`sow export rpm-leaf` 会在仓库外生成带本地元数据的兼容制品。默认使用 Copy；
-`--hardlink` 只是受控只读边界内、同文件系统上的显式优化。导出目录不是 Generation、
-发布源、Membership Owner 或 GC Root。
+包管理器需要解析元数据引用并下载包体。镜像工具还可能要求所有软件包都位于指定视图目录之下。
 
-客户端与镜像工具结果统一记录在[兼容性矩阵](/zh/docs/reference/compatibility/)。
-结构化 [`sow check`](/zh/docs/command/check/) 成功只能证明路径、摘要与闭包不变式，
-不能把尚未运行的客户端或 Provider 单元格自动升级为 PASS。
+需要独立 RPM 架构目录时，运行 `sow export rpm-leaf`。命令在仓库外生成包文件和指向本地文件的元数据。
+默认复制包体；同一文件系统可使用 `--hardlink`，但导出包必须保持只读，因为写入硬链接也会修改包池文件。
+导出目录不属于 Generation，不是发布源，也不参与成员关系或垃圾回收。
+
+客户端与镜像工具测试见[兼容性参考](/zh/docs/reference/compatibility/)。
+用 [`sow check`](/zh/docs/command/check/) 校验本地路径、摘要和文件引用，用对应客户端测试安装与镜像下载。
 
 ## 结果
 
-- Package Identity、Membership、Generation、Retention 与本地 GC 都保持 Repository Scope。
-- Publication Attempt、Checkpoint、远端 Inventory、Grace 与删除证据保持 Target-prefix Scope。
-- 每个正典文件一对一映射到静态对象 Key。
-- 包体删除服从引用闭包与精确文件身份，不依赖 inode link count。
-- 不支持只复制某个 RPM 架构 Leaf；应复制 Repository Root 或显式创建 Leaf Export。
+- 包身份、成员关系、Generation、保留与本地 GC 都在仓库内管理。
+- 发布尝试、检查点、远端清单、宽限期与删除记录按目标前缀管理。
+- 每个包文件对应一个静态对象存储键。
+- 删除包体前检查引用和文件身份，不依赖硬链接计数。
+- 复制完整仓库根目录，或通过导出命令生成独立的 RPM 架构目录。
 
-当前实现机制见[包池与元数据视图](/zh/docs/feature/views/)；周边所有权与生命周期契约见
+实现方式见[包池与元数据视图](/zh/docs/feature/views/)，状态与发布流程见
 [系统模型](/zh/blog/design/model/)和[发布与恢复](/zh/blog/design/publication/)。

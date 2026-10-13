@@ -1,7 +1,7 @@
 ---
 title: "服务与发布仓库"
 linkTitle: "对外服务"
-description: "用 Nginx 服务公共 Repository，并把已校验 Generation 发布到 filesystem target。"
+description: "把托管仓库发布到独立目录，并用 Nginx 对外提供服务。"
 categories: [Tutorial]
 tags: [publish, filesystem, managed]
 url: "/zh/docs/tutorial/serving/"
@@ -9,19 +9,16 @@ weight: 400
 icon: fa-solid fa-server
 ---
 
-SOW 只生成静态文件，不是 HTTP 服务器。本指南把可写 Workspace 与 Nginx 服务路径分开。
+SOW 生成静态仓库文件。本教程把 Managed 仓库发布到独立目录，再用 Nginx 提供服务。先完成[第一个工作区](/zh/docs/start/workspace/)。
 
-## 公共与私有路径
+<span id="公共与私有路径"></span>
 
-| 模式 | 公共单元 | 绝不能服务 |
-|---|---|---|
-| Plain | 传给 `sow create` 的目录 | 临时 `.sow-plain-stage-*` 输出；没有持久 journal |
-| Managed | 一个 Repository 的完整 `pool/ + dists/` 树 | Workspace `sow.yml`、`.sow/`、SQLite、锁、日志与 staging |
+源目录是 `/srv/sow/local`，公开副本将位于 `/srv/repo-public/local`。
+两者都包含完整的 `pool/` 与 `dists/` 目录树。工作区配置与私有状态保留在服务目录之外。
 
-[第一个工作区](/zh/docs/start/workspace/)里的源 Repository 是 `/srv/sow/local`。不要把
-`/srv/sow` 设为 document root。
+<span id="1-校验源-generation"></span>
 
-## 1. 校验源 Generation
+## 1. 构建并检查
 
 ```bash
 cd /srv/sow
@@ -29,20 +26,22 @@ sow build -r local
 sow check -r local
 ```
 
-只有 `check` 返回 `0` 才继续。`status` 适合诊断；`check` 才是完整只读交付证明。
+`check` 成功后继续。
 
-## 2. 配置 filesystem target
+<span id="2-配置-filesystem-target"></span>
 
-先创建 endpoint 目录。它必须是真实、规范目录，不能是 symlink；SOW 不会替你创建缺失 endpoint。
+## 2. 添加 filesystem 目标
+
+创建目标父目录，并给 SOW 操作者写权限：
 
 ```bash
 sudo install -d -m 0755 /srv/repo-public
 sudo chown "$(id -u):$(id -g)" /srv/repo-public
 ```
 
-第二条命令把写权限交给当前操作者；若 `sow publish` 由专用服务账户执行，应改为该账户。
+如果执行 `sow publish` 的账户不同，使用该账户。endpoint 必须已存在，并使用不含符号链接的物理路径。
 
-在 `/srv/sow/sow.yml` 中增加 target：
+在 `/srv/sow/sow.yml` 添加目标：
 
 ```yaml
 targets:
@@ -58,22 +57,25 @@ targets:
     exclusive_write_authority: true
 ```
 
-三个布尔字段都是必填安全确认。endpoint 与 prefix 合并为 `/srv/repo-public/local`；
-SOW 会在预先存在的 endpoint 下创建并拥有该 prefix。
+SOW 根据 `endpoint` 与 `prefix` 创建 `/srv/repo-public/local`。三个必填布尔值声明：本工作区是该目标的权威来源，也是唯一写入者。其他工具使用独立前缀。
 
-校验并发布：
+本例通过 `file://` 检查发布文件，并声明没有中间缓存。以后增加代理或 CDN 时，把 `public_endpoint` 改为公共仓库 URL，
+把 `max_cache_ttl` 设为其最长缓存时间，并通过 [`publish --rebind`](/zh/docs/command/publish/) 应用变更。
+SOW 据此检查交付结果，并确定旧文件何时可以删除。
+
+发布仓库：
 
 ```bash
-sow config check
 sow publish public
 ```
 
-发布先复制不可变包体和元数据，再更新可变协议指针，随后校验结果并记录 target checkpoint。
-同一 Generation 重复发布是幂等空操作。
+SOW 先复制包文件与不可变元数据，再更新客户端入口，随后检查结果并记录发布快照。内容不变时重复发布会报告空操作。
 
-不要让其他工具写入同一 target prefix。target 契约是单 writer、独占写入。
+<span id="3-用-nginx-服务-target"></span>
 
-## 3. 用 Nginx 服务 target
+## 3. 配置 Nginx
+
+安装 Nginx，添加以下服务器配置，并把 `repo.example.com` 换成你的主机名：
 
 ```nginx
 server {
@@ -93,57 +95,71 @@ server {
 }
 ```
 
-校验配置后 reload Nginx。客户端 URL 为：
-
-```text
-DNF baseurl: http://repo.example.com/local/dists/el9/x86_64/
-APT source:  deb http://repo.example.com/local bookworm main
-```
-
-如果元数据或包体已签名，请单独发布对应公钥并配置 `gpgkey`/`Signed-By`；私钥绝不能放在
-document root 下。
-
-## 4. 验证服务入口
+检查并重载配置：
 
 ```bash
-curl --fail --head \
-  http://repo.example.com/local/dists/el9/x86_64/repodata/repomd.xml
-
-curl --fail --head \
-  http://repo.example.com/local/dists/bookworm/Release
-
-curl --fail --head \
-  http://repo.example.com/local/dists/bookworm/main/binary-amd64/Packages.gz
+sudo nginx -t
+sudo nginx -s reload
 ```
 
-随后从客户端主机运行真实包管理器。HTTP 可达不等于客户端已验证，两层都要检查。
+上述命令假定 Nginx 已运行。首次安装时，在 `nginx -t` 成功后，用操作系统的服务管理器启动 Nginx。
 
-完整 Repository prefix 必须使用同一访问策略。RPM 元数据可能通过 `../../../pool/...`
-解析包路径，APT `Filename` 也直接指向 `pool/...`。只保护 `dists/` 而误放开或拦截 `pool/`
-都会破坏仓库。
+客户端地址如下：
 
-## 手工与隔离交付
+| 客户端 | 地址 |
+|---|---|
+| DNF `baseurl` | `http://repo.example.com/local/dists/el9/$basearch/` |
+| APT `URIs` | `http://repo.example.com/local` |
+| APT `Suites` / `Components` | `bookworm` / `main` |
 
-如果 `sow publish` 无法到达目标：
+完整源配置见 [YUM](/zh/docs/tutorial/yum-repo/) 或 [APT](/zh/docs/tutorial/apt-repo/) 教程。需要验签时，分发公钥并按[仓库签名](/zh/docs/tutorial/signing/)配置。
 
-1. 在源端运行 `sow check`；
-2. 把完整 Repository 复制到新的、非 live staging/release 目录；
-3. 用 `sow changes 0` 或 archive manifest 校验传输哈希；
-4. 原子切换操作者拥有的父级引用到新目录；
-5. 保留上一版，直到客户端与缓存越过它。
+<span id="4-验证服务入口"></span>
 
-不要直接对 live Repository root 执行无序 `rsync --delete`。它不保留 SOW 的指针顺序、
-target checkpoint、缓存 grace 或恢复状态。`sow changes` 描述 Generation 差异，不代表可以
-绕过这些控制直接修改 live target。
+## 4. 检查客户端访问
 
-## R2 target
+用上表地址配置客户端，刷新索引并安装一个软件包。
+这会检查 `dists/` 与 `pool/` 是否都能访问。两个目录使用相同的访问规则。
 
-`provider: r2` 使用 S3 兼容存储传输与只报告的 target GC。传输集成会针对固定的 PGSTY Silo fixture
-验证 list、HEAD、GET 与单段条件 PUT；不覆盖条件式 Multipart 完成，也不能替代真实 R2 验收。启用生产目标前，请先在非生产 prefix 验证凭据、bucket
-policy、公共 endpoint、缓存行为、重放与恢复。详见[平台与集成](/zh/docs/reference/compatibility/)。
+<span id="下一步"></span>
 
-## 下一步
+## 发布更新
 
-- [`sow publish`](/zh/docs/command/publish/) 与 [`sow gc`](/zh/docs/command/gc/)
-- [发布设计](/zh/blog/design/publication/)
-- [签名教程](/zh/docs/tutorial/signing/)
+修改成员或配置后，构建尚未完成的变更，再发布：
+
+```bash
+sow build -r local
+sow check -r local
+sow publish public
+```
+
+发布中断时，重新执行 `sow publish public` 继续。恢复与目标变更见 [`sow publish`](/zh/docs/command/publish/)；缓存宽限期后的清理见 [`sow gc`](/zh/docs/command/gc/)。
+
+<span id="手工与隔离交付"></span>
+
+## 交付到隔离主机
+
+SOW 无法连接目标时，按以下步骤复制。创建并检查副本期间，暂停源工作区的写入。
+
+1. 在源端执行 `sow check`。
+2. 把完整仓库复制到目标的新发布目录。保留硬链接，例如使用 `rsync -aH` 或 `tar`。
+3. 根据 `sow changes 0` 或归档校验清单检查传输后的文件。
+4. 将服务器路径切换到新发布目录。
+5. 切换后，继续让旧索引引用的软件包 URL 和不可变元数据 URL 可访问，直到最长缓存期结束，再清理旧发布。
+
+在此期间，HTTP 服务可将新目录中缺失的路径回退到上一发布目录。
+
+直接覆盖在线目录，可能在包文件到达前暴露新索引。先准备新目录，再整体切换。
+
+## 提供 Plain 仓库
+
+Plain 模式直接提供传给 `sow create` 的目录。使用上例 Nginx 隐藏文件规则，
+防止访问临时文件。
+
+<span id="r2-target"></span>
+
+## 发布到 R2
+
+Cloudflare R2 使用 `provider: r2`。配置 endpoint、bucket、凭据引用、公共 URL 与缓存时间，详见[目标配置参考](/zh/docs/reference/config/)。先发布到测试前缀，再从实际包管理器检查。
+
+R2 目标垃圾回收只报告待删除对象，SOW 不执行远端删除。已测试的存储操作见[平台与集成](/zh/docs/reference/compatibility/)。

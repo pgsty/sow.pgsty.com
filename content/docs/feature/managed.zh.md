@@ -1,7 +1,7 @@
 ---
 title: "Managed 工作区"
 linkTitle: "Managed 工作区"
-description: "工作区 → 仓库 → Dist 三层模型、固定磁盘布局、sow.yml 如何驱动一切,以及发现与选择规则。"
+description: "工作区结构、包成员关系、配置、查找规则与初始化。"
 categories: [Feature]
 tags: [managed, repository, dist, generation]
 url: "/zh/docs/feature/managed/"
@@ -9,260 +9,174 @@ weight: 300
 icon: fa-solid fa-sitemap
 ---
 
-当同一个仓库要维护好几个月 —— 包成批到达、由策略决定谁留下、事后还得说清楚什么时候变了什么 —— 你需要的是 Managed 模式。本页讲三层模型、它产出的布局,以及命令怎么判断你说的是哪个仓库、哪个 Dist。
+定期更新的仓库适合使用 Managed 模式。SOW 记录包成员关系、执行 Dist 策略、构建元数据，
+并保留操作历史。
 
-## 三个层级
+<span id="三个层级"></span>
+
+## 工作区、仓库与 Dist
 
 ```text
-Workspace 工作区                    发现与配置边界
-└── Repository 仓库                 所有权边界:pool、dists、SQLite、锁、Generation
-    └── Dist 发行版                 单一格式的具名成员集合
-        └── Architecture View 架构视图   渲染投影 —— 不是成员关系
+Workspace（工作区）
+└── Repository（仓库）
+    └── Dist（软件包集合）
+        └── Architecture view（架构视图）
 ```
 
-每层只做一件事,边界很硬:
+| 术语 | 用途 |
+|---|---|
+| 工作区 | 保存 `sow.yml`、私有 `.sow/` 状态和允许的架构族 |
+| 仓库 | 拥有独立包池、Dist、SQLite 数据库、构建快照（Generation）和发布状态 |
+| Dist | 按名称组织一组包，格式为 `rpm` 或 `deb` |
+| 架构视图 | 为某种架构的客户端提供 Dist 中的包索引 |
 
-**工作区(Workspace)** 只拥有两样东西:根级 `sow.yml` 和 `.sow/` 状态目录。工作区根下其他任何东西都不属于 SOW。它是发现的单位 —— 命令从某个起始目录向上找到工作区 —— 也是架构许可表所在的地方。
+一个仓库可以同时包含 RPM 和 DEB Dist。`el9`、`trixie`、`el9-beta` 等 Dist 名称由你指定，
+不会自动检查操作系统兼容性，也不会建立版本晋级流程。
 
-**仓库(Repository)** 固定在 `<workspace>/<name>`。你不能把它指到别处,没有 `path` 选项。一个 Repository 拥有自己的 `pool/`、`dists/`、SQLite、锁、恢复状态、Generation、保留代根、发布 checkpoint 与 GC 证据。两个 Repository 之间永不去重 —— 同一个包 add 进两个仓库就存两份,这是刻意的:这样删掉一个仓库永远不可能伤到另一个。
+同一包可以属于一个仓库中的多个 Dist，无需复制包文件。架构无关包在每个 Dist 中有一份
+成员关系，并出现在该 Dist 的各个适用架构视图中。不同仓库分别保存自己的包对象。
 
-**Dist** 是一个单一格式(`rpm` 或 `deb`)的普通具名成员集合。名字对 SOW 是不透明字符串。`el9`、`trixie`、`el9-beta`、`customer-acme` —— 它们都不产生状态机、晋升流程或快照。想要一个 beta 频道,就建一个叫 `el9-beta` 的 Dist;含义存在于你的脑子和 `.repo` 文件里,不在 SOW 里。
+<span id="磁盘布局"></span>
 
-**架构视图(Architecture View)** 是 `build` 渲染出来的东西,不产生第二份成员关系。一个 `noarch` RPM 只有一个包对象、一条成员记录,构建时投影进每个适用视图。参见[包池与元数据视图](/zh/docs/feature/views/)。
-
-一个 Repository 可以同时拥有 RPM Dist 与 DEB Dist,共用同一个 `pool/`。
-
-## 磁盘布局
-
-Managed 路径从不由用户输入拼装,而是由解析后的真实工作区根、已校验的名称和固定相对片段推导出来 —— 这就是为什么符号链接替换和路径逃逸没有可攻击的面。
+## 公开文件与私有状态
 
 ```text
 <workspace>/
-├── sow.yml                       # 唯一的配置文件
-├── .sow/                         # 私有状态;绝不要对外服务
+├── sow.yml
+├── .sow/
 │   ├── workspace.lock
-│   ├── workspace-ops/            # 工作区生命周期 journal
+│   ├── workspace-ops/
 │   ├── repo-locks/<repo>.lock
-│   ├── <repo>.db                 # 每个仓库一个 SQLite
+│   ├── <repo>.db
 │   └── <repo>/
-│       ├── stage/                # 同文件系统的 staging 区
-│       ├── recovery/             # 删除动作的原子移入目标
-│       ├── pending/              # --skip 的耐久 payload
-│       ├── retained/             # 保留代的私有根
-│       └── transitions/          # 布局迁移的恢复状态
-└── <repo>/                       # 可对外服务的树
-    ├── pool/                     # 不可变包字节
+│       ├── stage/
+│       ├── recovery/
+│       ├── pending/
+│       ├── retained/
+│       └── transitions/
+└── <repo>/
+    ├── pool/
     └── dists/
-        └── <dist>/               # 架构视图渲染在这里
 ```
 
-执行过两次 `dist new` 与两次 `add` 之后的真实工作区:
+对外服务或发布完整的 `<workspace>/<repo>/` 目录。`sow.yml` 和 `.sow/` 保持私有。
+需要保留可继续工作的工作区时，一起备份配置、私有状态和包文件。
+详见[仓库布局](/zh/docs/reference/layout/)。
 
-```console
-$ find .sow | sort
-.sow
-.sow/pigsty
-.sow/pigsty.db
-.sow/pigsty.db-shm
-.sow/pigsty.db-wal
-.sow/pigsty/pending
-.sow/pigsty/recovery
-.sow/pigsty/retained
-.sow/pigsty/stage
-.sow/pigsty/transitions
-.sow/repo-locks
-.sow/repo-locks/pigsty.lock
-.sow/workspace-ops
-.sow/workspace.lock
+<span id="sowyml-驱动一切"></span>
+<span id="protected-仓库"></span>
+
+## 创建与配置
+
+```bash
+sow init /srv/repo
+sow repo new demo -C /srv/repo
+sow dist new el9 --format rpm -r demo -C /srv/repo
+sow dist new trixie --format deb -r demo -C /srv/repo
 ```
 
-`<repo>/` 下是公共交付树：可以直接服务、由 SOW 发布，或整根复制到离线 staging 后原子切换。
-`.sow/` 下全部是私有状态，绝不能暴露；详见[对外服务](/zh/docs/tutorial/serving/)。
+初始配置使用 `schema: sow/v3`，架构族为 `[x86_64, aarch64]`。
+除非配置中已经声明仓库，`init` 不会创建仓库。仓库与 Dist 的创建、删除命令会更新 `sow.yml`。
 
-名称必须匹配 `[a-z0-9][a-z0-9._-]*`；`.`、`..`、`.sow`、`pool`、`dists` 以及工作区保留名一律拒绝。
+编辑 `sow.yml` 设置架构限制、成员策略、签名和发布目标，然后检查配置：
 
-## 状态数据库与软件包事实
-
-私有 SQLite 数据库按 `package_sha256` 索引 Desired/Built Membership，因此查询与构建可以
-一次批量展开完整成员投影，而不是为每个软件包单独查询。数据库还保存以不可变包体 SHA-256
-为键、可重建的软件包事实缓存。Ingest 从已认证快照解析一次软件包事实；快照安装到 pending、
-再提升到 Pool 时，为保证恢复正确性，各阶段仍独立验证内容，整个 add 并不是只读一遍包体。生产构建只按本次
-选中的 Digest，以有界、确定性批次读取 Facts Row，遇到缺失或损坏记录时再从已认证包体惰性
-重建。无关或超大的 Facts Row 不会被读取。
-
-对于未改变的 Pool 文件，暖构建使用设备号、inode、size、mtime 与 ctime 指纹避免重新读取
-包体。指纹漂移与 Facts 缺失共享一次权威 SHA-256 校验并自动修复；
-[`sow check`](/zh/docs/command/check/) 仍是显式的完整密码学审计，并且无论指纹是否匹配，都会
-对每个唯一物理包体哈希一次。
-
-缓存与指纹只属于私有实现状态，不改变公共 `pool/ + dists/` 布局。不要手工编辑数据库或
-`PRAGMA user_version`。v0.3 或 v0.4 Repository 必须先备份，再通过
-[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 显式升级，之后才能执行普通 0.5
-读写。Schema v13 为包池路径归属增加索引，使 add 只查询候选路径，不再扫描无关发布历史。
-首次构建刷新受影响的 RPM 认证与 APT 元数据契约，之后未变化的包可复用匹配的 Built 认证证据。
-其他维护只在 SOW 诊断明确指出时执行。
-
-## `sow.yml` 驱动一切
-
-只有一个配置文件，用严格 decoder 解析。未知字段不会被忽略——它会失败。重复的规范化架构、非法名称或 format、Dist 架构不是工作区许可表的子集、非法 glob 或分类、不完整的 signing 块，同样失败。
-
-```yaml
-schema: sow/v3
-architectures:
-  - x86_64
-  - aarch64
-repos:
-  pigsty:
-    signing:
-      rpm:
-        packages:
-          mode: never
-    dists:
-      el9:
-        format: rpm
-      trixie:
-        format: deb
-targets:
-  local:
-    repository: pigsty
-    provider: filesystem
-    endpoint: file:///srv/mirror
-    prefix: pigsty
-    public_endpoint: file:///srv/mirror/pigsty/
-    max_cache_ttl: 0s
-    authoritative_workspace: true
-    single_writer: true
-    exclusive_write_authority: true
+```bash
+sow config check -C /srv/repo
+sow config show --all -C /srv/repo
 ```
 
-`config show --all` 展开全部默认值与规范化别名,让你看到 SOW 实际的决定:
+解析器拒绝未知字段。`config check` 还会比较配置与已初始化状态，并解析签名引用。
+`config show --all` 展开默认值。配置接受 `amd64`、`arm64`，分别规范化为
+`x86_64`、`aarch64`；DEB 索引仍使用原生名称 `amd64`、`arm64`。
 
-```console
-$ sow config show --all
-schema: sow/v3
-architectures:
-  - x86_64
-  - aarch64
-repos:
-  pigsty:
-    protected: false
-    signing:
-      rpm:
-        packages:
-          mode: never
-    dists:
-      el9:
-        format: rpm
-        architectures:
-          - x86_64
-          - aarch64
-        limit: 0
-        exclude: []
-      trixie:
-        format: deb
-        architectures:
-          - x86_64
-          - aarch64
-        limit: 0
-        exclude: []
+要防止整个仓库被删除，设置 `protected: true`。它会阻止 `repo rm`，包括带 `-f` 的调用，
+但不限制包和 Dist 的修改。
+
+<span id="空-dist-也有合法协议发布面"></span>
+
+## 期望状态与构建状态
+
+期望状态记录各 Dist 应包含哪些包；构建状态记录最近完成的元数据构建快照。
+
+默认情况下，`add` 和 `rm` 更新成员后会构建相关输出。带 `--skip` 时，只更新成员关系，
+不构建。新包字节先保存在私有 `pending/` 中，构建时再进入包池。
+
+```bash
+sow add ./incoming/ -C /srv/repo -r demo -d el9 --skip
+sow status -C /srv/repo -r demo
+sow build -C /srv/repo -r demo
+sow check -C /srv/repo -r demo
 ```
 
-架构别名只在解析边界规范化一次:`amd64 → x86_64`,`arm64 → aarch64`。输出永远是 canonical family。生态名只在渲染出来的 DEB 视图目录名里出现(`binary-amd64`、`binary-arm64`)。
+`dirty` 表示仓库需要构建，公开目录仍对应上一次完成的构建快照。
+策略、架构或签名变化也会使 Dist 变脏。成员关系或构建状态仍引用某个架构时，不能从配置删除它。
 
-`config check` 不是 YAML lint。它会打开每个已初始化 Repository 的 SQLite,把候选配置与实际的 Dist、架构、成员集、Built 状态和签名可用性逐项比对。移除仍被成员或 Built 状态引用的架构族是预期拒绝(退出码 `6`);数据库或协议证据损坏是完整性错误(退出码 `5`)。每个写命令在写 journal 之前都跑同一套预检,所以 `config check` 能提前告诉你下一条 `add` 会不会被拒。
+新 Dist 会立即获得各架构的有效空索引。已配置元数据签名时，空 Dist 也会签名。
+移除最后一个成员后，索引为空，但入口仍保留。
 
-```console
-$ sow config check
-configuration valid: /data/ws repositories=1 dists=2
+<span id="发现哪个工作区"></span>
+
+## 查找工作区
+
+Managed 命令按以下顺序查找最近祖先目录中的 `sow.yml`：
+
+1. 指定 `-C/--workdir DIR` 时从 `DIR` 开始，否则从当前目录开始。
+2. 没有找到工作区时，从 `$SOW_DIR` 开始查找。
+3. 两次都没有找到时，返回工作区发现错误。
+
+命令使用找到的第一个配置，即使该配置有错误。`--workdir` 只改变工作区查找起点，
+不改变进程目录。相对输入路径仍相对于当前目录：
+
+```bash
+sow add ./build/example.rpm -C /srv/repo -r demo -d el9
 ```
 
-完整 schema(包括 `filesystem` 与 `r2` 发布目标)见
-[`sow.yml` 配置参考](/zh/docs/reference/config/)。
+查找起点可以是符号链接，但搜索沿输入路径的祖先目录进行。工作区内的符号链接会阻止
+隐式推断仓库或 Dist。需要时使用物理工作区路径，并明确指定 `-r`、`-d`。
 
-## 发现:哪个工作区?
+Plain 命令 `sow create` 不参与工作区查找。
 
-Managed 命令按以下顺序寻找最近祖先中的 `sow.yml`:
+<span id="选择哪个仓库哪个-dist"></span>
 
-1. 给了 `-C/--workdir DIR`：从 `DIR` 向上找，并跳过当前目录候选。
-2. 否则从当前目录向上找。
-3. 仍未找到：从 `$SOW_DIR` 向上找；显式 `-C` 查找失败后也保留这条回退。
-4. 还是没有:失败,并提示 `sow init`、`--workdir` 与 `SOW_DIR`。
+## 选择仓库与 Dist
 
-找到第一个 `sow.yml` 就停,不会越过它继续往上找"更好的那个"。
-查找沿传入路径的字面祖先进行，找到后再解析并绑定真实工作区根。符号链接起点可以使用，
-但其字面祖先未必等于目标的物理祖先；别名引起选择歧义时，直接指定物理根。
-`sow config check` 报告解析后的工作区，而不只是发现起点。
-
-`--workdir` 不是 `chdir`。它只改变发现的起点。`sow add` 里的相对 `PATH` 仍然相对你真实的当前目录解析 —— 这正是 `sow add ./build/*.rpm -C /srv/ws` 应有的行为。
-
-`sow create` 不参与上述任何一步。
-
-## 选择:哪个仓库、哪个 Dist?
-
-Repository 选择,按序:
+仓库选择使用第一个可用结果：
 
 1. 显式 `-r/--repo NAME`。
-2. 命令起始目录位于 `<workspace>/<repo>/` 内。
-3. 工作区只有一个 Repository。
-4. 否则失败并列出候选。
+2. 工作区查找起点所在的仓库。
+3. 工作区中唯一的仓库。
 
-Dist 选择,按序:
+`add`、`rm` 和 `ls` 按以下顺序选择 Dist：
 
-1. 一个或多个显式 `-d/--dist NAME`(可重复)。
-2. 起始目录位于 `<workspace>/<repo>/dists/<dist>/` 内。
-3. 选定 Repository 只有一个 Dist。
-4. 否则失败并列出候选。
+1. 显式 `-d` 参数；可重复使用，选择多个 Dist。
+2. 工作区查找起点所在的 Dist。
+3. 所选仓库中唯一的 Dist。
 
-关键的不对称在这里:没给 `-d` 时,`build`、`check`、`status` 默认作用于选定 Repository 的 **全部** Dist —— 对这几个命令而言,"没有过滤条件"解释成"全都要"是安全的。而 `add`、`rm`、`ls` 必须得到明确的 Dist 集合,因为猜一个包该落到哪里并不安全:
+如果仍有多个选择，命令要求显式指定。
 
-```console
-$ sow ls
-workspace discovery error: managed: workspace discovery error: repository "pigsty" has multiple Dists (el9, trixie); select one or more with --dist
-```
+`build`、`check` 和 `status` 默认覆盖所选仓库的全部 Dist。
+`show` 搜索所选仓库，`where` 搜索工作区全部仓库。支持 `-d` 的命令可用它缩小范围。
+各命令的选择规则见[命令参考](/zh/docs/command/)。
 
-退出码 `2`。所有推断都在路径类型与符号链接校验之后才进行。
+<span id="状态数据库与软件包事实"></span>
+<span id="init-只做收敛不做重置"></span>
 
-## `init` 只做收敛,不做重置
+## 重复初始化与升级
 
-`sow init` 的幂等性是设计出来的,它的规则是架构不变式而不是使用便利:
+再次运行 `init` 会补齐配置中尚未初始化的仓库和 Dist。已有状态只做检查，不重置构建快照。
+给已有 Dist 新增架构后，运行 `build` 生成新视图。
 
-- **没有 `sow.yml`:** 创建一个,写入 `schema: sow/v3` 与 `architectures: [x86_64, aarch64]`,同时创建 `.sow/`。不自动创建任何 Repository。
-- **已有合法配置:** 按稳定名称顺序补齐尚未初始化的部分 —— 缺失的 Repository 外壳、缺失的 SQLite、整个缺失的 Dist。新建的 Dist 立刻生成其当前有效架构的全部空视图。
-- **已有有效数据库状态或有效协议指针:** 只校验。绝不覆盖、绝不清零 Generation、绝不重写字节。
-- **Dist 已初始化之后又往配置里加了架构:** `init` 不渲染新视图、不推进 Generation。该 Dist 保持 dirty,等待显式 `build`。移除仍被成员或 Built 状态使用的架构族则失败。
+初始化已提交部分对象、后续又失败时，命令返回退出码 `3` 并报告已完成内容。
+修正错误后再次运行 `init`。
 
-```console
-$ sow init .
-initialized /data/ws: config_created=false repositories_initialized=0 dists_initialized=0
-```
+SOW 0.5 使用数据库 schema v13。先备份旧工作区，再用
+[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 执行受支持的升级。
+不要手动修改 SQLite schema 版本。
 
-第三、第四条规则的意义在于:`init` 必须能安全地在装着真实内容的仓库上执行。它朝声明的配置收敛,但绝不会拿"还没初始化"当借口去重建一个本来就好好的东西。
+数据库还缓存解析后的包信息。后续构建可以复用缓存和文件指纹；`sow check` 则读取包字节
+并计算哈希，执行完整一致性检查。
 
-对象按稳定顺序处理。如果靠前的配置、Repository 或 Dist 已经耐久提交,而靠后的对象失败了,已提交的计数会被保留:人类输出先报告已提交的结果,`--json` 保留结构化 result,命令以 `3`(部分成功)退出。如果此时还没有任何东西提交过,则按原始错误类别退出。
+继续阅读[成员策略](/zh/docs/feature/policy/)、[视图](/zh/docs/feature/views/)和
+[事务与恢复](/zh/docs/feature/transactions/)。
 
-## 空 Dist 也有合法协议发布面
-
-`dist new` 建出来的 Dist,在 add 第一个包之前就已具备完整协议入口。RPM Dist 每个架构族
-有一份合法的空 `repodata`;DEB Dist 有 `Packages`、`Packages.gz`、by-hash 条目和
-`Release`。如果 Repository 配了元数据密钥,空 Dist 也一样签名。
-
-因此从 Dist 里移除最后一个包之后,留下的是一份合法的空索引（配置签名时仍签名），
-而不是缺失或损坏的协议入口。真实包管理器验收仍是另一层兼容性门禁。
-
-## Protected 仓库
-
-```yaml
-repos:
-  pigsty:
-    protected: true
-```
-
-`protected: true` 会拒绝 `repo rm`,即使加了 `-f`,返回退出码 `6`。它不限制别的:`add`、`rm`、`build` 和常规 Dist 维护照常。真要删这个 Repository,你必须先改 `sow.yml`、通过 `config check`,然后才能删 —— 这个摩擦正是该 flag 存在的意义。
-
-## 继续阅读
-
-- [包池与元数据视图](/zh/docs/feature/views/) —— `build` 到底写了什么
-- [发布模型](/zh/blog/design/publication/) —— Generation 如何抵达目标
-- [成员策略](/zh/docs/feature/policy/) —— `exclude` 与 `limit` 如何决定谁留下
-- [第一个工作区](/zh/docs/start/workspace/) —— 本页的十分钟动手版
-- [`sow.yml` 配置参考](/zh/docs/reference/config/) —— 完整 schema
+<span id="继续阅读"></span>

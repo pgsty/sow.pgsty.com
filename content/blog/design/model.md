@@ -2,7 +2,7 @@
 title: "System Model"
 linkTitle: "System Model"
 date: 2026-08-08
-lastmod: 2026-08-24
+lastmod: 2026-10-13
 authors: [Vonng]
 description: "The objects and state transitions that connect packages, distributions, generations, and publication targets."
 categories: [Design]
@@ -15,105 +15,102 @@ icon: fa-solid fa-diagram-project
 draft: false
 ---
 
-The model is deliberately layered. Configuration expresses intent, the database records
-owned state, and the public tree is a deterministic projection. None of those layers may
-quietly become a substitute for another.
+SOW uses configuration for repository settings, SQLite for managed state, and a public
+directory for client access. The model separates the packages you select from the files
+that have been built and published.
 
-## Object hierarchy
+<span id="object-hierarchy"></span>
+
+## Objects
 
 ```text
 Workspace
 ├── Repository
-│   ├── Package Object
-│   ├── Dist
-│   │   └── Membership -> Package Object
+│   ├── Pool: package objects
+│   ├── Dists: package memberships and policies
 │   ├── Desired state
 │   ├── Built Generation
-│   └── Retained Generation references
-└── Publication Target
-    └── Repository + provider + prefix
+│   └── Retained Generations
+└── Publication targets
+    └── Repository + storage backend + prefix
 ```
 
 ### Workspace
 
-A Workspace supplies discovery, configuration, and coordination. It owns `sow.yml`, the
-private `.sow/` directory, and stable lock paths. It is not a package deduplication domain.
+A Workspace contains `sow.yml`, the private `.sow/` directory, and stable lock files.
+It groups configuration and lets commands discover the selected Repository.
 
 ### Repository
 
-A Repository is the smallest self-contained public archive and the unit of package
-identity. It owns one `pool/`, one set of `dists/`, one state database, and one Generation
-sequence. Two Repositories share no package bytes or counters even when their inputs match.
+A Repository owns one `pool/`, one `dists/` tree, one state database, and one Generation
+sequence. Package deduplication is local to this Repository. Two Repositories with the
+same input packages each keep their own copy.
 
-### Package Object
+### Package object
 
-A Package Object is identified by its final SHA-256 after any package signing. Logical
-coordinates such as name, version, release, and architecture are metadata; the digest is
-the byte identity. Re-adding the same digest is idempotent. Different bytes at the same
-canonical pool path are a hard conflict.
+SOW identifies a package object by its SHA-256 after package signing. Name, version,
+release, and architecture describe the package; the digest identifies its bytes.
+Re-adding the same object reuses it. Different bytes at the same Pool path are a conflict.
 
-### Dist and Membership
+### Dist and membership
 
-A Dist is an APT or RPM publication policy and a collection of memberships. Membership is
-many-to-many: one Package Object may belong to several Dists without acquiring another
-canonical payload. Neutral packages (`all` or `noarch`) project into every matching
-architecture view but remain one logical membership.
+A Dist selects packages and settings for one format, RPM or DEB. A package can belong to
+several Dists while keeping one Pool file. Architecture-neutral packages (`noarch` or
+`all`) appear in each matching architecture view without another package copy.
 
 ### Desired, Built, and Generation
 
-Desired state is what configuration and package operations ask for. Built state is the
-last fully rendered and validated public tree. A Generation is an immutable inventory of
-that Built state; a Changeset is the exact difference between two inventories.
+Desired state records the selected packages and configuration. Built state records the
+last completed build. A Generation is an immutable inventory of that build, and a
+changeset compares two inventories.
 
-Keeping Desired and Built separate lets an interrupted operation be described honestly:
-the intent may have changed while the last committed public tree remains valid.
+An `add --skip` operation can change Desired state without rebuilding indexes. An interrupted
+build can also leave unfinished work. Use `sow status` to inspect the difference and
+`sow build` to apply pending changes or finish recovery.
 
-### Publication Target
+### Publication target
 
-A target binds one Repository to a provider endpoint and prefix. Publication attempts,
-applied checkpoints, remote inventory, grace, and delete evidence are target-scoped.
-Building a Repository is target-neutral; publishing it is not.
+A target connects one Repository to a storage backend and prefix. Each target has its own
+publication attempts, checkpoints, inventory, and cleanup records.
 
-Storage identity (provider/endpoint/region/bucket), target identity (storage plus prefix), and
-Repository identity are durable. Only target name, public endpoint, and cache TTL may change through
-operator-confirmed rebind, and every accepted change appends an immutable binding revision.
+See [Publication and recovery](/blog/design/publication/#target-identity) for target identity and configuration changes.
 
 ## State flow
 
 ```text
 package input
-    -> inspect/sign/hash
-    -> Package Object + Membership
+    -> inspect, sign if configured, and hash
+    -> package object and membership
     -> Desired state
     -> render and validate
-    -> Built Generation + Changeset
+    -> Built Generation and changeset
     -> target publication attempt
     -> applied checkpoint
 ```
 
-Every arrow is journaled or transactional. A later stage consumes an immutable identity
-from the previous one rather than reinterpreting mutable paths.
+Managed operations record their progress in transactions and journals. Recovery uses these
+records to finish or roll back the interrupted step.
 
-## Public and private state
+<span id="public-and-private-state"></span>
 
-| Public, copy as one unit | Private, never serve |
+## Public and private files
+
+| Serve as a complete Repository | Keep in the private workspace |
 |---|---|
 | `<repo>/pool/` | `sow.yml` |
 | `<repo>/dists/` | `.sow/` databases and journals |
-| protocol signatures and indexes | locks, stages, recovery pre-images |
-| Generation-described regular files | credentials and provider receipts |
+| Generated indexes and signatures | Locks, staging, and recovery files |
 
-A copy of only the public tree is a valid static repository. It is not an authoritative
-writer: without the matching private state it cannot safely resume publication history,
-retention, or garbage collection.
+A copy of the public tree can serve packages. To continue managing that Repository, keep
+the matching private workspace too. A public copy alone has no membership, retention,
+or publication history.
 
-## Locking boundary
+<span id="locking-boundary"></span>
 
-Workspace lifecycle operations take the Workspace lock. Repository mutations take a
-stable Repository lock. When both are required, acquisition order is Workspace then
-Repository, released in reverse. Stable lock paths prevent a rename or recovery operation
-from accidentally creating a second writer on a new inode.
+## Locks and writers
 
-The model assumes one authoritative Workspace and exclusive write authority for every
-configured target prefix. Distributed arbitration between independent Workspaces is a
-non-goal.
+The Workspace and each Repository have separate locks. Most reads use shared locks; writes use exclusive locks to prevent concurrent changes to the same state.
+`sow status` queries the lock state directly so you can inspect an active writer.
+
+One workspace must own writes to each target prefix. These locks coordinate local processes,
+not independent workspaces on different hosts.

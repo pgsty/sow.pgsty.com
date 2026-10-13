@@ -1,8 +1,8 @@
 ---
+url: "/zh/tags/"
 title: 标签
-description: "横跨文档与发布注记的主题：软件包格式、仓库模式，以及交付机制。"
+description: "查找软件包格式、仓库模式与发布相关页面。"
 ---
 
-标签描述一个页面「讲的是什么」，与它在导航中的位置无关。`rpm`、`deb`、`yum`、`apt`
-是软件包格式；`plain` 与 `managed` 是两种执行模式；`publish`、`generation`、
-`retention`、`transaction` 则是把仓库送到使用者手上的机制。
+标签将不同栏目中的相关页面归在一起。`rpm` 和 `deb` 表示软件包格式，`yum` 和 `apt` 表示包管理器。
+`plain` 与 `managed` 表示两种模式；其他标签涵盖发布、Generation、保留与事务等主题。
