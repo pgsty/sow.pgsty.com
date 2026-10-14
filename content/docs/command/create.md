@@ -126,6 +126,8 @@ d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab  epel-release-7
 
 Cleanup applies only to top-level regular package files that parsed successfully and matched a rule.
 
+Documentation packages such as `annobin-docs` are retained unless they match one of those rules.
+
 SOW removes the existing `repo_complete` before replacing indexes. It then deletes the packages matched by the cleanup rules and writes the new marker last. A missing marker means the build is incomplete.
 
 ## Signing RPMs

@@ -97,6 +97,8 @@ sow create /srv/offline --pigsty
 package facts. It does not remove an RPM solely because its architecture is
 `i386`, `i486`, `i586`, or `i686`.
 
+Documentation packages such as `annobin-docs` are retained unless they match those cleanup rules.
+
 After updating indexes and removing the selected packages, SOW writes `repo_complete`.
 Each line contains a SHA-256, two spaces, and a retained package basename. Lines are
 sorted by basename.

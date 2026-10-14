@@ -87,6 +87,8 @@ sow create /srv/offline --pigsty
 `--pigsty` 根据包内信息删除 DEB `i386` 包和 Patroni 3.0.4 包。
 它不会仅因 RPM 架构为 `i386`、`i486`、`i586` 或 `i686` 而删除该包。
 
+`annobin-docs` 等文档包会保留，除非命中上述清理规则。
+
 索引更新和包清理完成后，SOW 写入 `repo_complete`。每行包含 SHA-256、两个空格和保留的
 包文件名，按文件名排序。
 
