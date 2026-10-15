@@ -14,7 +14,7 @@ SOW 0.2.0 引入了面向 RPM 与 DEB 仓库的 Plain 和 Managed 工作流。�
 
 本文记录 0.2.0 发布时的功能。当前安装与操作方法见[现行文档](/zh/docs/)。
 
-<span id="两种工作模式"></span>
+<span id="两种工作模式" data-td-print-local></span>
 
 ## 构建平面仓库
 
@@ -28,7 +28,7 @@ RPM 生成 `repodata/`，DEB 生成 `Packages` 与 `Packages.gz`，混合目录�
 
 本版还加入 `--sign-with`，为未签名 RPM 软件包签名。使用 `--overwrite` 可替换已有 RPM 签名。Plain 模式不生成或签署 APT `Release` 文件。
 
-<span id="生命周期控制"></span>
+<span id="生命周期控制" data-td-print-local></span>
 
 ## 持续管理仓库
 
@@ -57,7 +57,7 @@ sow check -r pigsty
 
 服务或发布完整 Repository 目录树，让元数据能访问共享包池。对已配置目标，`sow publish` 管理上传顺序与中断恢复。R2 清理只报告候选对象，不删除远端对象。
 
-<span id="兼容性证据"></span>
+<span id="兼容性证据" data-td-print-local></span>
 
 ## 发布测试与源码
 

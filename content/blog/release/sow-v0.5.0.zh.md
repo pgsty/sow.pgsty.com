@@ -17,7 +17,7 @@ SOW 0.5.0 为已有 YUM 仓库增加发布时间参数，并修复 Managed 仓�
 
 安装方式见[下载 SOW](/zh/download/)。使用 0.3 或 0.4 Managed 工作区时，先迁移各个 Repository，再进行写操作。
 
-<span id="升级与开发者说明"></span>
+<span id="升级与开发者说明" data-td-print-local></span>
 
 ## 升级 Managed 工作区
 
@@ -38,7 +38,7 @@ sow check -r pgsql -C /srv/sow
 迁移后的数据库使用 SOW 0.5.0 或更新版本。备份与安装步骤见
 [安装与升级](/zh/docs/start/install/#从-04-升级到-05)。
 
-<span id="已有-yum-仓库的发布时间"></span>
+<span id="已有-yum-仓库的发布时间" data-td-print-local></span>
 
 ## 保持 YUM 发布时间递增
 
@@ -67,7 +67,7 @@ sow create /srv/yum.candidate --metadata-timestamp "$PUBLISH_TIME"
 在维护脚本中保存已发布的最大时间戳。内容变化时递增时间戳，恢复旧包集合也按一次新发布处理。
 如果之前的转换已将时间戳重置为零，用转换前的发布历史恢复该值。
 
-<span id="验收外围维护流程"></span>
+<span id="验收外围维护流程" data-td-print-local></span>
 
 如果客户端校验仓库签名，每次修改后都要签署最终的 `repomd.xml`。
 `--sign-with` 签署 RPM 包，不会签署索引。
@@ -95,7 +95,7 @@ Agent 签名固定签名时间，并选择可用的签名子钥。新 APT 发布
 命令收到 SIGINT 或 SIGTERM 后返回退出码 `130`。全部被拒绝的 `add` 批次会显示各文件的错误。
 `file://` R2 凭据必须指向普通文件。
 
-<span id="rpm-依赖兼容性"></span>
+<span id="rpm-依赖兼容性" data-td-print-local></span>
 
 ## RPM 依赖
 

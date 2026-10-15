@@ -13,7 +13,7 @@ icon: fa-solid fa-arrows-rotate
 维护的仓库。它使用 Plain `sow create`，不创建 Managed 工作区。发布时间参数是
 **SOW 0.5.0 新增功能**，请使用该版本或更新版本。
 
-<span id="1-明确迁移范围"></span>
+<span id="1-明确迁移范围" data-td-print-local></span>
 
 ## 1. 准备工作副本
 
@@ -76,7 +76,7 @@ gpg --verify /srv/yum.candidate/repodata/repomd.xml.asc \
 
 `--sign-with KEY` 签署未签名 RPM，并保留已有签名，包括供应商签名。要把全部包签名换成自己的密钥，在候选副本中增加 `--overwrite`。这会改变包文件；`create` 根据签名后的结果生成索引。最后一次 `create` 完成后，再生成索引的分离签名。
 
-<span id="4-切换前验收"></span>
+<span id="4-切换前验收" data-td-print-local></span>
 
 ## 4. 测试候选仓库
 
@@ -91,7 +91,7 @@ gpg --verify /srv/yum.candidate/repodata/repomd.xml.asc \
 与 `createrepo_c` 比较时，检查依赖含义与客户端行为；XML 排版可以不同。
 详情见[平台与集成](/zh/docs/reference/compatibility/)。
 
-<span id="5-发布与恢复资料保留"></span>
+<span id="5-发布与恢复资料保留" data-td-print-local></span>
 
 ## 5. 发布仓库
 

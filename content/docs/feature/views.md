@@ -9,7 +9,7 @@ weight: 400
 icon: fa-solid fa-layer-group
 ---
 
-<span id="the-invariant"></span>
+<span id="the-invariant" data-td-print-local></span>
 
 A Managed repository stores each package object once under `pool/`. Its Dists and
 architecture views contain indexes that refer to those package bytes.
@@ -23,10 +23,10 @@ architecture views contain indexes that refer to those package bytes.
 The storage boundary is one repository. The same package in another repository or
 publication target occupies that repository's or target's namespace.
 
-<span id="what-a-built-repository-looks-like"></span>
-<span id="rpm-views-use-computed-parent-relative-hrefs"></span>
-<span id="why-views-contain-metadata-only"></span>
-<span id="neutral-packages-are-selected-not-duplicated"></span>
+<span id="what-a-built-repository-looks-like" data-td-print-local></span>
+<span id="rpm-views-use-computed-parent-relative-hrefs" data-td-print-local></span>
+<span id="why-views-contain-metadata-only" data-td-print-local></span>
+<span id="neutral-packages-are-selected-not-duplicated" data-td-print-local></span>
 
 ## RPM views
 
@@ -75,7 +75,7 @@ signed, `InRelease` and `Release.gpg`.
 `all` packages appear in each applicable architecture index while their payload remains
 one pool object. There are no per-view package copies or per-architecture `Release` files.
 
-<span id="ordinary-clients-and-reposync-are-different-contracts"></span>
+<span id="ordinary-clients-and-reposync-are-different-contracts" data-td-print-local></span>
 
 ## Export for `dnf reposync`
 
@@ -94,7 +94,7 @@ The default copies files. `--hardlink` requires the same filesystem and makes ex
 packages share the source inode; keep those files read-only. An export does not create
 Dist membership or a retained generation and is not input to `sow publish`.
 
-<span id="copy-and-publication"></span>
+<span id="copy-and-publication" data-td-print-local></span>
 
 ## Deliver the complete repository
 
@@ -110,4 +110,4 @@ pointers. It lists local files; `sow publish` manages target progress and cache 
 See [Repository layout](/docs/reference/layout/),
 [Serving](/docs/tutorial/serving/), and [`export`](/docs/command/export/).
 
-<span id="next"></span>
+<span id="next" data-td-print-local></span>

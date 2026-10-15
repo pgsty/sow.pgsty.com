@@ -9,12 +9,12 @@ weight: 700
 icon: fa-solid fa-shield-halved
 ---
 
-<span id="不变式"></span>
+<span id="不变式" data-td-print-local></span>
 
 Managed 模式先记录变更，再应用变更。中断后，SOW 根据记录完成或回滚操作。
 应使用哪个命令恢复，取决于中断的操作。
 
-<span id="崩溃恢复"></span>
+<span id="崩溃恢复" data-td-print-local></span>
 
 ## 恢复中断操作
 
@@ -43,8 +43,8 @@ sow log -r demo
 本地恢复完成后，运行 `sow check -r demo`。常见错误见[故障处理](/zh/docs/reference/troubleshooting/)，
 发布恢复见 [`publish`](/zh/docs/command/publish/)。
 
-<span id="两类持久日志"></span>
-<span id="操作生命周期"></span>
+<span id="两类持久日志" data-td-print-local></span>
+<span id="操作生命周期" data-td-print-local></span>
 
 ## SOW 记录什么
 
@@ -79,7 +79,7 @@ planned → staged → applied → built → done
 或受支持的内部契约升级，也可能让已提交操作保留为脏状态。日志会记录原因。
 需要时修正配置，再次运行 `build`。
 
-<span id="提交顺序"></span>
+<span id="提交顺序" data-td-print-local></span>
 
 ## 本地构建顺序
 
@@ -102,7 +102,7 @@ SOW 在同一文件系统暂存并检查输出，再按以下顺序应用：
 远端 HTTP 请求和缓存也有各自的存续时间；在线目标更新应使用 `sow publish`。
 `sow changes` 只列出本地文件变化，不执行发布或目标清理。
 
-<span id="锁模型"></span>
+<span id="锁模型" data-td-print-local></span>
 
 ## 锁与等待
 
@@ -121,7 +121,7 @@ Plain `create` 锁住目录及其父目录。
 无法取得锁时退出码为 `4`。`-N` 与非零 `-T` 同用时退出码为 `2`。
 只使用命令支持的锁选项；只读命令不接受这些选项。
 
-<span id="fail-closed-的路径安全"></span>
+<span id="fail-closed-的路径安全" data-td-print-local></span>
 
 ## 文件系统要求
 
@@ -134,4 +134,4 @@ Plain `create` 锁住目录及其父目录。
 [仓库布局](/zh/docs/reference/layout/)。脚本如何处理中断、占锁和完整性错误，
 见[退出码](/zh/docs/reference/exit-codes/)。
 
-<span id="继续阅读"></span>
+<span id="继续阅读" data-td-print-local></span>

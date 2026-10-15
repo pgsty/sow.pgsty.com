@@ -9,7 +9,7 @@ weight: 500
 icon: fa-solid fa-filter
 ---
 
-<span id="两条规则与它们的顺序"></span>
+<span id="两条规则与它们的顺序" data-td-print-local></span>
 
 用 Dist 策略排除不需要的包，并限制索引中的版本数量。在 `sow.yml` 中配置
 `exclude` 和 `limit`：
@@ -27,7 +27,7 @@ SOW 先执行 `exclude`，再执行 `limit`。`add`、`rm` 和 `build` 都会对
 成员集合应用策略。编辑策略后，先运行 `sow config check`，再运行 `sow build`，
 使现有成员符合新规则。
 
-<span id="exclude"></span>
+<span id="exclude" data-td-print-local></span>
 
 ## 排除软件包
 
@@ -69,7 +69,7 @@ SOW 根据二进制包名确定 `kind`：
 用 `sow show PACKAGE --json` 查看计算出的类型。模式值不会按此表校验：
 `kind: [debug]` 是合法配置，但不会匹配任何包类型。
 
-<span id="limit"></span>
+<span id="limit" data-td-print-local></span>
 
 ## 限制版本数量
 
@@ -86,7 +86,7 @@ RPM 使用 epoch-version-release 排序，DEB 使用 Debian 版本排序，不�
 `limit: 2` 时，向已有版本 1、2 的 Dist 加入版本 3，会在同一次操作中移除版本 1 的成员关系。
 即使包名相同，`x86_64` 包与 `noarch` 包也属于不同分组。
 
-<span id="策略作用于完整候选集"></span>
+<span id="策略作用于完整候选集" data-td-print-local></span>
 
 ## 读取策略结果
 
@@ -97,7 +97,7 @@ RPM 使用 epoch-version-release 排序，DEB 使用 Debian 版本排序，不�
 同一个包可以被一个 Dist 接受、被另一个排除。没有 Dist 接受新包时，
 SOW 不会为它保存一个无成员关系的包对象。
 
-<span id="放宽策略永远不会复活任何东西"></span>
+<span id="放宽策略永远不会复活任何东西" data-td-print-local></span>
 
 ## 恢复已移除的版本
 
@@ -111,7 +111,7 @@ sow add ./archive/example-1.0-1.x86_64.rpm -r demo -d el9
 策略移除的是成员关系，不是包字节。已构建或保留的构建快照可能仍引用该包，使其继续留在包池。
 用 [`sow gc`](/zh/docs/command/gc/) 回收无引用对象；对已发布目标使用 `sow gc TARGET`。
 
-<span id="预览一次决策"></span>
+<span id="预览一次决策" data-td-print-local></span>
 
 ## 预览移除结果
 
@@ -125,4 +125,4 @@ sow rm example -r demo -d el9 --check
 完整配置见[配置参考](/zh/docs/reference/config/)，输入结果见
 [`sow add`](/zh/docs/command/add/)。
 
-<span id="继续阅读"></span>
+<span id="继续阅读" data-td-print-local></span>

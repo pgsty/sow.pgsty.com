@@ -9,7 +9,7 @@ weight: 400
 icon: fa-solid fa-diagram-project
 ---
 
-<span id="选择模式"></span>
+<span id="选择模式" data-td-print-local></span>
 
 ## 选择模式 {#plain-还是-managed}
 
@@ -26,7 +26,7 @@ icon: fa-solid fa-diagram-project
 
 如果目录已包含全部待发布软件包，使用 Plain。如果需要由 SOW 持续管理成员与仓库，使用 Managed。
 
-<span id="工作区repository-与-dist"></span>
+<span id="工作区repository-与-dist" data-td-print-local></span>
 
 ## 工作区、仓库与 Dist {#managed-层级}
 
@@ -49,7 +49,7 @@ Workspace                    /srv/sow
 
 **架构视图** 保存某个架构的元数据。SOW 把 RPM `noarch` 与 DEB `all` 包加入每个适用的视图。
 
-<span id="每个软件包只存一份"></span>
+<span id="每个软件包只存一份" data-td-print-local></span>
 
 ## 每个软件包只存一份 {#一条规范包体路径}
 
@@ -61,7 +61,7 @@ RPM 元数据通过相对路径引用包池，APT `Packages` 使用相对于仓�
 
 部分镜像工具（包括默认 `dnf reposync`）拒绝 RPM 中指向父目录的路径。为这些工具使用 [`sow export rpm-leaf`](/zh/docs/command/export/) 导出独立 RPM 仓库。
 
-<span id="期望成员与构建快照"></span>
+<span id="期望成员与构建快照" data-td-print-local></span>
 
 ## 期望成员与构建快照 {#desired-与-built}
 
@@ -82,7 +82,7 @@ add / rm → 期望成员 → build → 构建快照
 | `sow changes [BASE_GENERATION]` | 列出指定快照到当前构建的文件变更 |
 | `sow publish TARGET` | 检查当前构建并发布到已配置目标 |
 
-<span id="理解仓库状态"></span>
+<span id="理解仓库状态" data-td-print-local></span>
 
 ## 理解仓库状态 {#事务与失败状态}
 

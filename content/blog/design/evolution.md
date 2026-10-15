@@ -101,7 +101,7 @@ introduced the package-facts cache, and made Plain generation a rebuildable one-
 operation. It also expanded Membership in batches and grouped payload commits to reduce
 filesystem work.
 
-<span id="v04-harden-evidence-rather-than-add-another-model"></span>
+<span id="v04-harden-evidence-rather-than-add-another-model" data-td-print-local></span>
 
 ## v0.4: strengthen verification and recovery
 
@@ -139,7 +139,7 @@ Several v0.1 rules continue in the smaller model:
 - Record compatibility results with the source version, client, provider, and environment
   that produced them.
 
-<span id="documentation-authority"></span>
+<span id="documentation-authority" data-td-print-local></span>
 
 The current rationale is in [Design Principles](/blog/design/principles/),
 [System Model](/blog/design/model/), [Single-Payload Repository](/blog/design/single-payload/),

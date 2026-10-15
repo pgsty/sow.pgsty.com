@@ -65,7 +65,7 @@ CGO_ENABLED=0 go build -trimpath \
 sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 ```
 
-<span id="校验"></span>
+<span id="校验" data-td-print-local></span>
 
 ## 验证安装
 
@@ -76,7 +76,7 @@ sow help
 
 `version` 显示产品版本、目标操作系统与架构，以及 Go 工具链版本。`help` 列出命令；用 `sow help COMMAND` 查看某条命令的参数。
 
-<span id="升级-03-managed-workspace"></span>
+<span id="升级-03-managed-workspace" data-td-print-local></span>
 
 ## 从 0.3 或 0.4 升级 Managed 工作区 {#从-04-升级到-05}
 
@@ -101,7 +101,7 @@ sow check -r REPOSITORY -C /srv/sow
 
 Plain 模式没有数据库需要迁移。更换现有 YUM 仓库的生成工具前，按[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)操作。0.5 新增 `--metadata-timestamp`，但默认值仍为 `0`。根据仓库发布历史设置时间戳，才能让带缓存的 YUM 客户端接受新索引。
 
-<span id="权限与可选工具"></span>
+<span id="权限与可选工具" data-td-print-local></span>
 
 ## 存储与可选工具
 

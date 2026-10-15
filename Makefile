@@ -13,7 +13,7 @@ d: debug
 s: serve
 
 dev:
-	HUGO_MODULE_REPLACEMENTS='github.com/pgsty/oink -> $(abspath $(THEME_DIR))' \
+	GOWORK=off HUGO_MODULE_WORKSPACE=off HUGO_MODULE_REPLACEMENTS='github.com/pgsty/oink -> $(abspath $(THEME_DIR))' \
 		$(HUGO) server --renderToMemory --bind "$(BIND)" $(if $(strip $(PORT)),--port "$(PORT)")
 
 debug: dev

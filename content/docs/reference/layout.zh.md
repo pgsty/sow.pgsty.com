@@ -12,7 +12,7 @@ icon: fa-solid fa-folder-tree
 对外服务完整的 Managed 仓库目录：`pool/` 加 `dists/`。
 工作区配置与 `.sow/` 状态应位于 Web 服务根目录之外。
 
-<span id="plain-模式"></span>
+<span id="plain-模式" data-td-print-local></span>
 
 ## Plain 目录
 
@@ -62,7 +62,7 @@ SOW 0.5 使用数据库 schema v13 和配置 schema `sow/v3`，两者是独立�
 执行 [`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 前备份完整工作区。
 数据库应与匹配的私有、公开状态一起保存；不要手动修改 schema 版本或可重建缓存。
 
-<span id="规范包池"></span>
+<span id="规范包池" data-td-print-local></span>
 
 ## 包池
 
@@ -84,7 +84,7 @@ pool/<prefix>/<source>/<filename>
 这些记录都不再需要某个对象后，[`gc`](/zh/docs/command/gc/) 才会删除它。
 每个仓库有独立包池。
 
-<span id="rpm-纯元数据视图"></span>
+<span id="rpm-纯元数据视图" data-td-print-local></span>
 
 ## RPM Dist
 
@@ -111,7 +111,7 @@ dists/el9/
 
 需要包路径都在目录内的独立副本时，使用 [`export rpm-leaf`](/zh/docs/command/export/)。
 
-<span id="deb-视图"></span>
+<span id="deb-视图" data-td-print-local></span>
 
 ## DEB Dist
 
@@ -134,7 +134,7 @@ dists/trixie/
 `Release` 包含 SHA-256 清单与 `Acquire-By-Hash: yes`。
 架构为 `all` 的包进入每个适用索引。
 
-<span id="发布目标"></span>
+<span id="发布目标" data-td-print-local></span>
 
 ## 发布路径
 
@@ -149,7 +149,7 @@ dists/trixie/
 导出拥有自己的包文件、元数据、清单和 `.sow-export.json` 完成标记。
 它是独立交付制品，不是另一个 Managed 仓库。
 
-<span id="名称与服务边界"></span>
+<span id="名称与服务边界" data-td-print-local></span>
 
 ## 名称与大小写
 
@@ -164,4 +164,4 @@ dists/trixie/
 继续阅读[视图](/zh/docs/feature/views/)、[对外服务](/zh/docs/tutorial/serving/)和
 [平台](/zh/docs/reference/compatibility/)。
 
-<span id="延伸阅读"></span>
+<span id="延伸阅读" data-td-print-local></span>

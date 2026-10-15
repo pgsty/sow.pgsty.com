@@ -130,7 +130,7 @@ sow create "$HOME/sow-quickstart"
 
 预览完成后，用 `Ctrl+C` 停止服务器，并从客户端删除本例的源配置文件。软件包目录可以保留，以后继续使用。
 
-<span id="何时使用-managed-模式"></span>
+<span id="何时使用-managed-模式" data-td-print-local></span>
 
 ## 下一步
 

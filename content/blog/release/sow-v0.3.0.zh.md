@@ -13,7 +13,7 @@ draft: false
 
 SOW 0.3.0 减少了重复包读取与数据库查询。Plain 生成只遍历一次包内容；Managed 构建缓存已解析的包数据，并批量提交新包池文件。本版还移除了已退役的运行时与发布代码。
 
-<span id="plain一遍完成包体处理"></span>
+<span id="plain一遍完成包体处理" data-td-print-local></span>
 
 ## Plain：每个软件包只读一次
 
@@ -23,7 +23,7 @@ Plain 构建中断后，从软件包目录重新运行即可。0.3 移除了 Pla
 
 Pigsty 预处理现在保留包头架构为 `i386`、`i486`、`i586` 或 `i686` 的 RPM。它们继续进入仓库元数据与 `repo_complete` 校验清单。DEB `i386` 与精确匹配 Patroni 3.0.4 的过滤规则保持不变。
 
-<span id="managed扩展规模不放松完整性"></span>
+<span id="managed扩展规模不放松完整性" data-td-print-local></span>
 
 ## Managed：减少查询与包读取
 
@@ -35,7 +35,7 @@ Schema v10 新增可重建的包数据缓存，以软件包 SHA-256 为键。导
 
 RPM 元数据与 DEB 架构索引使用受 `--jobs` 限制的并行任务。构建快照清单与变更记录改为批量写入。
 
-<span id="有界提交与可观察构建"></span>
+<span id="有界提交与可观察构建" data-td-print-local></span>
 
 ## 批量提交与构建进度
 
@@ -45,7 +45,7 @@ Pending 文件在私有 `0700` 目录中使用最终的 `0644` 权限。构建�
 
 长时间构建会为渲染、包文件提交、Dist 发布、规范化与完成阶段记录 `build_progress` 事件。使用 `sow log` 查看进度。
 
-<span id="收敛发布与运行时边界"></span>
+<span id="收敛发布与运行时边界" data-td-print-local></span>
 
 ## 统一仓库实现
 
@@ -53,7 +53,7 @@ Pending 文件在私有 `0700` 目录中使用最终的 `0644` 权限。构建�
 
 R2 发布保留 SOW 所需的存储操作：list、HEAD、GET 与条件 PUT。远端垃圾回收只报告候选对象，不执行删除。
 
-<span id="正确性与发布质量"></span>
+<span id="正确性与发布质量" data-td-print-local></span>
 
 ## 其他变更
 
@@ -62,7 +62,7 @@ R2 发布保留 SOW 所需的存储操作：list、HEAD、GET 与条件 PUT。�
 - CI 覆盖格式化、模块一致性、静态分析、死代码检查、测试、竞态检测、源码交付与软件包构建。
 - 集成测试覆盖混合 RPM/DEB 流程、Ubuntu 22.04 上未签名 Plain APT 安装、AlmaLinux 8/9 与 `pgsty/el10` 的 DNF 签名切换，以及固定 MinIO 版本上的 S3 条件操作。
 
-<span id="获取发布版本"></span>
+<span id="获取发布版本" data-td-print-local></span>
 
 ## 获取 0.3.0
 

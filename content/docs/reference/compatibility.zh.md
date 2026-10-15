@@ -14,7 +14,7 @@ icon: fa-solid fa-circle-check
 SOW 在 Linux 和 macOS 上构建 RPM、DEB 仓库文件。工作区使用受支持的本地文件系统，
 再为客户端配置 HTTP 或存储访问。
 
-<span id="release-目标"></span>
+<span id="release-目标" data-td-print-local></span>
 
 ## 平台
 
@@ -42,7 +42,7 @@ macOS 上使用 APFS；所需原子目录交换不可用时，SOW 会拒绝构�
 大小写敏感卷上创建的仓库可能包含目标卷无法区分的源码目录，filesystem 发布会在开始前检查。
 详见[布局](/zh/docs/reference/layout/)。
 
-<span id="仓库客户端契约"></span>
+<span id="仓库客户端契约" data-td-print-local></span>
 
 ## 仓库格式与客户端
 
@@ -77,7 +77,7 @@ SOW 不生成 zchunk、modulemd 或源码包索引。客户端需要模块 profi
 的包路径。这符合其[安全写入路径规则](https://dnf-plugins-core.readthedocs.io/en/latest/reposync.html)。
 该工作流使用 [`sow export rpm-leaf`](/zh/docs/command/export/) 生成自包含目录。
 
-<span id="迁移已有-plain-yum-仓库"></span>
+<span id="迁移已有-plain-yum-仓库" data-td-print-local></span>
 
 ### 已有 EL7 缓存
 
@@ -105,8 +105,8 @@ Managed RPM 与导出的 RPM 仓库使用固定时间戳 `0`，没有覆盖选�
 需要另行配置。`public_endpoint` 告诉 SOW 从哪里验证公开内容，不会创建服务。
 R2 公开 endpoint 必须使用 HTTP(S)，filesystem 还支持 `file://` 验证。
 
-<span id="自动化集成矩阵"></span>
-<span id="部署门禁"></span>
+<span id="自动化集成矩阵" data-td-print-local></span>
+<span id="部署门禁" data-td-print-local></span>
 
 ## 自动化覆盖
 

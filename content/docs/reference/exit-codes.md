@@ -9,9 +9,9 @@ weight: 500
 icon: fa-solid fa-triangle-exclamation
 ---
 
-<span id="1--runtime-error"></span>
-<span id="2--usage-discovery-or-configuration"></span>
-<span id="6--expected-rejection"></span>
+<span id="1--runtime-error" data-td-print-local></span>
+<span id="2--usage-discovery-or-configuration" data-td-print-local></span>
+<span id="6--expected-rejection" data-td-print-local></span>
 
 Use exit codes in scripts and read the diagnostic for the specific cause.
 SOW uses the same code meanings across commands.
@@ -27,8 +27,8 @@ SOW uses the same code meanings across commands.
 | `6` | Rejected operation | Correct the conflict, package reference, architecture, signing setting, or protection setting named in the error |
 | `130` | Command interrupted by SIGINT or SIGTERM | Follow the recovery procedure for the interrupted operation |
 
-<span id="0--success-or-no-op"></span>
-<span id="5--integrity-recovery-or-not-deliverable"></span>
+<span id="0--success-or-no-op" data-td-print-local></span>
+<span id="5--integrity-recovery-or-not-deliverable" data-td-print-local></span>
 
 ## Success does not always mean ready
 
@@ -46,8 +46,8 @@ because Desired state has not been built. Run `build` and check again.
 If the diagnostic reports corrupted bytes or conflicting recovery evidence, inspect that
 failure before retrying. See [Troubleshooting](/docs/reference/troubleshooting/).
 
-<span id="3--partial-success"></span>
-<span id="using-them-in-scripts"></span>
+<span id="3--partial-success" data-td-print-local></span>
+<span id="using-them-in-scripts" data-td-print-local></span>
 
 ## Partial success
 
@@ -80,8 +80,8 @@ sow publish mirror
 `mirror` must be a configured target for `demo`. The script stops on partial success so
 you can inspect failed inputs before publishing.
 
-<span id="130--interrupted"></span>
-<span id="4--lock-unavailable"></span>
+<span id="130--interrupted" data-td-print-local></span>
+<span id="4--lock-unavailable" data-td-print-local></span>
 
 ## Lock waits and interruption
 
@@ -119,4 +119,4 @@ results remain available when `ok` is `false`.
 See [JSON output](/docs/reference/json/) and
 [Transactions and recovery](/docs/feature/transactions/).
 
-<span id="see-also"></span>
+<span id="see-also" data-td-print-local></span>

@@ -19,7 +19,7 @@ verification during builds.
 Install the release from [Download SOW](/download/). If you use a Managed workspace from
 0.3 or 0.4, migrate each Repository before further writes.
 
-<span id="upgrade-and-developer-notes"></span>
+<span id="upgrade-and-developer-notes" data-td-print-local></span>
 
 ## Upgrade a Managed workspace
 
@@ -41,7 +41,7 @@ and APT metadata records. Later builds reuse matching RPM verification records.
 Use SOW 0.5.0 or newer with the migrated database. For backup and installation steps, see
 [Install and upgrade](/docs/start/install/#upgrade-from-04-to-05).
 
-<span id="publication-time-for-an-existing-yum-repository"></span>
+<span id="publication-time-for-an-existing-yum-repository" data-td-print-local></span>
 
 ## Preserve YUM publication time
 
@@ -73,7 +73,7 @@ Keep the highest published timestamp in your maintenance script. Increase it whe
 changes, including when you restore an older package set. If a previous conversion reset
 timestamps to zero, use the pre-conversion publication history to recover that value.
 
-<span id="validate-the-surrounding-maintenance-workflow"></span>
+<span id="validate-the-surrounding-maintenance-workflow" data-td-print-local></span>
 
 If clients verify repository signatures, sign the final `repomd.xml` after each change.
 `--sign-with` signs RPM packages; it does not sign the index. The
@@ -109,7 +109,7 @@ rules.
 the migration command. Commands interrupted by SIGINT or SIGTERM return exit code `130`. Rejected `add` batches
 show per-file errors. `file://` R2 credentials must point to regular files.
 
-<span id="rpm-dependency-compatibility"></span>
+<span id="rpm-dependency-compatibility" data-td-print-local></span>
 
 ## RPM dependencies
 

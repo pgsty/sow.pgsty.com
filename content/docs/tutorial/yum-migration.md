@@ -13,7 +13,7 @@ This guide covers a flat directory of RPMs and `repodata/`, such as a repository
 built with `createrepo_c`. It uses Plain `sow create`, without creating a Managed workspace.
 The publication-time option requires **SOW 0.5.0 or later**.
 
-<span id="1-establish-the-migration-boundary"></span>
+<span id="1-establish-the-migration-boundary" data-td-print-local></span>
 
 ## 1. Prepare a working copy
 
@@ -76,7 +76,7 @@ Record `PUBLISH_TIME` in the maintenance system before publishing the candidate.
 
 `--sign-with KEY` signs unsigned RPMs and preserves existing signatures, including vendor signatures. To replace every package signature with your key, add `--overwrite` in the candidate copy. This changes package bytes; `create` builds indexes from the signed result. Generate the detached index signature after the final `create` run.
 
-<span id="4-verify-before-promotion"></span>
+<span id="4-verify-before-promotion" data-td-print-local></span>
 
 ## 4. Test the candidate
 
@@ -94,7 +94,7 @@ If you are migrating an automated update script, also check two cases:
 When comparing with `createrepo_c`, check dependency meaning and client behavior; XML
 formatting can differ. See [Platforms & Integrations](/docs/reference/compatibility/).
 
-<span id="5-promote-and-retain-recovery-material"></span>
+<span id="5-promote-and-retain-recovery-material" data-td-print-local></span>
 
 ## 5. Publish the repository
 

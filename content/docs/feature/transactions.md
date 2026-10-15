@@ -9,13 +9,13 @@ weight: 700
 icon: fa-solid fa-shield-halved
 ---
 
-<span id="the-invariant"></span>
+<span id="the-invariant" data-td-print-local></span>
 
 Managed mode records changes before it applies them. After an interruption, SOW uses
 these records to finish or roll back the operation. The recovery command depends on the
 operation that stopped.
 
-<span id="crash-recovery"></span>
+<span id="crash-recovery" data-td-print-local></span>
 
 ## Recover an interrupted operation
 
@@ -45,8 +45,8 @@ configuration, database, and private state together during recovery. After a loc
 run `sow check -r demo`. See [Troubleshooting](/docs/reference/troubleshooting/) for common errors
 and [`publish`](/docs/command/publish/) for publication recovery.
 
-<span id="two-durable-journals"></span>
-<span id="the-operation-lifecycle"></span>
+<span id="two-durable-journals" data-td-print-local></span>
+<span id="the-operation-lifecycle" data-td-print-local></span>
 
 ## What SOW records
 
@@ -84,7 +84,7 @@ change before a build plan is frozen, or supported contract upgrade can also lea
 committed operation dirty. The log records the reason. Correct the configuration if
 needed, then run `build` again.
 
-<span id="the-commit-order"></span>
+<span id="the-commit-order" data-td-print-local></span>
 
 ## Local build order
 
@@ -109,7 +109,7 @@ switch views at different times. Remote HTTP requests and caches also have their
 lifetimes; use `sow publish` for live target updates. `sow changes` lists local file
 changes and does not perform publication or target cleanup.
 
-<span id="the-lock-model"></span>
+<span id="the-lock-model" data-td-print-local></span>
 
 ## Locks and waiting
 
@@ -130,7 +130,7 @@ Plain `create` locks its directory and parent.
 A failed lock attempt exits `4`. Combining `-N` with a nonzero `-T` exits `2`.
 Use only the lock options accepted by the command; read-only commands do not accept them.
 
-<span id="fail-closed-path-safety"></span>
+<span id="fail-closed-path-safety" data-td-print-local></span>
 
 ## Filesystem requirements
 
@@ -144,4 +144,4 @@ Repository and Dist names use `[a-z0-9][a-z0-9._-]*`; reserved names are listed 
 [Repository layout](/docs/reference/layout/). For script responses to interruption, lock
 contention, or integrity errors, see [Exit codes](/docs/reference/exit-codes/).
 
-<span id="next"></span>
+<span id="next" data-td-print-local></span>

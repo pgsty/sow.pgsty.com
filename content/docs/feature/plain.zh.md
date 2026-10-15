@@ -16,8 +16,8 @@ icon: fa-solid fa-folder-open
 sow create /srv/offline
 ```
 
-<span id="契约"></span>
-<span id="扫描与输出规则"></span>
+<span id="契约" data-td-print-local></span>
+<span id="扫描与输出规则" data-td-print-local></span>
 
 ## 输入与输出
 
@@ -38,9 +38,9 @@ RPM 包路径使用文件名，DEB 的 `Filename` 使用 `./<文件名>`。所�
 SOW 格式 RPM 元数据并替换上次运行留下的不完整输出。生成目录的权限为 `0755`，
 生成文件为 `0644`。
 
-<span id="单遍流水线"></span>
-<span id="最终-stat-校验保证什么"></span>
-<span id="确定性与-no-op"></span>
+<span id="单遍流水线" data-td-print-local></span>
+<span id="最终-stat-校验保证什么" data-td-print-local></span>
+<span id="确定性与-no-op" data-td-print-local></span>
 
 ## 构建与重复运行
 
@@ -63,7 +63,7 @@ sow create /srv/offline --metadata-timestamp 1791849600
 该选项只改变 `repomd.xml`，不改变压缩 XML、包文件或 DEB 索引。时间戳应从已有仓库的值
 继续递增；操作方法见 [YUM 迁移](/zh/docs/tutorial/yum-migration/)。
 
-<span id="发布与中断语义"></span>
+<span id="发布与中断语义" data-td-print-local></span>
 
 ## 构建中断
 
@@ -76,7 +76,7 @@ SOW 先在暂存区生成并检查元数据，再替换公开文件。这些替�
 对在线服务，在单独目录构建，成功后再把完整目录切换上线。需要记录成员关系、构建快照和
 事务恢复时，使用 [Managed 模式](/zh/docs/feature/managed/)。
 
-<span id="--pigsty-marker-门禁"></span>
+<span id="--pigsty-marker-门禁" data-td-print-local></span>
 
 ## Pigsty 清理与完成标记
 
@@ -94,7 +94,7 @@ SOW 在替换公开文件前移除旧标记，最后写入新标记。采用此�
 如果构建中断且标记缺失，再次运行带 `--pigsty` 的命令。目录已有 `repo_complete` 时，
 不带 `--pigsty` 的命令会拒绝重建。
 
-<span id="显式-rpm-签名"></span>
+<span id="显式-rpm-签名" data-td-print-local></span>
 
 ## RPM 包签名
 
@@ -108,7 +108,7 @@ sow create /srv/offline --sign-with 6D5C5A26C36B1F73
 
 Plain 模式不签仓库元数据。Managed 元数据签名和包签名策略见[签名](/zh/docs/feature/signing/)。
 
-<span id="锁与适用范围"></span>
+<span id="锁与适用范围" data-td-print-local></span>
 
 ## 并发命令
 
@@ -117,4 +117,4 @@ Plain 模式不签仓库元数据。Managed 元数据签名和包签名策略见
 
 完整选项与结果字段见 [`sow create`](/zh/docs/command/create/)。
 
-<span id="继续阅读"></span>
+<span id="继续阅读" data-td-print-local></span>

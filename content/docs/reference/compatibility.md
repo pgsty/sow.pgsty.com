@@ -14,7 +14,7 @@ icon: fa-solid fa-circle-check
 SOW builds RPM and DEB repository files on Linux and macOS. Choose a supported local
 filesystem for the workspace, then configure HTTP or storage access for clients.
 
-<span id="release-targets"></span>
+<span id="release-targets" data-td-print-local></span>
 
 ## Platforms
 
@@ -44,7 +44,7 @@ also rejected on case-insensitive filesystems. A repository created on a case-se
 volume can contain source directories that a case-insensitive destination cannot represent;
 filesystem publication checks this before starting. See [Layout](/docs/reference/layout/).
 
-<span id="repository-client-contract"></span>
+<span id="repository-client-contract" data-td-print-local></span>
 
 ## Repository formats and clients
 
@@ -83,7 +83,7 @@ parent-relative package locations in a canonical Managed RPM view. This follows 
 Use [`sow export rpm-leaf`](/docs/command/export/) to generate a self-contained directory
 for that workflow.
 
-<span id="migrating-an-existing-plain-yum-repository"></span>
+<span id="migrating-an-existing-plain-yum-repository" data-td-print-local></span>
 
 ### Existing EL7 caches
 
@@ -114,8 +114,8 @@ service, DNS, credentials, access policy, and cache behavior for that storage.
 `public_endpoint` tells SOW where to verify public content; it does not create the service.
 R2 public endpoints must use HTTP(S). Filesystem targets also accept `file://` verification.
 
-<span id="automated-integration-matrix"></span>
-<span id="deployment-gate"></span>
+<span id="automated-integration-matrix" data-td-print-local></span>
+<span id="deployment-gate" data-td-print-local></span>
 
 ## Automated coverage
 

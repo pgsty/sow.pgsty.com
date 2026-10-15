@@ -21,7 +21,7 @@ icon: fa-solid fa-magnifying-glass-chart
 
 这些命令不修改仓库内容。
 
-<span id="status低成本状态"></span>
+<span id="status低成本状态" data-td-print-local></span>
 
 ## 查看状态
 
@@ -42,7 +42,7 @@ sow status -r demo
 `recovering` 或 `error` 状态按诊断及[恢复流程](/zh/docs/feature/transactions/#恢复中断操作)处理。
 交付前运行 `check`。
 
-<span id="check交付证明"></span>
+<span id="check交付证明" data-td-print-local></span>
 
 ## 校验仓库
 
@@ -70,7 +70,7 @@ sow check -r demo
 `check` 忽略缓存指纹，读取每份唯一物理包并计算哈希，不修复文件。
 即使上一构建快照仍一致，脏仓库或恢复中的仓库也不能通过交付检查。
 
-<span id="changesgeneration-差异"></span>
+<span id="changesgeneration-差异" data-td-print-local></span>
 
 ## 比较构建快照
 
@@ -86,7 +86,7 @@ sow changes 42 -r demo --json
 该比较不检查发布目标。用 `sow publish TARGET` 更新目标并继续中断传输，
 用目标 GC 回收远端对象。
 
-<span id="generation-保留与-gc"></span>
+<span id="generation-保留与-gc" data-td-print-local></span>
 
 ## 保留构建快照与回收无用包
 
@@ -107,7 +107,7 @@ sow retain ls -r demo
 目标清理使用 `sow gc TARGET`：filesystem 目标在缓存宽限期后支持条件删除，
 R2 目标只报告候选，不执行删除。
 
-<span id="操作日志"></span>
+<span id="操作日志" data-td-print-local></span>
 
 ## 查看与导出日志
 
@@ -127,5 +127,5 @@ sow log prune 2026-01-01 -r demo
 脚本接口见 [JSON 输出](/zh/docs/reference/json/)，中断处理见
 [事务与恢复](/zh/docs/feature/transactions/)。
 
-<span id="操作模式"></span>
-<span id="延伸阅读"></span>
+<span id="操作模式" data-td-print-local></span>
+<span id="延伸阅读" data-td-print-local></span>

@@ -9,7 +9,7 @@ weight: 400
 icon: fa-solid fa-layer-group
 ---
 
-<span id="不变式"></span>
+<span id="不变式" data-td-print-local></span>
 
 Managed 仓库将每个包对象保存在 `pool/` 中。Dist 和架构视图只包含引用这些包字节的索引。
 
@@ -21,10 +21,10 @@ Managed 仓库将每个包对象保存在 `pool/` 中。Dist 和架构视图只�
 
 存储范围是一个仓库。同一个包放入其他仓库或发布目标后，分别占用相应仓库或目标的命名空间。
 
-<span id="构建完成的-repository"></span>
-<span id="rpm-view-使用计算出的父级相对-href"></span>
-<span id="为什么-view-只含元数据"></span>
-<span id="中性包只被选入不会复制"></span>
+<span id="构建完成的-repository" data-td-print-local></span>
+<span id="rpm-view-使用计算出的父级相对-href" data-td-print-local></span>
+<span id="为什么-view-只含元数据" data-td-print-local></span>
+<span id="中性包只被选入不会复制" data-td-print-local></span>
 
 ## RPM 视图
 
@@ -57,7 +57,7 @@ demo/
 客户端指向 `dists/el9/x86_64/`，服务端提供完整 `demo/` 目录，使相对包路径可以解析。
 `sow check` 检查索引路径没有逃出仓库，并指向预期包对象。
 
-<span id="apt-view"></span>
+<span id="apt-view" data-td-print-local></span>
 
 ## APT 视图
 
@@ -73,7 +73,7 @@ Filename: pool/e/example/example_1.0-1_amd64.deb
 `all` 包出现在每个适用架构索引中，包体仍只有一份包池对象。
 没有每视图包副本，也没有每架构 `Release` 文件。
 
-<span id="普通客户端与-reposync-是两份契约"></span>
+<span id="普通客户端与-reposync-是两份契约" data-td-print-local></span>
 
 ## 为 `dnf reposync` 导出
 
@@ -90,7 +90,7 @@ sow export rpm-leaf el9 x86_64 /srv/exports/el9-x86_64 -r demo
 默认复制文件。`--hardlink` 要求同一文件系统，使导出包与源包共用 inode，
 因此应保持导出文件只读。导出不会创建 Dist 成员或保留构建快照，也不是 `sow publish` 的输入。
 
-<span id="复制与发布"></span>
+<span id="复制与发布" data-td-print-local></span>
 
 ## 交付完整仓库
 
@@ -105,4 +105,4 @@ sow export rpm-leaf el9 x86_64 /srv/exports/el9-x86_64 -r demo
 继续阅读[仓库布局](/zh/docs/reference/layout/)、
 [对外服务](/zh/docs/tutorial/serving/)和 [`export`](/zh/docs/command/export/)。
 
-<span id="继续阅读"></span>
+<span id="继续阅读" data-td-print-local></span>

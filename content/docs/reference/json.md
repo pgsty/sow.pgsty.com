@@ -9,7 +9,7 @@ weight: 600
 icon: fa-solid fa-code
 ---
 
-<span id="stdout-and-stderr"></span>
+<span id="stdout-and-stderr" data-td-print-local></span>
 
 Use `--json` on data commands to read one newline-terminated JSON document from stdout.
 Diagnostics go to stderr. `log export` is the exception: it writes JSON Lines and does
@@ -19,7 +19,7 @@ not accept `--json`.
 sow status -r demo --json | jq '.result.status'
 ```
 
-<span id="the-envelope"></span>
+<span id="the-envelope" data-td-print-local></span>
 
 ## Envelope
 
@@ -63,8 +63,8 @@ Branch on `code` or `class`, not message text. Classes are `runtime`, `usage`, `
 `config`, `partial`, `lock`, `integrity`, `rejected`, and `interrupted`.
 See [Exit codes](/docs/reference/exit-codes/) for the mapping and next steps.
 
-<span id="operation-ids-are-strings"></span>
-<span id="generation-ids-are-fixed-width-strings"></span>
+<span id="operation-ids-are-strings" data-td-print-local></span>
+<span id="generation-ids-are-fixed-width-strings" data-td-print-local></span>
 
 ### Identities
 
@@ -90,8 +90,8 @@ The top-level `operation` field is set as follows:
 A null operation does not mean the command is read-only. `where` keeps the top-level
 repository null and places repository names inside its locations.
 
-<span id="result-shapes"></span>
-<span id="create"></span>
+<span id="result-shapes" data-td-print-local></span>
+<span id="create" data-td-print-local></span>
 
 ## Plain `create`
 
@@ -107,8 +107,8 @@ repository null and places repository names inside its locations.
 | `recovered` | Always `false`; Plain mode has no journal recovery |
 | `signed`, `signer` | Signed filenames and signer identity, when available |
 
-<span id="init"></span>
-<span id="config-check-and-config-show"></span>
+<span id="init" data-td-print-local></span>
+<span id="config-check-and-config-show" data-td-print-local></span>
 
 ## Initialization and configuration
 
@@ -122,8 +122,8 @@ Resolved signing settings can contain public fingerprints and certificate snapsh
 hashes. Fingerprint and hash arrays are independently sorted and must not be paired by
 index. See [Configuration](/docs/reference/config/#key-references).
 
-<span id="repo-ls-repo-new-repo-show"></span>
-<span id="dist-ls-dist-new-dist-show"></span>
+<span id="repo-ls-repo-new-repo-show" data-td-print-local></span>
+<span id="dist-ls-dist-new-dist-show" data-td-print-local></span>
 
 ## Repositories and Dists
 
@@ -150,9 +150,9 @@ Each architecture entry has `family` and `ecosystem_arch`. DEB uses canonical fa
 `complete`. `grace_not_before` is null when no grace deadline applies.
 See [`repo migrate`](/docs/command/repo/#sow-repo-migrate) for phase meanings.
 
-<span id="add"></span>
-<span id="rm"></span>
-<span id="build"></span>
+<span id="add" data-td-print-local></span>
+<span id="rm" data-td-print-local></span>
+<span id="build" data-td-print-local></span>
 
 ## `add`, `rm`, and `build`
 
@@ -181,8 +181,8 @@ file list. Pool bytes are not removed by `rm`.
 
 `build` returns `operation`, considered `dists`, and `noop`. A no-op creates no new generation.
 
-<span id="status"></span>
-<span id="check"></span>
+<span id="status" data-td-print-local></span>
+<span id="check" data-td-print-local></span>
 
 ## `status` and `check`
 
@@ -219,7 +219,7 @@ No base compares with the previous built generation. Base `0` lists the complete
 tree. A numbered base compares that recorded generation with the current one.
 This is a local file difference; use `publish` and target `gc` for remote changes.
 
-<span id="ls-show-where"></span>
+<span id="ls-show-where" data-td-print-local></span>
 
 ## Package queries
 
@@ -241,7 +241,7 @@ Package-object `coordinate` omits the format prefix; prepend `format + ":"` to f
 CLI coordinate reference. `where` location coordinates already include the prefix. Each location has `repository`,
 `dists`, `built_dists`, `sha256`, and `coordinate`.
 
-<span id="publish-retain-gc-export"></span>
+<span id="publish-retain-gc-export" data-td-print-local></span>
 
 ## Publication and maintenance
 
@@ -258,8 +258,8 @@ CLI coordinate reference. `where` location coordinates already include the prefi
 `publish --rebind` has the normal publish shape. R2 target GC reports candidates without
 deleting remote objects.
 
-<span id="log"></span>
-<span id="log-export-is-not-an-envelope"></span>
+<span id="log" data-td-print-local></span>
+<span id="log-export-is-not-an-envelope" data-td-print-local></span>
 
 ## Operation logs
 
@@ -294,7 +294,7 @@ sow log export - -r demo
 
 A file target must be new and its immediate parent must be a real directory, not a symlink.
 
-<span id="a-worked-example"></span>
+<span id="a-worked-example" data-td-print-local></span>
 
 ## Use a validation result in a script
 
@@ -309,4 +309,4 @@ sow changes 0 -r demo --json \
 This checks the local repository and prints its current file manifest. To publish it,
 run `sow publish TARGET` for the configured target.
 
-<span id="see-also"></span>
+<span id="see-also" data-td-print-local></span>

@@ -86,7 +86,7 @@ v0.2.0 也明确区分了本地与远端状态：
 v0.3 保持 v0.2.0 公共布局不变。它删除了 V1 运行时与迁移测试工具，引入包属性缓存，
 并将 Plain 生成简化为可重建的单遍操作。成员关系改为批量展开，包体改为分组提交，减少文件系统操作。
 
-<span id="v04强化证据不再增加一套模型"></span>
+<span id="v04强化证据不再增加一套模型" data-td-print-local></span>
 
 ## v0.4：强化校验与恢复
 
@@ -118,7 +118,7 @@ v0.1 的部分规则继续用于更小的模型：
 - 删除前检查引用关系与精确身份；远端删除还要检查缓存宽限期与存储服务能力。
 - 兼容性结果记录产生它的源码版本、客户端、存储服务和环境。
 
-<span id="文档权威边界"></span>
+<span id="文档权威边界" data-td-print-local></span>
 
 当前设计理由见[设计原则](/zh/blog/design/principles/)、[系统模型](/zh/blog/design/model/)、
 [单包体仓库](/zh/blog/design/single-payload/)和[发布与恢复](/zh/blog/design/publication/)。

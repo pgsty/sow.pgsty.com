@@ -19,7 +19,7 @@ SOW uses configuration for repository settings, SQLite for managed state, and a 
 directory for client access. The model separates the packages you select from the files
 that have been built and published.
 
-<span id="object-hierarchy"></span>
+<span id="object-hierarchy" data-td-print-local></span>
 
 ## Objects
 
@@ -91,7 +91,7 @@ package input
 Managed operations record their progress in transactions and journals. Recovery uses these
 records to finish or roll back the interrupted step.
 
-<span id="public-and-private-state"></span>
+<span id="public-and-private-state" data-td-print-local></span>
 
 ## Public and private files
 
@@ -105,7 +105,7 @@ A copy of the public tree can serve packages. To continue managing that Reposito
 the matching private workspace too. A public copy alone has no membership, retention,
 or publication history.
 
-<span id="locking-boundary"></span>
+<span id="locking-boundary" data-td-print-local></span>
 
 ## Locks and writers
 

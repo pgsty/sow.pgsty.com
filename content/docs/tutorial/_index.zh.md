@@ -11,7 +11,7 @@ icon: fa-solid fa-graduation-cap
 
 本节介绍仓库创建、签名、发布与更新。尚未安装 SOW 时，先看[安装](/zh/docs/start/install/)。
 
-<span id="先看哪篇"></span>
+<span id="先看哪篇" data-td-print-local></span>
 
 {{< cards >}}
 {{< card title="迁移现有 YUM 仓库" link="/zh/docs/tutorial/yum-migration/" >}}
@@ -34,7 +34,7 @@ icon: fa-solid fa-graduation-cap
 {{< /card >}}
 {{< /cards >}}
 
-<span id="本板块约定"></span>
+<span id="本板块约定" data-td-print-local></span>
 
 ## 使用示例
 

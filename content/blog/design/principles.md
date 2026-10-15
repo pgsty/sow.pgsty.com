@@ -18,7 +18,7 @@ draft: false
 SOW separates package storage, repository builds, and publication. These principles explain
 where each kind of state belongs and how operations use it.
 
-<span id="one-owner-for-every-durable-fact"></span>
+<span id="one-owner-for-every-durable-fact" data-td-print-local></span>
 
 ## One owner for each record
 
@@ -34,7 +34,7 @@ where each kind of state belongs and how operations use it.
 Each Repository stores its own copy of a package. Each publication target stores its own
 copy too. This keeps package retention and deletion independent across repositories and targets.
 
-<span id="canonical-data-rebuildable-projections"></span>
+<span id="canonical-data-rebuildable-projections" data-td-print-local></span>
 
 ## Store packages; rebuild indexes
 
@@ -44,7 +44,7 @@ them. Indexes and architecture views describe those packages and can be rebuilt.
 Managed garbage collection removes a package only after its active, retained, and recovery
 references are gone. Plain mode rebuilds indexes directly from the current directory.
 
-<span id="the-public-tree-is-the-delivery-unit"></span>
+<span id="the-public-tree-is-the-delivery-unit" data-td-print-local></span>
 
 ## Serve the complete public tree
 
@@ -55,7 +55,7 @@ consumer needs a self-contained RPM architecture directory.
 Keep the workspace's `sow.yml` and `.sow/` outside the HTTP root. They contain configuration,
 databases, locks, journals, and recovery files.
 
-<span id="pointers-commit-payloads-prepare"></span>
+<span id="pointers-commit-payloads-prepare" data-td-print-local></span>
 
 ## Upload packages before indexes
 
@@ -69,7 +69,7 @@ Protocol pointers include `repomd.xml`, `Release`, and `InRelease`. SOW uploads 
 files before updating these pointers. Old files remain through the grace period so clients
 with cached indexes can still use them.
 
-<span id="recovery-cost-follows-state-cost"></span>
+<span id="recovery-cost-follows-state-cost" data-td-print-local></span>
 
 ## Recover according to the recorded state
 
@@ -80,8 +80,8 @@ A Managed publication records its plan and progress. Before commit intent, SOW c
 an attempt and abandon it. After commit intent, rerun `sow publish TARGET` to complete the
 recorded update. Conflicting file identities stop recovery and identify the object to inspect.
 
-<span id="compatibility-is-a-matrix"></span>
-<span id="evidence-never-upgrades-itself"></span>
+<span id="compatibility-is-a-matrix" data-td-print-local></span>
+<span id="evidence-never-upgrades-itself" data-td-print-local></span>
 
 ## Test the layout with its consumers
 
@@ -90,7 +90,7 @@ directory. Test the complete Repository and an exported RPM leaf separately. Rec
 client version and layout with each result. The [compatibility reference](/docs/reference/compatibility/)
 lists automated coverage.
 
-<span id="non-goals-keep-the-model-honest"></span>
+<span id="non-goals-keep-the-model-honest" data-td-print-local></span>
 
 ## Keep coordination local
 

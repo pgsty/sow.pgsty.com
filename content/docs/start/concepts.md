@@ -9,7 +9,7 @@ weight: 400
 icon: fa-solid fa-diagram-project
 ---
 
-<span id="choose-a-mode"></span>
+<span id="choose-a-mode" data-td-print-local></span>
 
 ## Choose a mode {#plain-or-managed}
 
@@ -26,7 +26,7 @@ icon: fa-solid fa-diagram-project
 
 Use Plain when the directory already contains the packages you want to publish. Use Managed when SOW should track membership and maintain the repository over time.
 
-<span id="workspace-repository-and-dist"></span>
+<span id="workspace-repository-and-dist" data-td-print-local></span>
 
 ## Workspace, Repository, and Dist {#managed-hierarchy}
 
@@ -49,7 +49,7 @@ A **Dist** selects packages of one format. For example, `el9` can contain RPMs a
 
 An **architecture view** contains metadata for one architecture. SOW includes neutral RPM `noarch` and DEB `all` packages in each applicable view.
 
-<span id="store-each-package-once"></span>
+<span id="store-each-package-once" data-td-print-local></span>
 
 ## Store each package once {#one-canonical-payload}
 
@@ -61,7 +61,7 @@ RPM metadata uses relative paths back to the pool. APT `Packages` entries use pa
 
 Some mirror tools, including default `dnf reposync`, reject the parent-relative RPM paths. Use [`sow export rpm-leaf`](/docs/command/export/) to create a standalone RPM repository for those tools.
 
-<span id="desired-membership-and-built-generations"></span>
+<span id="desired-membership-and-built-generations" data-td-print-local></span>
 
 ## Desired membership and built generations {#desired-and-built}
 
@@ -82,7 +82,7 @@ add / rm → Desired membership → build → Built Generation
 | `sow changes [BASE_GENERATION]` | List file changes from a recorded generation to the current build |
 | `sow publish TARGET` | Check and publish the current build to a configured target |
 
-<span id="understand-repository-state"></span>
+<span id="understand-repository-state" data-td-print-local></span>
 
 ## Understand repository state {#transactions-and-failure-states}
 

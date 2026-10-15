@@ -9,7 +9,7 @@ weight: 500
 icon: fa-solid fa-filter
 ---
 
-<span id="the-two-rules-and-their-order"></span>
+<span id="the-two-rules-and-their-order" data-td-print-local></span>
 
 Use Dist policy to exclude unwanted packages and limit the number of versions in indexes.
 Set `exclude` and `limit` in `sow.yml`:
@@ -27,7 +27,7 @@ SOW applies `exclude` first, then `limit`. `add`, `rm`, and `build` apply policy
 complete candidate membership of each selected Dist. Edit the policy, run
 `sow config check`, then run `sow build` to apply it to existing members.
 
-<span id="exclude"></span>
+<span id="exclude" data-td-print-local></span>
 
 ## Exclude packages
 
@@ -70,7 +70,7 @@ SOW derives `kind` from the binary package name:
 Use `sow show PACKAGE --json` to inspect the computed kind. Pattern values are not checked
 against this table: `kind: [debug]` is valid YAML but matches no package kind.
 
-<span id="limit"></span>
+<span id="limit" data-td-print-local></span>
 
 ## Limit versions
 
@@ -90,7 +90,7 @@ With `limit: 2`, adding version 3 to a Dist that contains versions 1 and 2 remov
 from membership in the same operation. An `x86_64` package and a `noarch` package count in
 separate groups, even when they share a binary name.
 
-<span id="policy-runs-over-the-full-candidate-set"></span>
+<span id="policy-runs-over-the-full-candidate-set" data-td-print-local></span>
 
 ## Read policy results
 
@@ -101,7 +101,7 @@ does not count as a failed input and does not make the command fail.
 A package can be accepted by one Dist and excluded by another. If no Dist accepts a new
 package, SOW does not store an unreferenced package object for it.
 
-<span id="loosening-a-policy-never-resurrects-anything"></span>
+<span id="loosening-a-policy-never-resurrects-anything" data-td-print-local></span>
 
 ## Restore a removed version
 
@@ -117,7 +117,7 @@ Policy removes membership, not package bytes. A package can remain in the pool b
 built or retained generation still needs it. Use [`sow gc`](/docs/command/gc/) to reclaim
 unreferenced objects. Use `sow gc TARGET` for a published target.
 
-<span id="previewing-a-decision"></span>
+<span id="previewing-a-decision" data-td-print-local></span>
 
 ## Preview removal
 
@@ -132,4 +132,4 @@ Check `prediction_complete` in JSON before treating the file list as complete.
 See [Configuration](/docs/reference/config/) for the full schema and
 [`sow add`](/docs/command/add/) for input results.
 
-<span id="next"></span>
+<span id="next" data-td-print-local></span>

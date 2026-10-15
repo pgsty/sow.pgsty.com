@@ -29,7 +29,7 @@ Start with these current design explanations:
 - [Publication and recovery](/blog/design/publication/): upload order, checkpoints, and cleanup.
 - [Design principles](/blog/design/principles/): state ownership and coordination.
 
-<span id="authority-and-evidence"></span>
+<span id="authority-and-evidence" data-td-print-local></span>
 
 The historical series follows the v0.1 program, its design decisions and tests, the v0.2
 reset, and later releases. It links to dated source snapshots. Use [SOW Docs](/docs/) for

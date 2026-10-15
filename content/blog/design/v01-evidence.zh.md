@@ -81,7 +81,7 @@ v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
 这项工作验证了一条具体的 Pigsty 切换路径，也建立了一种方法：
 把迁移假设记录为数据，在每一步前检查，切换结束后移除迁移代码。
 
-<span id="provider-与-edge-实验"></span>
+<span id="provider-与-edge-实验" data-td-print-local></span>
 
 ### 云存储与边缘服务实验
 
@@ -93,7 +93,7 @@ v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
 - [完整存储服务的检查点约束删除](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-20-full-provider-checkpoint-fenced-delete.md)；
 - Cloudflare 初始化、私有域名、服务身份验证和回滚记录。
 
-<span id="归档没有证明什么"></span>
+<span id="归档没有证明什么" data-td-print-local></span>
 
 部分测试使用指定的非生产资源，另一些离线运行或使用模拟服务，报告中分别注明。
 在 R2、MinIO 或 COS 上测得的存储行为，对应具体服务与所测 API。

@@ -12,8 +12,8 @@ icon: fa-solid fa-key
 配置元数据签名，让客户端验证仓库索引。需要客户端验证 RPM 文件内嵌签名时，
 另行配置 RPM 包签名。
 
-<span id="两条独立的信任链"></span>
-<span id="客户端验证什么"></span>
+<span id="两条独立的信任链" data-td-print-local></span>
+<span id="客户端验证什么" data-td-print-local></span>
 
 ## 签名对象
 
@@ -26,7 +26,7 @@ icon: fa-solid fa-key
 元数据签名不改变包字节。RPM 包签名会改变包字节及 SHA-256。
 SOW 不给 DEB 包文件增加签名。
 
-<span id="配置"></span>
+<span id="配置" data-td-print-local></span>
 
 ## 配置元数据签名
 
@@ -60,7 +60,7 @@ sow check -r demo
 `Release` 一致。未配置密钥时，SOW 生成未签名索引。
 Managed 签名设置来自 `sow.yml`，`build` 没有单次覆盖签名设置的选项。
 
-<span id="四种密钥引用形态"></span>
+<span id="四种密钥引用形态" data-td-print-local></span>
 
 ## 密钥与口令引用
 
@@ -85,8 +85,8 @@ Managed 签名设置来自 `sow.yml`，`build` 没有单次覆盖签名设置的
 升级包含 SHA-1 元数据签名的工作区后，先运行 `build`，再开始新发布。
 已有发布尝试继续使用其记录的文件。
 
-<span id="rpm-包体签名"></span>
-<span id="信任环彼此独立验证"></span>
+<span id="rpm-包体签名" data-td-print-local></span>
+<span id="信任环彼此独立验证" data-td-print-local></span>
 
 ## 配置 RPM 包签名
 
@@ -117,7 +117,7 @@ SOW 检查签名结果、包坐标及排除签名头后的包体摘要。已有�
 包签名工作流请使用 RPM 格式 v4。SOW 不支持 RPM 格式 v6 使用的签名标签。
 这与 OpenPGP 签名报文版本不同；历史 CentOS 的 OpenPGP v3、v4 签名受支持。
 
-<span id="更换密钥会让-dist-变-dirty"></span>
+<span id="更换密钥会让-dist-变-dirty" data-td-print-local></span>
 
 ## 更换密钥
 
@@ -138,7 +138,7 @@ SOW 检查签名结果、包坐标及排除签名头后的包体摘要。已有�
 RPM 验证按包的签名时间检查证书和签名子钥是否有效。证书保留了所需历史自签名与子钥绑定时，
 续期本身不会使旧包签名失效。导出续期公钥时保留这些历史公钥信息。
 
-<span id="plain-模式"></span>
+<span id="plain-模式" data-td-print-local></span>
 
 ## Plain 签名
 
@@ -154,4 +154,4 @@ Plain 模式只签 RPM 包文件。不带 `--overwrite` 时，为没有可解析
 客户端配置见[仓库签名](/zh/docs/tutorial/signing/)，完整字段见
 [配置参考](/zh/docs/reference/config/)。
 
-<span id="继续阅读"></span>
+<span id="继续阅读" data-td-print-local></span>

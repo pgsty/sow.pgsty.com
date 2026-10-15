@@ -17,7 +17,7 @@ draft: false
 
 SOW 分别管理包存储、仓库构建和发布。以下原则说明各类状态由谁保存，以及操作如何使用这些状态。
 
-<span id="每个持久事实只有一个主人"></span>
+<span id="每个持久事实只有一个主人" data-td-print-local></span>
 
 ## 每类记录由一个对象管理
 
@@ -33,7 +33,7 @@ SOW 分别管理包存储、仓库构建和发布。以下原则说明各类状�
 每个 Repository 分别保存自己的包副本，每个发布目标也分别保存一份。
 因此，各仓库和目标可以独立管理包的保留与删除。
 
-<span id="正典数据与可重建投影"></span>
+<span id="正典数据与可重建投影" data-td-print-local></span>
 
 ## 保存包体，重建索引
 
@@ -42,7 +42,7 @@ Managed 模式将包体保存在 `pool/` 中；Plain 模式使用输入目录中
 
 Managed 垃圾回收只删除已无当前引用、保留引用和恢复引用的包。Plain 模式直接根据当前目录重建索引。
 
-<span id="公共树是交付单元"></span>
+<span id="公共树是交付单元" data-td-print-local></span>
 
 ## 提供完整公共目录
 
@@ -51,7 +51,7 @@ Managed Repository 根目录包含 `pool/` 与 `dists/`。复制或提供整个�
 
 工作区的 `sow.yml` 和 `.sow/` 放在 HTTP 根目录之外，其中保存配置、数据库、锁、日志和恢复文件。
 
-<span id="包体做准备指针做提交"></span>
+<span id="包体做准备指针做提交" data-td-print-local></span>
 
 ## 先上传包，再更新索引入口
 
@@ -64,7 +64,7 @@ Managed Repository 根目录包含 `pool/` 与 `dists/`。复制或提供整个�
 协议入口文件包括 `repomd.xml`、`Release` 和 `InRelease`。
 SOW 先上传它们引用的文件，再更新入口文件。旧文件保留到宽限期结束，让缓存了旧索引的客户端仍可下载。
 
-<span id="恢复成本服从状态成本"></span>
+<span id="恢复成本服从状态成本" data-td-print-local></span>
 
 ## 按已记录的状态恢复
 
@@ -74,8 +74,8 @@ Managed 发布会记录计划和进度。记录提交意图前，SOW 可以核�
 记录提交意图后，重新运行 `sow publish TARGET` 完成已记录的更新。
 文件身份冲突时，恢复会停止并指出需要检查的对象。
 
-<span id="兼容性是一张矩阵"></span>
-<span id="证据不会自动升级"></span>
+<span id="兼容性是一张矩阵" data-td-print-local></span>
+<span id="证据不会自动升级" data-td-print-local></span>
 
 ## 用实际消费者检查布局
 
@@ -83,7 +83,7 @@ Managed 发布会记录计划和进度。记录提交意图前，SOW 可以核�
 完整 Repository 与导出的 RPM 叶目录应分别测试，并记录客户端版本与目录布局。
 [兼容性参考](/zh/docs/reference/compatibility/)列出自动化覆盖范围。
 
-<span id="非目标让模型保持诚实"></span>
+<span id="非目标让模型保持诚实" data-td-print-local></span>
 
 ## 在本地协调写入
 

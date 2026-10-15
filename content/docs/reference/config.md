@@ -22,7 +22,7 @@ sow config show --all
 `config check` validates the YAML, compares it with initialized repository state, and
 resolves signing references. `--all` expands defaults in `config show`.
 
-<span id="how-the-file-is-read"></span>
+<span id="how-the-file-is-read" data-td-print-local></span>
 
 ## File rules
 
@@ -36,9 +36,9 @@ resolves signing references. `--all` expands defaults in `config show`.
 
 Use [`repo migrate`](/docs/command/repo/#sow-repo-migrate) to upgrade an older repository database or layout.
 
-<span id="top-level"></span>
-<span id="architectures"></span>
-<span id="complete-example"></span>
+<span id="top-level" data-td-print-local></span>
+<span id="architectures" data-td-print-local></span>
+<span id="complete-example" data-td-print-local></span>
 
 ## Workspace
 
@@ -67,8 +67,8 @@ A specified architecture list must not be empty or contain duplicate families af
 normalization. `noarch` and `all` are package architectures, not configuration families.
 SOW includes those neutral packages in each applicable view.
 
-<span id="protected"></span>
-<span id="repository-names"></span>
+<span id="protected" data-td-print-local></span>
+<span id="repository-names" data-td-print-local></span>
 
 ## Repository
 
@@ -96,9 +96,9 @@ Reserved names are `.`, `..`, `.sow`, `pool`, `dists`, `sow.yml`, `workspace.loc
 `workspace-ops`, and `repo-locks`. Repository names must also have distinct private state
 paths; for example, `db` and `db.db` cannot coexist.
 
-<span id="format"></span>
-<span id="architectures-1"></span>
-<span id="limit"></span>
+<span id="format" data-td-print-local></span>
+<span id="architectures-1" data-td-print-local></span>
+<span id="limit" data-td-print-local></span>
 
 ## Dist
 
@@ -126,7 +126,7 @@ Removing an architecture still referenced by membership or built state is reject
 version ordering. Neutral packages form a separate group. Relaxing policy does not
 restore removed members; add their package files again.
 
-<span id="exclude"></span>
+<span id="exclude" data-td-print-local></span>
 
 ### Exclusion rules
 
@@ -176,7 +176,7 @@ signing:
       passphrase: env://SOW_METADATA_PASSPHRASE
 ```
 
-<span id="rpmpackages"></span>
+<span id="rpmpackages" data-td-print-local></span>
 
 ### RPM package settings
 
@@ -194,7 +194,7 @@ Duplicate trusted-key reference strings are rejected.
 Package signing calls the host `rpm` command on a staged copy. Its GPG environment must
 already contain the private key. A configured key file alone does not provision it.
 
-<span id="rpmmetadata-and-debmetadata"></span>
+<span id="rpmmetadata-and-debmetadata" data-td-print-local></span>
 
 ### Metadata settings
 
@@ -321,7 +321,7 @@ Provider, endpoint, region, bucket, prefix, and repository identity cannot be re
 configure a new target. Pending maintenance can block changes to cache TTL or the public
 endpoint until that maintenance completes.
 
-<span id="what-is-not-in-sowyml"></span>
+<span id="what-is-not-in-sowyml" data-td-print-local></span>
 
 ## Fixed settings
 
@@ -332,4 +332,4 @@ retention is managed with [`retain`](/docs/command/retain/), not a configuration
 See [Layout](/docs/reference/layout/), [Publication](/docs/command/publish/), and
 [Exit codes](/docs/reference/exit-codes/).
 
-<span id="see-also"></span>
+<span id="see-also" data-td-print-local></span>

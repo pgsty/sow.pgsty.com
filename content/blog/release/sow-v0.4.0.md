@@ -15,7 +15,7 @@ SOW 0.4.0 improved Managed repository verification and recovery. `check` reads e
 
 Plain behavior and the public `pool/` and `dists/` layout stayed the same. This page describes version 0.4.0; use the [installation guide](/docs/start/install/) to upgrade to the current release.
 
-<span id="upgrade-from-03"></span>
+<span id="upgrade-from-03" data-td-print-local></span>
 
 ## Upgrade from 0.3 to 0.4
 
@@ -36,7 +36,7 @@ Schema v11 fixed a 0.3 status bug: a Repository could appear clean while one of 
 
 Schema v12 added an append-only history of publication-target bindings. Initial bindings, migration backfills, and later rebinds have separate revisions.
 
-<span id="one-authenticity-pass-per-physical-payload"></span>
+<span id="one-authenticity-pass-per-physical-payload" data-td-print-local></span>
 
 ## One content hash per physical package
 
@@ -46,7 +46,7 @@ The same result is reused when checking retained generations, the final manifest
 
 Package-cache queries are limited to the selected digests and run in bounded SQLite batches. A warm build of the 64 MiB test package reads no package content. A changed fingerprint and missing cache row share one verification pass.
 
-<span id="independent-rpm-trust-rings"></span>
+<span id="independent-rpm-trust-rings" data-td-print-local></span>
 
 ## Verify each RPM trust set separately
 
@@ -56,7 +56,7 @@ This supports historical CentOS signatures and deliberately dual-signed packages
 
 The current policy keys, retained-generation keys, and combined trusted keys use the same signature read. Additional keys change trust decisions without adding package reads.
 
-<span id="safe-target-rebind-and-public-verification"></span>
+<span id="safe-target-rebind-and-public-verification" data-td-print-local></span>
 
 ## Update publication-target settings
 
@@ -70,7 +70,7 @@ Use `sow publish TARGET --rebind` to update mutable target settings while preser
 
 A normal publish reports changed settings and requests `--rebind`. Rebind takes the publication locks, records a revision, and can resume an interrupted publication after its commit decision. Pending cleanup restricts TTL and filesystem public-URL changes. Previously recorded cache deadlines remain in effect.
 
-<span id="recovery-cli-and-implementation-cleanup"></span>
+<span id="recovery-cli-and-implementation-cleanup" data-td-print-local></span>
 
 ## Check public files and recover interrupted uploads
 
@@ -93,7 +93,7 @@ Other publication changes include:
 - Signer records stay consistent through partial builds, Dist changes, migration, retention, and garbage collection.
 - Retired APT builder, external-sort, empty-Dist, and Git-tracked by-hash code was removed.
 
-<span id="verification-and-artifacts"></span>
+<span id="verification-and-artifacts" data-td-print-local></span>
 
 ## Build and release checks
 
@@ -103,7 +103,7 @@ Release checks covered Go tests, static analysis, vulnerability and RPM-fork sou
 
 The release includes four Linux/macOS archives, two RPMs, two DEBs, and `SHA256SUMS`. Archives contain `sow`, `README.md`, `CHANGELOG.md`, and `LICENSE`. Linux packages install the license with the executable.
 
-<span id="get-the-release"></span>
+<span id="get-the-release" data-td-print-local></span>
 
 ## Get version 0.4.0
 

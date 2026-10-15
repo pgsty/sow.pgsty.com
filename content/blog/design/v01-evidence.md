@@ -98,7 +98,7 @@ Representative reports include:
 - [full-provider checkpoint-fenced deletion](https://github.com/pgsty/sow/blob/v0.1.0/docs/evidence/2026-07-20-full-provider-checkpoint-fenced-delete.md);
 - Cloudflare bootstrap, private-domain, provider-attestation, and rollback records.
 
-<span id="what-the-archive-did-not-prove"></span>
+<span id="what-the-archive-did-not-prove" data-td-print-local></span>
 
 Some tests used designated nonproduction resources; others ran offline or against mocks.
 The reports distinguish these environments. Storage behavior measured on R2, MinIO, or

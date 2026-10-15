@@ -15,7 +15,7 @@ SOW 0.4.0 改进了 Managed 仓库的校验与恢复。`check` 只对每个物�
 
 Plain 行为与公共 `pool/`、`dists/` 布局保持不变。本文记录 0.4.0；升级到当前版本请按[安装指南](/zh/docs/start/install/)操作。
 
-<span id="从-03-升级"></span>
+<span id="从-03-升级" data-td-print-local></span>
 
 ## 从 0.3 升级到 0.4
 
@@ -36,7 +36,7 @@ Schema v11 修复了 0.3 的状态错误：一个 Dist 仍为 dirty 时，Reposi
 
 Schema v12 为发布目标增加只追加的绑定历史。初次绑定、迁移回填与后续重绑定都有独立修订记录。
 
-<span id="每个物理包体只做一次真实性认证"></span>
+<span id="每个物理包体只做一次真实性认证" data-td-print-local></span>
 
 ## 每个物理软件包只计算一次内容哈希
 
@@ -46,7 +46,7 @@ Schema v12 为发布目标增加只追加的绑定历史。初次绑定、迁移
 
 包缓存只查询本次选中的摘要，并按限定批次读取 SQLite。64 MiB 测试包的重复构建不读取包内容；指纹变化与缓存缺失共用一次校验。
 
-<span id="独立-rpm-信任环"></span>
+<span id="独立-rpm-信任环" data-td-print-local></span>
 
 ## 分别验证 RPM 密钥集合
 
@@ -56,7 +56,7 @@ RPM 签名包在每组候选密钥内独立检查。每个可识别签名包都�
 
 当前策略密钥、保留的构建快照密钥与组合受信任密钥共用同一次签名读取。增加密钥只改变信任判断，不增加包读取次数。
 
-<span id="安全重绑定目标与公共验证"></span>
+<span id="安全重绑定目标与公共验证" data-td-print-local></span>
 
 ## 修改发布目标设置
 
@@ -70,7 +70,7 @@ RPM 签名包在每组候选密钥内独立检查。每个可识别签名包都�
 
 普通发布会报告配置变化，并提示使用 `--rebind`。重绑定取得发布锁、记录修订，也可继续执行已作出提交决定但被中断的发布。清理未完成时，TTL 与 filesystem 公共 URL 的变更受到限制。此前记录的缓存截止时间继续生效。
 
-<span id="恢复cli-与实现收敛"></span>
+<span id="恢复cli-与实现收敛" data-td-print-local></span>
 
 ## 检查公共文件与恢复上传
 
@@ -93,7 +93,7 @@ SOW 检查普通客户端 URL。过期内容与 404 最多等待 `max_cache_ttl`
 - 局部构建、Dist 变更、迁移、保留与垃圾回收过程保持签名者记录一致。
 - 移除已退役的 APT 构建器、外部排序、空 Dist 与 Git 跟踪的 by-hash 实现。
 
-<span id="验证与制品"></span>
+<span id="验证与制品" data-td-print-local></span>
 
 ## 构建与发布检查
 
@@ -103,7 +103,7 @@ SOW 检查普通客户端 URL。过期内容与 404 最多等待 `max_cache_ttl`
 
 本版包含四个 Linux/macOS 归档、两个 RPM、两个 DEB 与 `SHA256SUMS`。归档包含 `sow`、`README.md`、`CHANGELOG.md` 与 `LICENSE`。Linux 软件包随可执行文件安装协议文件。
 
-<span id="获取发布版本"></span>
+<span id="获取发布版本" data-td-print-local></span>
 
 ## 获取 0.4.0
 

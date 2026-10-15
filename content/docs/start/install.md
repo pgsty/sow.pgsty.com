@@ -65,7 +65,7 @@ CGO_ENABLED=0 go build -trimpath \
 sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 ```
 
-<span id="verify"></span>
+<span id="verify" data-td-print-local></span>
 
 ## Verify the installation
 
@@ -76,7 +76,7 @@ sow help
 
 `version` shows the product version, target operating system and architecture, and Go toolchain. `help` lists commands. Use `sow help COMMAND` for a command's options.
 
-<span id="upgrade-a-03-managed-workspace"></span>
+<span id="upgrade-a-03-managed-workspace" data-td-print-local></span>
 
 ## Upgrade a Managed workspace from 0.3 or 0.4 {#upgrade-from-04-to-05}
 
@@ -102,7 +102,7 @@ Keep the backup for rollback. Older SOW binaries cannot open the migrated databa
 
 Plain mode has no database to migrate. For an existing YUM repository, follow [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/) before changing its generator. Version 0.5 adds `--metadata-timestamp`, but its default is still `0`. Set the timestamp from the repository's publication history so cached YUM clients accept the new index.
 
-<span id="permissions-and-optional-tools"></span>
+<span id="permissions-and-optional-tools" data-td-print-local></span>
 
 ## Storage and optional tools
 

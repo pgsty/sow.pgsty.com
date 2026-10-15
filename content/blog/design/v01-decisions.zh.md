@@ -68,7 +68,7 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 | [0030](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0030-audit-bound-legacy-yum-missing-body-prune.md) | 仅依据已评审的问题集合摘要，修复旧 YUM 索引中缺失的包体引用。 | **迁移历史。** 这项来源例外没有变成通用忽略选项。 |
 | [0031](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0031-legacy-pro-gated-activation-and-checksum-repair.md) | 启用受访问控制的旧内容前，修复精确校验和并记录启用结果。 | **退役。** 商业版本启用流程退出产品，无法验证时停止修复的原则保留。 |
 
-<span id="provider-与-edge-控制面"></span>
+<span id="provider-与-edge-控制面" data-td-print-local></span>
 
 ## 云端与边缘控制面
 

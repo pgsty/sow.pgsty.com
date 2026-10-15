@@ -14,7 +14,7 @@ SOW 0.2.0 introduced Plain and Managed workflows for RPM and DEB repositories. I
 
 This page describes the 0.2.0 release. Use the [current documentation](/docs/) for installation and operations today.
 
-<span id="two-operating-modes"></span>
+<span id="two-operating-modes" data-td-print-local></span>
 
 ## Build a flat repository
 
@@ -28,7 +28,7 @@ For RPMs, it writes `repodata/`. For DEBs, it writes `Packages` and `Packages.gz
 
 The release also added `--sign-with` to sign unsigned RPM packages. Use `--overwrite` to replace existing RPM signatures. Plain mode does not generate or sign an APT `Release` file.
 
-<span id="lifecycle-controls"></span>
+<span id="lifecycle-controls" data-td-print-local></span>
 
 ## Manage a repository over time
 
@@ -57,7 +57,7 @@ Version 0.2.0 added:
 
 Serve or publish the complete Repository tree so metadata can reach the shared package pool. `sow publish` manages upload order and recovery for configured targets. R2 cleanup reports candidates without deleting remote objects.
 
-<span id="compatibility-evidence"></span>
+<span id="compatibility-evidence" data-td-print-local></span>
 
 ## Release testing and source
 

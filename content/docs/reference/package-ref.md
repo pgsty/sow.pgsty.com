@@ -17,12 +17,12 @@ sow ls -r demo -d el9
 sow show 'rpm:example-0:1.0-1.x86_64' -r demo
 ```
 
-<span id="the-five-forms"></span>
-<span id="content-digest"></span>
-<span id="rpm-coordinate"></span>
-<span id="deb-coordinate"></span>
-<span id="filename"></span>
-<span id="what-does-not-work"></span>
+<span id="the-five-forms" data-td-print-local></span>
+<span id="content-digest" data-td-print-local></span>
+<span id="rpm-coordinate" data-td-print-local></span>
+<span id="deb-coordinate" data-td-print-local></span>
+<span id="filename" data-td-print-local></span>
+<span id="what-does-not-work" data-td-print-local></span>
 
 ## Accepted forms
 
@@ -54,7 +54,7 @@ sow where 'deb:example=2:1.0-1:amd64'
 A filename is a convenience, not a unique identifier. Use a coordinate or full digest in
 scripts. References do not support paths, globs, regular expressions, or version ranges.
 
-<span id="bare-name"></span>
+<span id="bare-name" data-td-print-local></span>
 
 ## Name matching and ambiguity
 
@@ -78,7 +78,7 @@ use `-r` or a more specific reference.
 Other reference forms must identify one object within a repository. A missing or
 ambiguous reference returns exit `6`.
 
-<span id="scope"></span>
+<span id="scope" data-td-print-local></span>
 
 ## Search scope
 
@@ -96,7 +96,7 @@ For `rm`, if the Dist cannot be inferred and the repository has several Dists, s
 `-d`. Without `-r`, `where -d NAME` searches repositories containing that Dist name.
 It reports an error if the requested Dist name exists nowhere.
 
-<span id="coordinates-and-identity"></span>
+<span id="coordinates-and-identity" data-td-print-local></span>
 
 ## Coordinate conflicts
 
@@ -111,4 +111,4 @@ filename for changed bytes. See [Signing](/docs/feature/signing/).
 See [`rm`](/docs/command/rm/), [`show`](/docs/command/show/), and
 [`where`](/docs/command/where/) for command options.
 
-<span id="see-also"></span>
+<span id="see-also" data-td-print-local></span>
