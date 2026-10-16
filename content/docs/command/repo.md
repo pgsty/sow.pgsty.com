@@ -129,7 +129,9 @@ Repeat the last three commands for each Repository. The migration reports `schem
 
 Writes require the current schema. Compatible read-only commands can inspect older state without upgrading it. After migration, use SOW 0.5 or later; restore the backup to return to the older schema.
 
-`--abort` abandons an unfinished layout transition before its commit decision. It does not undo a completed schema migration. Pre-release C2 layouts must be rebuilt from their original packages.
+`--abort` discards an unfinished layout plan before its commit decision. For an earlier C2 transition that already started, SOW requires the existing trusted transition marker and verifies the Repository identity, old public tree, and uncommitted plan before cleanup. A successful abort keeps that marker; rerun `sow repo migrate NAME` without `--abort` to plan and resume the migration. After commit intent, only forward recovery is allowed. `--abort` does not undo a completed schema migration.
+
+A fresh pre-release C2 repository still cannot start a migration. Older SOW versions could erase all transition credentials during a successful abort; this fix cannot reconstruct them. Restore a verified, complete workspace backup from before that abort, if available, or create a new workspace and import the original packages. Do not edit the layout marker or fabricate a transition journal.
 
 | Flag | Description | Default |
 |---|---|---|
