@@ -58,6 +58,15 @@ filesystem publication checks this before starting. See [Layout](/docs/reference
 Managed APT uses component `main` and SHA-256 by-hash indexes. Metadata signing produces
 RPM `repomd.xml.asc` or APT `InRelease` and `Release.gpg`.
 
+### Publication times
+
+New Managed operations record one publication time when they build metadata, except `sow repo migrate`.
+APT `Release` dates, RPM `repomd.xml` data timestamps, and metadata signatures use that time.
+RPM `revision` remains the Generation number.
+
+Recovery reuses the recorded time. Older journals without a recorded publication time retain their previous timestamp behavior.
+No-op operations leave publication times unchanged.
+
 ### XML and SQLite RPM metadata
 
 SOW generates gzip-compressed `primary`, `filelists`, and `other` XML. It does not generate
@@ -91,9 +100,10 @@ EL7 YUM compares metadata data timestamps with its cached repository. Plain
 `create --metadata-timestamp SECONDS` lets you preserve and advance an existing publication
 time. The default is `0`.
 
-Managed RPM and exported RPM leaves use timestamp `0` and have no timestamp override.
-If the same client repository ID has cached a positive timestamp, use a new repository
-ID or clear that ID's metadata cache. Changing the base URL alone is insufficient.
+Exported RPM leaves and RPM metadata generated during `sow repo migrate` use timestamp `0`, with no timestamp override.
+Later Managed builds use their recorded publication time.
+For these outputs, use a new repository ID if the existing ID has cached a positive timestamp.
+Alternatively, clear that ID's metadata cache. Changing the base URL alone is insufficient.
 To retain the old ID and cache, follow the timestamp procedure with Plain mode in
 [YUM migration](/docs/tutorial/yum-migration/).
 

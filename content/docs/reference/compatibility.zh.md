@@ -56,6 +56,15 @@ macOS 上使用 APFS；所需原子目录交换不可用时，SOW 会拒绝构�
 Managed APT 使用 component `main` 和 SHA-256 by-hash 索引。
 元数据签名生成 RPM `repomd.xml.asc` 或 APT `InRelease`、`Release.gpg`。
 
+### 发布时间
+
+新的 Managed 操作在构建元数据时，会记录本次操作的发布时间；`sow repo migrate` 保持原有时间戳行为。
+APT `Release` 日期、RPM `repomd.xml` 的 data timestamp 与元数据签名使用同一时间。
+RPM `revision` 仍为构建快照（Generation）编号。
+
+恢复操作复用已记录的时间。没有记录发布时间的旧日志保持原有时间戳行为。
+没有实际变更的操作不会刷新发布时间。
+
 ### RPM 的 XML 与 SQLite 元数据
 
 SOW 生成 gzip 压缩的 `primary`、`filelists`、`other` XML，不生成 SQLite 格式的
@@ -84,8 +93,9 @@ SOW 不生成 zchunk、modulemd 或源码包索引。客户端需要模块 profi
 EL7 YUM 会把元数据 data timestamp 与已缓存仓库比较。
 Plain `create --metadata-timestamp SECONDS` 可以保留并推进已有发布时间，默认值为 `0`。
 
-Managed RPM 与导出的 RPM 仓库使用固定时间戳 `0`，没有覆盖选项。
-同一客户端仓库 ID 已缓存正数时间戳时，使用新仓库 ID 或清理该 ID 的元数据缓存。
+导出的 RPM 仓库，以及 `sow repo migrate` 本次生成的 RPM 元数据，使用时间戳 `0`，没有覆盖选项。
+之后的 Managed 构建使用其记录的发布时间。
+对这些输出，如果现有客户端仓库 ID 已缓存正数时间戳，使用新仓库 ID，或清理该 ID 的元数据缓存。
 只改变 base URL 不够。需要保留旧 ID 和缓存时，使用 Plain 模式，按
 [YUM 迁移](/zh/docs/tutorial/yum-migration/) 的时间戳流程操作。
 

@@ -84,6 +84,11 @@ membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:6-0.e
 
 `-c/--check` 预览移除结果与本地文件变化，不修改仓库。`removed` 只列出引用匹配到的成员。如果当前策略连带移除了其他成员，`changes` 会包含相关索引变化；实际执行后，`sow log` 会将这些成员计入移除数量。
 
+预览给出预期的成员移除、策略结果、文件路径、动作、构建快照（Generation）和 revision。
+包引用、所选 Dist、仓库状态、配置与签名密钥保持不变时，这些结果与实际执行一致。
+实际执行重建元数据时，会记录自己的发布时间。
+因此，包含时间信息的索引与签名，其字节内容、哈希值和大小可能与预览不同。
+
 ```console
 sow rm centos-release -r demo -d el9 -c
 preview repository=demo operation= dists=el9 memberships=2 revision=2 generation=00000000000000000003 dirty=false changes=2
