@@ -11,8 +11,8 @@ icon: fa-solid fa-download
 
 SOW is one executable. It needs no daemon, database service, or language runtime. Release archives support Linux and macOS on `amd64` and `arm64`. Linux also has RPM and DEB packages.
 
-These instructions target SOW 0.6.0. Check the [Download page](/download/) for release availability.
-Once the release is published, download the selected artifact and `SHA256SUMS` into a separate download directory.
+Use the [Download page](/download/) to select a SOW 0.6.0 artifact.
+Download it and `SHA256SUMS` into a separate download directory.
 
 ## Install an archive
 

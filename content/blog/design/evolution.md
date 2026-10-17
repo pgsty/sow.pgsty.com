@@ -16,7 +16,7 @@ draft: false
 SOW moved from a Git-based distribution control plane in v0.1 to a repository engine in
 v0.2. This article traces that change and the refinements through v0.6.0.
 
-The earlier versions below refer to released Git tags; v0.6 is the current documentation target.
+The versions below refer to released Git tags, including [v0.6.0](https://github.com/pgsty/sow/tree/v0.6.0).
 Some archived plans used “v0.2” and
 “v0.3” for development designs. In particular, the C2 layout with RPM hardlinks inside each
 view was replaced before v0.2.0 shipped.

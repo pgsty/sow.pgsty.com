@@ -2,8 +2,7 @@
 # 安装方式本身不在这里描述 —— `download` 小节读取 data/download/sow.yaml，
 # 因此与版本绑定的命令、链接与制品摘要只有一个来源，不会与它们指向的制品脱节。
 #
-# 本页唯一与版本相关的字符串是 Hero 的 note；发布新版时随 hugo.yaml 的
-# params.version 一起更新。
+# 发布新版时，随 hugo.yaml 的 params.version 一起更新版本说明与下载状态。
 sections:
   - hero
   # 用主题自身的 content 作用域包一层，安装命令才能保留代码块的边框样式；
@@ -36,7 +35,7 @@ hero:
 download:
   eyebrow: 安装方式
   title: 选择安装方式
-  desc: '本站以 SOW 0.6.0 为目标版本。正式发布后开放对应版本下载；Pigsty 软件源跟随其中的打包版本。'
+  desc: '下载 SOW 0.6.0 软件包与归档。Pigsty 软件源跟随其中的打包版本。'
   keys: [sow]
 
 next:

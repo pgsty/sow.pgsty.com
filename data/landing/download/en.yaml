@@ -36,7 +36,7 @@ hero:
 download:
   eyebrow: Installation
   title: Choose an installation method
-  desc: 'This site targets SOW 0.6.0. Versioned downloads will open when the release is published. The Pigsty repository follows its packaged version.'
+  desc: 'Download SOW 0.6.0 packages and archives below. The Pigsty repository follows its packaged version.'
   keys: [sow]
 
 next:

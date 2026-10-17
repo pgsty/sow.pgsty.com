@@ -7,7 +7,7 @@
 # repository channel is rolling on purpose: it tracks whatever the infra
 # repository currently serves, which is not necessarily this tag.
 repo: pgsty/sow
-published: false # Set true only after the matching GitHub Release is public.
+published: true # Set true only after the matching GitHub Release is public.
 channels:
   - id: pigsty
     kind: rolling
@@ -163,7 +163,7 @@ channels:
     title_zh: SHA256SUMS
     icon: fa-solid fa-shield-halved
     url: https://github.com/pgsty/sow/releases/download/${tag}/SHA256SUMS
-    # Add checksums_src only after copying the published v0.6.0 SHA256SUMS.
+    checksums_src: release/sow-checksums.txt
     note: >-
       Download `SHA256SUMS` from the same release as your package or archive.
       Before installation, set `ASSET` to the downloaded file name and check

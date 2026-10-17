@@ -11,8 +11,8 @@ icon: fa-solid fa-download
 
 SOW 是一个可执行文件，不依赖守护进程、数据库服务或语言运行时。发布归档支持 Linux 与 macOS 的 `amd64`、`arm64` 架构。Linux 另有 RPM 与 DEB 安装包。
 
-本页操作面向 SOW 0.6.0，制品发布状态见[下载页](/zh/download/)。
-正式发布后，将所选制品与 `SHA256SUMS` 下载到独立的下载目录。
+从 [下载页](/zh/download/) 选择 SOW 0.6.0 制品。
+将所选制品与 `SHA256SUMS` 下载到独立的下载目录。
 
 ## 安装归档
 
