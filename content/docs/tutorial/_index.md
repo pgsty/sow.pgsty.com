@@ -11,7 +11,7 @@ icon: fa-solid fa-graduation-cap
 
 These tutorials cover repository creation, signing, publication, and updates. Start with [Installation](/docs/start/install/) if you have not installed SOW.
 
-<span id="which-one-first"></span>
+<span id="which-one-first" data-td-print-local></span>
 
 {{< cards >}}
 {{< card title="Migrate an Existing YUM Repository" link="/docs/tutorial/yum-migration/" >}}
@@ -34,7 +34,7 @@ Use both package formats and architectures, test installation, and maintain roll
 {{< /card >}}
 {{< /cards >}}
 
-<span id="conventions-used-here"></span>
+<span id="conventions-used-here" data-td-print-local></span>
 
 ## Follow the examples
 

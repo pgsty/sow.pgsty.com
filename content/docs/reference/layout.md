@@ -12,7 +12,7 @@ icon: fa-solid fa-folder-tree
 Serve the complete Managed repository directory: `pool/` plus `dists/`.
 Keep workspace configuration and `.sow/` state outside the web server's document root.
 
-<span id="plain-mode"></span>
+<span id="plain-mode" data-td-print-local></span>
 
 ## Plain directory
 
@@ -35,6 +35,9 @@ DEBs are present. RPM locations use a bare basename; DEB locations use `./<basen
 A running build uses private `.sow-plain-stage-*` directories. Exclude them from serving
 and copying. A later `create` removes stale SOW temporary paths and rebuilds the indexes.
 
+`.sow-plain-rpm-history.json` records the current and previous RPM metadata references.
+Keep it when copying a directory for further `create` runs. It does not belong in a client index and is not a recovery journal.
+
 ## Managed workspace
 
 ```text
@@ -46,6 +49,7 @@ and copying. A later `create` removes stale SOW temporary paths and rebuilds the
 │   ├── repo-locks/<repo>.lock
 │   ├── <repo>.db
 │   └── <repo>/
+│       ├── abandoned/                # retained migration stages
 │       ├── stage/
 │       ├── recovery/
 │       ├── retained/
@@ -60,12 +64,12 @@ The database can have SQLite WAL and shared-memory sidecar files.
 `.sow/` and pending directories are private (`0700`). Pending payload files use `0644`
 so they can be promoted to public paths without changing their mode.
 
-SOW 0.5 uses database schema v13 and configuration schema `sow/v3`. These are separate
+SOW 0.6.0 uses database schema v13 and configuration schema `sow/v3`. These are separate
 version identifiers. Back up the complete workspace before
 [`repo migrate`](/docs/command/repo/#sow-repo-migrate). Keep the database with its matching
 private and public state; do not edit its schema version or rebuildable cache by hand.
 
-<span id="canonical-pool"></span>
+<span id="canonical-pool" data-td-print-local></span>
 
 ## Package pool
 
@@ -88,7 +92,7 @@ Package objects are immutable. Membership removal leaves the bytes available to 
 retained, recovery, and publication records. [`gc`](/docs/command/gc/) removes them when
 those records no longer need them. Each repository owns its own pool.
 
-<span id="rpm-metadata-only-views"></span>
+<span id="rpm-metadata-only-views" data-td-print-local></span>
 
 ## RPM Dist
 
@@ -117,7 +121,7 @@ files; `repomd.xml` selects the active set.
 For a self-contained directory with local package paths, use
 [`export rpm-leaf`](/docs/command/export/).
 
-<span id="deb-views"></span>
+<span id="deb-views" data-td-print-local></span>
 
 ## DEB Dist
 
@@ -140,7 +144,7 @@ dists/trixie/
 `Release` contains SHA-256 manifests and `Acquire-By-Hash: yes`.
 Architecture `all` packages appear in each applicable index.
 
-<span id="publication-targets"></span>
+<span id="publication-targets" data-td-print-local></span>
 
 ## Publication paths
 
@@ -155,7 +159,7 @@ Both target providers receive the same public layout:
 An export has its own package files, metadata, manifest, and `.sow-export.json` completion
 marker. It is a separate delivery artifact and is not another Managed repository.
 
-<span id="names-and-serving-boundary"></span>
+<span id="names-and-serving-boundary" data-td-print-local></span>
 
 ## Names and case sensitivity
 
@@ -171,4 +175,4 @@ distinct, so check them before moving a repository to a case-insensitive volume.
 See [Views](/docs/feature/views/), [Serving](/docs/tutorial/serving/), and
 [Platforms](/docs/reference/compatibility/).
 
-<span id="see-also"></span>
+<span id="see-also" data-td-print-local></span>

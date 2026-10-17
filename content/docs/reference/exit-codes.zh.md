@@ -9,9 +9,9 @@ weight: 500
 icon: fa-solid fa-triangle-exclamation
 ---
 
-<span id="1--运行时错误"></span>
-<span id="2--用法发现或配置错误"></span>
-<span id="6--预期拒绝"></span>
+<span id="1--运行时错误" data-td-print-local></span>
+<span id="2--用法发现或配置错误" data-td-print-local></span>
+<span id="6--预期拒绝" data-td-print-local></span>
 
 脚本使用退出码判断结果，具体原因读取错误诊断。SOW 各命令使用相同的退出码含义。
 
@@ -26,8 +26,8 @@ icon: fa-solid fa-triangle-exclamation
 | `6` | 操作被拒绝 | 修正错误指出的冲突、包引用、架构、签名或保护设置 |
 | `130` | 命令收到 SIGINT 或 SIGTERM 而中断 | 按中断操作的类型选择恢复命令 |
 
-<span id="0--成功或无操作"></span>
-<span id="5--完整性恢复或不可交付"></span>
+<span id="0--成功或无操作" data-td-print-local></span>
+<span id="5--完整性恢复或不可交付" data-td-print-local></span>
 
 ## 成功不一定表示可以交付
 
@@ -43,8 +43,8 @@ sow check -r demo
 运行 `build` 后再检查。如果诊断指出包损坏或恢复证据冲突，先查明该错误；
 具体处理方法见[故障处理](/zh/docs/reference/troubleshooting/)。
 
-<span id="3--部分成功"></span>
-<span id="在脚本里使用"></span>
+<span id="3--部分成功" data-td-print-local></span>
+<span id="在脚本里使用" data-td-print-local></span>
 
 ## 部分成功
 
@@ -76,8 +76,8 @@ sow publish mirror
 `mirror` 必须是 `demo` 的已配置发布目标。此脚本在部分成功时停止，
 以便先检查失败输入，再决定发布。
 
-<span id="130--中断"></span>
-<span id="4--锁不可用"></span>
+<span id="130--中断" data-td-print-local></span>
+<span id="4--锁不可用" data-td-print-local></span>
 
 ## 等待锁与中断
 
@@ -112,4 +112,4 @@ JSON 消息可能额外包含 CLI 分类前缀。即使 `ok` 为 `false`，诊�
 详见 [JSON 输出](/zh/docs/reference/json/)与
 [事务与恢复](/zh/docs/feature/transactions/)。
 
-<span id="延伸阅读"></span>
+<span id="延伸阅读" data-td-print-local></span>

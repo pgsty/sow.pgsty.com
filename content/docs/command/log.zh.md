@@ -107,6 +107,10 @@ Build 操作记录还会包含进度事件。它们保持当前 state，并把�
 
 阶段包括 `rendering`、`promoting_payload`、`publishing_dists`、`normalizing_public_tree` 与 `finalizing`。可用这些记录查看长时间构建的进度。
 
+新的元数据构建操作还会在 `payload_json` 中记录 `publication_time`。
+该字段是精确到秒的 UTC 时间戳，恢复时用于生成相同时间的元数据与签名。
+旧日志与布局迁移可能没有此字段。
+
 ### 按 Dist 过滤
 
 `-d` 把列表限制为触及该 Dist 的操作记录——一个仓库服务多个发行版时很有用：
@@ -161,7 +165,7 @@ sow log export - -r pigsty | gzip > pigsty-ops-$(date +%F).jsonl.gz
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
 | `-d, --dist NAME` | 只导出触及该 Dist 的操作记录 | 全部 |
 
-`export` 直接输出 JSONL，不需要 `--json`。
+`export` 直接输出 JSONL，不接受 `--json`。
 
 ### 输出路径 {#它拒绝覆盖}
 

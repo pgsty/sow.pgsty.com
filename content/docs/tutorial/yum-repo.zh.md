@@ -114,6 +114,8 @@ dnf --disablerepo='*' --enablerepo=pigsty-el9 list available
 sow export rpm-leaf el9 x86_64 /srv/export/pigsty-el9-x86_64 -r pigsty
 ```
 
+RPM Dist 必须属于当前构建快照。混合仓库先检查[导出前提](/zh/docs/command/export/)。
+
 目标目录必须不存在或为空。导出默认复制软件包。`--hardlink` 只用于同一文件系统；导出文件与源包池共享存储，应保持只读。
 
 ## 更新仓库

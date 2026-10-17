@@ -36,7 +36,7 @@ icon: fa-solid fa-book-open
 {{< /card >}}
 {{< /cards >}}
 
-<span id="约定"></span>
+<span id="约定" data-td-print-local></span>
 
 ## 示例约定
 

@@ -22,7 +22,7 @@ jobs:
       contents: read
       pages: read
     env:
-      HUGO_VERSION: 0.164.0
+      HUGO_VERSION: 0.166.0
     steps:
       - name: Checkout
         uses: actions/checkout@v7

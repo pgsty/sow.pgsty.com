@@ -83,7 +83,9 @@ A published package URL identifies fixed content. Use a new package version and 
 
 Before recording a checkpoint, SOW verifies that the published files can be read through `public_endpoint`. HTTP(S) verification uses ordinary GET requests. Stale or missing content is retried up to `max_cache_ttl`.
 
-Filesystem targets support `file://` or HTTP(S) public endpoints. R2 targets require HTTP(S). Each R2 publication lists the target prefix and checks each object with HEAD; an update performs this inventory check twice. Keep old objects on R2: target GC reports them without deleting them, and later publication checks the prefix against the recorded inventory.
+Filesystem targets support `file://` or HTTP(S) public endpoints. R2 targets require HTTP(S). Each R2 publication lists the target prefix and checks each object with HEAD. An update performs this inventory check twice.
+SOW uses up to eight concurrent HEAD requests per page. This limit is internal; `publish` has no `--jobs` option.
+Upload retries do not reset the idle timeout unless data transfer makes progress. Keep old objects on R2: target GC reports them without deleting them, and later publication checks the prefix against the recorded inventory.
 
 ## Removing a published view
 

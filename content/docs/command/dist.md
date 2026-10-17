@@ -66,6 +66,9 @@ view directories are `binary-amd64` and `binary-arm64`:
 }
 ```
 
+Pending repository maintenance can mark Dists dirty even when membership counts match.
+Read `dirty_reasons` and `sow status` before deciding that a Dist is ready for delivery.
+
 ## sow dist new
 
 Create a Dist with `--format rpm` or `--format deb`.

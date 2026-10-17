@@ -131,7 +131,7 @@ When replacing another YUM metadata generator, follow [Migrate an Existing YUM R
 
 When the preview is complete, stop the server with `Ctrl+C` and remove its source file from your client. Keep the package directory if you want to reuse it.
 
-<span id="when-to-use-managed-mode"></span>
+<span id="when-to-use-managed-mode" data-td-print-local></span>
 
 ## Next
 

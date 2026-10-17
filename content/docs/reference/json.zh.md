@@ -9,7 +9,7 @@ weight: 600
 icon: fa-solid fa-code
 ---
 
-<span id="stdout-与-stderr"></span>
+<span id="stdout-与-stderr" data-td-print-local></span>
 
 数据命令使用 `--json` 后，会向 stdout 输出一个以换行结束的 JSON 文档，诊断写入 stderr。
 `log export` 例外：它输出 JSON Lines，不接受 `--json`。
@@ -18,7 +18,7 @@ icon: fa-solid fa-code
 sow status -r demo --json | jq '.result.status'
 ```
 
-<span id="信封结构"></span>
+<span id="信封结构" data-td-print-local></span>
 
 ## 顶层封装
 
@@ -52,7 +52,10 @@ sow status -r demo --json | jq '.result.status'
 `result: null`。失败的 `check` 和部分成功的 `add` 仍可返回有用结果；
 `ok` 为 false 时也应保留它们。
 
-<span id="errors"></span>
+<span id="errors" data-td-print-local></span>
+
+数据库提交后的维护错误也可能返回已提交结果。
+重试前查看结果、`status` 和操作日志。非零退出码不代表事务已经回滚。
 
 ### 错误
 
@@ -64,8 +67,8 @@ sow status -r demo --json | jq '.result.status'
 `config`、`partial`、`lock`、`integrity`、`rejected`、`interrupted`。
 分类对应关系和下一步见[退出码](/zh/docs/reference/exit-codes/)。
 
-<span id="operation-id-是字符串"></span>
-<span id="generation-id-是固定宽度字符串"></span>
+<span id="operation-id-是字符串" data-td-print-local></span>
+<span id="generation-id-是固定宽度字符串" data-td-print-local></span>
 
 ### 身份标识
 
@@ -91,8 +94,8 @@ sow status -r demo --json | jq '.result.status'
 `operation` 为 null 不表示只读命令。`where` 的顶层 `repository` 为 null，
 具体仓库名称在位置记录中。
 
-<span id="各命令的-result-形态"></span>
-<span id="create"></span>
+<span id="各命令的-result-形态" data-td-print-local></span>
+<span id="create" data-td-print-local></span>
 
 ## Plain `create`
 
@@ -108,8 +111,8 @@ sow status -r demo --json | jq '.result.status'
 | `recovered` | 始终 `false`，Plain 没有日志恢复 |
 | `signed`、`signer` | 已签名文件名和可用的签名者身份 |
 
-<span id="init"></span>
-<span id="config-check-与-config-show"></span>
+<span id="init" data-td-print-local></span>
+<span id="config-check-与-config-show" data-td-print-local></span>
 
 ## 初始化与配置
 
@@ -122,8 +125,8 @@ sow status -r demo --json | jq '.result.status'
 解析后的签名设置可包含公钥指纹和证书快照摘要。指纹和摘要数组各自排序，不能按下标配对。
 详见[配置参考](/zh/docs/reference/config/#密钥引用)。
 
-<span id="repo-ls--repo-new--repo-show"></span>
-<span id="dist-ls--dist-new--dist-show"></span>
+<span id="repo-ls--repo-new--repo-show" data-td-print-local></span>
+<span id="dist-ls--dist-new--dist-show" data-td-print-local></span>
 
 ## 仓库与 Dist
 
@@ -147,12 +150,14 @@ sow status -r demo --json | jq '.result.status'
 `repo rm` 和 `dist rm` 返回 `name`、`removed`、`noop`。
 `repo migrate` 返回 `repository`、`repository_id`、`from_layout`、`to_layout`、
 `schema_from`、`schema_to`、`phase`、`generation`、`grace_not_before`、`legacy_aliases`、
-`complete`。没有宽限期截止时间时，`grace_not_before` 为 null。
+`complete`，以及可选的 `warnings`。没有宽限期截止时间时，`grace_not_before` 为 null。
+迁移中止告警会指出保留的暂存目录或未完成的清理。
+仓库选择成功后，即使迁移失败，响应中也会保留所选仓库。
 各阶段含义见 [`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。
 
-<span id="add"></span>
-<span id="rm"></span>
-<span id="build"></span>
+<span id="add" data-td-print-local></span>
+<span id="rm" data-td-print-local></span>
+<span id="build" data-td-print-local></span>
 
 ## `add`、`rm` 与 `build`
 
@@ -179,8 +184,8 @@ sow status -r demo --json | jq '.result.status'
 
 `build` 返回 `operation`、考虑的 `dists` 和 `noop`。无需变更时不创建新构建快照。
 
-<span id="status"></span>
-<span id="check"></span>
+<span id="status" data-td-print-local></span>
+<span id="check" data-td-print-local></span>
 
 ## `status` 与 `check`
 
@@ -213,7 +218,7 @@ sow status -r demo --json | jq '.result.status'
 不传基线时与上一构建快照比较；基线 `0` 列出当前完整目录；数字基线与指定的已记录构建快照比较。
 这是本地文件差异，远端变更使用 `publish` 和目标 `gc`。
 
-<span id="ls--show--where"></span>
+<span id="ls--show--where" data-td-print-local></span>
 
 ## 包查询
 
@@ -234,7 +239,7 @@ sow status -r demo --json | jq '.result.status'
 `where` 位置记录的坐标已含此前缀。每个位置包含 `repository`、`dists`、
 `built_dists`、`sha256` 和 `coordinate`。
 
-<span id="publishretaingcexport"></span>
+<span id="publishretaingcexport" data-td-print-local></span>
 
 ## 发布与维护
 
@@ -250,8 +255,8 @@ sow status -r demo --json | jq '.result.status'
 
 `publish --rebind` 使用普通 publish 结果结构。R2 目标 GC 只报告候选，不删除远端对象。
 
-<span id="log"></span>
-<span id="log-export-不是信封"></span>
+<span id="log" data-td-print-local></span>
+<span id="log-export-不是信封" data-td-print-local></span>
 
 ## 操作日志
 
@@ -267,7 +272,8 @@ sow status -r demo --json | jq '.result.status'
 | `files` | `sequence`、`action`、`phase`、`path`；可选 `size`、`sha256` |
 
 `payload_json`、`result_json` 和事件的 `detail_json` 是包含 JSON 的字符串，
-需要时再解析一次：
+新的元数据构建操作在 `payload_json` 中包含 `publication_time`；旧日志与布局迁移可能没有该字段。
+需要时单独解析这些 JSON 字符串：
 
 ```bash
 sow log -r demo --json \
@@ -286,7 +292,7 @@ sow log export - -r demo
 
 文件目标必须尚不存在，其直接父目录必须是真实目录，不能是符号链接。
 
-<span id="一个完整例子"></span>
+<span id="一个完整例子" data-td-print-local></span>
 
 ## 在脚本中使用检查结果
 
@@ -300,4 +306,4 @@ sow changes 0 -r demo --json \
 
 此脚本检查本地仓库并输出当前文件清单。需要发布时，对已配置目标运行 `sow publish TARGET`。
 
-<span id="延伸阅读"></span>
+<span id="延伸阅读" data-td-print-local></span>

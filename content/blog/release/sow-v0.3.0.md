@@ -13,7 +13,7 @@ draft: false
 
 SOW 0.3.0 reduced repeated package reads and database queries. Plain generation uses one pass over package content. Managed builds cache parsed package data and commit new pool files in batches. This release also removed retired runtime and publication code.
 
-<span id="plain-one-package-content-pass"></span>
+<span id="plain-one-package-content-pass" data-td-print-local></span>
 
 ## Plain: read each package once
 
@@ -23,7 +23,7 @@ An interrupted Plain build can be rerun from the package directory. Version 0.3 
 
 Pigsty preprocessing now keeps RPMs whose headers report `i386`, `i486`, `i586`, or `i686`. They remain in the repository metadata and `repo_complete` checksum manifest. The DEB `i386` and exact Patroni 3.0.4 filters remain in place.
 
-<span id="managed-scale-without-relaxing-integrity"></span>
+<span id="managed-scale-without-relaxing-integrity" data-td-print-local></span>
 
 ## Managed: fewer queries and package reads
 
@@ -35,7 +35,7 @@ For an unchanged pool, warm builds use device, inode, size, modification time, a
 
 RPM metadata and DEB architecture indexes use bounded `--jobs` concurrency. Generation manifests and change records are written in batches.
 
-<span id="bounded-commits-and-observable-builds"></span>
+<span id="bounded-commits-and-observable-builds" data-td-print-local></span>
 
 ## Batch commits and build progress
 
@@ -45,7 +45,7 @@ Pending files use their final `0644` mode inside a private `0700` directory. Bui
 
 Long builds write `build_progress` events for rendering, package promotion, Dist publication, normalization, and finalization. Use `sow log` to inspect this progress.
 
-<span id="focused-publication-and-runtime"></span>
+<span id="focused-publication-and-runtime" data-td-print-local></span>
 
 ## One active repository implementation
 
@@ -53,7 +53,7 @@ The release removed the retired V1 CLI and runtime, cloud/CDN publication code, 
 
 R2 publication keeps the storage operations SOW needs: list, HEAD, GET, and conditional PUT. Remote garbage collection reports candidates without deleting them.
 
-<span id="correctness-and-release-quality"></span>
+<span id="correctness-and-release-quality" data-td-print-local></span>
 
 ## Other changes
 
@@ -63,7 +63,7 @@ R2 publication keeps the storage operations SOW needs: list, HEAD, GET, and cond
 - Integration tests cover mixed RPM/DEB workflows and an unsigned Plain APT installation on Ubuntu 22.04.
   They also test DNF signature transitions on AlmaLinux 8/9 and `pgsty/el10`, plus conditional S3 operations against a pinned MinIO version.
 
-<span id="get-the-release"></span>
+<span id="get-the-release" data-td-print-local></span>
 
 ## Get version 0.3.0
 

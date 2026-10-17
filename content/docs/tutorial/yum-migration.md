@@ -11,9 +11,9 @@ icon: fa-solid fa-arrows-rotate
 
 This guide covers a flat directory of RPMs and `repodata/`, such as a repository previously
 built with `createrepo_c`. It uses Plain `sow create`, without creating a Managed workspace.
-The publication-time option requires **SOW 0.5.0 or later**.
+The commands below target **SOW 0.6.0**.
 
-<span id="1-establish-the-migration-boundary"></span>
+<span id="1-establish-the-migration-boundary" data-td-print-local></span>
 
 ## 1. Prepare a working copy
 
@@ -24,7 +24,7 @@ SOW="$(command -v sow)"
 "$SOW" version
 ```
 
-Confirm that the version is 0.5.0 or later.
+Confirm that the version is 0.6.0.
 
 | Check | Action |
 |---|---|
@@ -76,7 +76,7 @@ Record `PUBLISH_TIME` in the maintenance system before publishing the candidate.
 
 `--sign-with KEY` signs unsigned RPMs and preserves existing signatures, including vendor signatures. To replace every package signature with your key, add `--overwrite` in the candidate copy. This changes package bytes; `create` builds indexes from the signed result. Generate the detached index signature after the final `create` run.
 
-<span id="4-verify-before-promotion"></span>
+<span id="4-verify-before-promotion" data-td-print-local></span>
 
 ## 4. Test the candidate
 
@@ -94,14 +94,15 @@ If you are migrating an automated update script, also check two cases:
 When comparing with `createrepo_c`, check dependency meaning and client behavior; XML
 formatting can differ. See [Platforms & Integrations](/docs/reference/compatibility/).
 
-<span id="5-promote-and-retain-recovery-material"></span>
+<span id="5-promote-and-retain-recovery-material" data-td-print-local></span>
 
 ## 5. Publish the repository
 
 Plain replaces multiple files; it does not make the whole directory switch atomically.
 Coordinate package replacement, metadata, detached signatures, and cache visibility in
-your publication layer. Retain metadata objects that cached clients may still request;
-raw Plain rebuilds may remove old SOW checksum-named metadata from the directory.
+your publication layer. SOW 0.6.0 retains the current and immediately previous SOW checksum-named RPM metadata sets.
+Unchanged runs keep the same previous set. Keep `.sow-plain-rpm-history.json` when copying a directory for further builds.
+For clients that cache indexes across several updates, retain the required older metadata and packages in your publication layer.
 
 Keep the original backup and the saved maximum publication time. Roll back package content by rebuilding
 and signing it as a newer publication. Restoring an old `repomd.xml` beside changed RPMs

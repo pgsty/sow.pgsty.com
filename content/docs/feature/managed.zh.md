@@ -12,7 +12,7 @@ icon: fa-solid fa-sitemap
 定期更新的仓库适合使用 Managed 模式。SOW 记录包成员关系、执行 Dist 策略、构建元数据，
 并保留操作历史。
 
-<span id="三个层级"></span>
+<span id="三个层级" data-td-print-local></span>
 
 ## 工作区、仓库与 Dist
 
@@ -36,7 +36,7 @@ Workspace（工作区）
 同一包可以属于一个仓库中的多个 Dist，无需复制包文件。架构无关包在每个 Dist 中有一份
 成员关系，并出现在该 Dist 的各个适用架构视图中。不同仓库分别保存自己的包对象。
 
-<span id="磁盘布局"></span>
+<span id="磁盘布局" data-td-print-local></span>
 
 ## 公开文件与私有状态
 
@@ -63,8 +63,8 @@ Workspace（工作区）
 需要保留可继续工作的工作区时，一起备份配置、私有状态和包文件。
 详见[仓库布局](/zh/docs/reference/layout/)。
 
-<span id="sowyml-驱动一切"></span>
-<span id="protected-仓库"></span>
+<span id="sowyml-驱动一切" data-td-print-local></span>
+<span id="protected-仓库" data-td-print-local></span>
 
 ## 创建与配置
 
@@ -92,7 +92,7 @@ sow config show --all -C /srv/repo
 要防止整个仓库被删除，设置 `protected: true`。它会阻止 `repo rm`，包括带 `-f` 的调用，
 但不限制包和 Dist 的修改。
 
-<span id="空-dist-也有合法协议发布面"></span>
+<span id="空-dist-也有合法协议发布面" data-td-print-local></span>
 
 ## 期望状态与构建状态
 
@@ -114,7 +114,7 @@ sow check -C /srv/repo -r demo
 新 Dist 会立即获得各架构的有效空索引。已配置元数据签名时，空 Dist 也会签名。
 移除最后一个成员后，索引为空，但入口仍保留。
 
-<span id="发现哪个工作区"></span>
+<span id="发现哪个工作区" data-td-print-local></span>
 
 ## 查找工作区
 
@@ -136,7 +136,7 @@ sow add ./build/example.rpm -C /srv/repo -r demo -d el9
 
 Plain 命令 `sow create` 不参与工作区查找。
 
-<span id="选择哪个仓库哪个-dist"></span>
+<span id="选择哪个仓库哪个-dist" data-td-print-local></span>
 
 ## 选择仓库与 Dist
 
@@ -158,8 +158,8 @@ Plain 命令 `sow create` 不参与工作区查找。
 `show` 搜索所选仓库，`where` 搜索工作区全部仓库。支持 `-d` 的命令可用它缩小范围。
 各命令的选择规则见[命令参考](/zh/docs/command/)。
 
-<span id="状态数据库与软件包事实"></span>
-<span id="init-只做收敛不做重置"></span>
+<span id="状态数据库与软件包事实" data-td-print-local></span>
+<span id="init-只做收敛不做重置" data-td-print-local></span>
 
 ## 重复初始化与升级
 
@@ -169,8 +169,9 @@ Plain 命令 `sow create` 不参与工作区查找。
 初始化已提交部分对象、后续又失败时，命令返回退出码 `3` 并报告已完成内容。
 修正错误后再次运行 `init`。
 
-SOW 0.5 使用数据库 schema v13。先备份旧工作区，再用
-[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 执行受支持的升级。
+SOW 0.6.0 与 0.5.0 均使用数据库 schema v13。从 0.5.0 升级无需迁移数据库。
+对于 0.3 或 0.4 工作区，先备份完整工作区，再执行
+[`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。
 不要手动修改 SQLite schema 版本。
 
 数据库还缓存解析后的包信息。后续构建可以复用缓存和文件指纹；`sow check` 则读取包字节
@@ -179,4 +180,4 @@ SOW 0.5 使用数据库 schema v13。先备份旧工作区，再用
 继续阅读[成员策略](/zh/docs/feature/policy/)、[视图](/zh/docs/feature/views/)和
 [事务与恢复](/zh/docs/feature/transactions/)。
 
-<span id="继续阅读"></span>
+<span id="继续阅读" data-td-print-local></span>

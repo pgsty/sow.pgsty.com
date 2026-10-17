@@ -22,6 +22,5 @@ cascade:
 
 查看各版 SOW 的变化和升级步骤，版本按从新到旧排列。
 
-[SOW 0.5.0](/zh/blog/release/sow-v0.5.0/) 增加 Plain YUM 发布时间参数、schema v13，
-并修复 Managed 恢复、签名和包路径问题。升级 0.3 或 0.4 工作区时，执行 `sow repo migrate`，
-然后逐个构建并检查 Repository。
+[SOW 0.6.0](/zh/blog/release/sow-v0.6.0/) 保留上一轮 Plain RPM 索引，并记录 Managed 发布时间。
+它强化文件校验与恢复，减少重复 I/O。已使用 0.5.0 的工作区无需迁移数据库，详见[升级说明](/zh/docs/start/install/#升级到-060)。

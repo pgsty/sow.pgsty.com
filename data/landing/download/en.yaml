@@ -3,8 +3,7 @@
 # data/download/sow.yaml, so version-bound commands, links, and asset digests
 # have exactly one source and cannot drift from the artifacts they name.
 #
-# The one version-derived string on this page is the hero note; bump it with
-# params.version in hugo.yaml.
+# Update the version note and availability text with params.version in hugo.yaml.
 sections:
   - hero
   # Wrapped in the theme's content scope so the install commands keep the
@@ -19,7 +18,7 @@ hero:
   eyebrow: SOW for Linux and macOS
   title: Download SOW
   desc: 'Install from the Pigsty repository, download a versioned package or archive, or build from source. Choose the file for your operating system and architecture.'
-  note: SOW 0.5.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
+  note: SOW 0.6.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
   title_size: 3.4rem
@@ -30,14 +29,14 @@ hero:
       style: primary
       external: true
     - label: Installation guide
-      url: docs/start/install/
+      url: /docs/start/install/
       icon: fa-solid fa-cloud-arrow-down
       style: ghost
 
 download:
   eyebrow: Installation
   title: Choose an installation method
-  desc: 'The package and archive downloads below use SOW 0.5.0. The Pigsty repository provides its latest packaged version.'
+  desc: 'This site targets SOW 0.6.0. Versioned downloads will open when the release is published. The Pigsty repository follows its packaged version.'
   keys: [sow]
 
 next:
@@ -50,38 +49,38 @@ next:
       meta: Start
       icon: fa-solid fa-bolt
       desc: Build a flat repository from a directory of RPM and DEB files.
-      url: docs/start/quickstart/
+      url: /docs/start/quickstart/
     - title: First Workspace
       meta: Start
       icon: fa-solid fa-folder-tree
       desc: Create a Managed workspace to select packages and keep build history.
-      url: docs/start/workspace/
+      url: /docs/start/workspace/
     - title: CLI Reference
       meta: Reference
       icon: fa-solid fa-terminal
       desc: Look up command syntax, options, output, and exit codes.
-      url: docs/command/
+      url: /docs/command/
     - title: Serve a repository
       meta: Tutorial
       icon: fa-solid fa-server
       desc: Configure an HTTP server so clients can download packages.
-      url: docs/tutorial/serving/
+      url: /docs/tutorial/serving/
     - title: Compatibility
       meta: Reference
       icon: fa-solid fa-table-list
       desc: Check supported platforms, repository formats, clients, and storage targets.
-      url: docs/reference/compatibility/
+      url: /docs/reference/compatibility/
     - title: Release notes
       meta: History
       icon: fa-solid fa-clock-rotate-left
       desc: Read version changes and upgrade instructions.
-      url: blog/release/
+      url: /blog/release/
 
 cta:
   title: Build your first repository
   actions:
     - label: Get Started
-      url: docs/start/
+      url: /docs/start/
       icon: fa-solid fa-arrow-right
       style: primary
     - label: pgsty/sow

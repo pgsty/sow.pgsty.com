@@ -16,8 +16,8 @@ icon: fa-solid fa-folder-open
 sow create /srv/offline
 ```
 
-<span id="契约"></span>
-<span id="扫描与输出规则"></span>
+<span id="契约" data-td-print-local></span>
+<span id="扫描与输出规则" data-td-print-local></span>
 
 ## 输入与输出
 
@@ -34,13 +34,13 @@ RPM 包路径使用文件名，DEB 的 `Filename` 使用 `./<文件名>`。所�
 同一包坐标对应不同字节时，构建报冲突。没有受支持包的目录会被拒绝；`--pigsty`
 完成中断的清理操作时例外。
 
-默认保留包文件和无关文件。某种格式不再有包时，SOW 删除该格式的旧索引，也会删除过时的
-SOW 格式 RPM 元数据并替换上次运行留下的不完整输出。生成目录的权限为 `0755`，
-生成文件为 `0644`。
+默认保留包文件和无关文件。某种格式不再有包时，SOW 删除该格式的旧索引。
+对于 RPM，SOW 保留当前与紧邻上一轮以校验和命名的元数据，删除更早的 SOW 格式元数据，并替换不完整输出。
+生成目录的权限为 `0755`，生成文件为 `0644`。
 
-<span id="单遍流水线"></span>
-<span id="最终-stat-校验保证什么"></span>
-<span id="确定性与-no-op"></span>
+<span id="单遍流水线" data-td-print-local></span>
+<span id="最终-stat-校验保证什么" data-td-print-local></span>
+<span id="确定性与-no-op" data-td-print-local></span>
 
 ## 构建与重复运行
 
@@ -63,7 +63,11 @@ sow create /srv/offline --metadata-timestamp 1791849600
 该选项只改变 `repomd.xml`，不改变压缩 XML、包文件或 DEB 索引。时间戳应从已有仓库的值
 继续递增；操作方法见 [YUM 迁移](/zh/docs/tutorial/yum-migration/)。
 
-<span id="发布与中断语义"></span>
+<span id="发布与中断语义" data-td-print-local></span>
+
+小文件 `.sow-plain-rpm-history.json` 跟踪 RPM 元数据保留范围。
+没有变化的构建仍保留同一份上一轮索引。复制目录后还要继续构建时，一并保留该文件。
+软件包保留仍由维护者负责，详见 [RPM 索引保留](/zh/docs/command/create/#保留上一轮-rpm-索引)。
 
 ## 构建中断
 
@@ -76,7 +80,7 @@ SOW 先在暂存区生成并检查元数据，再替换公开文件。这些替�
 对在线服务，在单独目录构建，成功后再把完整目录切换上线。需要记录成员关系、构建快照和
 事务恢复时，使用 [Managed 模式](/zh/docs/feature/managed/)。
 
-<span id="--pigsty-marker-门禁"></span>
+<span id="--pigsty-marker-门禁" data-td-print-local></span>
 
 ## Pigsty 清理与完成标记
 
@@ -96,7 +100,7 @@ SOW 在替换公开文件前移除旧标记，最后写入新标记。采用此�
 如果构建中断且标记缺失，再次运行带 `--pigsty` 的命令。目录已有 `repo_complete` 时，
 不带 `--pigsty` 的命令会拒绝重建。
 
-<span id="显式-rpm-签名"></span>
+<span id="显式-rpm-签名" data-td-print-local></span>
 
 ## RPM 包签名
 
@@ -110,7 +114,7 @@ sow create /srv/offline --sign-with 6D5C5A26C36B1F73
 
 Plain 模式不签仓库元数据。Managed 元数据签名和包签名策略见[签名](/zh/docs/feature/signing/)。
 
-<span id="锁与适用范围"></span>
+<span id="锁与适用范围" data-td-print-local></span>
 
 ## 并发命令
 
@@ -119,4 +123,4 @@ Plain 模式不签仓库元数据。Managed 元数据签名和包签名策略见
 
 完整选项与结果字段见 [`sow create`](/zh/docs/command/create/)。
 
-<span id="继续阅读"></span>
+<span id="继续阅读" data-td-print-local></span>

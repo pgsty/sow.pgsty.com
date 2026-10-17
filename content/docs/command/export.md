@@ -46,11 +46,15 @@ The destination contains:
 
 The source Repository must be clean, have a completed Built Generation, and have no unfinished operation. The requested RPM view must belong to that Generation. The export is independent of the Workspace and does not protect source packages from GC.
 
+In a Repository with several Dists, a later build can update another Dist while this RPM Dist keeps an older Generation.
+A no-op `build` does not advance that Dist. Check `sow dist show DIST` and `sow status` before exporting.
+Export after an intended update builds the RPM Dist, or use a separate RPM Repository for this workflow.
+
 If export fails, correct the reported cause and retry into a new or empty directory. The failed destination can contain partial files.
 
-Managed RPM and `export rpm-leaf` use a fixed `0` repomd data timestamp and expose no
-`--metadata-timestamp` option. They cannot directly take over the same EL7 repository ID
-while clients retain a positive cached timestamp; changing the base URL alone does not help.
+`export rpm-leaf` uses a fixed `0` repomd data timestamp and exposes no
+`--metadata-timestamp` option. If EL7 clients retain a positive cached timestamp, this output cannot directly replace their existing repository ID.
+Changing the base URL alone does not help.
 Use a new client repository ID or clear its metadata cache. To keep the old ID and cache,
 continue with Plain `create` and an explicit publication time, following the
 [migration guide](/docs/tutorial/yum-migration/) and re-signing repomd.

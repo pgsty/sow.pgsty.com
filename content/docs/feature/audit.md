@@ -22,7 +22,7 @@ changes, and `log` to read operation history.
 
 These commands do not modify repository contents.
 
-<span id="status-cheap-state"></span>
+<span id="status-cheap-state" data-td-print-local></span>
 
 ## Inspect state
 
@@ -45,7 +45,7 @@ For `recovering` or `error`, follow the diagnostic and
 [recovery procedure](/docs/feature/transactions/#recover-an-interrupted-operation).
 Run `check` before delivery.
 
-<span id="check-delivery-proof"></span>
+<span id="check-delivery-proof" data-td-print-local></span>
 
 ## Verify the repository
 
@@ -75,7 +75,7 @@ An unfinished layout transition instead reports `config`, `state`, `public-modes
 It does not repair files. A dirty or recovering repository fails readiness even if its
 previous built tree remains consistent.
 
-<span id="changes-generation-difference"></span>
+<span id="changes-generation-difference" data-td-print-local></span>
 
 ## Compare generations
 
@@ -92,7 +92,7 @@ Rows contain the action, phase, repository-relative path, size, and SHA-256 as a
 This comparison does not inspect a publication target. Use `sow publish TARGET` to update
 that target and resume interrupted transfers. Use target GC to reclaim remote objects.
 
-<span id="generation-retention-and-gc"></span>
+<span id="generation-retention-and-gc" data-td-print-local></span>
 
 ## Retain generations and collect unused packages
 
@@ -115,7 +115,7 @@ The previous-generation metadata kept during ordinary builds is separate from ex
 retention. For target cleanup, run `sow gc TARGET`. Filesystem targets support conditional
 deletion after cache grace; R2 targets report candidates without deleting them.
 
-<span id="operation-log"></span>
+<span id="operation-log" data-td-print-local></span>
 
 ## Read and export the log
 
@@ -136,5 +136,5 @@ and generation manifests remain available.
 See [JSON output](/docs/reference/json/) for scripts and
 [Transactions and recovery](/docs/feature/transactions/) for interrupted operations.
 
-<span id="operational-pattern"></span>
-<span id="see-also"></span>
+<span id="operational-pattern" data-td-print-local></span>
+<span id="see-also" data-td-print-local></span>

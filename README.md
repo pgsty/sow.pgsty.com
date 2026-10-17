@@ -1,6 +1,6 @@
 # SOW Docs
 
-This repository contains the bilingual docs for **SOW**, the self-contained
+This repository contains the bilingual docs for **SOW 0.6.0**, the self-contained
 APT / YUM package repository manager by [Pigsty](https://pigsty.io). It uses
 [Hugo](https://gohugo.io/) and the [OINK](https://github.com/pgsty/oink) docs
 theme, with English at `/` and Simplified Chinese at `/zh/`.
@@ -35,7 +35,7 @@ OINK or Docsy templates into this repository.
 
 ## Theme dependency
 
-OINK 1.2.0 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
+OINK 1.3.0 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
 composed by OINK from bilingual data. Docs and blog pages also render through the theme;
 the site keeps only product-specific data and templates.
 
@@ -62,7 +62,7 @@ make d
 
 ## Local development
 
-Install Hugo Extended 0.160.1 or newer, Go 1.27.0 or newer, and Git, then run the local server:
+Install Hugo Extended 0.166.0 or newer, Go 1.27.0 or newer, and Git, then run the local server:
 
 ```bash
 make s
@@ -110,8 +110,10 @@ Use natural Chinese with the same meaning and sequence.
 - Preserve existing heading anchors when renaming sections. Keep historical release facts tied to their tags.
 - Verify commands, defaults, configuration, and examples against SOW source and `sow help`.
   Use actual output from the matching binary for command transcripts.
-- At release updates, set `params.version` and update the homepage and download notes.
-  Copy the published `SHA256SUMS` to `assets/release/sow-checksums.txt`. Check that all listed filenames match the release.
+- At release updates, set `params.version` and update the homepage, download notes, and bilingual release notes.
+  Keep `data/download/sow.yaml` at `published: false` while the matching GitHub Release is unavailable.
+  After publication, copy its `SHA256SUMS` to `assets/release/sow-checksums.txt` and restore that channel’s `checksums_src` binding.
+  Check every filename and digest against the release, then set `published: true`. The Pigsty repository is a separate rolling channel.
 - Keep whitespace around strong-emphasis delimiters next to Chinese prose.
   Run `make check` to check Markdown, modules, the production build, and internal links.
 
@@ -123,3 +125,7 @@ See [LICENSE](LICENSE) for the complete legal code. Third-party software and ass
 their respective licenses; OINK itself is licensed under Apache License 2.0.
 
 [cc-by-4]: https://creativecommons.org/licenses/by/4.0/
+
+### Custom anchors in Print
+
+Page-local HTML anchors declare `data-td-print-local`. OINK 1.3 preserves their ordinary HTML and single-page Print IDs, and namespaces them when chapters are aggregated for Print. Keep this marker on legacy heading aliases and package-profile headings so chapters do not share IDs. Use `make dev` with the sibling `../oink` checkout for local theme development; production builds use the published module pin.

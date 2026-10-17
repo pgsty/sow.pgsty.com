@@ -2,7 +2,7 @@
 title: "The v0.2 Reset: Plain and Managed Instead of a Universal Control Plane"
 linkTitle: "v0.2 Plain/Managed Reset"
 date: 2026-07-31
-lastmod: 2026-10-13
+lastmod: 2026-10-17
 authors: [Vonng]
 description: "How SOW replaced the v0.1 Git/CAS/Edge platform with two small execution modes, explicit ownership, SQLite state, and a repository-focused release."
 categories: [Design]
@@ -217,5 +217,5 @@ The current forms are documented in [Get Started](/docs/start/),
   [v0.2.0 source tag](https://github.com/pgsty/sow/tree/v0.2.0)
   — the released implementation.
 
-Continue with [Design Evolution](/blog/design/evolution/) for the v0.3 through v0.5
+Continue with [Design Evolution](/blog/design/evolution/) for the v0.3 through v0.6
 changes that followed.

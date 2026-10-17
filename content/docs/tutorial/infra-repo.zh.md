@@ -24,7 +24,7 @@ cp ~/pgsty/infra-pkg/dist/deb/*.deb ~/repo/packages/deb/
 
 输入需同时包含 x86-64 与 ARM64 包。第 3 步会按包内元数据检查格式与架构。
 
-<span id="2-创建-infra-repository-与两个-dist"></span>
+<span id="2-创建-infra-repository-与两个-dist" data-td-print-local></span>
 
 ## 2. 创建 infra 仓库与两个 Dist
 

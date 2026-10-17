@@ -37,7 +37,7 @@ Find the next step for configuration, build, signing, and publication errors.
 {{< /card >}}
 {{< /cards >}}
 
-<span id="conventions"></span>
+<span id="conventions" data-td-print-local></span>
 
 ## Example conventions
 

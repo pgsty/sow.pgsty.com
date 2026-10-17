@@ -10,10 +10,9 @@ icon: fa-solid fa-arrows-rotate
 ---
 
 本指南适用于 RPM 与 `repodata/` 放在同一层目录的平面仓库，例如此前用 `createrepo_c`
-维护的仓库。它使用 Plain `sow create`，不创建 Managed 工作区。发布时间参数是
-**SOW 0.5.0 新增功能**，请使用该版本或更新版本。
+维护的仓库。它使用 Plain `sow create`，不创建 Managed 工作区。以下命令以 **SOW 0.6.0** 为目标版本。
 
-<span id="1-明确迁移范围"></span>
+<span id="1-明确迁移范围" data-td-print-local></span>
 
 ## 1. 准备工作副本
 
@@ -24,7 +23,7 @@ SOW="$(command -v sow)"
 "$SOW" version
 ```
 
-确认版本为 0.5.0 或更新版本。
+确认版本为 0.6.0。
 
 | 检查项 | 操作 |
 |---|---|
@@ -76,7 +75,7 @@ gpg --verify /srv/yum.candidate/repodata/repomd.xml.asc \
 
 `--sign-with KEY` 签署未签名 RPM，并保留已有签名，包括供应商签名。要把全部包签名换成自己的密钥，在候选副本中增加 `--overwrite`。这会改变包文件；`create` 根据签名后的结果生成索引。最后一次 `create` 完成后，再生成索引的分离签名。
 
-<span id="4-切换前验收"></span>
+<span id="4-切换前验收" data-td-print-local></span>
 
 ## 4. 测试候选仓库
 
@@ -91,13 +90,14 @@ gpg --verify /srv/yum.candidate/repodata/repomd.xml.asc \
 与 `createrepo_c` 比较时，检查依赖含义与客户端行为；XML 排版可以不同。
 详情见[平台与集成](/zh/docs/reference/compatibility/)。
 
-<span id="5-发布与恢复资料保留"></span>
+<span id="5-发布与恢复资料保留" data-td-print-local></span>
 
 ## 5. 发布仓库
 
 Plain 会替换多个文件，不提供整个目录的原子切换。发布层需要协调包文件、索引、分离签名以及
-缓存的可见顺序。仍可能被缓存客户端请求的旧元数据文件应继续保留；直接运行 Plain 重建，可能
-删除目录中不再引用的 SOW 以校验和命名的元数据。
+缓存的可见顺序。SOW 0.6.0 保留当前与紧邻上一轮以校验和命名的 RPM 元数据。
+没有变化的运行仍保留同一份上一轮元数据。复制目录后还要继续构建时，一并保留 `.sow-plain-rpm-history.json`。
+如果客户端缓存跨越多轮更新，在发布层继续保留所需的更早元数据与软件包。
 
 保留原始备份与已保存的最大发布时间。回滚软件包内容时，把它当成更晚的一次发布重新建库、签名。只恢复旧
 `repomd.xml`、却搭配已经改变的 RPM，会重新引入校验和或时间戳问题。

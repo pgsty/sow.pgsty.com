@@ -28,7 +28,7 @@ module:
   proxy: direct
   hugoVersion:
     extended: true
-    min: "0.160.1"
+    min: "0.166.0"
   imports:
     - path: github.com/pgsty/oink
 
@@ -315,7 +315,7 @@ params:
   images:
     - images/sow-social-card.png
   # Documentation and pinned download version; publish after the matching release.
-  version: 0.5.0
+  version: 0.6.0
   copyright:
     authors: '[PIGSTY & SOW Contributors](https://pgsty.com) · [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)'
     from_year: 2026

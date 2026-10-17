@@ -70,6 +70,29 @@ sow create /srv/flat
 created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=true recovered=false
 ```
 
+## 保留上一轮 RPM 索引
+
+SOW 0.6.0 保留当前与紧邻上一版 `repomd.xml` 引用的、以校验和命名的 RPM 元数据。
+客户端已获取上一版索引时，仍可在更新后下载这些元数据文件。
+没有变化的运行不会推进保留窗口。
+
+隐藏文件 `.sow-plain-rpm-history.json` 记录这些引用。复制目录后继续构建时，一并保留该文件。
+它是保留记录，不是恢复日志；Plain 模式仍通过重建恢复。
+
+此窗口不保留已删除的包文件，也不保留全部历史索引。
+如果客户端缓存跨越多轮更新，在发布层保留所需的软件包与元数据。
+
+## repo_complete 标记 {#repo_complete-门禁}
+
+如果目录中有 `repo_complete`，使用 `--pigsty` 将它与索引一起更新。不带 `--pigsty` 运行会返回错误：
+
+```console
+sow create /srv/pigsty
+plain: marker gate /srv/pigsty/repo_complete: repo_complete exists; use --pigsty or remove it explicitly before rebuilding
+```
+
+需要保留完成标记时，添加 `--pigsty` 后重跑；不再使用此标记时，先将它移走。
+
 ## 已有 YUM 仓库的发布时间
 
 `--metadata-timestamp` 设置 RPM repomd 的 data 时间戳，不改变软件包、压缩 XML 文件或 DEB 索引。默认值为 `0`，范围为 `0..253402300799` Unix 秒。此选项从 SOW 0.5.0 开始提供。
@@ -85,17 +108,6 @@ sow create /srv/flat --metadata-timestamp "${PUBLISH_TIME:?Set the publication t
 如果客户端验证 `repomd.xml.asc`，repomd 变化后需要重新生成该签名。`create` 不签署 repomd，也不更新或删除旧的分离签名。
 
 完整流程见[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)。
-
-## repo_complete 标记 {#repo_complete-门禁}
-
-如果目录中有 `repo_complete`，使用 `--pigsty` 将它与索引一起更新。不带 `--pigsty` 运行会返回错误：
-
-```console
-sow create /srv/pigsty
-plain: marker gate /srv/pigsty/repo_complete: repo_complete exists; use --pigsty or remove it explicitly before rebuilding
-```
-
-需要保留完成标记时，添加 `--pigsty` 后重跑；不再使用此标记时，先将它移走。
 
 ## --pigsty
 

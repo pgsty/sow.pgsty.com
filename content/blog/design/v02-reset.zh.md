@@ -2,7 +2,7 @@
 title: "v0.2 重置：用 Plain 与 Managed 取代万能控制面"
 linkTitle: "v0.2 Plain/Managed 重置"
 date: 2026-07-31
-lastmod: 2026-10-13
+lastmod: 2026-10-17
 authors: [Vonng]
 description: "SOW 如何用 Plain 与 Managed 两条执行路径、明确所有权和 SQLite 状态，替换 v0.1 的 Git/CAS/Edge 平台。"
 categories: [Design]
@@ -193,4 +193,4 @@ R2 远端删除从一开始就被禁用，针对 R2 的 GC 只报告候选对象
 - [v0.2.0 发布注记](/zh/blog/release/sow-docs-launch/)与
   [v0.2.0 源码标签](https://github.com/pgsty/sow/tree/v0.2.0)：正式发布内容。
 
-后续 v0.3 到 v0.5 的改进见[设计演进](/zh/blog/design/evolution/)。
+后续 v0.3 到 v0.6 的改进见[设计演进](/zh/blog/design/evolution/)。

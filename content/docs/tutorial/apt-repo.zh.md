@@ -109,7 +109,7 @@ apt-cache policy
 需要签名时，按[仓库签名](/zh/docs/tutorial/signing/)生成签名、安装公钥并配置 `Signed-By`。
 预览完成后，删除测试源配置文件并停止 Python 服务器。
 
-<span id="6-安全发布"></span>
+<span id="6-安全发布" data-td-print-local></span>
 
 ## 6. 发布仓库
 

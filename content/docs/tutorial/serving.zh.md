@@ -11,12 +11,12 @@ icon: fa-solid fa-server
 
 SOW 生成静态仓库文件。本教程把 Managed 仓库发布到独立目录，再用 Nginx 提供服务。先完成[第一个工作区](/zh/docs/start/workspace/)。
 
-<span id="公共与私有路径"></span>
+<span id="公共与私有路径" data-td-print-local></span>
 
 源目录是 `/srv/sow/local`，公开副本将位于 `/srv/repo-public/local`。
 两者都包含完整的 `pool/` 与 `dists/` 目录树。工作区配置与私有状态保留在服务目录之外。
 
-<span id="1-校验源-generation"></span>
+<span id="1-校验源-generation" data-td-print-local></span>
 
 ## 1. 构建并检查
 
@@ -28,7 +28,7 @@ sow check -r local
 
 `check` 成功后继续。
 
-<span id="2-配置-filesystem-target"></span>
+<span id="2-配置-filesystem-target" data-td-print-local></span>
 
 ## 2. 添加 filesystem 目标
 
@@ -71,7 +71,7 @@ sow publish public
 
 SOW 先复制包文件与不可变元数据，再更新客户端入口，随后检查结果并记录发布快照。内容不变时重复发布会报告空操作。
 
-<span id="3-用-nginx-服务-target"></span>
+<span id="3-用-nginx-服务-target" data-td-print-local></span>
 
 ## 3. 配置 Nginx
 
@@ -114,14 +114,14 @@ sudo nginx -s reload
 
 完整源配置见 [YUM](/zh/docs/tutorial/yum-repo/) 或 [APT](/zh/docs/tutorial/apt-repo/) 教程。需要验签时，分发公钥并按[仓库签名](/zh/docs/tutorial/signing/)配置。
 
-<span id="4-验证服务入口"></span>
+<span id="4-验证服务入口" data-td-print-local></span>
 
 ## 4. 检查客户端访问
 
 用上表地址配置客户端，刷新索引并安装一个软件包。
 这会检查 `dists/` 与 `pool/` 是否都能访问。两个目录使用相同的访问规则。
 
-<span id="下一步"></span>
+<span id="下一步" data-td-print-local></span>
 
 ## 发布更新
 
@@ -135,7 +135,7 @@ sow publish public
 
 发布中断时，重新执行 `sow publish public` 继续。恢复与目标变更见 [`sow publish`](/zh/docs/command/publish/)；缓存宽限期后的清理见 [`sow gc`](/zh/docs/command/gc/)。
 
-<span id="手工与隔离交付"></span>
+<span id="手工与隔离交付" data-td-print-local></span>
 
 ## 交付到隔离主机
 
@@ -156,7 +156,7 @@ SOW 无法连接目标时，按以下步骤复制。创建并检查副本期间�
 Plain 模式直接提供传给 `sow create` 的目录。使用上例 Nginx 隐藏文件规则，
 防止访问临时文件。
 
-<span id="r2-target"></span>
+<span id="r2-target" data-td-print-local></span>
 
 ## 发布到 R2
 

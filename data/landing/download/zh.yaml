@@ -18,7 +18,7 @@ hero:
   eyebrow: Linux 与 macOS 版本
   title: 下载 SOW
   desc: '从 Pigsty 软件源安装，下载指定版本的软件包或归档，或自行编译源码。请按操作系统与架构选择文件。'
-  note: SOW 0.5.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
+  note: SOW 0.6.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
   title_size: 3.4rem
@@ -29,14 +29,14 @@ hero:
       style: primary
       external: true
     - label: 安装说明
-      url: docs/start/install/
+      url: /zh/docs/start/install/
       icon: fa-solid fa-cloud-arrow-down
       style: ghost
 
 download:
   eyebrow: 安装方式
   title: 选择安装方式
-  desc: '以下安装包与归档使用 SOW 0.5.0。Pigsty 软件源提供最新打包版本。'
+  desc: '本站以 SOW 0.6.0 为目标版本。正式发布后开放对应版本下载；Pigsty 软件源跟随其中的打包版本。'
   keys: [sow]
 
 next:
@@ -49,38 +49,38 @@ next:
       meta: 上手
       icon: fa-solid fa-bolt
       desc: 用装有 RPM 与 DEB 文件的目录构建平面仓库。
-      url: docs/start/quickstart/
+      url: /zh/docs/start/quickstart/
     - title: 第一个工作区
       meta: 上手
       icon: fa-solid fa-folder-tree
       desc: 创建托管工作区，选择软件包并记录构建历史。
-      url: docs/start/workspace/
+      url: /zh/docs/start/workspace/
     - title: CLI 命令参考
       meta: 参考
       icon: fa-solid fa-terminal
       desc: 查阅命令语法、选项、输出与退出码。
-      url: docs/command/
+      url: /zh/docs/command/
     - title: 对外提供仓库
       meta: 教程
       icon: fa-solid fa-server
       desc: 配置 HTTP 服务器，让客户端下载软件包。
-      url: docs/tutorial/serving/
+      url: /zh/docs/tutorial/serving/
     - title: 兼容性
       meta: 参考
       icon: fa-solid fa-table-list
       desc: 查看支持的平台、仓库格式、客户端与存储目标。
-      url: docs/reference/compatibility/
+      url: /zh/docs/reference/compatibility/
     - title: 发布说明
       meta: 历史
       icon: fa-solid fa-clock-rotate-left
       desc: 查看各版本变化与升级步骤。
-      url: blog/release/
+      url: /zh/blog/release/
 
 cta:
   title: 构建第一个仓库
   actions:
     - label: 上手
-      url: docs/start/
+      url: /zh/docs/start/
       icon: fa-solid fa-arrow-right
       style: primary
     - label: pgsty/sow

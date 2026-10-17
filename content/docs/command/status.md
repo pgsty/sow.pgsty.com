@@ -68,6 +68,10 @@ The JSON result additionally includes `dirty_reasons` and the most recent Operat
 
 `ready_to_copy` summarizes the recorded state. When it is false, `dirty_reasons` explains why. [`sow check`](/docs/command/check/) performs the file-content validation.
 
+Pending repository maintenance also affects Dist status, even when Desired and Built memberships match.
+Inspect `dirty_reasons` and the pending operation, then follow the recovery command it identifies.
+The same condition appears in `dist ls` and `dist show`.
+
 ## Reading stored state {#read-only-contract}
 
 `status` reports stored state without migrating or repairing it. It can read database schemas v6, v12, and the current v13. Unsupported or unreadable state returns `5`. Before writing to an older Workspace, back it up and run [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) for each Repository.

@@ -112,7 +112,7 @@ this unsigned example. To add signatures, follow [Sign Your Repository](/docs/tu
 to sign metadata, install the public key, and configure `Signed-By`. After the preview,
 remove the test source file and stop the Python server.
 
-<span id="6-publish-safely"></span>
+<span id="6-publish-safely" data-td-print-local></span>
 
 ## 6. Publish the repository
 

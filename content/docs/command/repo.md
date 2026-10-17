@@ -111,7 +111,8 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-Use `repo migrate` when upgrading an existing v0.3 or v0.4 Workspace to SOW 0.5. New 0.5 Repositories already use schema v13 and need no migration.
+Use `repo migrate` to upgrade a 0.3 or 0.4 workspace to SOW 0.6.0.
+Workspaces already on 0.5.0 use schema v13 and need no schema migration. New 0.6.0 repositories also use schema v13.
 
 1. Stop Workspace writers.
 2. Back up the whole Workspace, preserving hard links.
@@ -119,7 +120,7 @@ Use `repo migrate` when upgrading an existing v0.3 or v0.4 Workspace to SOW 0.5.
 4. Run `build` and `check` for each Repository.
 
 ```bash
-rsync -aH /srv/sow/ /srv/sow.backup-before-0.5.0/
+rsync -aH /srv/sow/ /srv/sow.backup-before-0.6.0/
 sow repo migrate pigsty -C /srv/sow
 sow build -r pigsty -C /srv/sow
 sow check -r pigsty -C /srv/sow
@@ -129,9 +130,21 @@ Repeat the last three commands for each Repository. The migration reports `schem
 
 Writes require the current schema. Compatible read-only commands can inspect older state without upgrading it. After migration, use SOW 0.5 or later; restore the backup to return to the older schema.
 
-`--abort` discards an unfinished layout plan before its commit decision. For an earlier C2 transition that already started, SOW requires the existing trusted transition marker and verifies the Repository identity, old public tree, and uncommitted plan before cleanup. A successful abort keeps that marker; rerun `sow repo migrate NAME` without `--abort` to plan and resume the migration. After commit intent, only forward recovery is allowed. `--abort` does not undo a completed schema migration.
+`--abort` abandons an unfinished layout plan before its commit decision. It does not undo a completed schema migration.
+For an earlier C2 transition, SOW checks the repository identity and available journal and database control records.
+Conflicting records stop the abort. A journal-bound plan also requires its recorded base manifest.
 
-A fresh pre-release C2 repository still cannot start a migration. Older SOW versions could erase all transition credentials during a successful abort; this fix cannot reconstruct them. Restore a verified, complete workspace backup from before that abort, if available, or create a new workspace and import the original packages. Do not edit the layout marker or fabricate a transition journal.
+An abort can complete before the first journal or base manifest was written, provided the trusted transition marker already exists.
+SOW keeps that marker so another `sow repo migrate NAME` can plan and resume the transition.
+After commit intent, only forward recovery is allowed.
+
+SOW moves a nonempty temporary stage intact into `.sow/<repo>/abandoned/`.
+It reports retained paths or cleanup problems on stderr and in JSON `warnings`.
+A stage-cleanup warning does not prevent abandonment. Inspect the reported paths before removing files you no longer need.
+The public tree remains unchanged.
+
+A fresh development-era C2 repository still cannot start a migration.
+If an older abort already removed the trusted marker, restore a complete matching backup or import the original packages into a new workspace.
 
 | Flag | Description | Default |
 |---|---|---|

@@ -108,6 +108,10 @@ versioned object in `detail_json`:
 
 The phases are `rendering`, `promoting_payload`, `publishing_dists`, `normalizing_public_tree`, and `finalizing`. Use them to follow long builds.
 
+New metadata-building operations also record `publication_time` in `payload_json`.
+It is a UTC timestamp with whole-second precision. Recovery reuses it for metadata and signatures.
+Older journals and layout migrations can omit this field.
+
 ### Filtering by Dist
 
 `-d` restricts the listing to Operations that touched that Dist — useful when one Repository serves

@@ -16,8 +16,8 @@ indexes beside the packages. It does not read `sow.yml` or create a state databa
 sow create /srv/offline
 ```
 
-<span id="contract"></span>
-<span id="scan-and-output-rules"></span>
+<span id="contract" data-td-print-local></span>
+<span id="scan-and-output-rules" data-td-print-local></span>
 
 ## Inputs and outputs
 
@@ -36,14 +36,13 @@ All valid versions are included. Different bytes with the same package coordinat
 a conflict. A directory with no supported packages is rejected, except when `--pigsty`
 finishes an interrupted cleanup.
 
-By default, package files and unrelated files stay unchanged. If a format disappears,
-SOW removes its old generated indexes. It also removes obsolete SOW-shaped RPM metadata
-and replaces incomplete output from an earlier run. Generated directories use `0755`;
-generated files use `0644`.
+By default, package files and unrelated files stay unchanged. If a format disappears, SOW removes its old generated indexes.
+For RPMs, it keeps the current and immediately previous checksum-named metadata sets. It removes older SOW-shaped metadata and replaces incomplete output.
+Generated directories use `0755`; generated files use `0644`.
 
-<span id="the-one-pass-pipeline"></span>
-<span id="what-the-final-stat-check-proves"></span>
-<span id="determinism-and-no-op"></span>
+<span id="the-one-pass-pipeline" data-td-print-local></span>
+<span id="what-the-final-stat-check-proves" data-td-print-local></span>
+<span id="determinism-and-no-op" data-td-print-local></span>
 
 ## Build and repeat
 
@@ -69,7 +68,11 @@ The timestamp changes `repomd.xml` only. It does not change the compressed XML, 
 bytes, or DEB indexes. Maintain a timestamp that advances from the existing repository;
 see [YUM migration](/docs/tutorial/yum-migration/).
 
-<span id="publication-and-interruption-semantics"></span>
+<span id="publication-and-interruption-semantics" data-td-print-local></span>
+
+A small `.sow-plain-rpm-history.json` file tracks RPM metadata retention.
+Unchanged builds keep the same previous index. Keep this file when copying a directory that you will rebuild.
+Package retention remains the operator's responsibility. See [RPM index retention](/docs/command/create/#keep-the-previous-rpm-indexes).
 
 ## Interrupted builds
 
@@ -85,7 +88,7 @@ For a live service, build in a separate directory and switch the complete direct
 service after the command succeeds. Use [Managed mode](/docs/feature/managed/) when you
 need recorded membership, generations, and transaction recovery.
 
-<span id="the---pigsty-marker-gate"></span>
+<span id="the---pigsty-marker-gate" data-td-print-local></span>
 
 ## Pigsty cleanup and completion marker
 
@@ -108,7 +111,7 @@ last. Consumers that use this convention must wait for the marker. If the build 
 without a marker, rerun with `--pigsty`. A plain invocation without `--pigsty` refuses to
 rebuild a directory that already contains `repo_complete`.
 
-<span id="explicit-rpm-signing"></span>
+<span id="explicit-rpm-signing" data-td-print-local></span>
 
 ## RPM package signing
 
@@ -124,7 +127,7 @@ This path reads package bytes more than once.
 Plain mode does not sign repository metadata. See [Signing](/docs/feature/signing/) for
 Managed metadata signing and package-signing policy.
 
-<span id="locking-and-scope"></span>
+<span id="locking-and-scope" data-td-print-local></span>
 
 ## Concurrent commands
 
@@ -134,4 +137,4 @@ until the lock becomes available.
 
 See [`sow create`](/docs/command/create/) for all options and result fields.
 
-<span id="next"></span>
+<span id="next" data-td-print-local></span>

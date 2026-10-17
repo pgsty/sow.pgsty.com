@@ -110,7 +110,8 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-将既有 v0.3 或 v0.4 工作区升级到 SOW 0.5 时，使用 `repo migrate`。新建的 0.5 仓库已使用 schema v13，无需迁移。
+从 0.3 或 0.4 工作区升级到 SOW 0.6.0 时，使用 `repo migrate`。
+已使用 0.5.0 的工作区采用 schema v13，无需迁移数据库。新建的 0.6.0 仓库也使用 schema v13。
 
 1. 停止工作区写操作。
 2. 备份整个工作区，并保留硬链接。
@@ -118,7 +119,7 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 4. 对每个仓库运行 `build` 与 `check`。
 
 ```bash
-rsync -aH /srv/sow/ /srv/sow.backup-before-0.5.0/
+rsync -aH /srv/sow/ /srv/sow.backup-before-0.6.0/
 sow repo migrate pigsty -C /srv/sow
 sow build -r pigsty -C /srv/sow
 sow check -r pigsty -C /srv/sow
@@ -128,9 +129,21 @@ sow check -r pigsty -C /srv/sow
 
 写操作要求当前 schema。兼容的只读命令可以查看旧状态，但不会升级数据库。迁移后使用 SOW 0.5 或更新版本；需要返回旧 schema 时，恢复备份。
 
-`--abort` 在提交决策前放弃未完成的布局迁移计划。对于早期已经启动的 C2 迁移，SOW 要求既有的可信迁移标记，并在清理前核对仓库身份、旧公开目录和未提交计划。成功放弃后会保留该标记；再次执行不带 `--abort` 的 `sow repo migrate NAME`，即可重新规划并继续迁移。记录提交意图后只能继续完成迁移。`--abort` 不能撤销已完成的 schema 升级。
+`--abort` 在提交决策前放弃未完成的布局迁移计划，不会撤销已完成的 schema 升级。
+对于早期 C2 迁移，SOW 核对仓库身份，以及现有日志和数据库中的控制记录。
+记录冲突时停止中止操作。日志已绑定迁移计划时，还必须存在其记录的基准清单。
 
-尚未启动迁移的开发期 C2 仓库仍不支持直接迁移。旧版 SOW 在成功放弃迁移时可能已经清除了全部迁移凭据，本修复无法重建这些凭据。如果有经过验证的完整工作区备份，可恢复到该次放弃操作之前；否则应创建新工作区并导入原始软件包。不要手动修改布局标记或伪造迁移日志。
+如果既有可信迁移标记已经存在，即使首份日志或基准清单尚未写入，也可以完成中止。
+SOW 保留该标记，让下一次 `sow repo migrate NAME` 能重新规划并继续迁移。
+记录提交意图后，只能继续完成迁移。
+
+SOW 将非空暂存目录完整移入 `.sow/<repo>/abandoned/`。
+保留路径或清理问题会写入 stderr 和 JSON 的 `warnings`。
+暂存清理告警不会阻止中止操作。确认报告路径中的文件不再需要后，再自行清理。
+公开目录保持不变。
+
+尚未启动迁移的开发期 C2 仓库仍不支持直接迁移。
+如果旧版中止操作已经移除了可信标记，恢复完整的匹配备份，或将原始软件包导入新工作区。
 
 | 参数 | 含义 | 默认值 |
 |---|---|---|

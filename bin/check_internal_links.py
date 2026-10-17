@@ -26,6 +26,7 @@ class DocumentParser(html.parser.HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.ids: set[str] = set()
+        self.duplicate_ids: set[str] = set()
         self.links: list[str] = []
         self.redirect_target: str | None = None
 
@@ -39,6 +40,8 @@ class DocumentParser(html.parser.HTMLParser):
             if value is None:
                 continue
             if key == "id" or (tag == "a" and key == "name"):
+                if key == "id" and value in self.ids:
+                    self.duplicate_ids.add(value)
                 self.ids.add(value)
             if key in LINK_ATTRIBUTES:
                 self.links.append(value.strip())
@@ -105,8 +108,11 @@ def main() -> int:
 
     failures: dict[str, list[str]] = collections.defaultdict(list)
     checked = 0
+    resolved_paths: dict[str, pathlib.Path | None] = {}
     for source_path, document in documents.items():
         source_route = route_for_file(public, source_path)
+        for identifier in sorted(document.duplicate_ids):
+            failures[f"duplicate id {identifier}"].append(source_route)
         for raw_url in document.links:
             target = resolve_internal_url(source_route, raw_url)
             if target is None:

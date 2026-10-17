@@ -14,7 +14,7 @@ icon: fa-solid fa-cubes
 SOW creates repository indexes in two modes. Choose Plain for a directory you can rebuild.
 Choose Managed for ongoing package updates, policy, signing, and publication.
 
-<span id="capability-matrix"></span>
+<span id="capability-matrix" data-td-print-local></span>
 
 ## Capabilities
 
@@ -35,7 +35,7 @@ SOW parses packages and generates indexes itself. It does not require `createrep
 `dpkg-scanpackages`, or `reprepro`. RPM package signing uses the host `rpm` and GPG
 environment. Metadata signing uses `gpg` when a key reference resolves to a GPG key identifier.
 
-<span id="repository-formats"></span>
+<span id="repository-formats" data-td-print-local></span>
 
 ## Generated formats
 
@@ -48,7 +48,7 @@ RPM XML is gzip-compressed. SOW does not generate SQLite rpm-md, zchunk, modulem
 source-package indexes. Use your HTTP server or object-storage service to serve the
 output. See [Platforms and integrations](/docs/reference/compatibility/) for client details.
 
-<span id="read-by-question"></span>
+<span id="read-by-question" data-td-print-local></span>
 
 ## Learn a feature
 

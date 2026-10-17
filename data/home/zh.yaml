@@ -12,7 +12,7 @@ hero:
     - 增量发布更新
   title_size: 4rem
   lead: 从本地 RPM 与 DEB 文件构建 YUM、APT 仓库。用 `sow create` 索引已有目录；用托管工作区（Managed）筛选软件包、签署元数据、保留快照并发布更新。
-  note: SOW 0.5.0 · Linux + macOS · RPM + DEB · Apache-2.0
+  note: SOW 0.6.0 · Linux + macOS · RPM + DEB · Apache-2.0
   image:
     light: img/sow-architecture-zh-light.svg
     dark: img/sow-architecture-zh-dark.svg
@@ -28,15 +28,15 @@ hero:
     hide_below: lg
   actions:
     - label: 上手
-      url: docs/start/
+      url: /zh/docs/start/
       icon: fa-solid fa-arrow-right
       style: primary
     - label: 下载
-      url: download/
+      url: /zh/download/
       icon: fa-solid fa-download
       style: ghost
-    - label: 0.5 版本新特性
-      url: blog/release/sow-v0.5.0/
+    - label: 0.6 版本变化
+      url: /zh/blog/release/sow-v0.6.0/
       icon: fa-solid fa-tag
       style: ghost
 
@@ -47,12 +47,12 @@ capabilities:
   items:
     - ref: 01 / 快速创建
       title: 索引软件包目录
-      url: docs/command/create/
+      url: /zh/docs/command/create/
       motto: 直接把装有软件包的目录交给 SOW
       bullets:
         - '`sow create` 就地索引目录顶层的 RPM 与 DEB 文件'
         - 生成 rpm-md 元数据与 APT Packages 索引
-        - 替换已有 YUM 索引时，可指定元数据时间戳
+        - 更新后保留当前与上一轮 RPM 元数据
       value: 用静态 HTTP 服务器提供生成后的目录。
       visual:
         type: code
@@ -63,7 +63,7 @@ capabilities:
           - { class: p, prefix: '$ ', text: 'python3 -m http.server 8080 --bind 127.0.0.1 --directory /srv/repo' }
     - ref: 02 / 托管模式
       title: 一份包体，多个托管视图
-      url: docs/feature/managed/
+      url: /zh/docs/feature/managed/
       motto: 统一管理 Enterprise Linux、Debian 与 Ubuntu 仓库
       bullets:
         - 每个仓库内，每个软件包只保存一份包体
@@ -75,15 +75,15 @@ capabilities:
         aria_label: 托管仓库模型
         columns: 2
         items:
-          - { icon: fa-brands fa-redhat, title: EL, detail: rpm-md 视图, url: docs/tutorial/yum-repo/ }
-          - { icon: fa-brands fa-debian, title: Debian, detail: APT 视图, url: docs/tutorial/apt-repo/ }
-          - { icon: fa-brands fa-ubuntu, title: Ubuntu, detail: APT 视图, url: docs/tutorial/apt-repo/ }
-          - { icon: fa-solid fa-box-archive, title: 共享包池, detail: 包体去重, url: docs/feature/views/ }
-          - { icon: fa-solid fa-camera, title: 构建快照, detail: Generation, url: docs/feature/transactions/ }
-          - { icon: fa-solid fa-code-branch, title: 软件包集合, detail: Dist, url: docs/reference/config/ }
+          - { icon: fa-brands fa-redhat, title: EL, detail: rpm-md 视图, url: /zh/docs/tutorial/yum-repo/ }
+          - { icon: fa-brands fa-debian, title: Debian, detail: APT 视图, url: /zh/docs/tutorial/apt-repo/ }
+          - { icon: fa-brands fa-ubuntu, title: Ubuntu, detail: APT 视图, url: /zh/docs/tutorial/apt-repo/ }
+          - { icon: fa-solid fa-box-archive, title: 共享包池, detail: 包体去重, url: /zh/docs/feature/views/ }
+          - { icon: fa-solid fa-camera, title: 构建快照, detail: Generation, url: /zh/docs/feature/transactions/ }
+          - { icon: fa-solid fa-code-branch, title: 软件包集合, detail: Dist, url: /zh/docs/reference/config/ }
     - ref: 03 / 开箱即用
       title: 一个可执行文件
-      url: download/
+      url: /zh/download/
       motto: macOS 与 Linux 使用一致的命令接口
       bullets:
         - 提供 Linux、macOS 的 `amd64` 与 `arm64` 归档
@@ -101,7 +101,7 @@ capabilities:
           - { icon: fa-solid fa-box-open, title: DEB, detail: amd64 · arm64 }
     - ref: 04 / 增量同步
       title: 发布仓库更新
-      url: docs/command/publish/
+      url: /zh/docs/command/publish/
       motto: 发布到文件系统或 Cloudflare R2
       bullets:
         - '`sow changes` 列出两次本地构建之间的文件变化'
@@ -140,14 +140,14 @@ faq:
   items:
     - question: 我应该从 Plain 还是 Managed 模式开始？
       answer: |
-        索引已有软件包目录时，使用 [Plain 模式](docs/start/quickstart/)。需要按发行版选择软件包、设置版本保留规则、签署元数据或发布更新时，使用 [Managed 工作区](docs/start/workspace/)。
+        索引已有软件包目录时，使用 [Plain 模式](/zh/docs/start/quickstart/)。需要按发行版选择软件包、设置版本保留规则、签署元数据或发布更新时，使用 [Managed 工作区](/zh/docs/start/workspace/)。
       open: true
     - question: 可以替换现有的 createrepo_c 工作流吗？
       answer: |
-        使用 RPM XML 元数据的仓库可以替换。通过 `--metadata-timestamp` 保持发布时间递增；如果客户端要求索引签名，构建后签署最终索引。操作步骤与元数据格式见 [YUM 迁移指南](docs/tutorial/yum-migration/)。
+        使用 RPM XML 元数据的仓库可以替换。通过 `--metadata-timestamp` 保持发布时间递增；如果客户端要求索引签名，构建后签署最终索引。操作步骤与元数据格式见 [YUM 迁移指南](/zh/docs/tutorial/yum-migration/)。
     - question: 签署 RPM 包时，也会签署仓库索引吗？
       answer: |
-        `--sign-with` 为未签名 RPM 包补签。Plain 模式需要在最后一次建库后单独签署 `repomd.xml`；Managed 模式通过配置管理元数据签名策略。两种流程见[仓库签名](docs/tutorial/signing/)。
+        `--sign-with` 为未签名 RPM 包补签。Plain 模式需要在最后一次建库后单独签署 `repomd.xml`；Managed 模式通过配置管理元数据签名策略。两种流程见[仓库签名](/zh/docs/tutorial/signing/)。
     - question: SOW 能同时处理 RPM 与 DEB 软件包吗？
       answer: |
         可以。Plain 目录可同时放置 RPM 与 DEB 软件包。在 Managed 模式中，每个 Dist 只有一种格式，同一个仓库可以包含多个 RPM 与 DEB Dist。
@@ -156,17 +156,17 @@ faq:
         不需要。SOW 通过命令生成静态文件，Managed 模式使用本地 SQLite 数据库。用静态 HTTP 服务器提供包含 `pool/` 与 `dists/` 的仓库根目录。
     - question: Managed 仓库可以发布到哪里？
       answer: |
-        可以发布到本地或挂载的[文件系统，也可以发布到 Cloudflare R2](docs/command/publish/)。每个目标单独记录发布检查点，`sow publish` 据此选择下次需要更新的文件。
+        可以发布到本地或挂载的[文件系统，也可以发布到 Cloudflare R2](/zh/docs/command/publish/)。每个目标单独记录发布检查点，`sow publish` 据此选择下次需要更新的文件。
 
 cta:
   title: 构建第一个仓库
   text: 安装 SOW 后，用 `sow create DIR` 为软件包目录生成索引。
   actions:
     - label: 上手
-      url: docs/start/
+      url: /zh/docs/start/
       icon: fa-solid fa-arrow-right
       style: primary
     - label: 浏览文档
-      url: docs/
+      url: /zh/docs/
       icon: fa-solid fa-book-open
       style: ghost

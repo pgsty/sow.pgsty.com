@@ -22,8 +22,8 @@ Replace `/srv/sow`, `pgsql`, and the target name `prod` below with your configur
 
 ## The database needs migration
 
-After upgrading a 0.3 or 0.4 workspace to 0.5, stop workspace writers and back up the complete
-workspace. Then run:
+SOW 0.6.0 uses schema v13, as does 0.5.0. An upgrade from 0.5.0 needs no schema migration.
+For a 0.3 or 0.4 workspace, stop writers and back up the complete workspace. Then run:
 
 ```bash
 sow repo migrate pgsql -C /srv/sow
@@ -32,7 +32,7 @@ sow check -C /srv/sow -r pgsql
 ```
 
 Repeat this for each Repository. Compatible read-only commands can still inspect an older
-schema, but they do not migrate it. See [Upgrade](/docs/start/install/#upgrade-from-04-to-05).
+schema, but they do not migrate it. See [Upgrade](/docs/start/install/#upgrade-to-060).
 
 ## Status shows pending changes
 
@@ -67,6 +67,14 @@ sow publish prod -C /srv/sow
 SOW resumes the saved attempt. To abandon an attempt before commit intent, use
 `sow publish prod --abort -C /srv/sow`. After commit intent, rerun publication to finish it.
 See [Publication recovery](/docs/command/publish/).
+
+## Errors after a committed change
+
+Database commit and later maintenance are separate steps. A checkpoint or cleanup error can occur after package membership or a build has committed.
+SOW keeps the committed result in command output. It does not report those items as rolled back.
+
+Read the result and `sow status`, then inspect the recorded operation with `sow log`.
+Resume the command named in the diagnostic. Keep original input files until you have confirmed the result.
 
 ## Target configuration changed
 

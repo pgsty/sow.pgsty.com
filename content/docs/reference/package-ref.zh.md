@@ -17,12 +17,12 @@ sow ls -r demo -d el9
 sow show 'rpm:example-0:1.0-1.x86_64' -r demo
 ```
 
-<span id="五种形态"></span>
-<span id="内容摘要"></span>
-<span id="rpm-坐标"></span>
-<span id="deb-坐标"></span>
-<span id="完整文件名"></span>
-<span id="哪些写法不成立"></span>
+<span id="五种形态" data-td-print-local></span>
+<span id="内容摘要" data-td-print-local></span>
+<span id="rpm-坐标" data-td-print-local></span>
+<span id="deb-坐标" data-td-print-local></span>
+<span id="完整文件名" data-td-print-local></span>
+<span id="哪些写法不成立" data-td-print-local></span>
 
 ## 支持的形式
 
@@ -52,7 +52,7 @@ sow where 'deb:example=2:1.0-1:amd64'
 文件名方便输入，但不一定唯一。脚本优先使用坐标或完整摘要。
 包引用不支持路径、通配符、正则表达式或版本范围。
 
-<span id="裸包名"></span>
+<span id="裸包名" data-td-print-local></span>
 
 ## 包名匹配与歧义
 
@@ -74,7 +74,7 @@ sow rm example -r demo -d el9 --check
 
 其他引用形式在单个仓库中必须确定一个对象。匹配不到或存在歧义时，退出码为 `6`。
 
-<span id="作用域"></span>
+<span id="作用域" data-td-print-local></span>
 
 ## 搜索范围
 
@@ -91,7 +91,7 @@ sow rm example -r demo -d el9 --check
 不带 `-r` 的 `where -d NAME` 搜索包含该 Dist 名称的仓库。
 所请求的 Dist 名称在所有仓库中都不存在时，命令报错。
 
-<span id="坐标与身份"></span>
+<span id="坐标与身份" data-td-print-local></span>
 
 ## 坐标冲突
 
@@ -104,4 +104,4 @@ sow rm example -r demo -d el9 --check
 命令选项见 [`rm`](/zh/docs/command/rm/)、[`show`](/zh/docs/command/show/)和
 [`where`](/zh/docs/command/where/)。
 
-<span id="延伸阅读"></span>
+<span id="延伸阅读" data-td-print-local></span>

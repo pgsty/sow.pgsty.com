@@ -14,7 +14,7 @@ icon: fa-solid fa-cubes
 SOW 用两种模式创建仓库索引。可以随时重建的包目录使用 Plain；
 需要持续更新、策略、签名和发布的仓库使用 Managed。
 
-<span id="能力矩阵"></span>
+<span id="能力矩阵" data-td-print-local></span>
 
 ## 功能对照
 
@@ -34,7 +34,7 @@ SOW 用两种模式创建仓库索引。可以随时重建的包目录使用 Pla
 SOW 自行解析包并生成索引，无需 `createrepo_c`、`dpkg-scanpackages` 或 `reprepro`。
 RPM 包签名使用主机上的 `rpm` 和 GPG 环境；元数据密钥引用解析为 GPG 密钥标识时，也需要 `gpg`。
 
-<span id="仓库格式"></span>
+<span id="仓库格式" data-td-print-local></span>
 
 ## 生成格式
 
@@ -47,7 +47,7 @@ RPM XML 使用 gzip 压缩。SOW 不生成 SQLite rpm-md、zchunk、modulemd 或
 生成结果由你配置的 HTTP 服务或对象存储对外提供。
 客户端细节见[平台与集成](/zh/docs/reference/compatibility/)。
 
-<span id="按问题阅读"></span>
+<span id="按问题阅读" data-td-print-local></span>
 
 ## 按任务阅读
 

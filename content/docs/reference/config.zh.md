@@ -22,7 +22,7 @@ sow config show --all
 `config check` 校验 YAML、比较配置与已初始化的仓库状态，并解析签名引用。
 `config show --all` 展开默认值。
 
-<span id="文件是怎么读的"></span>
+<span id="文件是怎么读的" data-td-print-local></span>
 
 ## 文件规则
 
@@ -35,9 +35,9 @@ sow config show --all
 
 旧仓库数据库或目录布局的升级方法见 [`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。
 
-<span id="根级字段"></span>
-<span id="architectures"></span>
-<span id="完整示例"></span>
+<span id="根级字段" data-td-print-local></span>
+<span id="architectures" data-td-print-local></span>
+<span id="完整示例" data-td-print-local></span>
 
 ## 工作区
 
@@ -65,9 +65,9 @@ targets: {}
 显式架构列表不能为空，规范化后不能有重复族。`noarch` 和 `all` 是包架构，
 不能写入配置架构列表；SOW 会将这些架构无关包加入各个适用视图。
 
-<span id="repository-仓库"></span>
-<span id="protected"></span>
-<span id="名称约束"></span>
+<span id="repository-仓库" data-td-print-local></span>
+<span id="protected" data-td-print-local></span>
+<span id="名称约束" data-td-print-local></span>
 
 ## 仓库
 
@@ -94,9 +94,9 @@ repos:
 保留名称为 `.`、`..`、`.sow`、`pool`、`dists`、`sow.yml`、`workspace.lock`、
 `workspace-ops`、`repo-locks`。仓库的私有状态路径也不能冲突，例如 `db` 与 `db.db` 不能共存。
 
-<span id="format"></span>
-<span id="architectures-1"></span>
-<span id="limit"></span>
+<span id="format" data-td-print-local></span>
+<span id="architectures-1" data-td-print-local></span>
+<span id="limit" data-td-print-local></span>
 
 ## Dist
 
@@ -123,7 +123,7 @@ dists:
 `limit` 不能为负数。RPM 使用 epoch-version-release 排序，DEB 使用 Debian 版本排序。
 架构无关包单独成组。放宽策略不会恢复已移除成员，需要重新加入包文件。
 
-<span id="exclude"></span>
+<span id="exclude" data-td-print-local></span>
 
 ### 排除规则
 
@@ -172,7 +172,7 @@ signing:
       passphrase: env://SOW_METADATA_PASSPHRASE
 ```
 
-<span id="rpmpackages"></span>
+<span id="rpmpackages" data-td-print-local></span>
 
 ### RPM 包设置
 
@@ -189,7 +189,7 @@ signing:
 包签名对暂存副本调用主机 `rpm` 命令，其 GPG 环境中必须已有对应私钥。
 仅配置一个密钥文件不会为该环境导入私钥。
 
-<span id="rpmmetadata-与-debmetadata"></span>
+<span id="rpmmetadata-与-debmetadata" data-td-print-local></span>
 
 ### 元数据设置
 
@@ -203,7 +203,7 @@ signing:
 RPM 签名生成 `repodata/repomd.xml.asc`，DEB 签名生成 `InRelease`、`Release.gpg`。
 没有密钥时索引不签名。DEB 包文件不会被重签。
 
-<span id="key-引用文法"></span>
+<span id="key-引用文法" data-td-print-local></span>
 
 ### 密钥引用
 
@@ -222,6 +222,10 @@ RPM 签名生成 `repodata/repomd.xml.asc`，DEB 签名生成 `InRelease`、`Rel
 提供私钥内容时，元数据签名在 SOW 进程内完成；引用解析为 GPG 密钥标识时，调用外部 `gpg`，
 无论该标识来自 `agent://` 还是环境变量。
 
+签名 `key` 引用必须解析为一个主密钥。
+`trusted_keys` 文件可以包含多个完整公钥，包括连续的 ASCII 装甲块。
+SOW 读取整个密钥集合，拒绝格式错误或被截断的输入，不会仅使用第一个密钥而忽略后续内容。
+
 ### Passphrase 引用
 
 口令接受路径、`file://`、`env://` 引用，配合私钥内容使用。引用解析为 GPG 密钥标识时，
@@ -237,7 +241,7 @@ SOW 移除末尾的一个换行符，包括 CRLF。口令文件采用与密钥�
 
 密钥轮换和包复用见[签名](/zh/docs/feature/signing/)。
 
-<span id="发布目标"></span>
+<span id="发布目标" data-td-print-local></span>
 
 ## 发布目标 {#publication-targets}
 
@@ -315,7 +319,7 @@ targets:
 Provider、endpoint、region、bucket、prefix 和仓库身份不能重新绑定，应配置新目标。
 待完成的维护操作可能阻止修改缓存 TTL 或公开 endpoint，需先完成维护。
 
-<span id="sowyml-里没有什么"></span>
+<span id="sowyml-里没有什么" data-td-print-local></span>
 
 ## 固定设置
 
@@ -326,4 +330,4 @@ Provider、endpoint、region、bucket、prefix 和仓库身份不能重新绑定
 继续阅读[布局](/zh/docs/reference/layout/)、[发布](/zh/docs/command/publish/)和
 [退出码](/zh/docs/reference/exit-codes/)。
 
-<span id="延伸阅读"></span>
+<span id="延伸阅读" data-td-print-local></span>

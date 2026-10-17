@@ -11,13 +11,13 @@ icon: fa-solid fa-server
 
 SOW generates static repository files. This guide publishes a Managed Repository to a separate directory, then serves that directory with Nginx. It continues from [First Workspace](/docs/start/workspace/).
 
-<span id="public-and-private-paths"></span>
+<span id="public-and-private-paths" data-td-print-local></span>
 
 The source is `/srv/sow/local`; the public copy will be `/srv/repo-public/local`.
 Both contain the complete `pool/` and `dists/` tree. The workspace configuration and
 private state stay outside the server root.
 
-<span id="1-gate-the-source-generation"></span>
+<span id="1-gate-the-source-generation" data-td-print-local></span>
 
 ## 1. Build and check
 
@@ -29,7 +29,7 @@ sow check -r local
 
 Continue when `check` succeeds.
 
-<span id="2-configure-a-filesystem-target"></span>
+<span id="2-configure-a-filesystem-target" data-td-print-local></span>
 
 ## 2. Add a filesystem target
 
@@ -73,7 +73,7 @@ sow publish public
 
 SOW copies package files and immutable metadata first, then updates client entry points. It checks the result and records the published generation. Repeating publication without changes reports a no-op.
 
-<span id="3-serve-the-target-with-nginx"></span>
+<span id="3-serve-the-target-with-nginx" data-td-print-local></span>
 
 ## 3. Configure Nginx
 
@@ -116,7 +116,7 @@ The client addresses are:
 
 Use the [YUM](/docs/tutorial/yum-repo/) or [APT](/docs/tutorial/apt-repo/) tutorial for the full source configuration. To verify signatures, distribute the public key and follow [Sign Your Repository](/docs/tutorial/signing/).
 
-<span id="4-verify-the-served-entry-points"></span>
+<span id="4-verify-the-served-entry-points" data-td-print-local></span>
 
 ## 4. Check client access
 
@@ -124,7 +124,7 @@ Configure a client with the addresses above. Refresh its indexes and install a p
 This checks access to both `dists/` and `pool/`. Apply the same access rules to both
 directories.
 
-<span id="next"></span>
+<span id="next" data-td-print-local></span>
 
 ## Publish an update
 
@@ -138,7 +138,7 @@ sow publish public
 
 If publication stops, rerun `sow publish public` to resume it. See [`sow publish`](/docs/command/publish/) for recovery and target changes, and [`sow gc`](/docs/command/gc/) for cleanup after the cache grace period.
 
-<span id="manual-and-air-gapped-delivery"></span>
+<span id="manual-and-air-gapped-delivery" data-td-print-local></span>
 
 ## Deliver to an isolated host
 
@@ -161,7 +161,7 @@ Copying directly over a live tree can expose indexes before their package files 
 For Plain mode, serve the directory passed to `sow create`. Keep temporary hidden files
 inaccessible; the Nginx dotfile rule above does this.
 
-<span id="r2-targets"></span>
+<span id="r2-targets" data-td-print-local></span>
 
 ## Publish to R2
 

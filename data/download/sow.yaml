@@ -7,7 +7,7 @@
 # repository channel is rolling on purpose: it tracks whatever the infra
 # repository currently serves, which is not necessarily this tag.
 repo: pgsty/sow
-published: true # Set true only after the matching GitHub Release is public.
+published: false # Set true only after the matching GitHub Release is public.
 channels:
   - id: pigsty
     kind: rolling
@@ -136,11 +136,11 @@ channels:
     icon: fa-solid fa-code-branch
     url: https://github.com/pgsty/sow/tree/${tag}
     note: >-
-      Install Go 1.27.1 or newer, then build the release tag with the commands
+      Install Go 1.27.2 or newer, then build the release tag with the commands
       below. No C compiler is required. The build flags set the version shown
       by `sow version`.
     note_zh: >-
-      先安装 Go 1.27.1 或更新版本，再按以下命令构建发布标签。无需 C 编译器。
+      先安装 Go 1.27.2 或更新版本，再按以下命令构建发布标签。无需 C 编译器。
       构建参数会设置 `sow version` 显示的版本号。
     steps:
       - title: Clone, check out, build
@@ -163,7 +163,7 @@ channels:
     title_zh: SHA256SUMS
     icon: fa-solid fa-shield-halved
     url: https://github.com/pgsty/sow/releases/download/${tag}/SHA256SUMS
-    checksums_src: release/sow-checksums.txt
+    # Add checksums_src only after copying the published v0.6.0 SHA256SUMS.
     note: >-
       Download `SHA256SUMS` from the same release as your package or archive.
       Before installation, set `ASSET` to the downloaded file name and check

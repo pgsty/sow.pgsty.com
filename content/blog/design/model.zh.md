@@ -18,7 +18,7 @@ draft: false
 SOW 用配置文件保存仓库设置，用 SQLite 记录托管状态，用公共目录向客户端提供文件。
 模型分别记录选中的软件包、已完成的构建，以及已发布的内容。
 
-<span id="对象层级"></span>
+<span id="对象层级" data-td-print-local></span>
 
 ## 对象
 
@@ -44,14 +44,14 @@ Workspace（工作区）
 一个仓库拥有一份 `pool/`、一棵 `dists/` 目录、一个状态数据库和一条 Generation 序列。
 包去重只在该仓库内进行。两个仓库即使输入相同，也各自保存一份包副本。
 
-<span id="package-object"></span>
+<span id="package-object" data-td-print-local></span>
 
 ### 包对象
 
 SOW 使用包签名完成后的 SHA-256 标识包对象。名称、版本、release 和架构描述软件包，摘要标识实际字节。
 重复加入同一对象会复用已有文件。同一包池路径对应不同内容时，SOW 报告冲突。
 
-<span id="dist-与-membership"></span>
+<span id="dist-与-membership" data-td-print-local></span>
 
 ### Dist 与成员关系
 
@@ -67,7 +67,7 @@ Generation 是该次构建的不可变清单，变更集则比较两份清单。
 `add --skip` 会修改 Desired 状态而不重建索引。构建中断也可能留下未完成的操作。
 用 `sow status` 查看差异，用 `sow build` 应用待构建变更或完成恢复。
 
-<span id="publication-target"></span>
+<span id="publication-target" data-td-print-local></span>
 
 ### 发布目标
 
@@ -90,7 +90,7 @@ Generation 是该次构建的不可变清单，变更集则比较两份清单。
 
 Managed 操作用事务和日志记录进度。恢复时，SOW 根据记录完成或回滚中断的步骤。
 
-<span id="公共状态与私有状态"></span>
+<span id="公共状态与私有状态" data-td-print-local></span>
 
 ## 公共文件与私有文件
 
@@ -103,7 +103,7 @@ Managed 操作用事务和日志记录进度。恢复时，SOW 根据记录完�
 公共目录副本可以提供软件下载。要继续管理仓库，还需保留匹配的私有工作区。
 只有公共副本时，无法恢复成员关系、保留记录或发布历史。
 
-<span id="锁边界"></span>
+<span id="锁边界" data-td-print-local></span>
 
 ## 锁与写入者
 

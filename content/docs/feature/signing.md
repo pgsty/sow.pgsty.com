@@ -12,8 +12,8 @@ icon: fa-solid fa-key
 Configure metadata signing to let clients verify repository indexes. Configure RPM package
 signing separately when clients also need to verify signatures embedded in RPM files.
 
-<span id="two-independent-trust-chains"></span>
-<span id="what-the-client-verifies"></span>
+<span id="two-independent-trust-chains" data-td-print-local></span>
+<span id="what-the-client-verifies" data-td-print-local></span>
 
 ## What gets signed
 
@@ -26,7 +26,7 @@ signing separately when clients also need to verify signatures embedded in RPM f
 Metadata signing leaves package bytes unchanged. RPM package signing changes package
 bytes and therefore their SHA-256. SOW does not add signatures to DEB package files.
 
-<span id="configuration"></span>
+<span id="configuration" data-td-print-local></span>
 
 ## Configure metadata signing
 
@@ -60,7 +60,7 @@ Signed empty Dists receive the same signature files as populated Dists. The sign
 of `InRelease` matches `Release`. Without a configured key, SOW produces unsigned indexes.
 Managed signing settings come from `sow.yml`; `build` has no per-run signing override.
 
-<span id="four-key-reference-forms"></span>
+<span id="four-key-reference-forms" data-td-print-local></span>
 
 ## Key and passphrase references
 
@@ -74,6 +74,10 @@ Managed signing settings come from `sow.yml`; `build` has no per-run signing ove
 Key files support ASCII-armored and binary OpenPGP data. A GPG key identifier is a
 16-digit key ID or a 40- or 64-digit fingerprint. References that resolve to a GPG key
 identifier use external `gpg` for private-key access and prompting.
+
+A signing `key` reference must resolve to exactly one primary key.
+A `trusted_keys` file can contain several complete public keys, including consecutive armored blocks.
+SOW reads the complete bundle and rejects malformed or truncated input. It does not silently use only the first key.
 
 For private-key material, passphrases accept path, `file://`, or `env://` references.
 GPG key identifiers use GPG passphrase handling and cannot take a `passphrase` field.
@@ -89,8 +93,8 @@ both APT signature files. If upgrading a workspace with SHA-1 metadata signature
 `build` before starting a new publication. An existing publication attempt resumes its
 recorded files.
 
-<span id="rpm-package-signing"></span>
-<span id="trust-rings-are-verified-independently"></span>
+<span id="rpm-package-signing" data-td-print-local></span>
+<span id="trust-rings-are-verified-independently" data-td-print-local></span>
 
 ## Configure RPM package signing
 
@@ -126,7 +130,7 @@ Use RPM format v4 for package-signing workflows. SOW does not support the signat
 used by RPM format v6. This is separate from OpenPGP packet versions; historical CentOS
 OpenPGP v3 and v4 signatures are supported.
 
-<span id="key-changes-make-dists-dirty"></span>
+<span id="key-changes-make-dists-dirty" data-td-print-local></span>
 
 ## Change keys
 
@@ -151,7 +155,7 @@ signature time. Renewing a certificate does not itself invalidate old signatures
 the required historical self-certifications and subkey bindings remain in the certificate.
 Keep that historical public-key material when exporting renewed keys.
 
-<span id="plain-mode"></span>
+<span id="plain-mode" data-td-print-local></span>
 
 ## Plain signing
 
@@ -168,4 +172,4 @@ At least one RPM must remain after any `--pigsty` cleanup.
 See [Sign your repository](/docs/tutorial/signing/) for client setup and
 [Configuration](/docs/reference/config/) for all signing fields.
 
-<span id="next"></span>
+<span id="next" data-td-print-local></span>

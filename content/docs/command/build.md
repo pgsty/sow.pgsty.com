@@ -63,6 +63,19 @@ SOW moves required pending packages into `pool/`, writes the indexes, then updat
 
 If a build stops, rerun it. SOW uses the operation journal to finish or roll back the unfinished work. If the journal, database, and files disagree, the command reports an integrity error. Use `sow check` and `sow log` to identify the affected state.
 
+## Publication time
+
+Each new build records one UTC publication time, with whole-second precision.
+APT `Release` dates, RPM data timestamps, and metadata signatures use this time across the affected Dists.
+Recovery reuses it; a no-op build leaves it unchanged.
+
+The chosen time cannot precede the recorded time of an existing build or the selected key's activation time.
+A key that is not yet usable causes an error. Keep the host clock correct.
+
+Older journals and `repo migrate` keep their previous timestamp behavior.
+An `rm --check` preview chooses its own time, so its predicted hashes and sizes can differ from execution.
+See [Publication times](/docs/reference/compatibility/#publication-times).
+
 ## Progress events
 
 Long builds append structured `build_progress` records to the Operation log. Each event

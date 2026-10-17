@@ -28,7 +28,7 @@ cascade:
 - [发布与恢复](/zh/blog/design/publication/)：上传顺序、检查点与清理。
 - [设计原则](/zh/blog/design/principles/)：状态归属与写入协调。
 
-<span id="权威与证据"></span>
+<span id="权威与证据" data-td-print-local></span>
 
 历史系列介绍 v0.1 产品计划、设计决策与测试，以及 v0.2 重构和后续版本，并链接到对应源码快照。
 当前命令见 [SOW 文档](/zh/docs/)，各版本变化见[发布说明](/zh/blog/release/)。

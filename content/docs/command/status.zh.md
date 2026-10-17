@@ -63,6 +63,10 @@ JSON 结果还包含 `dirty_reasons` 与最近一次操作记录：
 
 `ready_to_copy` 汇总已记录的状态。为 false 时，`dirty_reasons` 给出原因。文件内容由 [`sow check`](/zh/docs/command/check/) 校验。
 
+仓库中未完成的维护操作也会影响 Dist 状态，即使期望成员与已构建成员相同。
+查看 `dirty_reasons` 和待处理操作，再按提示执行相应的恢复命令。
+`dist ls` 与 `dist show` 也会反映该状态。
+
 ## 读取行为 {#只读契约}
 
 `status` 读取状态，不迁移或修复数据库。它可以读取 schema v6、v12 与当前 v13 数据库。不支持或无法读取的状态返回 `5`。对旧工作区执行写操作前，先备份，再逐个运行 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。

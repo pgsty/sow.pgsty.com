@@ -22,6 +22,6 @@ cascade:
 
 Read the changes and upgrade steps for each SOW release, with the newest version first.
 
-[SOW 0.5.0](/blog/release/sow-v0.5.0/) adds Plain YUM publication timestamps, schema v13,
-and fixes for Managed recovery, signing, and package paths. Upgrade a 0.3 or 0.4 workspace
-with `sow repo migrate`, then build and check each Repository.
+[SOW 0.6.0](/blog/release/sow-v0.6.0/) keeps previous Plain RPM indexes and records Managed publication times.
+It strengthens file verification and recovery while reducing repeated I/O.
+Workspaces already on 0.5.0 need no schema migration. See the [upgrade guide](/docs/start/install/#upgrade-to-060).

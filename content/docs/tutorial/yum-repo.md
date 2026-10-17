@@ -117,6 +117,8 @@ required:
 sow export rpm-leaf el9 x86_64 /srv/export/pigsty-el9-x86_64 -r pigsty
 ```
 
+The RPM Dist must belong to the current Built Generation. In a mixed Repository, check the [export preconditions](/docs/command/export/) first.
+
 The destination must be absent or empty. Export copies package files by default. Use `--hardlink` only on the same filesystem, and keep exported files read-only because they share storage with the source pool.
 
 ## Update the repository

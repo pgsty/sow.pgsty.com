@@ -74,6 +74,18 @@ sow create /srv/flat
 created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=true recovered=false
 ```
 
+## Keep the previous RPM indexes
+
+SOW 0.6.0 keeps the checksum-named RPM metadata referenced by the current and immediately previous `repomd.xml`.
+A client that fetched the previous index can still retrieve those metadata files after an update.
+An unchanged run does not advance this retention window.
+
+The hidden `.sow-plain-rpm-history.json` file records these references. Keep it with the directory when rebuilding a working copy.
+It is a retention record, not a recovery journal. Plain mode still recovers by rebuilding.
+
+This window does not retain removed package files or every older index.
+If client caches span several updates, keep the required packages and metadata in your publication layer.
+
 ## The repo_complete gate
 
 If the directory contains `repo_complete`, use `--pigsty` to refresh it with the indexes. Running without `--pigsty` returns an error:

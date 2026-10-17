@@ -18,7 +18,7 @@ draft: false
 A build creates a local snapshot (Generation). Publication uploads its files to a target and records progress for recovery.
 Each target keeps a checkpoint that identifies its last completed publication.
 
-<span id="ownership-split"></span>
+<span id="ownership-split" data-td-print-local></span>
 
 ## State ownership
 
@@ -28,8 +28,8 @@ Each target keeps a checkpoint that identifies its last completed publication.
 | Generations and changesets | Remote inventory |
 | Retained package and metadata references | Grace periods and deletion records |
 
-<span id="publication-phases"></span>
-<span id="pointer-order"></span>
+<span id="publication-phases" data-td-print-local></span>
+<span id="pointer-order" data-td-print-local></span>
 
 ## Publication order
 
@@ -65,7 +65,7 @@ Unchanged packages do not need another download.
 The public endpoint can still return cached files. SOW waits and retries within `max_cache_ttl`.
 If verification fails, SOW does not record a new completed checkpoint.
 
-<span id="recovery-outcomes"></span>
+<span id="recovery-outcomes" data-td-print-local></span>
 
 ## Resume or abandon an attempt
 
@@ -82,7 +82,7 @@ rather than starting from a newer local build.
 `--abort` removes eligible private filesystem staging. It keeps remote objects and records
 abandoned uploads so a later attempt can reuse matching bytes.
 
-<span id="durable-target-identity-and-rebind"></span>
+<span id="durable-target-identity-and-rebind" data-td-print-local></span>
 
 ## Target identity
 
@@ -98,7 +98,7 @@ Before changing `max_cache_ttl`, complete pending target maintenance.
 For filesystem targets, finish conditional deletion before changing `public_endpoint`.
 A shorter TTL does not shorten an already recorded grace period.
 
-<span id="published-pointer-fence"></span>
+<span id="published-pointer-fence" data-td-print-local></span>
 
 ## Remove a published view
 
@@ -112,8 +112,8 @@ of views, configure a new target with a different prefix and update clients to i
 `--rebind` cannot change a target prefix. See [`sow publish`](/docs/command/publish/) for
 the configuration rules.
 
-<span id="retention-without-payload-copies"></span>
-<span id="remote-deletion-is-a-capability"></span>
+<span id="retention-without-payload-copies" data-td-print-local></span>
+<span id="remote-deletion-is-a-capability" data-td-print-local></span>
 
 ## Retain and collect packages
 

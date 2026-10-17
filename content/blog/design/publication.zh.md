@@ -18,7 +18,7 @@ draft: false
 构建生成本地快照（Generation）。发布把快照中的文件上传到目标，并记录进度，以便中断后继续。
 每个目标分别保存检查点，记录上次完成发布的内容。
 
-<span id="所有权拆分"></span>
+<span id="所有权拆分" data-td-print-local></span>
 
 ## 状态归属
 
@@ -28,8 +28,8 @@ draft: false
 | Generation 与变更集 | 远端清单 |
 | 保留的包和元数据引用 | 宽限期与删除记录 |
 
-<span id="发布阶段"></span>
-<span id="指针顺序"></span>
+<span id="发布阶段" data-td-print-local></span>
+<span id="指针顺序" data-td-print-local></span>
 
 ## 发布顺序
 
@@ -56,7 +56,7 @@ APT: by-hash 与直接索引 -> Release.gpg -> InRelease/Release
 更新期间，各视图可能暂时使用不同构建的索引。分离签名与索引也分两次写入。
 因此，客户端可能需要重试索引刷新。公共校验完成后，SOW 才记录检查点。
 
-<span id="公共验证"></span>
+<span id="公共验证" data-td-print-local></span>
 
 ## 公共访问校验
 
@@ -66,7 +66,7 @@ SOW 通过 `public_endpoint` 下载变化的文件和受影响的索引入口，
 公共端点可能仍返回缓存中的旧文件。SOW 会在 `max_cache_ttl` 内等待并重试。
 校验失败时，发布不会记录新的完成检查点。
 
-<span id="恢复结果"></span>
+<span id="恢复结果" data-td-print-local></span>
 
 ## 继续或放弃发布
 
@@ -82,7 +82,7 @@ SOW 通过 `public_endpoint` 下载变化的文件和受影响的索引入口，
 `--abort` 清理符合条件的私有文件系统暂存目录，保留远端对象，并记录已放弃的上传。
 后续发布可复用字节相同的对象。
 
-<span id="持久-target-identity-与-rebind"></span>
+<span id="持久-target-identity-与-rebind" data-td-print-local></span>
 
 ## 目标身份
 
@@ -97,7 +97,7 @@ SOW 会追加绑定修订记录。Repository、存储身份或前缀变化时，
 文件系统目标正在执行条件删除时，需等删除流程完成后才能修改 `public_endpoint`。
 缩短 TTL 不会提前结束已记录的缓存宽限期。
 
-<span id="已发布指针栅栏"></span>
+<span id="已发布指针栅栏" data-td-print-local></span>
 
 ## 移除已发布的视图
 
@@ -108,8 +108,8 @@ SOW 会追加绑定修订记录。Repository、存储身份或前缀变化时，
 随后可以修改本地 Dist 配置并重建。要发布删减后的视图集合，配置一个使用不同前缀的新目标，并让客户端使用新 URL。
 `--rebind` 不能修改目标前缀。配置规则见 [`sow publish`](/zh/docs/command/publish/)。
 
-<span id="不复制包体的保留机制"></span>
-<span id="远端删除是一项能力"></span>
+<span id="不复制包体的保留机制" data-td-print-local></span>
+<span id="远端删除是一项能力" data-td-print-local></span>
 
 ## 保留与回收软件包
 

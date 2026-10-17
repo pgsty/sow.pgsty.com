@@ -12,7 +12,7 @@ icon: fa-solid fa-sitemap
 Use Managed mode for repositories that receive regular updates. SOW records package
 membership, applies Dist policy, builds metadata, and keeps operation history.
 
-<span id="the-three-tiers"></span>
+<span id="the-three-tiers" data-td-print-local></span>
 
 ## Workspace, repository, and Dist
 
@@ -38,7 +38,7 @@ One package can belong to several Dists in the same repository without another p
 copy. An architecture-neutral package has one membership per Dist and appears in each
 applicable architecture view. Separate repositories keep separate package objects.
 
-<span id="the-layout"></span>
+<span id="the-layout" data-td-print-local></span>
 
 ## Public files and private state
 
@@ -65,8 +65,8 @@ Serve or publish the complete `<workspace>/<repo>/` directory. Keep `sow.yml` an
 private. Back up configuration, private state, and package files together when you need
 to preserve a working workspace. See [Repository layout](/docs/reference/layout/).
 
-<span id="sowyml-drives-everything"></span>
-<span id="protected-repositories"></span>
+<span id="sowyml-drives-everything" data-td-print-local></span>
+<span id="protected-repositories" data-td-print-local></span>
 
 ## Create and configure
 
@@ -97,7 +97,7 @@ DEB indexes use the native names `amd64` and `arm64`.
 To prevent removal of a repository, set `protected: true` on it. This blocks `repo rm`,
 including `-f`; package and Dist changes remain available.
 
-<span id="empty-has-a-valid-protocol-surface"></span>
+<span id="empty-has-a-valid-protocol-surface" data-td-print-local></span>
 
 ## Desired state and built state
 
@@ -122,7 +122,7 @@ Removing an architecture still referenced by membership or built state is reject
 Every new Dist starts with valid empty indexes for its architectures. Metadata signing,
 when configured, applies to empty Dists too. Removing the last member leaves empty indexes.
 
-<span id="discovery-which-workspace"></span>
+<span id="discovery-which-workspace" data-td-print-local></span>
 
 ## Find the workspace
 
@@ -146,7 +146,7 @@ Use the physical workspace path and explicit `-r` and `-d` when needed.
 
 Plain `sow create` does not use workspace discovery.
 
-<span id="selection-which-repository-which-dist"></span>
+<span id="selection-which-repository-which-dist" data-td-print-local></span>
 
 ## Select a repository and Dist
 
@@ -168,8 +168,8 @@ If more than one choice remains, the command requires an explicit selection.
 `show` searches that repository; `where` searches all repositories. Use `-d` to narrow
 commands that accept it. See [Commands](/docs/command/) for each command's selection rules.
 
-<span id="state-database-and-package-facts"></span>
-<span id="init-converges-it-does-not-reset"></span>
+<span id="state-database-and-package-facts" data-td-print-local></span>
+<span id="init-converges-it-does-not-reset" data-td-print-local></span>
 
 ## Repeat initialization or upgrade
 
@@ -180,9 +180,10 @@ existing Dist, run `build` to create its new view.
 If initialization commits some objects and then fails, it returns exit `3` and reports
 what completed. Resolve the error and rerun `init`.
 
-SOW 0.5 uses database schema v13. Back up older workspaces and use
-[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) for supported upgrades.
-Do not change the SQLite schema version by hand.
+SOW 0.6.0 uses database schema v13, as does 0.5.0. Upgrading from 0.5.0 needs no schema migration.
+For a 0.3 or 0.4 workspace, back up the complete workspace, then run
+[`sow repo migrate`](/docs/command/repo/#sow-repo-migrate).
+Do not edit the SQLite schema version manually.
 
 The database also caches parsed package facts. Warm builds can reuse those facts and
 file fingerprints; `sow check` reads and hashes package bytes for a full consistency check.
@@ -190,4 +191,4 @@ file fingerprints; `sow check` reads and hashes package bytes for a full consist
 See [Policy](/docs/feature/policy/), [Views](/docs/feature/views/), and
 [Transactions and recovery](/docs/feature/transactions/) for the next steps.
 
-<span id="next"></span>
+<span id="next" data-td-print-local></span>

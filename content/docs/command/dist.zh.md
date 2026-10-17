@@ -64,6 +64,9 @@ el9	rpm	x86_64,aarch64	2	1	4	true	["Desired and Built membership sets differ"]
 }
 ```
 
+即使成员数量相同，仓库中未完成的维护操作也可能使 Dist 显示为 dirty。
+判断 Dist 是否可以交付前，查看 `dirty_reasons` 与 `sow status`。
+
 ## sow dist new
 
 使用 `--format rpm` 或 `--format deb` 创建 Dist。

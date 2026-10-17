@@ -19,8 +19,8 @@ cascade:
 SOW 创建 RPM/YUM 与 DEB/APT 软件仓库。执行 `sow create DIR`，即可为目录中的包生成索引。
 需要按 Dist 组织软件包、限制版本数、签署元数据或发布更新时，使用 Managed 工作区。
 
-本文档对应 **SOW 0.5.0**。版本变化见[发布注记](/zh/blog/release/sow-v0.5.0/)，
-已有 Managed 工作区请参考[升级说明](/zh/docs/start/install/#从-04-升级到-05)。
+本文档对应 **SOW 0.6.0**。版本变化见[发布注记](/zh/blog/release/sow-v0.6.0/)，
+已有 Managed 工作区请参考[升级说明](/zh/docs/start/install/#升级到-060)。
 
 - [上手](/zh/docs/start/) — 安装 SOW、创建平面仓库，并构建第一个 Managed 工作区。
 - [教程](/zh/docs/tutorial/) — 完整的 YUM、APT、签名、对外服务与发布实战。

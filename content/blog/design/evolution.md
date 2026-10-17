@@ -2,9 +2,9 @@
 title: "SOW Design Evolution: From Route Graphs to the Repository Core"
 linkTitle: "Design Evolution"
 date: 2026-08-10
-lastmod: 2026-10-13
+lastmod: 2026-10-17
 authors: [Vonng]
-description: "How SOW moved from the v0.1 distribution platform to a repository engine, and how v0.2 through v0.5 refined that model."
+description: "How SOW moved from the v0.1 distribution platform to a repository engine, and how v0.2 through v0.6 refined that model."
 categories: [Design]
 tags: [architecture, repository, migration, decision]
 weight: 20
@@ -14,9 +14,10 @@ draft: false
 ---
 
 SOW moved from a Git-based distribution control plane in v0.1 to a repository engine in
-v0.2. This article traces that change and the refinements through v0.5.0.
+v0.2. This article traces that change and the refinements through v0.6.0.
 
-Version numbers below refer to released Git tags. Some archived plans used “v0.2” and
+The earlier versions below refer to released Git tags; v0.6 is the current documentation target.
+Some archived plans used “v0.2” and
 “v0.3” for development designs. In particular, the C2 layout with RPM hardlinks inside each
 view was replaced before v0.2.0 shipped.
 
@@ -40,8 +41,9 @@ Four articles cover the earlier work in detail:
 | v0.3 | Removed V1, cached package facts, simplified Plain builds, and batched payload commits | Unchanged |
 | v0.4 | Single-pass verification, independent RPM trust rings, target rebind, and migration/recovery fixes | Unchanged |
 | v0.5 | Package-path reservations, removal and recovery fixes, signing checks, and reproducible Plain timestamps | Unchanged |
+| v0.6 | Previous Plain RPM indexes, recorded Managed publication times, stronger file checks, consistent state reads, and less repeated I/O | Unchanged |
 
-The source tags preserve each implementation:
+The source tags preserve the earlier implementations:
 [v0.1.0](https://github.com/pgsty/sow/tree/v0.1.0),
 [v0.2.0](https://github.com/pgsty/sow/tree/v0.2.0),
 [v0.3.0](https://github.com/pgsty/sow/tree/v0.3.0),
@@ -101,7 +103,7 @@ introduced the package-facts cache, and made Plain generation a rebuildable one-
 operation. It also expanded Membership in batches and grouped payload commits to reduce
 filesystem work.
 
-<span id="v04-harden-evidence-rather-than-add-another-model"></span>
+<span id="v04-harden-evidence-rather-than-add-another-model" data-td-print-local></span>
 
 ## v0.4: strengthen verification and recovery
 
@@ -126,6 +128,19 @@ changing Desired state. Plain `create --metadata-timestamp` added an explicit ti
 for reproducible RPM metadata; its default is zero. See the
 [v0.5.0 changelog](https://github.com/pgsty/sow/blob/v0.5.0/CHANGELOG.md) for the full changes.
 
+## v0.6: verify once, preserve the result
+
+v0.6 keeps schema 13 and the same public layout. It records one publication time for each
+new metadata build and reuses that time during recovery. File checks bind verified bytes
+to the opened file, so later steps can safely reuse verification results within an operation.
+
+SQLite reads use a consistent snapshot. Commands preserve committed results when later
+maintenance fails. Plain RPM updates keep the current and immediately previous metadata
+sets, so clients can finish fetching files from the previous index.
+
+These changes improve the existing model without another full repository scan or recovery
+state machine. See the [v0.6.0 release note](/blog/release/sow-v0.6.0/) for behavior and upgrade details.
+
 ## What survived every redesign
 
 Several v0.1 rules continue in the smaller model:
@@ -139,7 +154,7 @@ Several v0.1 rules continue in the smaller model:
 - Record compatibility results with the source version, client, provider, and environment
   that produced them.
 
-<span id="documentation-authority"></span>
+<span id="documentation-authority" data-td-print-local></span>
 
 The current rationale is in [Design Principles](/blog/design/principles/),
 [System Model](/blog/design/model/), [Single-Payload Repository](/blog/design/single-payload/),

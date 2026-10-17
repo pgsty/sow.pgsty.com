@@ -2,7 +2,7 @@
 title: "Why SOW Uses One Payload Tree per Repository"
 linkTitle: "Single-Payload Repository"
 date: 2026-08-05
-lastmod: 2026-10-13
+lastmod: 2026-10-17
 authors: [Vonng]
 description: "One package pool per repository, with metadata-only distribution views that share its files."
 categories: [Design]
@@ -16,7 +16,7 @@ draft: false
 ---
 
 This decision was drafted on 2026-08-05 and shipped in SOW v0.2.0 on 2026-08-08.
-SOW 0.5.0 still uses this layout. Each Repository stores one package tree and lets its
+SOW 0.6.0 still uses this layout. Each Repository stores one package tree and lets its
 distribution views reference that tree.
 
 ## Decision

@@ -12,7 +12,7 @@ hero:
     - Publish what changed
   title_size: 4rem
   lead: Build YUM and APT repositories from local RPM and DEB files. Index an existing directory with `sow create`. Use a Managed workspace to select packages, sign metadata, keep snapshots, and publish updates.
-  note: SOW 0.5.0 · Linux + macOS · RPM + DEB · Apache-2.0
+  note: SOW 0.6.0 · Linux + macOS · RPM + DEB · Apache-2.0
   image:
     light: img/sow-architecture-light.svg
     dark: img/sow-architecture-dark.svg
@@ -31,15 +31,15 @@ hero:
     hide_below: lg
   actions:
     - label: Get Started
-      url: docs/start/
+      url: /docs/start/
       icon: fa-solid fa-arrow-right
       style: primary
     - label: Download
-      url: download/
+      url: /download/
       icon: fa-solid fa-download
       style: ghost
-    - label: What's new in 0.5
-      url: blog/release/sow-v0.5.0/
+    - label: What's new in 0.6
+      url: /blog/release/sow-v0.6.0/
       icon: fa-solid fa-tag
       style: ghost
 
@@ -50,12 +50,12 @@ capabilities:
   items:
     - ref: 01 / CREATE
       title: Index a package directory
-      url: docs/command/create/
+      url: /docs/command/create/
       motto: Point SOW at a directory of packages
       bullets:
         - '`sow create` indexes top-level RPM and DEB files in place'
         - Produces rpm-md metadata and APT Packages indexes
-        - Set the metadata timestamp when replacing an existing YUM index
+        - Keeps current and previous RPM metadata after updates
       value: Serve the resulting directory with a static HTTP server.
       visual:
         type: code
@@ -66,7 +66,7 @@ capabilities:
           - { class: p, prefix: '$ ', text: 'python3 -m http.server 8080 --bind 127.0.0.1 --directory /srv/repo' }
     - ref: 02 / MANAGED
       title: One pool, many views
-      url: docs/feature/managed/
+      url: /docs/feature/managed/
       motto: Curate Enterprise Linux, Debian, and Ubuntu repositories
       bullets:
         - Stores one copy of each package per repository
@@ -78,15 +78,15 @@ capabilities:
         aria_label: Managed repository model
         columns: 2
         items:
-          - { icon: fa-brands fa-redhat, title: EL, detail: rpm-md views, url: docs/tutorial/yum-repo/ }
-          - { icon: fa-brands fa-debian, title: Debian, detail: APT views, url: docs/tutorial/apt-repo/ }
-          - { icon: fa-brands fa-ubuntu, title: Ubuntu, detail: APT views, url: docs/tutorial/apt-repo/ }
-          - { icon: fa-solid fa-box-archive, title: One Pool, detail: deduplicated payload, url: docs/feature/views/ }
-          - { icon: fa-solid fa-camera, title: Generations, detail: immutable manifests, url: docs/feature/transactions/ }
-          - { icon: fa-solid fa-code-branch, title: Package sets, detail: Dists, url: docs/reference/config/ }
+          - { icon: fa-brands fa-redhat, title: EL, detail: rpm-md views, url: /docs/tutorial/yum-repo/ }
+          - { icon: fa-brands fa-debian, title: Debian, detail: APT views, url: /docs/tutorial/apt-repo/ }
+          - { icon: fa-brands fa-ubuntu, title: Ubuntu, detail: APT views, url: /docs/tutorial/apt-repo/ }
+          - { icon: fa-solid fa-box-archive, title: One Pool, detail: deduplicated payload, url: /docs/feature/views/ }
+          - { icon: fa-solid fa-camera, title: Generations, detail: immutable manifests, url: /docs/feature/transactions/ }
+          - { icon: fa-solid fa-code-branch, title: Package sets, detail: Dists, url: /docs/reference/config/ }
     - ref: 03 / READY TO RUN
       title: One executable
-      url: download/
+      url: /download/
       motto: The same CLI on macOS and Linux
       bullets:
         - Linux and macOS archives for `amd64` and `arm64`
@@ -104,7 +104,7 @@ capabilities:
           - { icon: fa-solid fa-box-open, title: DEB, detail: amd64 · arm64 }
     - ref: 04 / INCREMENTAL
       title: Publish repository updates
-      url: docs/command/publish/
+      url: /docs/command/publish/
       motto: Publish to a filesystem or Cloudflare R2 target
       bullets:
         - '`sow changes` lists file changes between local builds'
@@ -143,14 +143,14 @@ faq:
   items:
     - question: Should I start with Plain or Managed mode?
       answer: |
-        Use [Plain mode](docs/start/quickstart/) to index an existing package directory. Use a [Managed workspace](docs/start/workspace/) to select packages per distribution, apply retention rules, sign metadata, and publish updates.
+        Use [Plain mode](/docs/start/quickstart/) to index an existing package directory. Use a [Managed workspace](/docs/start/workspace/) to select packages per distribution, apply retention rules, sign metadata, and publish updates.
       open: true
     - question: Can I replace an existing createrepo_c workflow?
       answer: |
-        Yes, for repositories that use RPM XML metadata. Preserve the publication timestamp with `--metadata-timestamp` and sign the final index if clients require it. See the [YUM migration guide](docs/tutorial/yum-migration/) for the steps and supported metadata formats.
+        Yes, for repositories that use RPM XML metadata. Preserve the publication timestamp with `--metadata-timestamp` and sign the final index if clients require it. See the [YUM migration guide](/docs/tutorial/yum-migration/) for the steps and supported metadata formats.
     - question: Does RPM signing also sign the repository index?
       answer: |
-        `--sign-with` signs unsigned RPM packages. In Plain mode, sign `repomd.xml` separately after the final metadata build. Managed mode provides configured metadata-signing policies. See [Signing](docs/tutorial/signing/) for both workflows.
+        `--sign-with` signs unsigned RPM packages. In Plain mode, sign `repomd.xml` separately after the final metadata build. Managed mode provides configured metadata-signing policies. See [Signing](/docs/tutorial/signing/) for both workflows.
     - question: Can SOW handle RPM and DEB packages together?
       answer: |
         Yes. A Plain directory can contain both RPM and DEB packages. In Managed mode, each Dist has one format. One repository can contain multiple RPM and DEB Dists.
@@ -159,17 +159,17 @@ faq:
         No. SOW runs as a command and generates static files. Managed mode uses a local SQLite database. Serve the Repository root, which contains `pool/` and `dists/`, with a static HTTP server.
     - question: Where can a Managed repository be published?
       answer: |
-        Publish to a local or mounted [filesystem, or Cloudflare R2](docs/command/publish/). Each target records its own checkpoint. `sow publish` uses that checkpoint to select the files for the next update.
+        Publish to a local or mounted [filesystem, or Cloudflare R2](/docs/command/publish/). Each target records its own checkpoint. `sow publish` uses that checkpoint to select the files for the next update.
 
 cta:
   title: Build your first repository
   text: After installation, run `sow create DIR` to index your package directory.
   actions:
     - label: Get Started
-      url: docs/start/
+      url: /docs/start/
       icon: fa-solid fa-arrow-right
       style: primary
     - label: Browse Docs
-      url: docs/
+      url: /docs/
       icon: fa-solid fa-book-open
       style: ghost

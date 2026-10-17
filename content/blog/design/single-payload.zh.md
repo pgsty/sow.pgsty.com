@@ -2,7 +2,7 @@
 title: "为什么 SOW 每个仓库只保留一棵包体树"
 linkTitle: "单包体仓库"
 date: 2026-08-05
-lastmod: 2026-10-13
+lastmod: 2026-10-17
 authors: [Vonng]
 description: "每个仓库共用一个包池，各发行版视图只保存元数据，避免重复包副本。"
 categories: [Design]
@@ -15,10 +15,10 @@ icon: fa-solid fa-layer-group
 draft: false
 ---
 
-这项决策起草于 2026-08-05，随 2026-08-08 的 SOW v0.2.0 发布。SOW 0.5.0 仍使用这一布局：
+这项决策起草于 2026-08-05，随 2026-08-08 的 SOW v0.2.0 发布。SOW 0.6.0 仍使用这一布局：
 每个仓库保存一棵包体树，各发行版视图引用同一棵树。
 
-<span id="最终决策"></span>
+<span id="最终决策" data-td-print-local></span>
 
 ## 决策
 
@@ -55,7 +55,7 @@ draft: false
 
 v0.2.0 发布前，最终布局删除了 RPM 视图中的包体别名。归档中的 C2 文档描述的是该开发线。
 
-<span id="元数据如何引用-pool"></span>
+<span id="元数据如何引用-pool" data-td-print-local></span>
 
 ## 元数据如何引用包池
 
@@ -78,7 +78,7 @@ href:    ../../../pool/p/pkg/pkg-1.0-1.x86_64.rpm
 只要 `pool/` 与 `dists/` 的相对位置不变，就可以把整个公共目录复制到其他目录、HTTP 站点、桶或前缀，
 无需改写元数据。
 
-<span id="被否决的方案"></span>
+<span id="被否决的方案" data-td-print-local></span>
 
 ## 其他方案
 
@@ -91,7 +91,7 @@ href:    ../../../pool/p/pkg/pkg-1.0-1.x86_64.rpm
 | CDN 改写或重定向对象 | 仓库依赖额外的路由配置 |
 | 工作区或桶级共享包池 | 需要跨仓库协调锁、保留与删除 |
 
-<span id="镜像工具兼容属于导出问题"></span>
+<span id="镜像工具兼容属于导出问题" data-td-print-local></span>
 
 ## 为镜像工具导出独立目录
 
