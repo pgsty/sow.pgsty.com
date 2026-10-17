@@ -87,6 +87,18 @@ Module rather than an imported Go package, so `tidy` would remove the required t
 The build is Hugo-only: OINK ships its styles, scripts, fonts, search, and content
 runtimes with the theme, so this repository has no Node.js or CDN build dependency.
 
+## Cloudflare Pages
+
+Set `HUGO_VERSION=0.166.0` in both the Production and Preview environments of
+the `sow-pgsty-com` Pages project. Keep this value aligned with
+`.github/workflows/pages.yaml`. The build command is `hugo`, and the output
+directory is `public`.
+
+The `hugoVersion.min` setting in `hugo.yaml` declares the required version;
+it does not install that version in Cloudflare. Without the environment variable,
+an older default Hugo can reject OINK's translation files. See the
+[Cloudflare Hugo guide](https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/).
+
 ## Writing conventions
 
 This repository maintains SOW's user and design documentation. Use the writing rules of
