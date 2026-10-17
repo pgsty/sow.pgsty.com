@@ -62,7 +62,8 @@ make d
 
 ## Local development
 
-Install Hugo Extended 0.166.0 or newer, Go 1.27.0 or newer, and Git, then run the local server:
+Install Hugo Extended 0.166.0, Go 1.27.0 or newer, and Git for the strict local checks.
+Start the local server with:
 
 ```bash
 make s
@@ -80,6 +81,9 @@ Run the module verification and warning-strict production build with:
 make c
 ```
 
+GitHub Actions pins Hugo Extended 0.166.0 for warning-strict checks.
+OINK 1.3 uses LibSass. Hugo 0.168.0 still builds the site, but its LibSass warning fails `make check`.
+
 The corresponding long targets are `debug`, `serve`, `build`, and `check`;
 `make dev` uses the sibling OINK checkout while `make serve` retains the pinned-theme preview. Do not run `go mod tidy`: OINK is a Hugo
 Module rather than an imported Go package, so `tidy` would remove the required theme pin.
@@ -89,10 +93,9 @@ runtimes with the theme, so this repository has no Node.js or CDN build dependen
 
 ## Cloudflare Pages
 
-Set `HUGO_VERSION=0.166.0` in both the Production and Preview environments of
-the `sow-pgsty-com` Pages project. Keep this value aligned with
-`.github/workflows/pages.yaml`. The build command is `hugo`, and the output
-directory is `public`.
+Set `HUGO_VERSION=0.168.0` in both the Production and Preview environments of
+the `sow-pgsty-com` Pages project. The build command is `hugo`, and the output
+directory is `public`. This build reports the LibSass warning described above.
 
 The `hugoVersion.min` setting in `hugo.yaml` declares the required version;
 it does not install that version in Cloudflare. Without the environment variable,
