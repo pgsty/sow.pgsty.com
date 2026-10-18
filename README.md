@@ -35,7 +35,7 @@ OINK or Docsy templates into this repository.
 
 ## Theme dependency
 
-OINK 1.3.0 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
+OINK 1.3.2 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
 composed by OINK from bilingual data. Docs and blog pages also render through the theme;
 the site keeps only product-specific data and templates.
 
@@ -62,7 +62,9 @@ make d
 
 ## Local development
 
-Install Hugo Extended 0.166.0, Go 1.27.0 or newer, and Git for the strict local checks.
+Install Hugo Extended 0.168.0, Go 1.27.0 or newer, and Git for the strict local checks.
+
+
 Start the local server with:
 
 ```bash
@@ -75,14 +77,14 @@ Build the static site with:
 make b
 ```
 
-Run the module verification and warning-strict production build with:
+Run the module verification and production build with:
 
 ```bash
 make c
 ```
 
-GitHub Actions pins Hugo Extended 0.166.0 for warning-strict checks.
-OINK 1.3 uses LibSass. Hugo 0.168.0 still builds the site, but its LibSass warning fails `make check`.
+GitHub Actions follows stable Go releases and pins Hugo Extended 0.168.0
+for production builds. SCSS uses Hugo’s built-in compiler.
 
 The corresponding long targets are `debug`, `serve`, `build`, and `check`;
 `make dev` uses the sibling OINK checkout while `make serve` retains the pinned-theme preview. Do not run `go mod tidy`: OINK is a Hugo
@@ -93,7 +95,7 @@ runtimes with the theme, so this repository has no Node.js or CDN build dependen
 
 ## Cloudflare Pages
 
-Set `HUGO_VERSION=0.168.0` in both the Production and Preview environments of
+Set `HUGO_VERSION=0.166.0` in both the Production and Preview environments of
 the `sow-pgsty-com` Pages project. The build command is `hugo`, and the output
 directory is `public`. This build reports the LibSass warning described above.
 
