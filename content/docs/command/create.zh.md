@@ -72,7 +72,7 @@ created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=true recover
 
 ## 保留上一轮 RPM 索引
 
-SOW 0.6.0 保留当前与紧邻上一版 `repomd.xml` 引用的、以校验和命名的 RPM 元数据。
+SOW 0.6.1 保留当前与紧邻上一版 `repomd.xml` 引用的、以校验和命名的 RPM 元数据。
 客户端已获取上一版索引时，仍可在更新后下载这些元数据文件。
 没有变化的运行不会推进保留窗口。
 

@@ -62,7 +62,7 @@ RPM 位置使用文件名，DEB 使用 `./<文件名>`。构建期间使用私�
 数据库旁可能有 SQLite WAL 和共享内存文件。`.sow/` 与 pending 目录权限为私有的 `0700`。
 待构建包文件使用 `0644`，进入公开路径时无需改变权限。
 
-SOW 0.6.0 使用数据库 schema v13 和配置 schema `sow/v3`，两者是独立的版本标识。
+SOW 0.6.1 使用数据库 schema v13 和配置 schema `sow/v3`，两者是独立的版本标识。
 执行 [`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 前备份完整工作区。
 数据库应与匹配的私有、公开状态一起保存；不要手动修改 schema 版本或可重建缓存。
 

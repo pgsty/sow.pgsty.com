@@ -180,7 +180,7 @@ existing Dist, run `build` to create its new view.
 If initialization commits some objects and then fails, it returns exit `3` and reports
 what completed. Resolve the error and rerun `init`.
 
-SOW 0.6.0 uses database schema v13, as does 0.5.0. Upgrading from 0.5.0 needs no schema migration.
+SOW 0.6.1 uses database schema v13, as do 0.5.0 and 0.6.0. Upgrading from either version needs no schema migration.
 For a 0.3 or 0.4 workspace, back up the complete workspace, then run
 [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate).
 Do not edit the SQLite schema version manually.

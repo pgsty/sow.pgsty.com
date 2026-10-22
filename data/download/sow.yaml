@@ -136,11 +136,11 @@ channels:
     icon: fa-solid fa-code-branch
     url: https://github.com/pgsty/sow/tree/${tag}
     note: >-
-      Install Go 1.27.2 or newer, then build the release tag with the commands
+      Install Go 1.27.3 or newer, then build the release tag with the commands
       below. No C compiler is required. The build flags set the version shown
       by `sow version`.
     note_zh: >-
-      先安装 Go 1.27.2 或更新版本，再按以下命令构建发布标签。无需 C 编译器。
+      先安装 Go 1.27.3 或更新版本，再按以下命令构建发布标签。无需 C 编译器。
       构建参数会设置 `sow version` 显示的版本号。
     steps:
       - title: Clone, check out, build

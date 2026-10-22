@@ -169,7 +169,7 @@ Plain 命令 `sow create` 不参与工作区查找。
 初始化已提交部分对象、后续又失败时，命令返回退出码 `3` 并报告已完成内容。
 修正错误后再次运行 `init`。
 
-SOW 0.6.0 与 0.5.0 均使用数据库 schema v13。从 0.5.0 升级无需迁移数据库。
+SOW 0.6.1 与 0.5.0、0.6.0 均使用数据库 schema v13。从这两个版本升级均无需迁移数据库。
 对于 0.3 或 0.4 工作区，先备份完整工作区，再执行
 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。
 不要手动修改 SQLite schema 版本。

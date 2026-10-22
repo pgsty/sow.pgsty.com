@@ -76,7 +76,7 @@ created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=true recover
 
 ## Keep the previous RPM indexes
 
-SOW 0.6.0 keeps the checksum-named RPM metadata referenced by the current and immediately previous `repomd.xml`.
+SOW 0.6.1 keeps the checksum-named RPM metadata referenced by the current and immediately previous `repomd.xml`.
 A client that fetched the previous index can still retrieve those metadata files after an update.
 An unchanged run does not advance this retention window.
 

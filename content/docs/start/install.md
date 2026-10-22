@@ -11,7 +11,7 @@ icon: fa-solid fa-download
 
 SOW is one executable. It needs no daemon, database service, or language runtime. Release archives support Linux and macOS on `amd64` and `arm64`. Linux also has RPM and DEB packages.
 
-Use the [Download page](/download/) to select a SOW 0.6.0 artifact.
+Use the [Download page](/download/) to select a SOW 0.6.1 artifact.
 Download it and `SHA256SUMS` into a separate download directory.
 
 ## Install an archive
@@ -20,8 +20,8 @@ For Linux amd64, verify the archive, extract it, and install the executable:
 
 ```bash
 set -euo pipefail
-grep '  sow_0.6.0_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
-tar -xzf sow_0.6.0_linux_amd64.tar.gz
+grep '  sow_0.6.1_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
+tar -xzf sow_0.6.1_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
@@ -43,25 +43,25 @@ Verify the downloaded package against its entry in `SHA256SUMS`. Then run the co
 
 ```bash
 # RPM, x86_64
-sudo rpm -Uvh ./sow-0.6.0-1PGSTY.x86_64.rpm
+sudo rpm -Uvh ./sow-0.6.1-1PGSTY.x86_64.rpm
 
 # Debian or Ubuntu, amd64
-sudo apt install ./sow_0.6.0-1PGSTY_amd64.deb
+sudo apt install ./sow_0.6.1-1PGSTY_amd64.deb
 ```
 
 For ARM64, use the RPM ending in `.aarch64.rpm` or the DEB ending in `_arm64.deb`. Packages install the executable at `/usr/bin/sow`.
 
 ## Build from source
 
-Install Go 1.27.2 or newer and Git. The build uses `CGO_ENABLED=0` and needs no C compiler.
+Install Go 1.27.3 or newer and Git. The build uses `CGO_ENABLED=0` and needs no C compiler.
 
 ```bash
 set -euo pipefail
-git clone --branch v0.6.0 https://github.com/pgsty/sow.git
+git clone --branch v0.6.1 https://github.com/pgsty/sow.git
 cd sow
 SOW_BUILD_DIR="$(mktemp -d)"
 CGO_ENABLED=0 go build -trimpath \
-  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.6.0' \
+  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.6.1' \
   -o "$SOW_BUILD_DIR/sow" ./cmd/sow
 sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 ```
@@ -79,14 +79,16 @@ sow help
 
 <span id="upgrade-a-03-managed-workspace" data-td-print-local></span>
 
-## Upgrade to 0.6.0 {#upgrade-to-060}
+<span id="upgrade-to-060" data-td-print-local></span>
 
-SOW 0.6.0 keeps database schema v13, configuration schema `sow/v3`, and the public directory layout.
-A workspace already on 0.5.0 needs no schema migration.
+## Upgrade to 0.6.1 {#upgrade-to-061}
+
+SOW 0.6.1 keeps database schema v13, configuration schema `sow/v3`, and the public directory layout.
+Workspaces already on 0.5.0 or 0.6.0 need no schema migration.
 
 1. Stop all workspace writers.
 2. Back up the complete workspace with a tool that preserves hard links, such as `rsync -aH` or `tar`.
-3. Install SOW 0.6.0.
+3. Install SOW 0.6.1.
 4. Build and check each Repository in `sow.yml`:
 
 ```bash
@@ -101,7 +103,7 @@ New builds record one publication time and reuse it during recovery.
 
 ### Workspaces from 0.3 or 0.4 {#upgrade-from-04-to-05}
 
-These workspaces need migration before the first build. After backing up the workspace and installing 0.6.0, run:
+These workspaces need migration before the first build. After backing up the workspace and installing 0.6.1, run:
 
 ```bash
 sow repo migrate REPOSITORY -C /srv/sow

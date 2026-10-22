@@ -12,7 +12,7 @@ hero:
     - Publish what changed
   title_size: 4rem
   lead: Build YUM and APT repositories from local RPM and DEB files. Index an existing directory with `sow create`. Use a Managed workspace to select packages, sign metadata, keep snapshots, and publish updates.
-  note: SOW 0.6.0 · Linux + macOS · RPM + DEB · Apache-2.0
+  note: SOW 0.6.1 · Linux + macOS · RPM + DEB · Apache-2.0
   image:
     light: img/sow-architecture-light.svg
     dark: img/sow-architecture-dark.svg
@@ -38,8 +38,8 @@ hero:
       url: /download/
       icon: fa-solid fa-download
       style: ghost
-    - label: What's new in 0.6
-      url: /blog/release/sow-v0.6.0/
+    - label: What's new in 0.6.1
+      url: /blog/release/sow-v0.6.1/
       icon: fa-solid fa-tag
       style: ghost
 

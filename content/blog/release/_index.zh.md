@@ -22,5 +22,5 @@ cascade:
 
 查看各版 SOW 的变化和升级步骤，版本按从新到旧排列。
 
-[SOW 0.6.0](/zh/blog/release/sow-v0.6.0/) 保留上一轮 Plain RPM 索引，并记录 Managed 发布时间。
-它强化文件校验与恢复，减少重复 I/O。已使用 0.5.0 的工作区无需迁移数据库，详见[升级说明](/zh/docs/start/install/#升级到-060)。
+[SOW 0.6.1](/zh/blog/release/sow-v0.6.1/) 升级到 Go 1.27.3，更新依赖，并修复无效输入的错误信息。
+已使用 0.5.0 或 0.6.0 的工作区无需迁移数据库，详见[升级说明](/zh/docs/start/install/#升级到-061)。

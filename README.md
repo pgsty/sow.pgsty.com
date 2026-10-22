@@ -1,6 +1,6 @@
 # SOW Docs
 
-This repository contains the bilingual docs for **SOW 0.6.0**, the self-contained
+This repository contains the bilingual docs for **SOW 0.6.1**, the self-contained
 APT / YUM package repository manager by [Pigsty](https://pigsty.io). It uses
 [Hugo](https://gohugo.io/) and the [OINK](https://github.com/pgsty/oink) docs
 theme, with English at `/` and Simplified Chinese at `/zh/`.
@@ -62,8 +62,7 @@ make d
 
 ## Local development
 
-Install Hugo Extended 0.168.0, Go 1.27.0 or newer, and Git for the strict local checks.
-
+Install Hugo Extended 0.168.0, Go 1.27.3 or newer, and Git for the local checks.
 
 Start the local server with:
 
@@ -95,9 +94,9 @@ runtimes with the theme, so this repository has no Node.js or CDN build dependen
 
 ## Cloudflare Pages
 
-Set `HUGO_VERSION=0.166.0` in both the Production and Preview environments of
+Set `HUGO_VERSION=0.168.0` in both the Production and Preview environments of
 the `sow-pgsty-com` Pages project. The build command is `hugo`, and the output
-directory is `public`. This build reports the LibSass warning described above.
+directory is `public`. No external Sass installation is required.
 
 The `hugoVersion.min` setting in `hugo.yaml` declares the required version;
 it does not install that version in Cloudflare. Without the environment variable,

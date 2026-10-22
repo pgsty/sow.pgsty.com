@@ -64,7 +64,7 @@ The database can have SQLite WAL and shared-memory sidecar files.
 `.sow/` and pending directories are private (`0700`). Pending payload files use `0644`
 so they can be promoted to public paths without changing their mode.
 
-SOW 0.6.0 uses database schema v13 and configuration schema `sow/v3`. These are separate
+SOW 0.6.1 uses database schema v13 and configuration schema `sow/v3`. These are separate
 version identifiers. Back up the complete workspace before
 [`repo migrate`](/docs/command/repo/#sow-repo-migrate). Keep the database with its matching
 private and public state; do not edit its schema version or rebuildable cache by hand.

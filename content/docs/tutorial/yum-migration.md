@@ -11,7 +11,7 @@ icon: fa-solid fa-arrows-rotate
 
 This guide covers a flat directory of RPMs and `repodata/`, such as a repository previously
 built with `createrepo_c`. It uses Plain `sow create`, without creating a Managed workspace.
-The commands below target **SOW 0.6.0**.
+The commands below target **SOW 0.6.1**.
 
 <span id="1-establish-the-migration-boundary" data-td-print-local></span>
 
@@ -24,7 +24,7 @@ SOW="$(command -v sow)"
 "$SOW" version
 ```
 
-Confirm that the version is 0.6.0.
+Confirm that the version is 0.6.1.
 
 | Check | Action |
 |---|---|
@@ -100,7 +100,7 @@ formatting can differ. See [Platforms & Integrations](/docs/reference/compatibil
 
 Plain replaces multiple files; it does not make the whole directory switch atomically.
 Coordinate package replacement, metadata, detached signatures, and cache visibility in
-your publication layer. SOW 0.6.0 retains the current and immediately previous SOW checksum-named RPM metadata sets.
+your publication layer. SOW 0.6.1 retains the current and immediately previous SOW checksum-named RPM metadata sets.
 Unchanged runs keep the same previous set. Keep `.sow-plain-rpm-history.json` when copying a directory for further builds.
 For clients that cache indexes across several updates, retain the required older metadata and packages in your publication layer.
 

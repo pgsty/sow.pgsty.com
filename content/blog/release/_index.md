@@ -22,6 +22,5 @@ cascade:
 
 Read the changes and upgrade steps for each SOW release, with the newest version first.
 
-[SOW 0.6.0](/blog/release/sow-v0.6.0/) keeps previous Plain RPM indexes and records Managed publication times.
-It strengthens file verification and recovery while reducing repeated I/O.
-Workspaces already on 0.5.0 need no schema migration. See the [upgrade guide](/docs/start/install/#upgrade-to-060).
+[SOW 0.6.1](/blog/release/sow-v0.6.1/) updates Go to 1.27.3, refreshes dependencies, and improves invalid-input diagnostics.
+Workspaces already on 0.5.0 or 0.6.0 need no schema migration. See the [upgrade guide](/docs/start/install/#upgrade-to-061).

@@ -12,7 +12,7 @@ hero:
     - 增量发布更新
   title_size: 4rem
   lead: 从本地 RPM 与 DEB 文件构建 YUM、APT 仓库。用 `sow create` 索引已有目录；用托管工作区（Managed）筛选软件包、签署元数据、保留快照并发布更新。
-  note: SOW 0.6.0 · Linux + macOS · RPM + DEB · Apache-2.0
+  note: SOW 0.6.1 · Linux + macOS · RPM + DEB · Apache-2.0
   image:
     light: img/sow-architecture-zh-light.svg
     dark: img/sow-architecture-zh-dark.svg
@@ -35,8 +35,8 @@ hero:
       url: /zh/download/
       icon: fa-solid fa-download
       style: ghost
-    - label: 0.6 版本变化
-      url: /zh/blog/release/sow-v0.6.0/
+    - label: 0.6.1 版本变化
+      url: /zh/blog/release/sow-v0.6.1/
       icon: fa-solid fa-tag
       style: ghost
 

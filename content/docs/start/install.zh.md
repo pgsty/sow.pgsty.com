@@ -11,7 +11,7 @@ icon: fa-solid fa-download
 
 SOW 是一个可执行文件，不依赖守护进程、数据库服务或语言运行时。发布归档支持 Linux 与 macOS 的 `amd64`、`arm64` 架构。Linux 另有 RPM 与 DEB 安装包。
 
-从 [下载页](/zh/download/) 选择 SOW 0.6.0 制品。
+从 [下载页](/zh/download/) 选择 SOW 0.6.1 制品。
 将所选制品与 `SHA256SUMS` 下载到独立的下载目录。
 
 ## 安装归档
@@ -20,8 +20,8 @@ SOW 是一个可执行文件，不依赖守护进程、数据库服务或语言�
 
 ```bash
 set -euo pipefail
-grep '  sow_0.6.0_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
-tar -xzf sow_0.6.0_linux_amd64.tar.gz
+grep '  sow_0.6.1_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
+tar -xzf sow_0.6.1_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
@@ -43,25 +43,25 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ```bash
 # RPM，x86_64
-sudo rpm -Uvh ./sow-0.6.0-1PGSTY.x86_64.rpm
+sudo rpm -Uvh ./sow-0.6.1-1PGSTY.x86_64.rpm
 
 # Debian 或 Ubuntu，amd64
-sudo apt install ./sow_0.6.0-1PGSTY_amd64.deb
+sudo apt install ./sow_0.6.1-1PGSTY_amd64.deb
 ```
 
 ARM64 主机使用以 `.aarch64.rpm` 或 `_arm64.deb` 结尾的软件包。安装后的可执行文件位于 `/usr/bin/sow`。
 
 ## 从源码构建
 
-安装 Go 1.27.2 或更新版本，以及 Git。构建使用 `CGO_ENABLED=0`，不需要 C 编译器。
+安装 Go 1.27.3 或更新版本，以及 Git。构建使用 `CGO_ENABLED=0`，不需要 C 编译器。
 
 ```bash
 set -euo pipefail
-git clone --branch v0.6.0 https://github.com/pgsty/sow.git
+git clone --branch v0.6.1 https://github.com/pgsty/sow.git
 cd sow
 SOW_BUILD_DIR="$(mktemp -d)"
 CGO_ENABLED=0 go build -trimpath \
-  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.6.0' \
+  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.6.1' \
   -o "$SOW_BUILD_DIR/sow" ./cmd/sow
 sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 ```
@@ -79,14 +79,16 @@ sow help
 
 <span id="升级-03-managed-workspace" data-td-print-local></span>
 
-## 升级到 0.6.0 {#升级到-060}
+<span id="升级到-060" data-td-print-local></span>
 
-SOW 0.6.0 保持数据库 schema v13、配置 schema `sow/v3` 与公开目录布局不变。
-已使用 0.5.0 的工作区无需迁移数据库。
+## 升级到 0.6.1 {#升级到-061}
+
+SOW 0.6.1 保持数据库 schema v13、配置 schema `sow/v3` 与公开目录布局不变。
+已使用 0.5.0 或 0.6.0 的工作区无需迁移数据库。
 
 1. 停止工作区的全部写入任务。
 2. 用保留硬链接的工具备份完整工作区，例如 `rsync -aH` 或 `tar`。
-3. 安装 SOW 0.6.0。
+3. 安装 SOW 0.6.1。
 4. 对 `sow.yml` 中每个仓库执行构建与检查：
 
 ```bash
@@ -101,7 +103,7 @@ sow check -r REPOSITORY -C /srv/sow
 
 ### 从 0.3 或 0.4 升级 {#从-04-升级到-05}
 
-这些工作区需要在首次构建前迁移。备份工作区并安装 0.6.0 后，执行：
+这些工作区需要在首次构建前迁移。备份工作区并安装 0.6.1 后，执行：
 
 ```bash
 sow repo migrate REPOSITORY -C /srv/sow

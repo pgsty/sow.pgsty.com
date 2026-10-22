@@ -22,7 +22,7 @@ Replace `/srv/sow`, `pgsql`, and the target name `prod` below with your configur
 
 ## The database needs migration
 
-SOW 0.6.0 uses schema v13, as does 0.5.0. An upgrade from 0.5.0 needs no schema migration.
+SOW 0.6.1 uses schema v13, as do 0.5.0 and 0.6.0. An upgrade from either version needs no schema migration.
 For a 0.3 or 0.4 workspace, stop writers and back up the complete workspace. Then run:
 
 ```bash
@@ -32,7 +32,7 @@ sow check -C /srv/sow -r pgsql
 ```
 
 Repeat this for each Repository. Compatible read-only commands can still inspect an older
-schema, but they do not migrate it. See [Upgrade](/docs/start/install/#upgrade-to-060).
+schema, but they do not migrate it. See [Upgrade](/docs/start/install/#upgrade-to-061).
 
 ## Status shows pending changes
 

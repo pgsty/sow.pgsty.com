@@ -17,7 +17,7 @@ hero:
   eyebrow: Linux 与 macOS 版本
   title: 下载 SOW
   desc: '从 Pigsty 软件源安装，下载指定版本的软件包或归档，或自行编译源码。请按操作系统与架构选择文件。'
-  note: SOW 0.6.0 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
+  note: SOW 0.6.1 · Linux · macOS · amd64 / arm64 · RPM + DEB · Apache-2.0
   note_icon: fa-solid fa-box-archive
   align: center
   title_size: 3.4rem
@@ -35,7 +35,7 @@ hero:
 download:
   eyebrow: 安装方式
   title: 选择安装方式
-  desc: '下载 SOW 0.6.0 软件包与归档。Pigsty 软件源跟随其中的打包版本。'
+  desc: '下载 SOW 0.6.1 软件包与归档。Pigsty 软件源跟随其中的打包版本。'
   keys: [sow]
 
 next:

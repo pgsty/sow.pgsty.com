@@ -1,6 +1,6 @@
 ---
 title: "SOW: Software Object Warehouse"
-description: "SOW 0.6.0 builds YUM and APT indexes from local packages. Start with a flat repository, or manage package policy, signing, snapshots, and incremental publication."
+description: "SOW 0.6.1 builds YUM and APT indexes from local packages. Start with a flat repository, or manage package policy, signing, snapshots, and incremental publication."
 url: "/"
 weight: 1
 type: home
