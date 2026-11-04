@@ -45,6 +45,7 @@ search_boost: 1.5
 | [`sow gc [TARGET]`](/zh/docs/command/gc/) | Managed | 回收不再需要的本地包，或维护发布目标 |
 | [`sow export rpm-leaf`](/zh/docs/command/export/) | Managed | 导出独立 RPM 仓库 |
 | [`sow log [OPERATION]`](/zh/docs/command/log/) | Managed | 查询、导出和裁剪操作记录 |
+{.wide .expand}
 
 ## 全局语法
 

@@ -261,6 +261,7 @@ sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 | `log prune` | `2` | Malformed `BEFORE`, `-d` given, or ambiguous selection |
 | `log prune` | `4` | Repository lock held and `--no-wait` given or `--timeout` expired |
 | `log prune` | `5` | Integrity or recovery error |
+{.wide .expand}
 
 ## See also
 

@@ -338,6 +338,7 @@ SOW 不会将这些 Dist 设为只读；创建后保留其成员与生效配置�
 | latest | `http://infra-nginx/infra/dists/rpm/$basearch/` | `http://infra-nginx/infra` / `deb` |
 | stable | `http://infra-nginx/infra/dists/rpm-stable/$basearch/` | `http://infra-nginx/infra` / `deb-stable` |
 | 2026-08 | `http://infra-nginx/infra/dists/rpm-202608/$basearch/` | `http://infra-nginx/infra` / `deb-202608` |
+{.wide .expand}
 
 用 `sow dist ls -r infra` 查看全部六个 Dist。
 

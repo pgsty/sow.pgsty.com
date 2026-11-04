@@ -257,6 +257,7 @@ sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 | `log prune` | `2` | `BEFORE` 格式非法、给了 `-d`，或选择有歧义 |
 | `log prune` | `4` | 仓库锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `log prune` | `5` | 完整性或恢复错误 |
+{.wide .expand}
 
 ## 参见
 

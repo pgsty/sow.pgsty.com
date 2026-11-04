@@ -39,6 +39,7 @@ By default, `create` updates its indexes and preserves the package files. `--pig
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--json` | Output JSON | false |
 | `-h, --help` | Show help | — |
+{.wide .expand}
 
 ## Scan rules
 

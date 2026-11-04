@@ -42,6 +42,7 @@ Four articles cover the earlier work in detail:
 | v0.4 | Single-pass verification, independent RPM trust rings, target rebind, and migration/recovery fixes | Unchanged |
 | v0.5 | Package-path reservations, removal and recovery fixes, signing checks, and reproducible Plain timestamps | Unchanged |
 | v0.6 | Previous Plain RPM indexes, recorded Managed publication times, stronger file checks, consistent state reads, and less repeated I/O | Unchanged |
+{.wide .expand}
 
 The source tags preserve the earlier implementations:
 [v0.1.0](https://github.com/pgsty/sow/tree/v0.1.0),

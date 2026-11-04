@@ -70,6 +70,7 @@ Managed signing settings come from `sow.yml`; `build` has no per-run signing ove
 | `file:///secure/repo.asc` | OpenPGP key file at an absolute path | In-process |
 | `env://SOW_METADATA_KEY` | Armored key material, file path, or GPG key identifier | Depends on the value |
 | `agent://KEY_ID_OR_FINGERPRINT` | Key available through the local GPG environment | External `gpg` |
+{.wide .expand}
 
 Key files support ASCII-armored and binary OpenPGP data. A GPG key identifier is a
 16-digit key ID or a 40- or 64-digit fingerprint. References that resolve to a GPG key

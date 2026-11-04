@@ -51,6 +51,7 @@ infrastructure details.
 | [0016](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0016-frozen-vendor-sdk-boundary.md) | Cloud adapters used concrete, bounded SDK/API contracts instead of a generic provider abstraction. | **Evolved.** Concrete provider boundaries survived; V1 Edge/COS details retired. |
 | [0017](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0017-rpm-package-keyring-and-cryptographic-verification.md) | Accepted RPM signatures had to close against a stable repository keyring and opened payload identity. | **Evolved.** v0.4 independent multi-ring verification strengthens the same trust boundary. |
 | [0018](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0018-selected-set-local-materialization-transaction.md) | A selected package set staged, validated, committed, and recovered as one bounded local transaction. | **Evolved.** Managed operations use recovery journals. Plain stages metadata and replaces pointers last; an interrupted Plain build is rebuilt. |
+{.wide .expand}
 
 ## Legacy topology, compatibility, and migration
 
@@ -69,6 +70,7 @@ infrastructure details.
 | [0029](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0029-client-support-floor-and-el8-freeze-version.md) | Client floors and the EL8 freeze were explicit owner policy, not inferred from code. | **Migration history.** Current platform policy lives in the compatibility reference and release notes. |
 | [0030](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0030-audit-bound-legacy-yum-missing-body-prune.md) | Missing legacy YUM bodies could be repaired only from a reviewed blocker-set digest. | **Migration history.** The narrow negative-provenance exception did not become a general ignore flag. |
 | [0031](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0031-legacy-pro-gated-activation-and-checksum-repair.md) | Gated legacy content required exact checksum repair and activation evidence. | **Retired.** Pro activation left product scope; fail-closed repair remained a general lesson. |
+{.wide .expand}
 
 ## Provider and Edge control plane
 
@@ -82,6 +84,7 @@ infrastructure details.
 | [0037](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0037-pre-upload-confidential-edge-denial-attestation.md) | Gated publication had to prove denial at the Edge before uploading confidential bytes. | **Retired.** Edge access control is now an external deployment responsibility. |
 | [0038](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0038-yum-consumer-preflight-receipt.md) | YUM cutover required an expiring receipt bound to exact endpoints, generation, and trust bytes. | **Migration history.** It made a dangerous consumer cutover auditable and then retired. |
 | [0039](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0039-caret-url-wire-canonicalization.md) | Caret had one canonical URL spelling across Go, Edge, logs, and origin routing. | **Evolved.** The route was retired; canonical encode-once path handling remains. |
+{.wide .expand}
 
 ## Bounded configuration and derived-state recovery
 
@@ -93,6 +96,7 @@ infrastructure details.
 | [0043](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0043-derived-state-hostile-writer-admission.md) | File mutation checked descriptor identity and defined the limit against a hostile writer using the same OS user. | **Retained.** Path checks reject identity changes; OS permissions remain the boundary against other writers. |
 | [0044](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0044-preserved-projection-audit-retirement.md) | Preserved audit copies could be retired only through an exact capability and confirmation token. | **Evolved.** The V1 command retired; exact capability-bound deletion remains a design rule. |
 | [0045](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0045-generic-derived-state-residue-recovery.md) | Unjournaled residue had a bounded classifier and could never be silently adopted or deleted. | **Retained.** Current recovery distinguishes known state, safe residue, and contradictory evidence. |
+{.wide .expand}
 
 ## The pattern behind the ledger
 

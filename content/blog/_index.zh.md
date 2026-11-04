@@ -21,7 +21,7 @@ cascade:
     - print
   images: [/images/blog/sow.webp]
   featured_image: wash
-  # OINK 0.6 page-end share bar, scoped to the blog. Every entry is a plain
+  # OINK 1.5.0 page-end share bar, scoped to the blog. Every entry is a plain
   # intent link carrying only this page's permalink and title -- no SDK, no
   # iframe, no third-party script, no share counts -- plus a local copy button.
   share: [x, linkedin, reddit, hackernews, telegram, weibo, email, copy]

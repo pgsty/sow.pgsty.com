@@ -35,7 +35,7 @@ OINK or Docsy templates into this repository.
 
 ## Theme dependency
 
-OINK 1.3.2 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
+OINK 1.5.0 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
 composed by OINK from bilingual data. Docs and blog pages also render through the theme;
 the site keeps only product-specific data and templates.
 
@@ -62,7 +62,7 @@ make d
 
 ## Local development
 
-Install Hugo Extended 0.168.0, Go 1.27.3 or newer, and Git for the local checks.
+Install Hugo Extended 0.168.0, Go 1.27.3, and Git for the local checks.
 
 Start the local server with:
 
@@ -82,7 +82,7 @@ Run the module verification and production build with:
 make c
 ```
 
-GitHub Actions follows stable Go releases and pins Hugo Extended 0.168.0
+GitHub Actions pins Go 1.27.3 and Hugo Extended 0.168.0
 for production builds. SCSS uses Hugo’s built-in compiler.
 
 The corresponding long targets are `debug`, `serve`, `build`, and `check`;
@@ -144,4 +144,4 @@ their respective licenses; OINK itself is licensed under Apache License 2.0.
 
 ### Custom anchors in Print
 
-Page-local HTML anchors declare `data-td-print-local`. OINK 1.3 preserves their ordinary HTML and single-page Print IDs, and namespaces them when chapters are aggregated for Print. Keep this marker on legacy heading aliases and package-profile headings so chapters do not share IDs. Use `make dev` with the sibling `../oink` checkout for local theme development; production builds use the published module pin.
+Page-local HTML anchors declare `data-td-print-local`. OINK 1.5.0 preserves their ordinary HTML and single-page Print IDs, and namespaces them when chapters are aggregated for Print. Keep this marker on legacy heading aliases and package-profile headings so chapters do not share IDs. Use `make dev` with the sibling `../oink` checkout for local theme development; production builds use the published module pin.

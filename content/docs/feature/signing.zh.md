@@ -70,6 +70,7 @@ Managed 签名设置来自 `sow.yml`，`build` 没有单次覆盖签名设置的
 | `file:///secure/repo.asc` | 绝对路径的 OpenPGP 密钥文件 | 进程内 |
 | `env://SOW_METADATA_KEY` | ASCII 装甲格式密钥、文件路径或 GPG 密钥标识 | 取决于变量值 |
 | `agent://KEY_ID_OR_FINGERPRINT` | 本地 GPG 环境可用的密钥 | 外部 `gpg` |
+{.wide .expand}
 
 密钥文件支持 ASCII 装甲格式和二进制 OpenPGP 数据。GPG 密钥标识可以是 16 位 key ID，
 或 40、64 位指纹。引用解析为 GPG 密钥标识时，使用外部 `gpg` 访问私钥和处理口令。

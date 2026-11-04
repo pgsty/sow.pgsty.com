@@ -43,6 +43,7 @@ Use these pages for command syntax, selection rules, results, and examples. Run 
 | [`sow gc [TARGET]`](/docs/command/gc/) | Managed | Reclaim unused local packages or maintain a publication target |
 | [`sow export rpm-leaf`](/docs/command/export/) | Managed | Export a standalone RPM repository |
 | [`sow log [OPERATION]`](/docs/command/log/) | Managed | Read, export, and prune operation records |
+{.wide .expand}
 
 ## Global syntax
 

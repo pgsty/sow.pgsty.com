@@ -30,6 +30,7 @@ Choose Managed for ongoing package updates, policy, signing, and publication.
 | Recovery after interruption | Rerun `create` | Recorded operations and publication attempts |
 | Operation log and JSONL export | — | Yes |
 | Publication targets | — | Filesystem and R2 |
+{.wide .expand}
 
 SOW parses packages and generates indexes itself. It does not require `createrepo_c`,
 `dpkg-scanpackages`, or `reprepro`. RPM package signing uses the host `rpm` and GPG
@@ -43,6 +44,7 @@ environment. Metadata signing uses `gpg` when a key reference resolves to a GPG 
 |---|---|---|
 | RPM | `primary`, `filelists`, `other` XML and `repomd.xml` | Architecture views; optional `repomd.xml.asc` |
 | DEB | `Packages`, `Packages.gz` | `Release`, by-hash indexes; optional `InRelease` and `Release.gpg` |
+{.wide .expand}
 
 RPM XML is gzip-compressed. SOW does not generate SQLite rpm-md, zchunk, modulemd, or
 source-package indexes. Use your HTTP server or object-storage service to serve the

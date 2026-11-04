@@ -23,6 +23,7 @@ icon: fa-solid fa-diagram-project
 | Sign RPM packages | Yes | Yes |
 | Sign repository metadata | Sign separately | Configure keys in `sow.yml` |
 | Track generations and publication | Manage these outside SOW | Built in |
+{.wide .expand}
 
 Use Plain when the directory already contains the packages you want to publish. Use Managed when SOW should track membership and maintain the repository over time.
 
@@ -92,6 +93,7 @@ add / rm → Desired membership → build → Built Generation
 | `dirty` | Membership or configuration needs a build | Run `build`, then `check` |
 | `recovering` | An interrupted operation needs recovery | Follow the error and [recovery steps](/docs/reference/troubleshooting/#a-command-was-interrupted) |
 | `error` | Stored state or files conflict | Inspect the reported error and operation log |
+{.wide .expand}
 
 Use [`sow log`](/docs/command/log/) to inspect failed or interrupted operations.
 

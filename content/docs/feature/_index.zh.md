@@ -30,6 +30,7 @@ SOW 用两种模式创建仓库索引。可以随时重建的包目录使用 Pla
 | 中断恢复 | 重新运行 `create` | 操作记录和发布尝试 |
 | 操作日志与 JSONL 导出 | — | 支持 |
 | 发布目标 | — | Filesystem 与 R2 |
+{.wide .expand}
 
 SOW 自行解析包并生成索引，无需 `createrepo_c`、`dpkg-scanpackages` 或 `reprepro`。
 RPM 包签名使用主机上的 `rpm` 和 GPG 环境；元数据密钥引用解析为 GPG 密钥标识时，也需要 `gpg`。

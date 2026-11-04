@@ -130,6 +130,7 @@ repos:
 | `-d, --dist NAME` | Select a distribution; repeatable | selection rules |
 | `--json` | Output JSON | false |
 | `-h, --help` | Show help | — |
+{.wide .expand}
 
 ### Select configuration with -r and -d {#scope-projection-with--r-and--d}
 

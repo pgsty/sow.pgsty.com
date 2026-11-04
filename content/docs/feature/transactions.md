@@ -55,6 +55,7 @@ and [`publish`](/docs/command/publish/) for publication recovery.
 | Workspace lifecycle journal | `.sow/workspace-ops/active.json` | Coordinates configuration with repository creation or removal |
 | Repository operation journal | `.sow/<repo>.db` | Records local membership changes, builds, and maintenance |
 | Publication state | `.sow/<repo>.db` | Records target bindings, frozen publication plans, and progress |
+{.wide .expand}
 
 Workspace lifecycle recovery compares the current `sow.yml` digest with the journal's old
 and new configurations. The configuration replacement decides whether to roll back or

@@ -34,6 +34,7 @@ SOW records the intended package set as Desired state and the last build as a Bu
 | `dirty` | Desired and Built state differ, commonly after `--skip` or a config change | Run `build` to apply the changes |
 | `recovering` | A local Repository operation was interrupted | Run `build` to recover it |
 | `error` | State, files, or recovery records need attention | Read `dirty_reasons`, then run `check` and `log` |
+{.wide .expand}
 
 ## Output
 

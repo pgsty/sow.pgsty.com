@@ -26,6 +26,7 @@ SOW uses the same code meanings across commands.
 | `5` | Integrity/recovery error, or repository not ready for delivery | Inspect `status` and `check`; build a dirty repository or recover the recorded operation |
 | `6` | Rejected operation | Correct the conflict, package reference, architecture, signing setting, or protection setting named in the error |
 | `130` | Command interrupted by SIGINT or SIGTERM | Follow the recovery procedure for the interrupted operation |
+{.wide .expand}
 
 <span id="0--success-or-no-op" data-td-print-local></span>
 <span id="5--integrity-recovery-or-not-deliverable" data-td-print-local></span>

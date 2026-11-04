@@ -40,6 +40,7 @@ For a Repository with no unfinished layout migration, `check` reports nine layer
 | `index` | Rendered indexes match the membership they claim | Dists |
 | `signature` | Every declared metadata and package signature verifies | signatures |
 | `generation-manifest` | Built Generation manifest matches files on disk | one manifest |
+{.wide .expand}
 
 During an unfinished layout migration, `check` reports `config`, `state`, `public-modes`, and `layout-transition`, then stops. Follow the reported [`repo migrate`](/docs/command/repo/#sow-repo-migrate) instruction to complete or abort that migration.
 

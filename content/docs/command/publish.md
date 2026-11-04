@@ -25,6 +25,7 @@ sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -
 | `-T, --timeout DUR` | Maximum Repository-lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 `TARGET` must name a configured `filesystem` or `r2` publication target. `--abort` and
 `--rebind` are mutually exclusive.

@@ -41,6 +41,7 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--json` | 输出 JSON | false |
 | `-h, --help` | 显示帮助 | — |
+{.wide .expand}
 
 ## 扫描规则
 

@@ -54,6 +54,7 @@ filesystem publication checks this before starting. See [Layout](/docs/reference
 | Plain DEB | `Packages` or `Packages.gz` | Beside the indexes; flat APT source |
 | Managed RPM | `dists/<dist>/<arch>/repodata/repomd.xml` | Relative paths back to root `pool/` |
 | Managed DEB | `dists/<dist>/Release` or signed `InRelease` | Root-relative `pool/` paths |
+{.wide .expand}
 
 Managed APT uses component `main` and SHA-256 by-hash indexes. Metadata signing produces
 RPM `repomd.xml.asc` or APT `InRelease` and `Release.gpg`.
@@ -118,6 +119,7 @@ supported. Metadata key-reference support is separate; see [Signing](/docs/featu
 |---|---|---|
 | `filesystem` | Writes below an existing canonical `file://` endpoint | Conditional deletion after cache grace, followed by public-absence verification |
 | `r2` | Writes through S3-compatible storage operations | Reports candidates; does not delete remote objects |
+{.wide .expand}
 
 Both publish the complete repository under the configured prefix. Configure the HTTP
 service, DNS, credentials, access policy, and cache behavior for that storage.
@@ -138,6 +140,7 @@ The source tree contains these integration checks:
 | RPM detached-signature transitions | AlmaLinux 8/9 and `pgsty/el10` containers | DNF behavior while `repomd.xml` and its detached signature change |
 | S3-compatible transport | Pinned PGSTY Silo container | Bucket listing, HEAD, GET, conditional single-part PUT, replay, and object SHA-256 metadata |
 | Release packaging | Linux CI | Four archives, two RPMs, two DEBs, checksums, package paths, and license files |
+{.wide .expand}
 
 The DNF test checks signature transitions; the APT test uses unsigned Plain output.
 Complete signed Managed installation and hosted R2 conditional multipart completion

@@ -28,6 +28,7 @@ and the [download page](/download/) for release availability.
 | Signing keys | Read complete OpenPGP key bundles | All supplied trusted keys are considered; malformed input is rejected |
 | State and recovery | Preserve locks, consistent reads, and committed results | Maintenance errors do not make completed changes appear to have rolled back |
 | Large repositories | Reuse verified data and limit parallel work | Builds, imports, checks, and publication avoid repeated work |
+{.wide .expand}
 
 ## Plain RPM updates keep the previous indexes
 

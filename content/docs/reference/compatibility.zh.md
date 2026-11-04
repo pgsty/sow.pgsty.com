@@ -52,6 +52,7 @@ macOS 上使用 APFS；所需原子目录交换不可用时，SOW 会拒绝构�
 | Plain DEB | `Packages` 或 `Packages.gz` | 与索引同级，使用平面 APT 源 |
 | Managed RPM | `dists/<dist>/<arch>/repodata/repomd.xml` | 通过相对路径回到根 `pool/` |
 | Managed DEB | `dists/<dist>/Release` 或已签名的 `InRelease` | 相对于仓库根的 `pool/` 路径 |
+{.wide .expand}
 
 Managed APT 使用 component `main` 和 SHA-256 by-hash 索引。
 元数据签名生成 RPM `repomd.xml.asc` 或 APT `InRelease`、`Release.gpg`。
@@ -129,6 +130,7 @@ R2 公开 endpoint 必须使用 HTTP(S)，filesystem 还支持 `file://` 验证�
 | RPM 分离签名切换 | AlmaLinux 8/9 与 `pgsty/el10` 容器 | `repomd.xml` 及分离签名切换时的 DNF 行为 |
 | S3 兼容传输 | 固定版本的 PGSTY Silo 容器 | Bucket 列表、HEAD、GET、条件式单段 PUT、重放和对象 SHA-256 元数据 |
 | 发布打包 | Linux CI | 四个归档、两个 RPM、两个 DEB、校验和、包内路径与许可文件 |
+{.wide .expand}
 
 DNF 测试检查签名切换，APT 测试使用未签名 Plain 输出。
 完整的已签名 Managed 安装及托管 R2 条件式分段上传完成，需要在部署环境检查。

@@ -361,6 +361,7 @@ params:
       loading: lazy
 
   ui:
+    compare: true
     preset: paper
     preset_menu: [paper, slate, ink, terminal]
     # OINK applies the shared shell to product-specific content types.

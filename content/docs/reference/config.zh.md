@@ -213,6 +213,7 @@ RPM 签名生成 `repodata/repomd.xml.asc`，DEB 签名生成 `InRelease`、`Rel
 | `file://` | `file:///secure/repo.asc` | OpenPGP 密钥文件 |
 | `env://` | `env://SOW_METADATA_KEY` | 环境变量保存 ASCII 装甲格式密钥、文件路径或 GPG 密钥标识 |
 | `agent://` | `agent://7F721C4AD40F4A9D8CA578BFAC7E4690B50CCF3B` | 本地 GPG 环境中的密钥 |
+{.wide .expand}
 
 环境变量名称使用 `[A-Za-z_][A-Za-z0-9_]*`。GPG 密钥标识可以是 16 位 key ID，
 或 40、64 位指纹，十六进制字母不区分大小写。
@@ -273,6 +274,7 @@ targets:
 | `authoritative_workspace` | 是 | 必须为 `true` |
 | `single_writer` | 是 | 必须为 `true` |
 | `exclusive_write_authority` | 是 | 必须为 `true` |
+{.wide .expand}
 
 最后三个字段声明此工作区负责发布，并且是目标命名空间的唯一写者。
 同一存储上的目标前缀不能重叠，filesystem 目标也不能指向重叠目录。

@@ -345,6 +345,7 @@ One Nginx service and one shared `infra/pool` support every channel:
 | latest | `http://infra-nginx/infra/dists/rpm/$basearch/` | `http://infra-nginx/infra` / `deb` |
 | stable | `http://infra-nginx/infra/dists/rpm-stable/$basearch/` | `http://infra-nginx/infra` / `deb-stable` |
 | 2026-08 | `http://infra-nginx/infra/dists/rpm-202608/$basearch/` | `http://infra-nginx/infra` / `deb-202608` |
+{.wide .expand}
 
 Use `sow dist ls -r infra` to see all six Dists.
 

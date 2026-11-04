@@ -33,6 +33,7 @@ in its report. Current compatibility is listed in the
 | 2026-07-22 | 10 | Descriptor/path identity across stage, apply, prune, rollback, and residue cleanup |
 | 2026-07-26–29 | 7 | Recursive durability, hostile-writer limits, replacement outcomes, preserved audits, and provider corrections |
 | 2026-07-30–31 | 2 | Clean-room APT/YUM/asset MVP and final legacy-source baseline |
+{.wide .expand}
 
 ## What had strong supporting evidence
 

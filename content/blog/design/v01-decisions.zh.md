@@ -49,6 +49,7 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 | [0016](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0016-frozen-vendor-sdk-boundary.md) | 云适配器使用具体、有界的 SDK/API 接口。 | **演化。** 具体存储服务接口保留，V1 Edge/COS 细节退役。 |
 | [0017](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0017-rpm-package-keyring-and-cryptographic-verification.md) | 在稳定的仓库密钥环中验证 RPM 签名，并绑定已打开包体的身份。 | **演化。** v0.4 的独立多信任环验证强化了这一规则。 |
 | [0018](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0018-selected-set-local-materialization-transaction.md) | 选定包集合在一个有界本地事务中完成暂存、验证、提交与恢复。 | **演化。** Managed 操作使用恢复日志；Plain 暂存元数据并最后替换指针，中断后重新构建。 |
+{.wide .expand}
 
 ## 旧拓扑、兼容性与迁移
 
@@ -67,6 +68,7 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 | [0029](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0029-client-support-floor-and-el8-freeze-version.md) | 由所有者明确规定最低客户端版本与 EL8 固定版本。 | **迁移历史。** 当前平台策略见兼容性参考与发布注记。 |
 | [0030](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0030-audit-bound-legacy-yum-missing-body-prune.md) | 仅依据已评审的问题集合摘要，修复旧 YUM 索引中缺失的包体引用。 | **迁移历史。** 这项来源例外没有变成通用忽略选项。 |
 | [0031](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0031-legacy-pro-gated-activation-and-checksum-repair.md) | 启用受访问控制的旧内容前，修复精确校验和并记录启用结果。 | **退役。** 商业版本启用流程退出产品，无法验证时停止修复的原则保留。 |
+{.wide .expand}
 
 <span id="provider-与-edge-控制面" data-td-print-local></span>
 
@@ -82,6 +84,7 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 | [0037](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0037-pre-upload-confidential-edge-denial-attestation.md) | 上传机密字节前，先证明边缘服务会拒绝未授权访问。 | **退役。** 边缘访问控制现由外部部署负责。 |
 | [0038](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0038-yum-consumer-preflight-receipt.md) | YUM 切换需要有有效期的回执，绑定精确端点、Generation 与信任数据。 | **迁移历史。** 用于核对客户端切换，随后退役。 |
 | [0039](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0039-caret-url-wire-canonicalization.md) | 脱字符在 Go、边缘服务、日志与源站路由中采用唯一 URL 编码。 | **演化。** 旧路由已退役，路径只编码一次的规范保留。 |
+{.wide .expand}
 
 ## 有界配置与派生状态恢复
 
@@ -93,6 +96,7 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 | [0043](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0043-derived-state-hostile-writer-admission.md) | 文件修改检查描述符身份，并规定同一操作系统用户恶意并发写入的保护范围。 | **保留。** 路径检查拒绝身份变化，操作系统权限仍负责隔离其他写入者。 |
 | [0044](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0044-preserved-projection-audit-retirement.md) | 只有匹配精确操作权限与确认令牌，才可删除保留的核查副本。 | **演化。** V1 命令已退役，删除前限定对象与操作权限的规则保留。 |
 | [0045](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0045-generic-derived-state-residue-recovery.md) | 对无日志残留进行有界分类，不能静默接纳或删除。 | **保留。** 当前恢复仍区分已知状态、安全残留与冲突记录。 |
+{.wide .expand}
 
 ## 账本背后的共同模式
 

@@ -118,6 +118,7 @@ dists:
 | `architectures` | string list | Workspace list | A nonempty subset of workspace families |
 | `limit` | integer | `0` | Newest versions to keep per binary name and canonical architecture; `0` keeps all |
 | `exclude` | rule list | Empty | Package exclusion rules |
+{.wide .expand}
 
 Adding an architecture makes the Dist dirty; run `build` to generate its view.
 Removing an architecture still referenced by membership or built state is rejected.
@@ -185,6 +186,7 @@ signing:
 | `mode` | `never` without a key; `fill` with a key | `never`, `fill`, or `always` |
 | `key` | None | Signing-key reference; required for `fill` and `always` |
 | `trusted_keys` | Empty | Additional public-key references accepted by `fill` |
+{.wide .expand}
 
 `never` preserves input bytes. `fill` preserves packages whose signatures verify with
 the current or trusted keys and signs the rest. `always` requires the current key,
@@ -216,6 +218,7 @@ RPM signing creates `repodata/repomd.xml.asc`. DEB signing creates `InRelease` a
 | `file://` | `file:///secure/repo.asc` | OpenPGP key file |
 | `env://` | `env://SOW_METADATA_KEY` | Variable containing armored key material, a file path, or a GPG key identifier |
 | `agent://` | `agent://7F721C4AD40F4A9D8CA578BFAC7E4690B50CCF3B` | Key in the local GPG environment |
+{.wide .expand}
 
 Environment names use `[A-Za-z_][A-Za-z0-9_]*`. A GPG key identifier is a 16-digit key ID
 or a 40- or 64-digit fingerprint. Hexadecimal letters are case-insensitive.
@@ -276,6 +279,7 @@ targets:
 | `authoritative_workspace` | Yes | Must be `true` |
 | `single_writer` | Yes | Must be `true` |
 | `exclusive_write_authority` | Yes | Must be `true` |
+{.wide .expand}
 
 The last three fields state that this workspace owns publication and is the only writer
 for the target namespace. Targets on the same storage cannot have overlapping prefixes.
