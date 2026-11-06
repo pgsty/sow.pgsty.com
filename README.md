@@ -35,7 +35,7 @@ OINK or Docsy templates into this repository.
 
 ## Theme dependency
 
-OINK 1.5.0 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
+OINK 1.5.1 is imported as a Hugo Module in `hugo.yaml` and pinned in `go.mod`. The homepage is
 composed by OINK from bilingual data. Docs and blog pages also render through the theme;
 the site keeps only product-specific data and templates.
 
@@ -144,4 +144,4 @@ their respective licenses; OINK itself is licensed under Apache License 2.0.
 
 ### Custom anchors in Print
 
-Page-local HTML anchors declare `data-td-print-local`. OINK 1.5.0 preserves their ordinary HTML and single-page Print IDs, and namespaces them when chapters are aggregated for Print. Keep this marker on legacy heading aliases and package-profile headings so chapters do not share IDs. Use `make dev` with the sibling `../oink` checkout for local theme development; production builds use the published module pin.
+Page-local HTML anchors declare `data-td-print-local`. OINK 1.5.1 preserves their ordinary HTML and single-page Print IDs, and namespaces them when chapters are aggregated for Print. Keep this marker on legacy heading aliases and package-profile headings so chapters do not share IDs. Use `make dev` with the sibling `../oink` checkout for local theme development; production builds use the published module pin.
