@@ -112,6 +112,10 @@ sow create /srv/offline --sign-with 6D5C5A26C36B1F73
 签名需要主机上的 `rpm` 命令和可用 GPG 密钥。SOW 对暂存副本签名并检查，再先替换包文件、
 后替换索引。这条路径会多次读取包字节。
 
+密钥带口令时，开发版支持 `--passfile PATH` 或 `SOW_GPG_PASSFILE`；启用签名仍需
+`--sign-with`。完整文件格式见[口令文件](/zh/docs/reference/config/#passfile)。
+Plain 模式不读取 Managed 的 `sow.yml` 配置。
+
 Plain 模式不签仓库元数据。Managed 元数据签名和包签名策略见[签名](/zh/docs/feature/signing/)。
 
 <span id="锁与适用范围" data-td-print-local></span>

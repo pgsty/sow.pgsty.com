@@ -15,7 +15,7 @@ icon: fa-solid fa-seedling
 ## Synopsis
 
 ```text
-sow init [DIR] [--json]
+sow init [DIR] [--json] [--passfile PATH]
 ```
 
 `DIR` defaults to the current directory. To initialize another directory, pass its path as `DIR`.
@@ -48,6 +48,7 @@ ls -a /srv/repo
 
 | Flag | Description | Default |
 |---|---|---|
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 | `-h, --help` | Show help | — |
 

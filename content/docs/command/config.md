@@ -15,9 +15,11 @@ Use `sow config check` after editing `sow.yml`. It validates the configuration, 
 ## Synopsis
 
 ```text
-sow config check [-C DIR] [--json]
+sow config check [-C DIR] [--json] [--passfile PATH]
 sow config show [--all] [-C DIR] [-r NAME] [-d NAME]... [--json]
 ```
+
+`config check` accepts `--passfile PATH` for signing preflights. Priority is CLI, per-key config, then `SOW_GPG_PASSFILE`. `config show` does not read password files. See [Password files](/docs/reference/config/#passfile).
 
 ## sow config check
 
@@ -40,6 +42,7 @@ sow config check --json
 | Flag | Description | Default |
 |---|---|---|
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 | `-h, --help` | Show help | — |
 
@@ -60,7 +63,17 @@ sow config check
 configuration error: load config "/srv/repo/sow.yml": config schema must be "sow/v3", got "invalid"
 ```
 
-`config check` also verifies that the signing keys are available and suitable for signing. Before removing an architecture from the Workspace list, remove its use from Dist configuration, membership, and Built state.
+Signing checks depend on the signer:
+
+- Metadata key files are unlocked and checked for signing suitability. External GPG
+  metadata keys also perform a small noninteractive signing probe.
+- Active RPM package signing checks the selected password file's format, `rpm`/GPG,
+  and secret-key availability. It does not sign a package or prove that the password
+  is correct. RPM macros can affect authentication; an actual package-signing call
+  and verification of its output are the final check.
+
+Before removing an architecture from the Workspace list, remove its use from Dist
+configuration, membership, and Built state.
 
 ## sow config show
 
@@ -165,6 +178,8 @@ Without `--all`, normal Repository selection applies. If the discovery start dir
 ### Signing references {#secrets-are-never-printed}
 
 The output contains key references and resolved fingerprints. Private key contents and passphrases are omitted.
+Configured `passfile` paths remain visible. The `SOW_GPG_PASSFILE` fallback is a
+runtime source and is not added to the displayed configuration.
 
 ## Examples
 

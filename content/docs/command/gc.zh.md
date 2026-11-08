@@ -14,9 +14,11 @@ icon: fa-solid fa-recycle
 ## 语法
 
 ```text
-sow gc          [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json]
-sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-wait] [--json]
+sow gc          [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
+sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
+
+`--passfile` 可为恢复中断的本地变更提供签名口令，文件回收本身不会签署文件。来源选择和格式见[口令文件](/zh/docs/reference/config/#passfile)。
 
 | 参数 | 含义 | 默认值 |
 |---|---|---|
@@ -24,6 +26,7 @@ sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-
 | `-r, --repo NAME` | 仅用于选择本地 GC 的仓库 | 选择规则 |
 | `-T, --timeout DUR` | 最长仓库等锁时间；`0` 表示无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 目标自身已绑定仓库，因此 `gc TARGET -r NAME` 属于用法错误。两种模式都不接受 `--dist`。

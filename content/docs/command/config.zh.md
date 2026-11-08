@@ -15,9 +15,11 @@ icon: fa-solid fa-file-code
 ## 语法
 
 ```text
-sow config check [-C DIR] [--json]
+sow config check [-C DIR] [--json] [--passfile PATH]
 sow config show [--all] [-C DIR] [-r NAME] [-d NAME]... [--json]
 ```
+
+`config check` 支持 `--passfile PATH`，用于签名前置检查。优先级为命令行、单个密钥配置、`SOW_GPG_PASSFILE`。`config show` 不读取口令文件。详见[口令文件](/zh/docs/reference/config/#passfile)。
 
 ## sow config check
 
@@ -39,6 +41,7 @@ sow config check --json
 | 参数 | 说明 | 默认 |
 |---|---|---|
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 | `-h, --help` | 显示帮助 | — |
 
@@ -59,7 +62,13 @@ sow config check
 configuration error: load config "/srv/repo/sow.yml": config schema must be "sow/v3", got "invalid"
 ```
 
-`config check` 还会验证签名密钥是否可用且适用于签名。从工作区架构列表移除某个架构前，先移除 Dist 配置、成员和已构建状态对该架构的使用。
+签名检查因签名方式而异：
+
+- 元数据私钥文件会被解锁，并检查是否适合签名；外部 GPG 元数据密钥还会做一次非交互试签。
+- 启用的 RPM 包签名会检查所选口令文件的格式、`rpm`/GPG 和私钥是否可用，
+  不会签包，也不能证明口令正确。RPM 宏可能影响认证方式，最终以实际签包和输出验签为准。
+
+从工作区架构列表移除某个架构前，先移除 Dist 配置、成员和已构建状态对该架构的使用。
 
 ## sow config show
 
@@ -162,6 +171,8 @@ repos:
 ### 签名引用 {#秘密永不输出}
 
 输出包含密钥引用和解析后的指纹，不包含私钥内容或口令。
+配置中的 `passfile` 路径仍然可见；`SOW_GPG_PASSFILE` 属于运行时来源，
+不会被补入显示的配置。
 
 ## 示例
 

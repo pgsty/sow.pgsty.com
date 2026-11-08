@@ -40,6 +40,13 @@ sow log -r demo
 | Publication | `sow publish TARGET` |
 | Plain index generation | Rerun `sow create` with the original options |
 
+Recovery that must regenerate signed metadata needs access to the signing key and
+password again. Password values are not stored in journals. Use `--passfile PATH`,
+the per-key configuration, or `SOW_GPG_PASSFILE`; see
+[Password files](/docs/reference/config/#passfile) for availability and priority.
+For a pending Workspace lifecycle journal, supply a CLI/environment override without
+editing the recorded `sow.yml`, whose digest is part of recovery validation.
+
 First correct any reported input, configuration, or storage error. Keep the workspace
 configuration, database, and private state together during recovery. After a local recovery,
 run `sow check -r demo`. See [Troubleshooting](/docs/reference/troubleshooting/) for common errors

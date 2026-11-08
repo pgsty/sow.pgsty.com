@@ -17,8 +17,10 @@ icon: fa-solid fa-clipboard-list
 ```text
 sow log [OPERATION] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME] [--json]
 sow log export [FILE] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]
-sow log prune BEFORE [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json]
+sow log prune BEFORE [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
+
+`log prune` 支持 `--passfile PATH`，用于恢复中断变更时需要的签名。优先级为命令行、单个密钥配置、`SOW_GPG_PASSFILE`。`log` 和 `log export` 不读取口令文件。详见[口令文件](/zh/docs/reference/config/#passfile)。
 
 ## sow log
 
@@ -190,6 +192,7 @@ pruned log repository=pigsty operation=8150803833883584722 before=2026-12-31T16:
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 `prune` 作用于整个仓库，不接受 `-d`。

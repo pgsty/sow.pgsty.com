@@ -14,7 +14,7 @@ icon: fa-solid fa-hammer
 ## 语法
 
 ```text
-sow build [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [-T|--timeout DUR | -N|--no-wait] [--json]
+sow build [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
 
 | 参数 | 含义 | 默认值 |
@@ -25,6 +25,7 @@ sow build [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 | `-d, --dist NAME` | 构建指定 Dist；可重复 | 全部受影响 Dist |
 | `-T, --timeout DUR` | 最长等锁时间；`0` 表示无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 不带 `-d` 时，SOW 构建所选仓库中全部受影响 Dist；带 `-d` 时只构建指定 Dist，

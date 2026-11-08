@@ -23,7 +23,7 @@ APT 通过签名的 `Release` 文件验证包哈希，因此 DEB 不需要单独
 
 ## 1. 创建专用密钥
 
-先安装 GPG。下面生成一把无口令的测试密钥，并导出到私有目录。已有带口令密钥时，按下文配置 `passphrase` 引用。
+先安装 GPG。下面生成一把无口令的测试密钥，并导出到私有目录。已有带口令密钥时，按下文配置 `passfile`。
 
 ```bash
 SIGNING_UID='SOW Repository <repo@example.com>'
@@ -62,6 +62,15 @@ repos:
       # 保留已有 Dist 定义
 ```
 
+带口令的密钥应先配置口令来源，再检查或构建。开发版可在 `key` 旁增加
+`passfile: /run/secrets/gpg-password`，或执行
+`export SOW_GPG_PASSFILE=/run/secrets/gpg-password`。单次执行可以使用
+`sow build -r pigsty --passfile /run/secrets/gpg-password`，`agent://FINGERPRINT` 密钥同样支持。
+口令文件放在仓库之外，权限建议为 `0600`。内容就是口令：非空 UTF-8 单行，可以带一个
+末尾 LF 或 CRLF，空格与制表符会保留。不自动搜索默认文件。
+优先级和完整格式见[口令文件](/zh/docs/reference/config/#passfile)。
+旧 `passphrase` 引用继续兼容。配置只保存引用，不保存秘密值。
+
 校验配置、重新构建并检查：
 
 ```bash
@@ -70,8 +79,6 @@ sow config check
 sow build -r pigsty
 sow check -r pigsty
 ```
-
-带口令的密钥在 `key` 旁增加 `passphrase: env://SOW_METADATA_PASSPHRASE`，并向 SOW 提供该环境变量。也可以使用口令文件，或通过 `agent://FINGERPRINT` 调用 GPG 签名。详情见 [passphrase 引用](/zh/docs/reference/config/#passphrase-引用)。配置只保存引用，不保存秘密值。
 
 ## 3. 可选：查看元数据签名者 {#3-手工验证元数据}
 
@@ -111,6 +118,11 @@ repos:
 
 `fill` 会签署新导入的包；如果已有签名能通过配置密钥或 `trusted_keys` 验证，则保留原签名。
 其他模式见 [RPM 签名策略](/zh/docs/reference/config/)。
+
+包签名密钥带口令时，在 `signing.rpm.packages` 下配置 `passfile`，或使用
+`SOW_GPG_PASSFILE`。`metadata` 下的 `passfile` 只适用于对应的元数据密钥。
+`config check` 会校验包签名前置条件，但不会通过签包来测试口令；下面的 `add`
+必须实际遇到需要签名的包，才会验证这条路径。
 
 SOW 在 `add` 时签署私有副本，输入文件保持不变。`build` 检查包池中的 RPM 是否满足策略，不会重签它们。
 
@@ -183,6 +195,10 @@ sow create /srv/flat --sign-with 0123456789ABCDEF
 将 `0123456789ABCDEF` 换成你的密钥 ID 或指纹，匹配的私钥必须能被 `rpm` 与 GPG 使用。
 命令保留已有签名，包括上游签名。需要全部换成自己的密钥时，在独立工作副本上使用 `--overwrite`。
 密钥格式见 [`sow create`](/zh/docs/command/create/#rpm-包签名)。
+
+开发版中使用带口令的密钥时，增加 `--passfile /run/secrets/gpg-password`，或将
+`SOW_GPG_PASSFILE` 设置为该路径。这些选项只为 SOW 签名提供口令；单独执行的
+`gpg` 命令需要自己的凭据配置。
 
 已有 YUM 仓库按[迁移指南](/zh/docs/tutorial/yum-migration/)保留发布时间，
 并在最后一次 `create` 完成后签署 `repomd.xml`。

@@ -15,7 +15,7 @@ icon: fa-solid fa-seedling
 ## 语法
 
 ```text
-sow init [DIR] [--json]
+sow init [DIR] [--json] [--passfile PATH]
 ```
 
 `DIR` 默认为当前目录。需要初始化其他目录时，将它的路径作为 `DIR` 传入。
@@ -48,6 +48,7 @@ ls -a /srv/repo
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 | `-h, --help` | 显示帮助 | — |
 

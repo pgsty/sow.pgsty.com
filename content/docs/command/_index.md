@@ -56,6 +56,17 @@ Running `sow` with no arguments prints the command list and exits `0`. Use `sow 
 
 Options apply only to the commands that list them. Use `--` before a positional argument that starts with `-`. Unknown or repeated single-value options return exit code `2`.
 
+## Signing passwords {#passfile}
+
+The password-file interface is an unreleased change. Check the installed binary's
+command help before using it.
+
+Signing and recovery commands accept `--passfile PATH`. The environment variable
+`SOW_GPG_PASSFILE` supplies a default path. Per-key config takes priority over that
+default; the CLI overrides both. No default file is searched. See
+[Password files](/docs/reference/config/#passfile) for the full command list, file format,
+relative-path rules, and legacy `passphrase` compatibility.
+
 ## Workspace discovery
 
 Managed commands find the nearest ancestor containing `sow.yml`:

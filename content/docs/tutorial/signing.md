@@ -23,7 +23,7 @@ This guide uses the `pigsty` Repository from the [YUM](/docs/tutorial/yum-repo/)
 
 ## 1. Create a dedicated key
 
-Install GPG first. These commands create an unencrypted test key and export it to a private directory. For an existing protected key, use a `passphrase` reference as described below.
+Install GPG first. These commands create an unencrypted test key and export it to a private directory. For an existing protected key, use a `passfile` as described below.
 
 ```bash
 SIGNING_UID='SOW Repository <repo@example.com>'
@@ -62,6 +62,16 @@ repos:
       # existing Dist definitions remain here
 ```
 
+For a protected key, configure the password source before checking or building.
+In the development version, add `passfile: /run/secrets/gpg-password` next to `key`,
+or run `export SOW_GPG_PASSFILE=/run/secrets/gpg-password`. For one invocation, use
+`sow build -r pigsty --passfile /run/secrets/gpg-password`. This also works with
+`agent://FINGERPRINT` keys. Keep the file outside the repository, normally mode `0600`.
+Its contents are the password itself: one nonempty UTF-8 line, with an optional final
+LF or CRLF; spaces and tabs are preserved. No default file is searched.
+See [Password files](/docs/reference/config/#passfile) for priority and format details.
+Existing `passphrase` references continue to work. Configuration stores references, not secret values.
+
 Validate the configuration, rebuild, and check:
 
 ```bash
@@ -70,8 +80,6 @@ sow config check
 sow build -r pigsty
 sow check -r pigsty
 ```
-
-For a protected key, add `passphrase: env://SOW_METADATA_PASSPHRASE` next to `key`, then supply that environment variable to SOW. You can also use a passphrase file or `agent://FINGERPRINT` to sign through GPG. See [passphrase references](/docs/reference/config/#passphrase-references). Configuration stores references, not secret values.
 
 ## 3. Optional: inspect the metadata signer {#3-verify-metadata-manually}
 
@@ -113,6 +121,12 @@ and make the secret key available in the GPG keyring used by `rpm`.
 `fill` signs newly imported packages unless their signatures already verify against the
 configured key or `trusted_keys`. See [RPM signing policy](/docs/reference/config/) for
 other modes.
+
+For a protected package-signing key, configure `passfile` under `signing.rpm.packages`
+or use `SOW_GPG_PASSFILE`. A `passfile` under `metadata` only applies to that metadata
+key. `config check` validates the package-signing prerequisites but does not test
+the password by signing a package; the following `add` must actually need to sign
+a package to exercise that path.
 
 SOW signs a private copy during `add`; the input file stays unchanged. `build` checks stored RPMs against the policy but does not re-sign them.
 
@@ -190,6 +204,11 @@ Replace `0123456789ABCDEF` with your key ID or fingerprint. The matching private
 be available to `rpm` and GPG. Existing signatures, including upstream signatures, are
 preserved. To replace all RPM signatures with your key, use `--overwrite` on a separate
 working copy. See [`sow create`](/docs/command/create/#signing-rpms) for key formats.
+
+For a protected key in the development version, add
+`--passfile /run/secrets/gpg-password` or set `SOW_GPG_PASSFILE` to that path.
+These options only supply SOW's signing password. A separate `gpg` command needs
+its own credential configuration.
 
 For an existing YUM repository, follow the [migration guide](/docs/tutorial/yum-migration/)
 to preserve publication time and sign `repomd.xml` after the final `create` run.

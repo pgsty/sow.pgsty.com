@@ -17,8 +17,10 @@ icon: fa-solid fa-clipboard-list
 ```text
 sow log [OPERATION] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME] [--json]
 sow log export [FILE] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]
-sow log prune BEFORE [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json]
+sow log prune BEFORE [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
+
+`log prune` accepts `--passfile PATH` when recovery of an interrupted mutation needs signing. Priority is CLI, per-key config, then `SOW_GPG_PASSFILE`. `log` and `log export` do not read password files. See [Password files](/docs/reference/config/#passfile).
 
 ## sow log
 
@@ -193,6 +195,7 @@ the journal ID and `compaction_deferred` appear in `result`.
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 
 `prune` applies to the whole Repository and does not accept `-d`.

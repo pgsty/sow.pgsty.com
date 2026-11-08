@@ -57,6 +57,11 @@ reported cause. Run `sow build` for that Repository to complete recovery. Commit
 changes remain part of the pending build. For interrupted `init`, `repo new`, or `repo rm`
 operations, rerun the corresponding lifecycle command to recover the workspace journal.
 
+If recovery needs a protected signing key, supply its password source again. Journals
+do not save passwords. A supported recovery command can use `--passfile PATH` or
+`SOW_GPG_PASSFILE`; per-key configuration still applies. Keep `sow.yml` consistent
+with any pending workspace lifecycle journal. See [Password files](/docs/reference/config/#passfile).
+
 For an interrupted publication, restore access to its storage and public endpoint, then
 rerun the same target:
 
@@ -101,6 +106,27 @@ command; `status` normally reports the lock state without waiting. Keep the lock
 See [Global options](/docs/command/).
 
 ## A package, signature, or path fails validation
+
+### A signing key asks for a password or cannot unlock {#signing-password}
+
+With a binary that supports [password files](/docs/reference/config/#passfile), use
+`--passfile PATH`, a per-key `passfile`, or `SOW_GPG_PASSFILE`, in that priority order.
+`create` also requires `--sign-with`; setting the environment variable alone does
+not enable signing.
+
+- Check the selected path first. CLI/environment paths start at the process working
+  directory, regardless of `-C`; config paths start at the workspace root. An empty
+  environment variable is not the same as an unset one.
+- Use a readable regular file without symlinks. The password is one nonempty UTF-8
+  line with an optional final LF or CRLF; spaces and tabs are significant. The file
+  is not a shell script or `NAME=value` assignment.
+- An invalid selected source fails without fallback or prompting. External GPG needs
+  agent support for loopback mode. A hardware key may still require its own confirmation.
+- `config check` unlocks metadata keys and probes external metadata GPG signing.
+  RPM package preflight does not prove that a password is correct; verify an actual
+  package-signing operation. `check` verifies public signatures without reading passwords.
+
+### Other validation failures
 
 Use the named file and the check stage to narrow the cause:
 

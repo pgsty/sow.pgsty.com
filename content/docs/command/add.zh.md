@@ -15,8 +15,10 @@ icon: fa-solid fa-plus
 ## 语法
 
 ```text
-sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [-T|--timeout DUR | -N|--no-wait] [--json]
+sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
+
+`--skip` 只跳过元数据构建，RPM 包签名仍可能需要口令文件。参见[口令文件](/zh/docs/reference/config/#passfile)。
 
 ## 参数
 
@@ -30,6 +32,7 @@ sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|-
 | `-d, --dist NAME` | 选择一个 Dist；可重复 | 按选择规则 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 ## 输入与目标

@@ -39,6 +39,11 @@ sow log -r demo
 | 发布 | `sow publish TARGET` |
 | Plain 索引生成 | 使用原选项重新运行 `sow create` |
 
+恢复过程如果需要重新生成带签名的元数据，就需要再次访问签名密钥与口令。日志不保存口令值。
+可用 `--passfile PATH`、单个密钥配置或 `SOW_GPG_PASSFILE` 提供来源；支持版本和优先级见
+[口令文件](/zh/docs/reference/config/#passfile)。工作区生命周期日志尚待恢复时，用命令行或
+环境变量覆盖口令来源，保持日志记录的 `sow.yml` 不变，其摘要属于恢复校验的一部分。
+
 先修正报错中的输入、配置或存储问题。恢复期间，工作区配置、数据库和私有状态应保持配套。
 本地恢复完成后，运行 `sow check -r demo`。常见错误见[故障处理](/zh/docs/reference/troubleshooting/)，
 发布恢复见 [`publish`](/zh/docs/command/publish/)。

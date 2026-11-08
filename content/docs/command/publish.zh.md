@@ -14,8 +14,10 @@ icon: fa-solid fa-cloud-arrow-up
 ## 语法
 
 ```text
-sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -N|--no-wait] [--json]
+sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
+
+`--passfile` 可为恢复中断的本地变更提供签名口令，发布已构建 Generation 本身不会签署文件。来源选择和格式见[口令文件](/zh/docs/reference/config/#passfile)。
 
 | 参数 | 含义 | 默认值 |
 |---|---|---|
@@ -24,6 +26,7 @@ sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
 | `-T, --timeout DUR` | 最长仓库等锁时间；`0` 表示无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 `TARGET` 必须是已配置的 `filesystem` 或 `r2` 发布目标。`--abort` 与 `--rebind` 互斥。

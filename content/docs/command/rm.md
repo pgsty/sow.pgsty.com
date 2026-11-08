@@ -15,8 +15,10 @@ icon: fa-solid fa-minus
 ## Synopsis
 
 ```text
-sow rm PACKAGE... [-c|--check] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [-T|--timeout DUR | -N|--no-wait] [--json]
+sow rm PACKAGE... [-c|--check] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
+
+A `--check` preview can render signed metadata and also accepts `--passfile`. See [Password files](/docs/reference/config/#passfile).
 
 ## Options
 
@@ -30,6 +32,7 @@ sow rm PACKAGE... [-c|--check] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|--r
 | `-d, --dist NAME` | Select a distribution; repeatable | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 
 `--check` and `--skip` are mutually exclusive:

@@ -16,11 +16,13 @@ icon: fa-solid fa-box-archive
 
 ```text
 sow repo ls [-C DIR] [--json]
-sow repo new NAME [-C DIR] [-T DUR | -N] [--json]
+sow repo new NAME [-C DIR] [-T DUR | -N] [--json] [--passfile PATH]
 sow repo show [NAME] [-C DIR] [-r NAME] [--json]
-sow repo migrate [NAME] [--abort] [-j N] [-C DIR] [-r NAME] [-T DUR | -N] [--json]
-sow repo rm NAME [-f|--force] [-C DIR] [-T DUR | -N] [--json]
+sow repo migrate [NAME] [--abort] [-j N] [-C DIR] [-r NAME] [-T DUR | -N] [--json] [--passfile PATH]
+sow repo rm NAME [-f|--force] [-C DIR] [-T DUR | -N] [--json] [--passfile PATH]
 ```
+
+`repo new`, `repo rm`, and `repo migrate` accept `--passfile PATH` for signing preflights, signing, or recovery of interrupted operations. Priority is CLI, per-key config, then `SOW_GPG_PASSFILE`. The other query subcommands on this page do not read password files. See [Password files](/docs/reference/config/#passfile).
 
 ## Naming
 
@@ -68,6 +70,7 @@ created pigsty: path=/srv/repo/pigsty protected=false dists=0 generation=0 statu
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 
 Pass the new Repository name as `NAME`.
@@ -154,6 +157,7 @@ If an older abort already removed the trusted marker, restore a complete matchin
 | `-r, --repo NAME` | Select the repository when `NAME` is omitted | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 
 ## sow repo rm
@@ -184,6 +188,7 @@ removed repository pgsql
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 
 ### Force removal {#what--f-actually-downgrades}

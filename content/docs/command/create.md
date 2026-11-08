@@ -15,8 +15,10 @@ icon: fa-solid fa-folder-tree
 ## Synopsis
 
 ```text
-sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite]] [-T DUR | -N] [--json]
+sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite] [--passfile PATH]] [-T DUR | -N] [--json]
 ```
+
+`--passfile PATH` requires `--sign-with`; `SOW_GPG_PASSFILE` supplies a default password-file path but does not enable signing by itself. Use one nonempty UTF-8 line: exactly one final LF or CRLF is removed, with no trimming. Relative paths start at the current directory; no default location is searched. This interface is currently unreleased; see [Password files](/docs/reference/config/#passfile).
 
 ## Description
 
@@ -34,6 +36,7 @@ By default, `create` updates its indexes and preserves the package files. `--pig
 | `--metadata-timestamp SECONDS` | Unix seconds from `0` to `253402300799` for RPM repomd data timestamps; leaves DEB, package times and gzip headers unchanged | `0` |
 | `--pigsty` | Enable Pigsty compatibility cleanup and completion marker | off |
 | `-S, --sign-with KEY` | Sign unsigned RPMs with a GPG key ID or fingerprint | off |
+| `--passfile PATH` | Password file for `--sign-with` | `SOW_GPG_PASSFILE`, then existing RPM/GPG behavior |
 | `--overwrite` | Re-sign every RPM; requires `--sign-with` | off |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
@@ -145,7 +148,7 @@ SOW removes the existing `repo_complete` before replacing indexes. It then delet
 
 ## Signing RPMs
 
-`-S/--sign-with KEY` signs RPM package files through the local RPM/GPG environment. Use a 16-digit hexadecimal key ID or a 40- or 64-digit fingerprint. An optional `0x` or `0X` prefix is accepted. Configure the private key and passphrase in that environment before running the command.
+`-S/--sign-with KEY` signs RPM package files through the local RPM/GPG environment. Use a 16-digit hexadecimal key ID or a 40- or 64-digit fingerprint. An optional `0x` or `0X` prefix is accepted. Make the private key available in that environment before running the command. For a protected key, use `--passfile PATH` or set `SOW_GPG_PASSFILE` to its password-file path.
 
 - Default: only RPMs with no parseable embedded OpenPGP signature are signed. Anything already
   signed keeps its bytes.
@@ -228,8 +231,8 @@ sow create /srv/empty --json
 | Code | Trigger |
 |---|---|
 | `0` | Indexes written, or unchanged input produced a no-op |
-| `1` | Directory unreadable or missing, package parse failure, renderer failure, signing tool failure |
-| `2` | Usage error — invalid or repeated timestamp, `--overwrite` without `--sign-with`, malformed key, `--no-wait` with a non-zero `--timeout` |
+| `1` | Directory unreadable or missing, package parse failure, renderer failure, signing tool failure, or a missing/unreadable/malformed password file when signing needs it |
+| `2` | Usage error — invalid or repeated timestamp, `--overwrite` or `--passfile` without `--sign-with`, invalid/empty/repeated `--passfile`, malformed key, `--no-wait` with a non-zero `--timeout` |
 | `4` | Directory write lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Input set/stat changed before publication, or a controlled output path failed an integrity check |
 | `6` | No supported package found, `repo_complete` gate hit, `--sign-with` on a DEB-only directory, coordinate conflict |

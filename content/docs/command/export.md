@@ -14,7 +14,7 @@ icon: fa-solid fa-file-export
 ## Synopsis
 
 ```text
-sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAME] [--json]
+sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAME] [--json] [--passfile PATH]
 ```
 
 | Argument | Requirement |
@@ -28,6 +28,7 @@ sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAM
 | `--hardlink` | Use hard links for read-only output on the same filesystem | copy files |
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a Repository | selection rules |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 
 ## Output

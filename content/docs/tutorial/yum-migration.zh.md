@@ -75,6 +75,12 @@ gpg --verify /srv/yum.candidate/repodata/repomd.xml.asc \
 
 `--sign-with KEY` 签署未签名 RPM，并保留已有签名，包括供应商签名。要把全部包签名换成自己的密钥，在候选副本中增加 `--overwrite`。这会改变包文件；`create` 根据签名后的结果生成索引。最后一次 `create` 完成后，再生成索引的分离签名。
 
+对于带口令的包签名密钥，尚未发布的开发版新增了 `--passfile PATH` 与
+`SOW_GPG_PASSFILE`；请先通过所用二进制的 `sow help create` 确认支持情况，
+详见[口令文件](/zh/docs/reference/config/#passfile)。这些设置不会影响上面单独执行的
+`gpg` 命令。无人值守签署元数据时，该命令需要自己的凭据配置，例如在现有 `--batch`
+之外增加 `--pinentry-mode loopback --passphrase-file PATH`，或使用 agent 已解锁的密钥。
+
 <span id="4-切换前验收" data-td-print-local></span>
 
 ## 4. 测试候选仓库

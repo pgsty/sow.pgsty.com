@@ -167,14 +167,15 @@ signing:
     packages:
       mode: fill
       key: agent://7F721C4AD40F4A9D8CA578BFAC7E4690B50CCF3B
+      passfile: /run/secrets/rpm-password
       trusted_keys: [keys/upstream.asc]
     metadata:
       key: keys/repo-signing.asc
-      passphrase: env://SOW_METADATA_PASSPHRASE
+      passfile: /run/secrets/metadata-password
   deb:
     metadata:
       key: keys/repo-signing.asc
-      passphrase: env://SOW_METADATA_PASSPHRASE
+      passfile: /run/secrets/metadata-password
 ```
 
 <span id="rpmpackages" data-td-print-local></span>
@@ -185,6 +186,7 @@ signing:
 |---|---|---|
 | `mode` | `never` without a key; `fill` with a key | `never`, `fill`, or `always` |
 | `key` | None | Signing-key reference; required for `fill` and `always` |
+| `passfile` | None | Password-file path; requires `key` |
 | `trusted_keys` | Empty | Additional public-key references accepted by `fill` |
 {.wide .expand}
 
@@ -205,7 +207,8 @@ Both `rpm.metadata` and `deb.metadata` accept:
 | Field | Default | Meaning |
 |---|---|---|
 | `key` | None | Metadata signing-key reference |
-| `passphrase` | None | Reference to the passphrase for an encrypted key |
+| `passfile` | None | Password-file path; requires `key` |
+| `passphrase` | None | Legacy password reference; mutually exclusive with `passfile` |
 
 RPM signing creates `repodata/repomd.xml.asc`. DEB signing creates `InRelease` and
 `Release.gpg`. Without a key, indexes are unsigned. DEB package files are not re-signed.
@@ -232,14 +235,107 @@ A signing `key` reference must resolve to exactly one primary key.
 A `trusted_keys` file can contain several complete public keys, including consecutive armored blocks.
 SOW reads the complete bundle and rejects malformed or truncated input. It does not silently use only the first key.
 
+### Password files {#passfile}
+
+This interface is part of the current development version (Unreleased). Check
+`sow help create` or `sow help config check` for support in an installed binary.
+
+Use one password-file interface for RPM packages, RPM metadata, and APT metadata,
+including protected private-key files and `agent://` keys. The sources are selected
+in this order, separately for each signing key:
+
+1. `--passfile PATH`: override every signing key used by this invocation.
+2. The key's configured `passfile`, or its legacy `passphrase` reference.
+3. `SOW_GPG_PASSFILE`: default file path for keys without a configured source.
+4. Existing key/GPG/RPM credential handling when no source is set.
+
+Configure `passfile` next to `key` under `repos.<name>.signing.rpm.packages`,
+`signing.rpm.metadata`, or `signing.deb.metadata`; it is not a top-level setting.
+An empty YAML `passfile: ""` is treated as unset. A CLI override does not bypass
+configuration validation: two nonempty `passfile` and `passphrase` values on the
+same metadata key are still rejected.
+
+`passfile` takes a literal filesystem path, not a URL or an environment-variable name.
+CLI and environment paths are relative to the process working directory, even with
+`-C`. Config paths are relative to the workspace root. SOW does not expand `~` or
+`$VARIABLE` in config or environment values; the shell can expand them in CLI arguments.
+No default file is searched. Set `SOW_GPG_PASSFILE` to an absolute path to reuse a source
+across commands. An empty `SOW_GPG_PASSFILE` is an error if that source is selected
+when credentials are needed; CLI or per-key configuration can override it. Unset
+the variable to return to existing behavior.
+
+Without a source, an encrypted metadata key file still needs a password reference.
+External metadata GPG can use an already unlocked agent key but runs with pinentry
+disabled; RPM retains its existing agent and macro behavior. An unprotected key
+does not require a password file. The environment variable only supplies a password
+source: Plain `create` still needs `--sign-with` to enable signing.
+
+```bash
+sow create ./packages -S 0123456789ABCDEF --passfile /run/secrets/gpg-password
+export SOW_GPG_PASSFILE=/run/secrets/gpg-password
+sow config check
+sow build -r demo
+```
+
+The file contains the password itself, with these exact rules:
+
+- One nonempty UTF-8 line, without a BOM, at most 64 KiB including an optional terminator.
+- No final newline is required. Exactly one final LF or CRLF is removed.
+- No trimming: leading/trailing spaces and tabs are password bytes. Quotes, `#`, and
+  backslashes are literal; there are no comments, escapes, or `NAME=value` syntax.
+- Empty files, an empty line, NUL, embedded CR/LF, a bare final CR, and extra blank
+  lines are rejected. A password consisting only of spaces is not empty.
+- Use a readable regular file with no symlinks in its path. FIFOs, directories, and
+  stdin (`-`) are not special sources. macOS system aliases `/tmp`, `/var`, and `/etc`
+  are normalized to their `/private` locations.
+
+Keep the file outside the repository and public document root, normally with mode
+`0600` and a private parent directory. SOW does not require exactly `0600`, so a
+read-only secret mounted with suitable access controls also works. File paths do not
+hide the password from processes or users that can read the file.
+
+SOW reads the selected source only for signing or a signing preflight. A missing,
+unreadable, or malformed selected source fails without trying another source or
+opening a password prompt. With an explicit source, external GPG uses [batch loopback mode](https://www.gnupg.org/documentation/manuals/gnupg/GPG-Esoteric-Options.html), which must be
+allowed by the agent; hardware keys that require interaction retain that requirement.
+No new raw-password flag or environment variable is provided.
+
+The option is available on `create` (with `--sign-with`), `init`, `config check`,
+`repo new/rm/migrate`, `dist new/rm`, `add`, `rm`, `build`, and `export rpm-leaf`.
+`add --skip` can still sign packages; `rm --check` can render signed preview metadata.
+`publish`, local/target `gc`, and `log prune` also accept it because recovery of an
+interrupted mutation can need a signer. Query commands, `config show`, and signature
+verification with `check` do not read password files. `retain` does not accept
+`--passfile`. Recovery selects the source
+again from the current invocation and configuration; password values are never journaled.
+
+Changing only a `passfile` path does not change a signing identity or make a Dist dirty.
+Password values never enter logs, config output, repository state, or public files.
+External metadata signing passes the password through a private descriptor. RPM signing
+uses a temporary `0600` file in a private `/tmp/sow-gpg-pass-*` directory because RPM
+may invoke GPG repeatedly. SOW removes it when the signing call returns; forced process
+termination can leave it behind.
+
 ### Passphrase references
 
-Passphrases accept path, `file://`, or `env://` references. They require a key containing
-private-key material; GPG handles the passphrase when a reference resolves to a key identifier.
-Passphrase values must be nonempty, contain no NUL bytes, and fit within 64 KiB. SOW removes
-one trailing newline, including CRLF. Passphrase files use the same path rules as key files.
+Existing metadata `passphrase` fields remain supported, including paths, `file://`, and
+`env://` references. They now also work with GPG key identifiers. They take priority over
+`SOW_GPG_PASSFILE`; `--passfile` overrides them. Nonempty `passfile` and `passphrase`
+values on one key are a configuration error. New configuration should use `passfile`.
+Moving from `passphrase` to `passfile` can require one metadata rebuild, because
+historical configuration identities include the legacy reference.
 
-Reference syntax errors return `2`; unresolved or unusable signing references return `6`.
+Legacy references keep their byte-oriented behavior: at most 64 KiB, nonempty, no NUL,
+remove one final LF and then one final CR. In-process legacy keys retain support for
+other bytes; external GPG requires a single line. Legacy file paths resolve from the
+workspace root and use the same regular-file and no-symlink rules as keys.
+
+For `config check`, reference syntax errors return `2`; unresolved or unusable
+signing references return `6`. Metadata key files are unlocked and checked for
+signing suitability; external GPG metadata keys also perform a signing probe.
+RPM package checks validate the selected password file's format, the tools, and
+secret-key availability. They do not sign a package or prove its password is
+correct; actual RPM signing and verification happen when a package needs signing.
 
 `config show` can include `key_fingerprint` even without `--all`. Active RPM package
 settings can also include `key_snapshot_sha256`, `trusted_key_fingerprints`, and

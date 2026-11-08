@@ -14,8 +14,10 @@ icon: fa-solid fa-cloud-arrow-up
 ## Synopsis
 
 ```text
-sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -N|--no-wait] [--json]
+sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
+
+`--passfile` supplies signing credentials when recovering an interrupted local mutation. Publishing an already built Generation does not itself sign files. See [Password files](/docs/reference/config/#passfile) for source selection and format.
 
 | Flag | Meaning | Default |
 |---|---|---|
@@ -24,6 +26,7 @@ sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-T, --timeout DUR` | Maximum Repository-lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 {.wide .expand}
 

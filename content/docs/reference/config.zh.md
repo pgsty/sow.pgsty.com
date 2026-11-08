@@ -162,14 +162,15 @@ signing:
     packages:
       mode: fill
       key: agent://7F721C4AD40F4A9D8CA578BFAC7E4690B50CCF3B
+      passfile: /run/secrets/rpm-password
       trusted_keys: [keys/upstream.asc]
     metadata:
       key: keys/repo-signing.asc
-      passphrase: env://SOW_METADATA_PASSPHRASE
+      passfile: /run/secrets/metadata-password
   deb:
     metadata:
       key: keys/repo-signing.asc
-      passphrase: env://SOW_METADATA_PASSPHRASE
+      passfile: /run/secrets/metadata-password
 ```
 
 <span id="rpmpackages" data-td-print-local></span>
@@ -180,6 +181,7 @@ signing:
 |---|---|---|
 | `mode` | 无密钥时 `never`，有密钥时 `fill` | `never`、`fill` 或 `always` |
 | `key` | 无 | 签名密钥引用，`fill`、`always` 必填 |
+| `passfile` | 无 | 口令文件路径，需要同时配置 `key` |
 | `trusted_keys` | 空 | `fill` 接受的额外公钥引用 |
 
 `never` 保留输入字节；`fill` 保留可由当前密钥或受信密钥验证的包，其余包签名；
@@ -198,7 +200,8 @@ signing:
 | 字段 | 默认值 | 含义 |
 |---|---|---|
 | `key` | 无 | 元数据签名密钥引用 |
-| `passphrase` | 无 | 加密密钥的口令引用 |
+| `passfile` | 无 | 口令文件路径，需要同时配置 `key` |
+| `passphrase` | 无 | 兼容旧配置的口令引用，与 `passfile` 互斥 |
 
 RPM 签名生成 `repodata/repomd.xml.asc`，DEB 签名生成 `InRelease`、`Release.gpg`。
 没有密钥时索引不签名。DEB 包文件不会被重签。
@@ -227,13 +230,91 @@ RPM 签名生成 `repodata/repomd.xml.asc`，DEB 签名生成 `InRelease`、`Rel
 `trusted_keys` 文件可以包含多个完整公钥，包括连续的 ASCII 装甲块。
 SOW 读取整个密钥集合，拒绝格式错误或被截断的输入，不会仅使用第一个密钥而忽略后续内容。
 
+### 口令文件 {#passfile}
+
+此接口属于当前开发版（Unreleased）。已安装的二进制是否支持，以
+`sow help create` 或 `sow help config check` 为准。
+
+RPM 包、RPM 元数据与 APT 元数据统一使用口令文件接口，支持加密私钥文件与
+`agent://` 密钥。每个签名密钥分别按以下优先级选择来源：
+
+1. `--passfile PATH`：覆盖本次执行用到的所有签名密钥。
+2. 该密钥配置的 `passfile`，或旧配置中的 `passphrase` 引用。
+3. `SOW_GPG_PASSFILE`：未单独配置口令来源的密钥使用此默认文件路径。
+4. 未设置来源时，沿用现有密钥/GPG/RPM 口令处理方式。
+
+`passfile` 与 `key` 同级，放在 `repos.<name>.signing.rpm.packages`、
+`signing.rpm.metadata` 或 `signing.deb.metadata` 下，不是顶层配置。
+YAML 中的空值 `passfile: ""` 视为未设置。命令行覆盖不会跳过配置校验：
+同一元数据密钥的 `passfile` 与 `passphrase` 都非空时仍然报错。
+
+`passfile` 接收普通文件路径，不接收 URL 或环境变量名称。命令行和环境变量中的相对路径
+以进程当前目录为基准，`-C` 不会改变这个基准；配置中的相对路径以工作区根为基准。
+SOW 不展开配置或环境变量值中的 `~`、`$VARIABLE`；命令行参数可由 shell 提前展开。
+不自动搜索默认文件。需要跨命令复用时，将 `SOW_GPG_PASSFILE` 设置为绝对路径。
+需要凭据且选中了环境变量来源时，空 `SOW_GPG_PASSFILE` 会报错；命令行或单个密钥配置
+可以覆盖它。恢复原有行为应取消设置该变量。
+
+没有配置来源时，加密的元数据私钥文件仍需提供口令引用。外部元数据 GPG 可使用
+agent 已解锁的密钥，但禁用 pinentry；RPM 沿用现有 agent 和宏配置行为。
+未加密密钥无需口令文件。环境变量只提供口令来源，Plain `create` 仍需
+`--sign-with` 才会启用签名。
+
+```bash
+sow create ./packages -S 0123456789ABCDEF --passfile /run/secrets/gpg-password
+export SOW_GPG_PASSFILE=/run/secrets/gpg-password
+sow config check
+sow build -r demo
+```
+
+文件直接保存口令，格式规则如下：
+
+- 单行、非空、UTF-8 编码，不带 BOM；含可选末尾换行在内，最多 64 KiB。
+- 可以没有末尾换行；恰好移除末尾的一个 LF 或 CRLF。
+- 不做 trim：首尾空格和制表符都是口令的一部分。引号、`#`、反斜杠也按字面处理，
+  不支持注释、转义或 `NAME=value` 语法。
+- 拒绝空文件、空行、NUL、中间的 CR/LF、单独的末尾 CR 和多余空行。只含空格的口令不算空。
+- 必须是可读普通文件，路径中不能经过符号链接。FIFO、目录不受支持，`-` 不代表标准输入。
+  macOS 的系统别名 `/tmp`、`/var`、`/etc` 会规范化为对应的 `/private` 路径。
+
+建议放在仓库与公开服务目录之外，文件权限设为 `0600`，父目录仅允许所需用户访问。
+SOW 不强制要求权限恰好为 `0600`，因此访问控制适当的只读 secret 挂载也可使用。
+能读取文件的用户或进程仍然能取得口令。
+
+SOW 只在签名或签名前置检查时读取所选来源。文件不存在、不可读或格式错误时直接失败，
+不会尝试其他来源，也不会退回密码输入框。指定来源后，外部 GPG 使用 [batch loopback 模式](https://www.gnupg.org/documentation/manuals/gnupg/GPG-Esoteric-Options.html)，
+需要 agent 允许该模式；要求交互确认的硬件密钥仍须满足其自身要求。
+不新增直接传递明文口令的参数或环境变量。
+
+支持该选项的命令包括 `create`（同时指定 `--sign-with`）、`init`、`config check`、
+`repo new/rm/migrate`、`dist new/rm`、`add`、`rm`、`build` 和 `export rpm-leaf`。
+`add --skip` 仍可能签包，`rm --check` 可能渲染带签名的预览元数据。
+`publish`、本地与目标端 `gc`、`log prune` 也支持，因为恢复中断的变更可能需要签名。
+查询命令、`config show` 和只验证签名的 `check` 不读取口令文件。
+`retain` 不接受 `--passfile`。
+恢复时从本次执行和当前配置重新选择来源，口令值不会写入恢复日志。
+
+只修改 `passfile` 路径不会改变签名身份，也不会让 Dist 变脏。
+口令值不会进入日志、配置输出、仓库状态或公开文件。
+外部元数据签名通过独立文件描述符传入口令；RPM 可能多次调用 GPG，因此签包时会在
+私有的 `/tmp/sow-gpg-pass-*` 目录内创建 `0600` 临时文件，调用返回后删除。
+进程被强制终止时，临时文件可能残留。
+
 ### Passphrase 引用
 
-口令接受路径、`file://`、`env://` 引用，配合私钥内容使用。引用解析为 GPG 密钥标识时，
-由 GPG 处理口令。口令值必须非空、不含 NUL 字节，且不超过 64 KiB。
-SOW 移除末尾的一个换行符，包括 CRLF。口令文件采用与密钥文件相同的路径规则。
+元数据签名中的旧 `passphrase` 字段继续兼容路径、`file://` 和 `env://` 引用，
+现在也可配合 GPG 密钥标识使用。它优先于 `SOW_GPG_PASSFILE`，可被 `--passfile` 覆盖。
+同一密钥的 `passfile` 与 `passphrase` 都非空时会报配置错误。新配置建议使用 `passfile`。
+从 `passphrase` 改为 `passfile` 可能需要重建一次元数据，因为旧配置身份包含旧引用。
 
-引用语法错误返回 `2`，签名引用无法解析或不可用时返回 `6`。
+旧引用保持原来的字节处理方式：最多 64 KiB、非空、不含 NUL，先去掉末尾一个 LF，
+再去掉末尾一个 CR。进程内签名继续兼容旧口令中的其他字节；外部 GPG 要求单行。
+旧文件引用中的相对路径以工作区根为基准，并沿用密钥文件的普通文件和无符号链接规则。
+
+对 `config check`，引用语法错误返回 `2`，签名引用无法解析或不可用时返回 `6`。
+元数据私钥文件会被解锁并检查是否适合签名；外部 GPG 元数据密钥还会执行一次试签。
+RPM 包签名只检查所选口令文件的格式、工具与私钥是否可用，不会签包，也不能证明
+口令正确；实际签名和验签发生在包需要签名时。
 
 不带 `--all` 时，`config show` 也可能显示 `key_fingerprint`。
 启用的 RPM 包签名设置还可能显示 `key_snapshot_sha256`、`trusted_key_fingerprints` 和

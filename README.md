@@ -1,6 +1,7 @@
 # SOW Docs
 
-This repository contains the bilingual docs for **SOW 0.6.1**, the self-contained
+This repository contains the bilingual docs for **SOW 0.6.1** and explicitly marked
+unreleased changes, including the password-file interface. SOW is the self-contained
 APT / YUM package repository manager by [Pigsty](https://pigsty.io). It uses
 [Hugo](https://gohugo.io/) and the [OINK](https://github.com/pgsty/oink) docs
 theme, with English at `/` and Simplified Chinese at `/zh/`.

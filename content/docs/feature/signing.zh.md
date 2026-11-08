@@ -47,7 +47,8 @@ repos:
         format: deb
 ```
 
-RPM 与 DEB 可使用相同或不同密钥。文件或环境变量中的密钥已加密时，增加 `passphrase` 引用。
+RPM 与 DEB 可使用相同或不同密钥。密钥带口令时，在 `key` 旁增加
+`passfile: /run/secrets/gpg-password`，或将 `SOW_GPG_PASSFILE` 设置为口令文件路径。
 先检查配置，再构建：
 
 ```bash
@@ -58,7 +59,8 @@ sow check -r demo
 
 已配置签名的空 Dist 与非空 Dist 生成相同种类的签名文件。`InRelease` 的签名正文与
 `Release` 一致。未配置密钥时，SOW 生成未签名索引。
-Managed 签名设置来自 `sow.yml`，`build` 没有单次覆盖签名设置的选项。
+Managed 的密钥与签名策略来自 `sow.yml`；`--passfile PATH` 可为本次执行覆盖口令来源，
+`build` 同样支持。
 
 <span id="四种密钥引用形态" data-td-print-local></span>
 
@@ -73,17 +75,26 @@ Managed 签名设置来自 `sow.yml`，`build` 没有单次覆盖签名设置的
 {.wide .expand}
 
 密钥文件支持 ASCII 装甲格式和二进制 OpenPGP 数据。GPG 密钥标识可以是 16 位 key ID，
-或 40、64 位指纹。引用解析为 GPG 密钥标识时，使用外部 `gpg` 访问私钥和处理口令。
+或 40、64 位指纹。引用解析为 GPG 密钥标识时，使用外部 `gpg` 访问私钥；
+显式指定口令文件后，通过 GPG loopback 模式非交互解锁。
 
 签名 `key` 引用必须解析为一个主密钥。
 `trusted_keys` 文件可以包含多个完整公钥，包括连续的 ASCII 装甲块。
 SOW 读取整个密钥集合，拒绝格式错误或被截断的输入，不会仅使用第一个密钥而忽略后续内容。
 
-提供私钥内容时，口令支持路径、`file://` 或 `env://` 引用。GPG 密钥标识由 GPG 处理口令，
-不能另配 `passphrase` 字段。路径和大小限制见[密钥引用](/zh/docs/reference/config/#密钥引用)。
+口令来源优先级为 `--passfile PATH`、每个密钥的 `passfile` 配置、`SOW_GPG_PASSFILE`。
+旧元数据配置的 `passphrase` 引用继续兼容，优先级与单个密钥配置相同；
+同一密钥的两个字段不能都非空。三种签名设置都接受 `passfile`，包括 `agent://` 密钥。
+
+口令文件为非空 UTF-8 单行。SOW 只移除末尾一个 LF 或 CRLF，保留空格与制表符。
+不搜索默认路径，所选来源不可用时直接失败。完整格式、相对路径基准、权限及恢复命令范围
+见[口令文件](/zh/docs/reference/config/#passfile)。
 
 `config show` 显示引用和解析出的公钥身份，不显示私钥或口令内容。
-`config check` 解析引用并检查用途。创建新元数据签名时，选中的签名密钥需要在发布时间和
+`config check` 解锁元数据私钥文件并检查用途；外部 GPG 元数据密钥还会试签。
+RPM 包签名只检查口令格式、工具和私钥是否可用，不会签包或证明口令正确，
+详见 [`config check`](/zh/docs/command/config/#sow-config-check)。
+创建新元数据签名时，选中的签名密钥需要在发布时间和
 当前时间都可用。历史验证使用保留的证书。
 
 新 APT 签名使用 SHA-256。新的发布尝试要求两份 APT 签名都使用 SHA-256、SHA-384 或 SHA-512。
@@ -126,7 +137,7 @@ SOW 检查签名结果、包坐标及排除签名头后的包体摘要。已有�
 
 ## 更换密钥
 
-签名身份变化会使相关 Dist 变脏。更换元数据密钥后，运行 `build` 生成新签名，
+只修改 `passfile` 路径不会让 Dist 变脏；签名身份变化会使相关 Dist 变脏。更换元数据密钥后，运行 `build` 生成新签名，
 并在发布新元数据前把新公钥分发给客户端。
 
 已有包池对象不可变，修改 RPM 包签名策略不会原地重签这些对象。
@@ -148,8 +159,8 @@ RPM 验证按包的签名时间检查证书和签名子钥是否有效。证书�
 ## Plain 签名
 
 ```bash
-sow create /srv/offline --sign-with 6D5C5A26C36B1F73
-sow create /srv/offline --sign-with 6D5C5A26C36B1F73 --overwrite
+sow create /srv/offline --sign-with 6D5C5A26C36B1F73 --passfile /run/secrets/gpg-password
+sow create /srv/offline --sign-with 6D5C5A26C36B1F73 --overwrite --passfile /run/secrets/gpg-password
 ```
 
 Plain 模式只签 RPM 包文件。不带 `--overwrite` 时，为没有可解析内嵌签名的包签名；

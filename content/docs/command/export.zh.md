@@ -14,7 +14,7 @@ icon: fa-solid fa-file-export
 ## 语法
 
 ```text
-sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAME] [--json]
+sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAME] [--json] [--passfile PATH]
 ```
 
 | 参数 | 要求 |
@@ -28,6 +28,7 @@ sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAM
 | `--hardlink` | 对同一文件系统上的只读输出使用硬链接 | 复制文件 |
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
 | `-r, --repo NAME` | 选择仓库 | 选择规则 |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 ## 输出

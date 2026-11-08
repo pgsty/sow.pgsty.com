@@ -47,8 +47,9 @@ repos:
         format: deb
 ```
 
-RPM and DEB can use the same key or different keys. For an encrypted file or environment
-key, add a `passphrase` reference. Validate the settings, then build:
+RPM and DEB can use the same key or different keys. For a protected key, add
+`passfile: /run/secrets/gpg-password` next to `key`, or set `SOW_GPG_PASSFILE` to the
+password-file path. Validate the settings, then build:
 
 ```bash
 sow config check
@@ -58,7 +59,8 @@ sow check -r demo
 
 Signed empty Dists receive the same signature files as populated Dists. The signed body
 of `InRelease` matches `Release`. Without a configured key, SOW produces unsigned indexes.
-Managed signing settings come from `sow.yml`; `build` has no per-run signing override.
+Managed keys and signing policy come from `sow.yml`. `--passfile PATH` overrides the
+password source for one invocation, including `build`.
 
 <span id="four-key-reference-forms" data-td-print-local></span>
 
@@ -74,18 +76,28 @@ Managed signing settings come from `sow.yml`; `build` has no per-run signing ove
 
 Key files support ASCII-armored and binary OpenPGP data. A GPG key identifier is a
 16-digit key ID or a 40- or 64-digit fingerprint. References that resolve to a GPG key
-identifier use external `gpg` for private-key access and prompting.
+identifier use external `gpg` for private-key access. An explicit password file enables
+noninteractive unlocking through GPG loopback mode.
 
 A signing `key` reference must resolve to exactly one primary key.
 A `trusted_keys` file can contain several complete public keys, including consecutive armored blocks.
 SOW reads the complete bundle and rejects malformed or truncated input. It does not silently use only the first key.
 
-For private-key material, passphrases accept path, `file://`, or `env://` references.
-GPG key identifiers use GPG passphrase handling and cannot take a `passphrase` field.
-See [Key references](/docs/reference/config/#key-references) for path and size limits.
+Use `--passfile PATH`, per-key `passfile`, or `SOW_GPG_PASSFILE`, in that priority order.
+Legacy metadata `passphrase` references remain supported at the per-key priority;
+`passfile` and `passphrase` cannot both be nonempty on one key. All three signing settings
+accept `passfile`, including `agent://` keys.
+
+Password files contain one nonempty UTF-8 line. SOW removes exactly one final LF or
+CRLF and preserves spaces and tabs. It does not search a default path or fall back
+from an invalid selected source. See [Password files](/docs/reference/config/#passfile)
+for the full format, relative-path rules, permissions, and recovery command coverage.
 
 `config show` displays references and resolved public identities, not private-key or
-passphrase contents. `config check` resolves references and checks their suitability.
+passphrase contents. `config check` unlocks metadata key files and checks their
+suitability; external GPG metadata keys also perform a signing probe. RPM package
+signing checks credential format, tools, and secret-key availability, without signing
+a package or proving the password correct. See [`config check`](/docs/command/config/#sow-config-check).
 For new metadata signatures, the selected signing key must be usable at the publication
 time and at the current time. Historical verification uses the retained certificate.
 
@@ -135,7 +147,7 @@ OpenPGP v3 and v4 signatures are supported.
 
 ## Change keys
 
-A changed signing identity makes affected Dists dirty. For metadata keys, run `build` to
+Changing only a `passfile` path does not make Dists dirty. A changed signing identity does. For metadata keys, run `build` to
 create signatures with the new identity. Distribute the new public key to clients before
 publishing the new metadata.
 
@@ -161,8 +173,8 @@ Keep that historical public-key material when exporting renewed keys.
 ## Plain signing
 
 ```bash
-sow create /srv/offline --sign-with 6D5C5A26C36B1F73
-sow create /srv/offline --sign-with 6D5C5A26C36B1F73 --overwrite
+sow create /srv/offline --sign-with 6D5C5A26C36B1F73 --passfile /run/secrets/gpg-password
+sow create /srv/offline --sign-with 6D5C5A26C36B1F73 --overwrite --passfile /run/secrets/gpg-password
 ```
 
 Plain mode signs RPM package files only. Without `--overwrite`, it signs packages with

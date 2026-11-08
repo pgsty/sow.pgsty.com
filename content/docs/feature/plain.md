@@ -124,6 +124,11 @@ re-sign every retained RPM. It requires the host `rpm` command and a usable GPG 
 SOW signs and checks staged copies, then replaces the package files before their indexes.
 This path reads package bytes more than once.
 
+For a protected key, the development version accepts `--passfile PATH` or
+`SOW_GPG_PASSFILE`. `--sign-with` is still required to enable signing.
+See [Password files](/docs/reference/config/#passfile) for the exact file format;
+Plain mode does not read the Managed `sow.yml` configuration.
+
 Plain mode does not sign repository metadata. See [Signing](/docs/feature/signing/) for
 Managed metadata signing and package-signing policy.
 

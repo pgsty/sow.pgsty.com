@@ -16,10 +16,12 @@ icon: fa-solid fa-layer-group
 
 ```text
 sow dist ls [-C DIR] [-r NAME] [--json]
-sow dist new NAME --format rpm|deb [-C DIR] [-r NAME] [-T DUR | -N] [--json]
+sow dist new NAME --format rpm|deb [-C DIR] [-r NAME] [-T DUR | -N] [--json] [--passfile PATH]
 sow dist show NAME [-C DIR] [-r NAME] [--json]
-sow dist rm NAME [-f|--force] [-C DIR] [-r NAME] [-T DUR | -N] [--json]
+sow dist rm NAME [-f|--force] [-C DIR] [-r NAME] [-T DUR | -N] [--json] [--passfile PATH]
 ```
+
+`dist new`、`dist rm` 支持 `--passfile PATH`，用于签名前置检查、签名或恢复中断操作。优先级为命令行、单个密钥配置、`SOW_GPG_PASSFILE`。本页其他查询子命令不读取口令文件。详见[口令文件](/zh/docs/reference/config/#passfile)。
 
 ## 命名
 
@@ -88,6 +90,7 @@ created trixie: format=deb architectures=x86_64,aarch64 members=0/0 generation=2
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 `--format` 必填，只接受 `rpm` 或 `deb`：
@@ -177,6 +180,7 @@ removed dist el9 from pgsql
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 ### 删除 Dist 不会删除 pool 字节

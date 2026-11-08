@@ -16,10 +16,12 @@ icon: fa-solid fa-layer-group
 
 ```text
 sow dist ls [-C DIR] [-r NAME] [--json]
-sow dist new NAME --format rpm|deb [-C DIR] [-r NAME] [-T DUR | -N] [--json]
+sow dist new NAME --format rpm|deb [-C DIR] [-r NAME] [-T DUR | -N] [--json] [--passfile PATH]
 sow dist show NAME [-C DIR] [-r NAME] [--json]
-sow dist rm NAME [-f|--force] [-C DIR] [-r NAME] [-T DUR | -N] [--json]
+sow dist rm NAME [-f|--force] [-C DIR] [-r NAME] [-T DUR | -N] [--json] [--passfile PATH]
 ```
+
+`dist new` and `dist rm` accept `--passfile PATH` for signing preflights, signing, or recovery of interrupted operations. Priority is CLI, per-key config, then `SOW_GPG_PASSFILE`. The other query subcommands on this page do not read password files. See [Password files](/docs/reference/config/#passfile).
 
 ## Naming
 
@@ -90,6 +92,7 @@ created trixie: format=deb architectures=x86_64,aarch64 members=0/0 generation=2
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 
 `--format` is required and accepts only `rpm` or `deb`:
@@ -178,6 +181,7 @@ removed dist el9 from pgsql
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `-T, --timeout DUR` | Maximum lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 
 ### Dist removal does not delete Pool bytes

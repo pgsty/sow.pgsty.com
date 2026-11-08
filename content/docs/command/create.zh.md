@@ -15,8 +15,10 @@ icon: fa-solid fa-folder-tree
 ## 语法
 
 ```text
-sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite]] [-T DUR | -N] [--json]
+sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite] [--passfile PATH]] [-T DUR | -N] [--json]
 ```
+
+`--passfile PATH` 需要同时指定 `--sign-with`；`SOW_GPG_PASSFILE` 可提供默认口令文件，但不会自动启用签名。文件为非空 UTF-8 单行，只去掉末尾一个 LF 或 CRLF，不做 trim。相对路径以当前目录为基准，不自动搜索默认位置。此接口尚未发布，详见[口令文件](/zh/docs/reference/config/#passfile)。
 
 ## 说明
 
@@ -36,6 +38,7 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 | `--metadata-timestamp SECONDS` | RPM repomd 的 data 时间戳，取值 `0` 至 `253402300799` 的 Unix 秒；不影响 DEB、包时间或 gzip 头 | `0` |
 | `--pigsty` | 启用 Pigsty 兼容清理与完成标记 | 关闭 |
 | `-S, --sign-with KEY` | 用 GPG 密钥 ID 或指纹为未签名 RPM 补签 | 关闭 |
+| `--passfile PATH` | 为 `--sign-with` 提供口令文件 | `SOW_GPG_PASSFILE`，再沿用 RPM/GPG 行为 |
 | `--overwrite` | 重签全部 RPM；必须与 `--sign-with` 同用 | 关闭 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 表示无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
@@ -140,7 +143,7 @@ SOW 先撤下已有的 `repo_complete`，再替换索引；新元数据安装后
 
 ## RPM 包签名
 
-`-S/--sign-with KEY` 通过本地 RPM/GPG 环境为 RPM 包签名。使用 16 位十六进制密钥 ID，或 40/64 位指纹；可以带 `0x` 或 `0X` 前缀。运行前，在该环境中配置私钥与口令。
+`-S/--sign-with KEY` 通过本地 RPM/GPG 环境为 RPM 包签名。使用 16 位十六进制密钥 ID，或 40/64 位指纹；可以带 `0x` 或 `0X` 前缀。运行前，确保该环境中已有私钥。密钥带口令时，使用 `--passfile PATH` 或将 `SOW_GPG_PASSFILE` 设置为口令文件路径。
 
 - 默认只给没有可解析嵌入 OpenPGP 签名的 RPM 补签；已有签名的包保持原字节。
 - `--overwrite` 必须与 `--sign-with` 同用，改为对全部保留 RPM 执行 `rpm --resign`。
@@ -222,8 +225,8 @@ sow create /srv/empty --json
 | 码 | 触发条件 |
 |---|---|
 | `0` | 索引写出成功，或输入未变化产生 no-op |
-| `1` | 目录不可读或不存在、包解析失败、渲染失败、签名工具失败 |
-| `2` | 用法错误——时间戳非法或重复指定、`--overwrite` 未配 `--sign-with`、密钥格式非法、`--no-wait` 与非零 `--timeout` 同用 |
+| `1` | 目录不可读或不存在、包解析失败、渲染失败、签名工具失败，或签名需要的口令文件不存在、不可读、格式错误 |
+| `2` | 用法错误——时间戳非法或重复指定、`--overwrite` 或 `--passfile` 未配 `--sign-with`、`--passfile` 路径非法/为空/重复指定、密钥格式非法、`--no-wait` 与非零 `--timeout` 同用 |
 | `4` | 目录写锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 发布前输入文件发生变化，或受控输出路径未通过完整性检查 |
 | `6` | 未找到受支持的包、已有 `repo_complete` 但未使用 `--pigsty`、对 DEB-only 目录用 `--sign-with`、坐标冲突 |

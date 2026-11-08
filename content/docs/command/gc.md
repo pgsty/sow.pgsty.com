@@ -14,9 +14,11 @@ Run `sow gc` to reclaim local package files that are no longer needed. Run `sow 
 ## Synopsis
 
 ```text
-sow gc          [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json]
-sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-wait] [--json]
+sow gc          [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
+sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
+
+`--passfile` supplies signing credentials when recovering an interrupted local mutation. Collection itself does not sign files. See [Password files](/docs/reference/config/#passfile) for source selection and format.
 
 | Flag | Meaning | Default |
 |---|---|---|
@@ -24,6 +26,7 @@ sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-
 | `-r, --repo NAME` | Select a Repository for local GC only | selection rules |
 | `-T, --timeout DUR` | Maximum Repository-lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
+| `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 
 `gc TARGET -r NAME` is a usage error because the target already binds a Repository. `--dist` is not

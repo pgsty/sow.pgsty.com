@@ -16,11 +16,13 @@ icon: fa-solid fa-box-archive
 
 ```text
 sow repo ls [-C DIR] [--json]
-sow repo new NAME [-C DIR] [-T DUR | -N] [--json]
+sow repo new NAME [-C DIR] [-T DUR | -N] [--json] [--passfile PATH]
 sow repo show [NAME] [-C DIR] [-r NAME] [--json]
-sow repo migrate [NAME] [--abort] [-j N] [-C DIR] [-r NAME] [-T DUR | -N] [--json]
-sow repo rm NAME [-f|--force] [-C DIR] [-T DUR | -N] [--json]
+sow repo migrate [NAME] [--abort] [-j N] [-C DIR] [-r NAME] [-T DUR | -N] [--json] [--passfile PATH]
+sow repo rm NAME [-f|--force] [-C DIR] [-T DUR | -N] [--json] [--passfile PATH]
 ```
+
+`repo new`、`repo rm`、`repo migrate` 支持 `--passfile PATH`，用于签名前置检查、签名或恢复中断操作。优先级为命令行、单个密钥配置、`SOW_GPG_PASSFILE`。本页其他查询子命令不读取口令文件。详见[口令文件](/zh/docs/reference/config/#passfile)。
 
 ## 命名
 
@@ -68,6 +70,7 @@ created pigsty: path=/srv/repo/pigsty protected=false dists=0 generation=0 statu
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 用 `NAME` 指定新仓库的名称。
@@ -153,6 +156,7 @@ SOW 将非空暂存目录完整移入 `.sow/<repo>/abandoned/`。
 | `-r, --repo NAME` | 省略 `NAME` 时选择仓库 | 选择规则 |
 | `-T, --timeout DUR` | 最长锁等待；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 ## sow repo rm
@@ -182,6 +186,7 @@ removed repository pgsql
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-T, --timeout DUR` | 等待锁的最长时间；`0` 无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
+| `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 
 ### 强制删除 {#-f-到底降级了什么}
