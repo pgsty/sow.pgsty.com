@@ -76,7 +76,7 @@ Record `PUBLISH_TIME` in the maintenance system before publishing the candidate.
 
 `--sign-with KEY` signs unsigned RPMs and preserves existing signatures, including vendor signatures. To replace every package signature with your key, add `--overwrite` in the candidate copy. This changes package bytes; `create` builds indexes from the signed result. Generate the detached index signature after the final `create` run.
 
-For protected package-signing keys, the unreleased development version adds
+For protected package-signing keys, SOW 0.7.0 adds
 `--passfile PATH` and `SOW_GPG_PASSFILE`; check `sow help create` in the binary you use.
 See [Password files](/docs/reference/config/#passfile). These settings do not affect
 the separate `gpg` command above. For unattended metadata signing, that command needs

@@ -18,7 +18,11 @@ icon: fa-solid fa-folder-tree
 sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite] [--passfile PATH]] [-T DUR | -N] [--json]
 ```
 
-`--passfile PATH` 需要同时指定 `--sign-with`；`SOW_GPG_PASSFILE` 可提供默认口令文件，但不会自动启用签名。文件为非空 UTF-8 单行，只去掉末尾一个 LF 或 CRLF，不做 trim。相对路径以当前目录为基准，不自动搜索默认位置。此接口尚未发布，详见[口令文件](/zh/docs/reference/config/#passfile)。
+`--passfile PATH` 需要同时指定 `--sign-with`；`SOW_GPG_PASSFILE` 可提供默认口令文件，但不会自动启用签名。文件为非空 UTF-8 单行，只去掉末尾一个 LF 或 CRLF，不做 trim。相对路径以当前目录为基准，不自动搜索默认位置。此接口需要 SOW 0.7.0 或更新版本，详见[口令文件](/zh/docs/reference/config/#passfile)。
+
+从 SOW 0.7.0 起，如果已有 `repomd.xml` 登记了 SOW 不生成的独立元数据，例如软件包组（`comps`）、updateinfo 或 modules，命令会在修改仓库之前拒绝执行。包索引的其他编码（`*_db`、`*_zck`）仍然允许。确定不再需要附加元数据时，先在候选副本中删除 `repodata/repomd.xml`，再重建；客户端仍需要这些记录时，不应这样处理。超出检查大小限制的旧索引也会被拒绝。
+
+需要在平面 RPM 仓库中按包名和架构仅保留最新版本时，使用 [`sow prune`](/zh/docs/command/prune/)。
 
 ## 说明
 

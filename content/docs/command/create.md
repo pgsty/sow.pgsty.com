@@ -18,7 +18,11 @@ icon: fa-solid fa-folder-tree
 sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite] [--passfile PATH]] [-T DUR | -N] [--json]
 ```
 
-`--passfile PATH` requires `--sign-with`; `SOW_GPG_PASSFILE` supplies a default password-file path but does not enable signing by itself. Use one nonempty UTF-8 line: exactly one final LF or CRLF is removed, with no trimming. Relative paths start at the current directory; no default location is searched. This interface is currently unreleased; see [Password files](/docs/reference/config/#passfile).
+`--passfile PATH` requires `--sign-with`; `SOW_GPG_PASSFILE` supplies a default password-file path but does not enable signing by itself. Use one nonempty UTF-8 line: exactly one final LF or CRLF is removed, with no trimming. Relative paths start at the current directory; no default location is searched. This interface requires SOW 0.7.0 or later; see [Password files](/docs/reference/config/#passfile).
+
+From SOW 0.7.0, an existing `repomd.xml` that lists independent metadata SOW does not generate, such as groups (`comps`), updateinfo, or modules, is rejected before any repository change. Alternate encodings of package indexes (`*_db`, `*_zck`) are allowed. To deliberately rebuild without the additional metadata, remove `repodata/repomd.xml` from the candidate copy first. Do not use this procedure if clients still need those records. Oversized prior indexes that cannot be safely inspected are also rejected.
+
+Use [`sow prune`](/docs/command/prune/) to keep only the latest version per package name and architecture in a flat RPM repository.
 
 ## Description
 

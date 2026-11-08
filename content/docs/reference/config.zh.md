@@ -232,7 +232,7 @@ SOW 读取整个密钥集合，拒绝格式错误或被截断的输入，不会�
 
 ### 口令文件 {#passfile}
 
-此接口属于当前开发版（Unreleased）。已安装的二进制是否支持，以
+此接口需要 SOW 0.7.0 或更新版本。已安装的二进制是否支持，以
 `sow help create` 或 `sow help config check` 为准。
 
 RPM 包、RPM 元数据与 APT 元数据统一使用口令文件接口，支持加密私钥文件与
