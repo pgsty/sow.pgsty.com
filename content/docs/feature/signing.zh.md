@@ -14,21 +14,24 @@ icon: fa-solid fa-key
 
 <span id="两条独立的信任链" data-td-print-local></span>
 <span id="客户端验证什么" data-td-print-local></span>
+<span id="签名对象" data-td-print-local></span>
 
-## 签名对象
+## 签名对象 {#what-gets-signed}
 
 | 配置 | 签名内容 | 输出 | 客户端设置 |
 |---|---|---|---|
 | `signing.rpm.metadata` | RPM 索引清单 | `repodata/repomd.xml.asc` | DNF `repo_gpgcheck=1` |
 | `signing.deb.metadata` | APT 发布清单 | `InRelease`、`Release.gpg` | APT `Signed-By` |
 | `signing.rpm.packages` | RPM 包 | 内嵌 OpenPGP 签名 | DNF `gpgcheck=1` |
+{.wide .expand}
 
 元数据签名不改变包字节。RPM 包签名会改变包字节及 SHA-256。
 SOW 不给 DEB 包文件增加签名。
 
 <span id="配置" data-td-print-local></span>
+<span id="配置元数据签名" data-td-print-local></span>
 
-## 配置元数据签名
+## 配置元数据签名 {#configure-metadata-signing}
 
 ```yaml
 repos:
@@ -63,8 +66,9 @@ Managed 的密钥与签名策略来自 `sow.yml`；`--passfile PATH` 可为本�
 `build` 同样支持。
 
 <span id="四种密钥引用形态" data-td-print-local></span>
+<span id="密钥与口令引用" data-td-print-local></span>
 
-## 密钥与口令引用
+## 密钥与口令引用 {#key-and-passphrase-references}
 
 | 元数据密钥引用 | 含义 | 签名实现 |
 |---|---|---|
@@ -103,8 +107,9 @@ RPM 包签名只检查口令格式、工具和私钥是否可用，不会签包�
 
 <span id="rpm-包体签名" data-td-print-local></span>
 <span id="信任环彼此独立验证" data-td-print-local></span>
+<span id="配置-rpm-包签名" data-td-print-local></span>
 
-## 配置 RPM 包签名
+## 配置 RPM 包签名 {#configure-rpm-package-signing}
 
 ```yaml
 signing:
@@ -120,6 +125,7 @@ signing:
 | `never` | 原样保存输入字节 |
 | `fill` | 已有签名可由当前密钥或受信密钥验证时保留原包，其余包签名 |
 | `always` | 已由当前密钥签名的包保留原样，其余包重签 |
+{.wide .expand}
 
 没有密钥时默认 `never`，有密钥时默认 `fill`。`fill` 和 `always` 都必须配置密钥。
 
@@ -130,12 +136,13 @@ signing:
 SOW 检查签名结果、包坐标及排除签名头后的包体摘要。已有对象的坐标和包体相同、
 且符合当前策略时，可复用已有签名字节。`never` 模式要求字节完全相同才能复用。
 
-包签名工作流请使用 RPM 格式 v4。SOW 不支持 RPM 格式 v6 使用的签名标签。
-这与 OpenPGP 签名报文版本不同；历史 CentOS 的 OpenPGP v3、v4 签名受支持。
+包签名工作流请使用 RPM 格式 v4。SOW 支持验证 RSA、DSA、ECDSA 与 EdDSA RPM 签名，包括保存在 RPM 签名头 tag 267（`RPMSIGTAG_DSA`）中的纯头签名。SOW 不支持 RPM 格式 v6 使用的签名标签。
+这与 OpenPGP 签名报文版本不同；SOW 支持历史 CentOS 的 OpenPGP v3、v4 签名。
 
 <span id="更换密钥会让-dist-变-dirty" data-td-print-local></span>
+<span id="更换密钥" data-td-print-local></span>
 
-## 更换密钥
+## 更换密钥 {#change-keys}
 
 只修改 `passfile` 路径不会让 Dist 变脏；签名身份变化会使相关 Dist 变脏。更换元数据密钥后，运行 `build` 生成新签名，
 并在发布新元数据前把新公钥分发给客户端。
@@ -147,6 +154,7 @@ SOW 检查签名结果、包坐标及排除签名头后的包体摘要。已有�
 2. 旧包仍为成员时，在 `trusted_keys` 中保留旧公钥。
 3. 加入由新密钥签名的新版本包。
 4. 旧签名包退出成员集合或被新版本替代后，再移除旧信任。
+{.steps .td-steps-compact}
 
 直接换新密钥并使用 `always`，要求所有期望成员 RPM 已符合新密钥策略。
 若重签会使同一包 URL 对应不同字节，应使用新的包发行版本和文件名。
@@ -155,8 +163,9 @@ RPM 验证按包的签名时间检查证书和签名子钥是否有效。证书�
 续期本身不会使旧包签名失效。导出续期公钥时保留这些历史公钥信息。
 
 <span id="plain-模式" data-td-print-local></span>
+<span id="plain-签名" data-td-print-local></span>
 
-## Plain 签名
+## Plain 签名 {#plain-signing}
 
 ```bash
 sow create /srv/offline --sign-with 6D5C5A26C36B1F73 --passfile /run/secrets/gpg-password

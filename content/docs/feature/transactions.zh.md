@@ -15,8 +15,9 @@ Managed 模式先记录变更，再应用变更。中断后，SOW 根据记录�
 应使用哪个命令恢复，取决于中断的操作。
 
 <span id="崩溃恢复" data-td-print-local></span>
+<span id="恢复中断操作" data-td-print-local></span>
 
-## 恢复中断操作
+## 恢复中断操作 {#recover-an-interrupted-operation}
 
 先查看记录的状态：
 
@@ -31,15 +32,21 @@ sow log -r demo
 | `dirty` | 运行 `sow build`，应用待构建的成员或配置变化 |
 | `recovering` | 按下表选择与中断操作对应的恢复命令 |
 | `error` | 根据诊断与日志检查报错文件或操作 |
+{.wide .expand}
 
 | 中断操作 | 恢复命令 |
 |---|---|
 | `add`、`rm`、Dist 修改或构建 | `sow build -r demo` |
 | `init`、`repo new` 或 `repo rm` | 重新运行对应的创建、删除命令 |
 | 发布 | `sow publish TARGET` |
-| Plain 索引生成 | 使用原选项重新运行 `sow create` |
+| 本地或目标垃圾回收 | `sow gc -r demo` 或 `sow gc TARGET` |
+| 移除保留构建快照 | `sow retain rm GENERATION -r demo` |
+| Plain 索引生成或 RPM 清理 | 使用原选项重新运行 `sow create` 或 `sow prune` |
+{.wide .expand}
 
-恢复过程如果需要重新生成带签名的元数据，就需要再次访问签名密钥与口令。日志不保存口令值。
+SOW 按未完成状态（而非记录的时间戳）选择活动的仓库变更操作，因此系统时钟回拨不会把未完成操作隐藏在更早的已完成记录之后。本地或目标 `gc` 以及 `retain rm` 在固定执行计划后中断时，SOW 会保留该计划，再次运行同一命令即可完成中断的清理。
+
+恢复过程如果需要重新生成带签名的元数据，就需要再次访问签名密钥与口令。SOW 不在日志中保存口令值。
 可用 `--passfile PATH`、单个密钥配置或 `SOW_GPG_PASSFILE` 提供来源；支持版本和优先级见
 [口令文件](/zh/docs/reference/config/#passfile)。工作区生命周期日志尚待恢复时，用命令行或
 环境变量覆盖口令来源，保持日志记录的 `sow.yml` 不变，其摘要属于恢复校验的一部分。
@@ -50,8 +57,9 @@ sow log -r demo
 
 <span id="两类持久日志" data-td-print-local></span>
 <span id="操作生命周期" data-td-print-local></span>
+<span id="sow-记录什么" data-td-print-local></span>
 
-## SOW 记录什么
+## SOW 记录什么 {#what-sow-records}
 
 | 记录 | 位置 | 用途 |
 |---|---|---|
@@ -72,12 +80,13 @@ planned → staged → applied → built → done
 
 | 状态 | 含义 |
 |---|---|
-| `planned` | 已记录操作及其范围 |
-| `staged` | 已为下一阶段准备输入 |
-| `applied` | 期望状态已提交，公开目录可能仍使用上一构建快照 |
-| `built` | 已安装生成的公开目录 |
+| `planned` | SOW 已记录操作及其范围 |
+| `staged` | SOW 已为下一阶段准备输入 |
+| `applied` | SOW 已提交期望状态，公开目录可能仍使用上一构建快照 |
+| `built` | SOW 已安装生成的公开目录 |
 | `done` | 操作完成 |
-| `done_dirty` | 期望状态已提交，仍需构建 |
+| `done_dirty` | SOW 已提交期望状态，仍需构建 |
+{.wide .expand}
 
 其他终态包括 `rolled_back` 和 `failed`。用 `sow log OPERATION -r demo` 查看转换和时间。
 
@@ -86,8 +95,9 @@ planned → staged → applied → built → done
 需要时修正配置，再次运行 `build`。
 
 <span id="提交顺序" data-td-print-local></span>
+<span id="已提交变更后的错误" data-td-print-local></span>
 
-## 已提交变更后的错误
+## 已提交变更后的错误 {#errors-after-a-committed-change}
 
 数据库提交与后续维护是两个步骤。成员关系或构建已经提交后，仍可能发生检查点或清理错误。
 SOW 会在命令输出中保留已提交结果，不会把这些项目报告为已回滚。
@@ -95,7 +105,9 @@ SOW 会在命令输出中保留已提交结果，不会把这些项目报告为�
 先查看命令结果与 `sow status`，再用 `sow log` 查看对应操作。
 按诊断提示继续执行相应命令。确认结果前，保留原始输入文件。
 
-## 本地构建顺序
+<span id="本地构建顺序" data-td-print-local></span>
+
+## 本地构建顺序 {#local-build-order}
 
 SOW 在同一文件系统暂存并检查输出，再按以下顺序应用：
 
@@ -108,6 +120,7 @@ SOW 在同一文件系统暂存并检查输出，再按以下顺序应用：
 3. 安装 RPM 的 `repomd.xml` 和已配置的签名，或适用的 APT `Release`、`InRelease`、
    `Release.gpg`。
 4. 替换持久化后，清理过时元数据。
+{.steps .td-steps-compact}
 
 构建保留紧邻前一代的 RPM 不可变元数据和 APT by-hash 对象，供仍持有旧入口的客户端读取。
 显式构建快照保留是独立功能，详见 [`retain`](/zh/docs/command/retain/)。
@@ -117,27 +130,29 @@ SOW 在同一文件系统暂存并检查输出，再按以下顺序应用：
 `sow changes` 只列出本地文件变化，不执行发布或目标清理。
 
 <span id="锁模型" data-td-print-local></span>
+<span id="锁与等待" data-td-print-local></span>
 
-## 锁与等待
+## 锁与等待 {#locks-and-waiting}
 
 SOW 通过建议锁协调进程。工作区生命周期使用 `.sow/workspace.lock`，
 仓库写操作使用 `.sow/repo-locks/<repo>.lock`。需要两把锁时，先取工作区锁。
 
 需要一致快照的读命令使用共享锁。`status` 探测仓库写锁，无需等写者结束即可报告活动状态。
-Plain `create` 锁住目录及其父目录。
+Plain `create` 与 `prune` 锁住目标目录及其父目录。
 
 | 选项 | 行为 |
 |---|---|
 | `-T 30s` | 最多等待写锁 30 秒 |
 | `-T 0` | 等待到锁可用，默认行为 |
-| `-N` | 只尝试一次，占锁时立即退出 |
+| `-N` | 只尝试一次，其他写者占锁时立即退出 |
 
 无法取得锁时退出码为 `4`。`-N` 与非零 `-T` 同用时退出码为 `2`。
 只使用命令支持的锁选项；只读命令不接受这些选项。
 
 <span id="fail-closed-的路径安全" data-td-print-local></span>
+<span id="文件系统要求" data-td-print-local></span>
 
-## 文件系统要求
+## 文件系统要求 {#filesystem-requirements}
 
 使用支持建议锁、`fsync` 和原子重命名的本地 POSIX 文件系统，macOS 使用 APFS。
 公开文件与私有暂存区应位于同一文件系统。SOW 拒绝控制路径中的符号链接、

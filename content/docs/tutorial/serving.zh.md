@@ -18,7 +18,7 @@ SOW 生成静态仓库文件。本教程把 Managed 仓库发布到独立目录�
 
 <span id="1-校验源-generation" data-td-print-local></span>
 
-## 1. 构建并检查
+## 1. 构建并检查 {#1-build-and-check}
 
 ```bash
 cd /srv/sow
@@ -30,7 +30,7 @@ sow check -r local
 
 <span id="2-配置-filesystem-target" data-td-print-local></span>
 
-## 2. 添加 filesystem 目标
+## 2. 添加 filesystem 目标 {#2-add-a-filesystem-target}
 
 创建目标父目录，并给 SOW 操作者写权限：
 
@@ -57,7 +57,7 @@ targets:
     exclusive_write_authority: true
 ```
 
-SOW 根据 `endpoint` 与 `prefix` 创建 `/srv/repo-public/local`。三个必填布尔值声明：本工作区是该目标的权威来源，也是唯一写入者。其他工具使用独立前缀。
+SOW 根据 `endpoint` 与 `prefix` 创建 `/srv/repo-public/local`。三个必填布尔值声明：本工作区是该目标的权威来源，也是唯一写入者。SOW 按每个目标的完整预期路径（`endpoint + prefix`）检查路径重叠，因此 `/srv/repo-public` 下不同前缀的同级目标不会互相阻塞。其他工具使用独立前缀。
 
 本例通过 `file://` 检查发布文件，并声明没有中间缓存。以后增加代理或 CDN 时，把 `public_endpoint` 改为公共仓库 URL，
 把 `max_cache_ttl` 设为其最长缓存时间，并通过 [`publish --rebind`](/zh/docs/command/publish/) 应用变更。
@@ -73,7 +73,7 @@ SOW 先复制包文件与不可变元数据，再更新客户端入口，随后�
 
 <span id="3-用-nginx-服务-target" data-td-print-local></span>
 
-## 3. 配置 Nginx
+## 3. 配置 Nginx {#3-configure-nginx}
 
 安装 Nginx，添加以下服务器配置，并把 `repo.example.com` 换成你的主机名：
 
@@ -111,19 +111,20 @@ sudo nginx -s reload
 | DNF `baseurl` | `http://repo.example.com/local/dists/el9/$basearch/` |
 | APT `URIs` | `http://repo.example.com/local` |
 | APT `Suites` / `Components` | `bookworm` / `main` |
+{.wide .expand}
 
 完整源配置见 [YUM](/zh/docs/tutorial/yum-repo/) 或 [APT](/zh/docs/tutorial/apt-repo/) 教程。需要验签时，分发公钥并按[仓库签名](/zh/docs/tutorial/signing/)配置。
 
 <span id="4-验证服务入口" data-td-print-local></span>
 
-## 4. 检查客户端访问
+## 4. 检查客户端访问 {#4-check-client-access}
 
 用上表地址配置客户端，刷新索引并安装一个软件包。
 这会检查 `dists/` 与 `pool/` 是否都能访问。两个目录使用相同的访问规则。
 
 <span id="下一步" data-td-print-local></span>
 
-## 发布更新
+## 发布更新 {#publish-an-update}
 
 修改成员或配置后，构建尚未完成的变更，再发布：
 
@@ -137,7 +138,7 @@ sow publish public
 
 <span id="手工与隔离交付" data-td-print-local></span>
 
-## 交付到隔离主机
+## 交付到隔离主机 {#deliver-to-an-isolated-host}
 
 SOW 无法连接目标时，按以下步骤复制。创建并检查副本期间，暂停源工作区的写入。
 
@@ -146,19 +147,21 @@ SOW 无法连接目标时，按以下步骤复制。创建并检查副本期间�
 3. 根据 `sow changes 0` 或归档校验清单检查传输后的文件。
 4. 将服务器路径切换到新发布目录。
 5. 切换后，继续让旧索引引用的软件包 URL 和不可变元数据 URL 可访问，直到最长缓存期结束，再清理旧发布。
+{.steps .td-steps-compact}
 
 在此期间，HTTP 服务可将新目录中缺失的路径回退到上一发布目录。
 
-直接覆盖在线目录，可能在包文件到达前暴露新索引。先准备新目录，再整体切换。
+> [!WARNING]
+> 直接覆盖在线目录，可能在包文件到达前暴露新索引。先准备新目录，再整体切换。
 
-## 提供 Plain 仓库
+## 提供 Plain 仓库 {#serve-a-plain-repository}
 
 Plain 模式直接提供传给 `sow create` 的目录。使用上例 Nginx 隐藏文件规则，
 防止访问临时文件。
 
 <span id="r2-target" data-td-print-local></span>
 
-## 发布到 R2
+## 发布到 R2 {#publish-to-r2}
 
 Cloudflare R2 使用 `provider: r2`。配置 endpoint、bucket、凭据引用、公共 URL 与缓存时间，详见[目标配置参考](/zh/docs/reference/config/)。先发布到测试前缀，再从实际包管理器检查。
 

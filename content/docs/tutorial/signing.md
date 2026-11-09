@@ -16,6 +16,7 @@ Repository signing has two layers: metadata signatures and RPM package signature
 | RPM metadata | `repodata/repomd.xml.asc` | `repo_gpgcheck=1` |
 | APT metadata | `InRelease` and `Release.gpg` | `Signed-By` |
 | RPM package body | embedded RPM signature | `gpgcheck=1` |
+{.wide .expand}
 
 APT verifies package hashes through the signed `Release` file, so DEBs need no separate package signature. Start with metadata signing. Add RPM package signing when clients require `gpgcheck=1`.
 
@@ -63,12 +64,12 @@ repos:
 ```
 
 For a protected key, configure the password source before checking or building.
-In the development version, add `passfile: /run/secrets/gpg-password` next to `key`,
+Add `passfile: /run/secrets/gpg-password` next to `key`,
 or run `export SOW_GPG_PASSFILE=/run/secrets/gpg-password`. For one invocation, use
 `sow build -r pigsty --passfile /run/secrets/gpg-password`. This also works with
 `agent://FINGERPRINT` keys. Keep the file outside the repository, normally mode `0600`.
 Its contents are the password itself: one nonempty UTF-8 line, with an optional final
-LF or CRLF; spaces and tabs are preserved. No default file is searched.
+LF or CRLF. SOW preserves spaces and tabs and searches no default file.
 See [Password files](/docs/reference/config/#passfile) for priority and format details.
 Existing `passphrase` references continue to work. Configuration stores references, not secret values.
 
@@ -119,14 +120,13 @@ Replace the placeholder with the 40-hex fingerprint in `$FPR`. Install `rpm` and
 and make the secret key available in the GPG keyring used by `rpm`.
 
 `fill` signs newly imported packages unless their signatures already verify against the
-configured key or `trusted_keys`. See [RPM signing policy](/docs/reference/config/) for
+configured key or `trusted_keys`. SOW verifies RSA, DSA, ECDSA, and EdDSA RPM signatures, including header-only signatures stored in RPM signature header tag 267 (`RPMSIGTAG_DSA`). See [RPM signing policy](/docs/reference/config/) for
 other modes.
 
 For a protected package-signing key, configure `passfile` under `signing.rpm.packages`
 or use `SOW_GPG_PASSFILE`. A `passfile` under `metadata` only applies to that metadata
-key. `config check` validates the package-signing prerequisites but does not test
-the password by signing a package; the following `add` must actually need to sign
-a package to exercise that path.
+key. `config check` validates the package-signing prerequisites, but it does not test
+the password by signing a package. The following `add` must sign a package to test that path.
 
 SOW signs a private copy during `add`; the input file stays unchanged. `build` checks stored RPMs against the policy but does not re-sign them.
 
@@ -143,7 +143,7 @@ sow check -r pigsty
 To inspect a resulting package independently, run `rpmkeys --checksig` on its file in
 `pigsty/pool/`.
 
-## 5. Enable dnf verification
+## 5. Enable DNF verification {#5-enable-dnf-verification}
 
 First [publish the signed Repository](/docs/tutorial/serving/). Then transfer the public
 key to the client through a trusted channel:
@@ -201,11 +201,10 @@ sow create /srv/flat --sign-with 0123456789ABCDEF
 ```
 
 Replace `0123456789ABCDEF` with your key ID or fingerprint. The matching private key must
-be available to `rpm` and GPG. Existing signatures, including upstream signatures, are
-preserved. To replace all RPM signatures with your key, use `--overwrite` on a separate
+be available to `rpm` and GPG. SOW preserves existing signatures, including upstream signatures, and recognizes RSA, DSA, ECDSA, and EdDSA header-only signatures in RPM signature header tag 267 (`RPMSIGTAG_DSA`). To replace all RPM signatures with your key, use `--overwrite` on a separate
 working copy. See [`sow create`](/docs/command/create/#signing-rpms) for key formats.
 
-For a protected key in the development version, add
+For a protected key, add
 `--passfile /run/secrets/gpg-password` or set `SOW_GPG_PASSFILE` to that path.
 These options only supply SOW's signing password. A separate `gpg` command needs
 its own credential configuration.

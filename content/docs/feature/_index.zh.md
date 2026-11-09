@@ -15,8 +15,9 @@ SOW 用两种模式创建仓库索引。可以随时重建的包目录使用 Pla
 需要持续更新、策略、签名和发布的仓库使用 Managed。
 
 <span id="能力矩阵" data-td-print-local></span>
+<span id="功能对照" data-td-print-local></span>
 
-## 功能对照
+## 功能对照 {#capabilities}
 
 | 功能 | Plain | Managed |
 |---|---|---|
@@ -24,33 +25,36 @@ SOW 用两种模式创建仓库索引。可以随时重建的包目录使用 Pla
 | 持久化成员与构建快照 | — | 支持 |
 | 分架构视图 | — | 支持，包含架构无关包 |
 | 包排除 | `--pigsty` 使用固定清理规则 | 按 Dist 配置 |
-| 版本数量限制 | — | 按 Dist 配置 |
+| 版本数量限制 | `sow prune` 清理旧版 RPM | 按 Dist 配置 |
 | 元数据签名 | — | RPM 和 DEB |
 | RPM 包签名 | `--sign-with` | `never`、`fill`、`always` |
-| 中断恢复 | 重新运行 `create` | 操作记录和发布尝试 |
+| 中断恢复 | 重新运行 `create` 或 `prune` | 操作记录和发布尝试 |
 | 操作日志与 JSONL 导出 | — | 支持 |
 | 发布目标 | — | Filesystem 与 R2 |
-{.wide .expand}
+{.matrix .wide .expand}
 
 SOW 自行解析包并生成索引，无需 `createrepo_c`、`dpkg-scanpackages` 或 `reprepro`。
 RPM 包签名使用主机上的 `rpm` 和 GPG 环境；元数据密钥引用解析为 GPG 密钥标识时，也需要 `gpg`。
 
 <span id="仓库格式" data-td-print-local></span>
+<span id="生成格式" data-td-print-local></span>
 
-## 生成格式
+## 生成格式 {#generated-formats}
 
 | 格式 | Plain | Managed 增加的内容 |
 |---|---|---|
 | RPM | `primary`、`filelists`、`other` XML 和 `repomd.xml` | 架构视图，可选 `repomd.xml.asc` |
 | DEB | `Packages`、`Packages.gz` | `Release`、by-hash 索引，可选 `InRelease`、`Release.gpg` |
+{.wide .expand}
 
 RPM XML 使用 gzip 压缩。SOW 不生成 SQLite rpm-md、zchunk、modulemd 或源码包索引。
 生成结果由你配置的 HTTP 服务或对象存储对外提供。
 客户端细节见[平台与集成](/zh/docs/reference/compatibility/)。
 
 <span id="按问题阅读" data-td-print-local></span>
+<span id="按任务阅读" data-td-print-local></span>
 
-## 按任务阅读
+## 按任务阅读 {#learn-a-feature}
 
 | 任务 | 文档 |
 |---|---|

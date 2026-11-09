@@ -11,7 +11,9 @@ icon: fa-solid fa-box-open
 
 This tutorial creates a new Managed RPM repository. Install SOW and Python 3, and prepare RPM files built for your clients. Use an empty `/srv/sow` directory that your user can create and write to, or substitute another writable path.
 
-## 1. Create the workspace
+{{% steps %}}
+
+## Create the workspace {#1-create-the-workspace}
 
 ```bash
 mkdir -p /srv/sow
@@ -24,7 +26,7 @@ sow dist new el9 --format rpm -r pigsty
 `el9` names this RPM package set. You can choose another name; it does not change which
 operating systems the packages support.
 
-## 2. Set membership policy
+## Set membership policy {#2-set-membership-policy}
 
 Edit the generated `sow.yml`. This example keeps one version per package and architecture
 and excludes debug and LLVM JIT packages:
@@ -51,28 +53,28 @@ sow config check
 
 `exclude` runs before `limit`. SOW includes `noarch` packages in every enabled architecture view. Keep only CPU architecture names in `architectures`.
 
-## 3. Add RPMs
+## Add RPMs {#3-add-rpms}
 
 ```bash
 sow add /path/to/packages/*.rpm -r pigsty -d el9
 sow check -r pigsty
 ```
 
-Replace the input path with your RPM directory. `add` stores accepted packages in the pool, updates membership, and builds the indexes. Review its per-package output: excluded files are reported without failing the whole command.
+Replace the input path with your RPM directory. `add` stores accepted packages in the pool, updates membership, and builds the indexes. Review its per-package output: SOW reports excluded files without failing the whole command.
 
 The public tree has this shape:
 
-```text
+```filetree
 /srv/sow/pigsty/
-├── pool/...
+├── pool/
 └── dists/el9/
-    ├── x86_64/repodata/...
-    └── aarch64/repodata/...
+    ├── x86_64/repodata/
+    └── aarch64/repodata/
 ```
 
 RPM indexes point back to `pool/` through relative paths. Serve or copy the complete `pigsty/` tree so clients can download the packages.
 
-## 4. Preview over HTTP
+## Preview over HTTP {#4-preview-over-http}
 
 Run this in a separate terminal and leave it running:
 
@@ -82,7 +84,7 @@ python3 -m http.server --bind 127.0.0.1 --directory /srv/sow/pigsty 8080
 
 The preview serves only the Repository root and is reachable from the same host. For a persistent service or clients on other hosts, use [Serve Repositories](/docs/tutorial/serving/).
 
-## 5. Configure dnf
+## Configure dnf {#5-configure-dnf}
 
 On the Linux host running the preview, save this as `/etc/yum.repos.d/pigsty.repo`. For a remote client, first publish the Repository and substitute its public base URL:
 
@@ -105,13 +107,12 @@ dnf --disablerepo='*' --enablerepo=pigsty-el9 list available
 
 This example uses unsigned packages and metadata. Follow [Sign Your Repository](/docs/tutorial/signing/) to enable verification. After the preview, remove this source file and stop the Python server.
 
-## 6. Publish or export
+## Publish or export {#6-publish-or-export}
 
 Use [`sow publish`](/docs/tutorial/serving/) for a filesystem or R2 target. It uploads package files and metadata in the order clients need. That guide also covers manual delivery to isolated hosts.
 
 Some mirroring tools, including default `dnf reposync`, reject rpm-md package locations
-that traverse to the root pool. Export a self-contained RPM leaf when such a consumer is
-required:
+that traverse to the root pool. Export a self-contained RPM leaf when a consumer requires it:
 
 ```bash
 sow export rpm-leaf el9 x86_64 /srv/export/pigsty-el9-x86_64 -r pigsty
@@ -120,6 +121,8 @@ sow export rpm-leaf el9 x86_64 /srv/export/pigsty-el9-x86_64 -r pigsty
 The RPM Dist must belong to the current Built Generation. In a mixed Repository, check the [export preconditions](/docs/command/export/) first.
 
 The destination must be absent or empty. Export copies package files by default. Use `--hardlink` only on the same filesystem, and keep exported files read-only because they share storage with the source pool.
+
+{{% /steps %}}
 
 ## Update the repository
 

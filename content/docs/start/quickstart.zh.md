@@ -15,7 +15,8 @@ Plain 模式为一个软件包目录生成仓库，不需要工作区或配置�
 
 {{% steps %}}
 
-## 准备目录 {#1-准备目录}
+<span id="1-准备目录" data-td-print-local></span>
+## 准备目录 {#1-prepare-a-directory}
 
 创建可写目录。将下例输入路径换成实际文件，只执行已有格式对应的复制命令：
 
@@ -27,7 +28,8 @@ cp /path/to/example.deb "$HOME/sow-quickstart/"
 
 把包放在目录顶层；`sow create` 不扫描子目录。
 
-## 生成元数据 {#2-生成元数据}
+<span id="2-生成元数据" data-td-print-local></span>
+## 生成元数据 {#2-generate-metadata}
 
 ```bash
 sow create "$HOME/sow-quickstart"
@@ -41,7 +43,7 @@ rpm=1 deb=1 signed=0 removed=0 marker=false noop=false recovered=false
 
 原始软件包旁会新增索引：
 
-```text
+```filetree
 sow-quickstart/
 ├── example.rpm
 ├── example.deb
@@ -52,7 +54,8 @@ sow-quickstart/
 
 SOW 只为实际存在的格式生成索引。Plain 模式不生成 APT `Release`、`InRelease` 或 `Release.gpg` 文件，也不改变软件包名称与路径。
 
-## 启动本地服务器 {#3-对外服务}
+<span id="3-对外服务" data-td-print-local></span>
+## 启动本地服务器 {#3-serve-the-directory}
 
 在另一个终端执行以下命令，并保持运行：
 
@@ -72,7 +75,8 @@ curl --fail http://127.0.0.1:8080/Packages.gz >/dev/null
 
 此服务器只能从本机访问。要供其他客户端访问或长期运行，请按[对外服务](/zh/docs/tutorial/serving/)配置。
 
-## 配置本机客户端 {#4-配置客户端}
+<span id="4-配置客户端" data-td-print-local></span>
+## 配置本机客户端 {#4-configure-a-client}
 
 如果预览服务器运行在 Linux 上，为本机包管理器创建源配置文件。下面使用未签名元数据，并关闭客户端签名检查。需要签名元数据时，使用 [Managed 工作区](/zh/docs/start/workspace/)与[签名教程](/zh/docs/tutorial/signing/)。
 
@@ -114,7 +118,8 @@ sudo apt install PACKAGE_NAME
 
 把 `PACKAGE_NAME` 换成包内元数据中的名称，而不是文件名。macOS 用户可以完成上述 HTTP 检查；软件包安装需在兼容的 Linux 客户端上执行。
 
-## 更新仓库 {#5-更新仓库}
+<span id="5-更新仓库" data-td-print-local></span>
+## 更新仓库 {#5-update-the-repository}
 
 添加或删除软件包文件后，重新生成索引：
 
@@ -124,6 +129,8 @@ sow create "$HOME/sow-quickstart"
 
 包文件与参数不变时，生成的元数据也不变，重复运行会报告 `noop=true`。
 
+对于只包含 RPM 的平面目录，也可以运行 `sow prune "$HOME/sow-quickstart" --dry-run` 预览旧版 RPM，再执行 `sow prune "$HOME/sow-quickstart"` 删除旧版文件并刷新 `repodata/`。
+
 替换其他 YUM 元数据生成工具时，按[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)保留客户端缓存所需的时间戳。
 
 {{% /steps %}}
@@ -132,6 +139,6 @@ sow create "$HOME/sow-quickstart"
 
 <span id="何时使用-managed-模式" data-td-print-local></span>
 
-## 下一步
+## 下一步 {#next}
 
-需要具名 Dist、架构视图、版本限制、元数据签名与发布目标时，使用 [Managed 工作区](/zh/docs/start/workspace/)。全部 Plain 参数见 [`sow create`](/zh/docs/command/create/)。
+需要具名 Dist、架构视图、版本限制、元数据签名与发布目标时，使用 [Managed 工作区](/zh/docs/start/workspace/)。全部 Plain 参数见 [`sow create`](/zh/docs/command/create/) 与 [`sow prune`](/zh/docs/command/prune/)。

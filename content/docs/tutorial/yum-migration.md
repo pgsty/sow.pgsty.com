@@ -33,12 +33,15 @@ Confirm that the version is 0.7.0.
 | Package trust | Keep valid upstream signatures, or deliberately replace them with your own key |
 | Index trust | If clients use `repo_gpgcheck=1`, sign and verify the new `repomd.xml` separately |
 | Existing clients | Include clients with cached metadata, using their existing URL and repository ID |
+{.wide .expand}
 
 If your clients use modular filtering, keep the repository's existing `module_hotfixes=1` setting where needed. Plain metadata does not include module streams or profiles.
 
+If the existing `repomd.xml` contains independent metadata such as `comps`, `updateinfo`, or `modules`, `sow create` replaces the index and reports the dropped types as a warning on stderr (or in `dropped_metadata` with `--json`). Once SOW owns `repodata/`, you can also use [`sow prune`](/docs/command/prune/) to remove superseded RPM versions while keeping `--metadata-timestamp` monotonic; `prune` refuses an index that still carries foreign metadata types.
+
 ## 2. Preserve publication history
 
-EL7 YUM can reject an index whose largest data timestamp is older than the cached index. Read `<data><timestamp>` in the current `repomd.xml` and retained copies, then use the largest value clients may have seen. If the live index was reset to zero, recover that value from earlier copies or publication records. Use data timestamps, not `revision` or file modification times.
+EL7 YUM can reject an index whose largest data timestamp is older than the cached index. Read `<data><timestamp>` in the current `repomd.xml` and retained copies, then use the largest value clients may have seen. If a previous run reset the live index to zero, recover that value from earlier copies or publication records. Use data timestamps, not `revision` or file modification times.
 
 Have the maintenance script serialize updates and save the greatest published timestamp outside the served tree. For changed content, choose:
 
@@ -76,12 +79,7 @@ Record `PUBLISH_TIME` in the maintenance system before publishing the candidate.
 
 `--sign-with KEY` signs unsigned RPMs and preserves existing signatures, including vendor signatures. To replace every package signature with your key, add `--overwrite` in the candidate copy. This changes package bytes; `create` builds indexes from the signed result. Generate the detached index signature after the final `create` run.
 
-For protected package-signing keys, SOW 0.7.0 adds
-`--passfile PATH` and `SOW_GPG_PASSFILE`; check `sow help create` in the binary you use.
-See [Password files](/docs/reference/config/#passfile). These settings do not affect
-the separate `gpg` command above. For unattended metadata signing, that command needs
-its own credentials, such as `--pinentry-mode loopback --passphrase-file PATH`
-alongside its existing `--batch`, or an already unlocked agent key.
+For protected package-signing keys, SOW 0.7.0 adds `--passfile PATH` and `SOW_GPG_PASSFILE`. See [Password files](/docs/reference/config/#passfile). These settings do not affect the separate `gpg` command above. For unattended metadata signing, pass `--pinentry-mode loopback --passphrase-file PATH` alongside `--batch`, or use an unlocked agent key.
 
 <span id="4-verify-before-promotion" data-td-print-local></span>
 

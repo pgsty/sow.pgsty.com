@@ -24,13 +24,13 @@ Choose Managed for ongoing package updates, policy, signing, and publication.
 | Stored membership and generations | — | Yes |
 | Per-architecture views | — | Yes, including neutral packages |
 | Package exclusions | Fixed cleanup with `--pigsty` | Configurable per Dist |
-| Version limits | — | Configurable per Dist |
+| Version limits | `sow prune` removes superseded RPMs | Configurable per Dist |
 | Metadata signing | — | RPM and DEB |
 | RPM package signing | `--sign-with` | `never`, `fill`, `always` |
-| Recovery after interruption | Rerun `create` | Recorded operations and publication attempts |
+| Recovery after interruption | Rerun `create` or `prune` | Recorded operations and publication attempts |
 | Operation log and JSONL export | — | Yes |
 | Publication targets | — | Filesystem and R2 |
-{.wide .expand}
+{.matrix .wide .expand}
 
 SOW parses packages and generates indexes itself. It does not require `createrepo_c`,
 `dpkg-scanpackages`, or `reprepro`. RPM package signing uses the host `rpm` and GPG

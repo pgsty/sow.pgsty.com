@@ -11,7 +11,7 @@ icon: fa-solid fa-rocket
 
 SOW turns RPM and DEB files into static YUM and APT repositories. Install SOW, then choose how to manage your packages:
 
-- **Plain mode:** run `sow create DIR` to build indexes for the packages in a directory.
+- **Plain mode:** run `sow create DIR` to build indexes for the packages in a directory, and `sow prune DIR` to remove superseded RPM versions in place.
 - **Managed mode:** create a workspace to group packages into Dists, limit versions, sign metadata, and publish updates.
 
 - [Installation](/docs/start/install/) — Install a release archive, Linux package, or source build.

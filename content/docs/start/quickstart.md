@@ -42,7 +42,7 @@ rpm=1 deb=1 signed=0 removed=0 marker=false noop=false recovered=false
 
 The directory now has indexes beside the original packages:
 
-```text
+```filetree
 sow-quickstart/
 ├── example.rpm
 ├── example.deb
@@ -125,6 +125,8 @@ sow create "$HOME/sow-quickstart"
 
 Unchanged package files and options produce the same metadata. A repeat run reports `noop=true`.
 
+In an RPM-only flat directory, you can also run `sow prune "$HOME/sow-quickstart" --dry-run` to preview superseded RPM versions and `sow prune "$HOME/sow-quickstart"` to delete them and refresh `repodata/`.
+
 When replacing another YUM metadata generator, follow [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/) to preserve the timestamp that cached clients expect.
 
 {{% /steps %}}
@@ -135,4 +137,4 @@ When the preview is complete, stop the server with `Ctrl+C` and remove its sourc
 
 ## Next
 
-Use a [Managed workspace](/docs/start/workspace/) for named Dists, architecture views, version limits, signed metadata, and publication targets. See [`sow create`](/docs/command/create/) for all Plain options.
+Use a [Managed workspace](/docs/start/workspace/) for named Dists, architecture views, version limits, signed metadata, and publication targets. See [`sow create`](/docs/command/create/) and [`sow prune`](/docs/command/prune/) for all Plain options.

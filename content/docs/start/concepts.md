@@ -19,11 +19,11 @@ icon: fa-solid fa-diagram-project
 | Keep configuration and package membership | Directory contents are the state | `sow.yml` and private SQLite databases |
 | Organize packages | One flat directory; RPM and DEB can coexist | Named Dists; one format per Dist |
 | Publish architecture views | No | Yes |
-| Apply filters and version limits | Pigsty conventions with `--pigsty` | Configurable per Dist |
+| Apply filters and version limits | `sow prune DIR` (RPM latest version per `NAME + ARCH`) and `--pigsty` cleanup | Configurable per Dist |
 | Sign RPM packages | Yes | Yes |
 | Sign repository metadata | Sign separately | Configure keys in `sow.yml` |
 | Track generations and publication | Manage these outside SOW | Built in |
-{.wide .expand}
+{.matrix .wide .expand}
 
 Use Plain when the directory already contains the packages you want to publish. Use Managed when SOW should track membership and maintain the repository over time.
 
@@ -31,15 +31,15 @@ Use Plain when the directory already contains the packages you want to publish. 
 
 ## Workspace, Repository, and Dist {#managed-hierarchy}
 
-```text
-Workspace                    /srv/sow
-├── sow.yml                  configuration
-├── .sow/                    private state
-└── Repository               /srv/sow/local
-    ├── pool/                package files
+```filetree
+Workspace                    # /srv/sow
+├── sow.yml                  # configuration
+├── .sow/                    # private state
+└── Repository/              # /srv/sow/local
+    ├── pool/                # package files
     └── dists/
-        └── Dist             a named RPM or DEB package set
-            └── views        metadata for each architecture
+        └── Dist/            # a named RPM or DEB package set
+            └── views/       # metadata for each architecture
 ```
 
 A **workspace** holds configuration and private state for one or more repositories.
@@ -82,6 +82,7 @@ add / rm → Desired membership → build → Built Generation
 | `sow check` | Check package files, indexes, signatures, and recorded state without changing them |
 | `sow changes [BASE_GENERATION]` | List file changes from a recorded generation to the current build |
 | `sow publish TARGET` | Check and publish the current build to a configured target |
+{.wide .expand}
 
 <span id="understand-repository-state" data-td-print-local></span>
 

@@ -53,7 +53,7 @@ repos:
         limit: 1
 ```
 
-`limit: 1` keeps only the newest version for each package name and native architecture. The `rpm` and `deb`
+`limit: 1` keeps only the newest version for each package name and native architecture. SOW follows native RPM (`rpmvercmp`, including `~` and `^` caret operators) and Debian version sorting, so post-release snapshots such as `2.0^20250611` sort below `2.0.1`. The `rpm` and `deb`
 Dists are therefore rolling latest channels while still retaining both x86-64 and ARM64.
 
 ```bash
@@ -95,7 +95,7 @@ SOW reports canonical architecture names, so DEB `amd64/arm64` appear here as `x
 
 The important structure is:
 
-```text
+```filetree
 ~/repo/
 ├── sow.yml                            # configuration; never serve it
 ├── .sow/                              # database, locks, recovery; never serve it
@@ -135,7 +135,7 @@ Nginx can see only `~/repo/infra`; it cannot see `sow.yml` or `.sow/`, and it ca
 
 ## 6. Install an RPM from only infra on EL9
 
-The Rocky Linux 9 container below is attached to the `--internal` network. The script removes every preconfigured
+The Rocky Linux 9 container below connects to the `--internal` network. The script removes every preconfigured
 repository and enables only `infra`, so a successful installation cannot fall back to a public mirror.
 
 ```bash
@@ -210,9 +210,8 @@ sow build -r infra -d rpm -d deb
 sow check -r infra
 ```
 
-Because the latest Dists have `limit: 1`, the new version wins and the old version automatically leaves that
-Dist's Desired Membership. The old bytes are not deleted immediately, and relaxing policy later does not make
-the old membership reappear automatically.
+Because the latest Dists have `limit: 1`, the new version wins and the old version leaves that
+Dist's Desired Membership automatically. SOW does not delete the old bytes immediately. Relaxing policy later does not restore the old membership automatically.
 
 Rerun the EL9 and Ubuntu clients from sections 6 and 7, refresh metadata, then install or upgrade to complete
 the update acceptance test.
@@ -221,7 +220,7 @@ To withdraw a bad package, use `sow ls -r infra -d rpm --json` to find its SHA-2
 
 ## 9. Two retention layers: latest and stable
 
-`limit: 1` makes `rpm` and `deb` good rolling channels but cannot express “keep every formally released version.”
+`limit: 1` makes `rpm` and `deb` good rolling channels, but it cannot express "keep every formally released version."
 Create two more Dists for that purpose:
 
 ```bash
@@ -239,6 +238,7 @@ The new Dists default to `limit: 0`, which means retain every version. The resul
 | `deb` | DEB | 1 | DEB latest |
 | `rpm-stable` | RPM | 0 | Accumulate promoted RPMs |
 | `deb-stable` | DEB | 0 | Accumulate promoted DEBs |
+{.wide .expand}
 
 Stable accumulates the versions you explicitly promote after creating the Dists.
 
@@ -279,7 +279,7 @@ cd ~/repo
 )
 ```
 
-Each `add` should report `reused`. If the loop stops midway, the source Dists are unchanged; correct the failure
+Each `add` should report `reused`. If the loop stops midway, the source Dists stay unchanged. Fix the failure
 and rerun the same manifest. Over subsequent promotions, `rpm/deb` retain only the latest version while
 `rpm-stable/deb-stable` accumulate release history.
 

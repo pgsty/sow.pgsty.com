@@ -14,7 +14,7 @@ SOW 是一个可执行文件，不依赖守护进程、数据库服务或语言�
 [下载页](/zh/download/)提供 SOW 0.7.0 软件包、归档与校验值。
 将所选制品与 `SHA256SUMS` 下载到独立的下载目录。
 
-## 安装归档
+## 安装归档 {#install-an-archive}
 
 以 Linux amd64 为例，先校验归档，再解压并安装：
 
@@ -37,7 +37,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 把 `export PATH` 这一行加入 shell 配置文件，让新终端也能找到 SOW。
 
-## 安装 Linux 软件包
+## 安装 Linux 软件包 {#install-a-linux-package}
 
 先用 `SHA256SUMS` 中对应的条目校验下载的软件包，再执行适合本机发行版的命令：
 
@@ -51,7 +51,7 @@ sudo apt install ./sow_0.7.0-1PGSTY_amd64.deb
 
 ARM64 主机使用以 `.aarch64.rpm` 或 `_arm64.deb` 结尾的软件包。安装后的可执行文件位于 `/usr/bin/sow`。
 
-## 从源码构建
+## 从源码构建 {#build-from-source}
 
 安装 Go 1.27.3 或更新版本，以及 Git。构建使用 `CGO_ENABLED=0`，不需要 C 编译器。
 
@@ -68,7 +68,7 @@ sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 
 <span id="校验" data-td-print-local></span>
 
-## 验证安装
+## 验证安装 {#verify-the-installation}
 
 ```bash
 sow version
@@ -83,17 +83,22 @@ sow help
 
 <span id="升级到-061" data-td-print-local></span>
 
-## 升级到 0.7.0 {#升级到-070}
+<span id="升级到-070" data-td-print-local></span>
+
+## 升级到 0.7.0 {#upgrade-to-070}
 
 SOW 0.7.0 保持数据库 schema v13、配置 schema `sow/v3` 与公开目录布局不变。
 已使用 0.5.0 至 0.6.1 的工作区无需迁移数据库。
-使用 `passfile` 的配置不能由 0.6.1 或更早版本读取，降级前需移除这些字段。
-迁移后的仓库若在后续构建中被残留迁移锚点阻塞，升级到 0.7.0 即可恢复，无需手工修复。
+迁移后的仓库若在后续构建中被残留迁移锚点阻塞，升级到 0.7.0 即可自动恢复，无需手工修复。
+
+> [!IMPORTANT]
+> SOW 0.6.1 及更早版本不支持读取包含 `passfile` 的 `sow.yml`。降级前请先移除 `passfile` 字段。
 
 1. 停止工作区的全部写入任务。
 2. 用保留硬链接的工具备份完整工作区，例如 `rsync -aH` 或 `tar`。
 3. 安装 SOW 0.7.0。
 4. 对 `sow.yml` 中每个仓库执行构建与检查：
+{.steps .td-steps-compact}
 
 ```bash
 sow version
@@ -105,7 +110,8 @@ sow check -r REPOSITORY -C /srv/sow
 没有变化的构建保留原构建快照编号与元数据时间戳。
 新的构建会记录一个发布时间，并在恢复时复用。
 
-### 从 0.3 或 0.4 升级 {#从-04-升级到-05}
+<span id="从-04-升级到-05" data-td-print-local></span>
+### 从 0.3 或 0.4 升级 {#upgrade-from-04-to-05}
 
 这些工作区需要在首次构建前迁移。备份工作区并安装 0.7.0 后，执行：
 
@@ -117,15 +123,16 @@ sow check -r REPOSITORY -C /srv/sow
 
 对每个仓库重复执行。迁移更新数据库，重建应用当前的 RPM 验签与 APT 元数据规则。
 需要回退到使用旧 schema 的版本时，恢复备份。
-详情见 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 与 [0.6.0 发布说明](/zh/blog/release/sow-v0.6.0/)。
+详情见 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 与 [0.7.0 发布说明](/zh/blog/release/sow-v0.7.0/)。
 
-## 升级 Plain 仓库
+## 升级 Plain 仓库 {#upgrade-a-plain-repository}
 
 Plain 模式没有数据库需要迁移。更换现有 YUM 仓库的生成工具前，按[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)操作。`--metadata-timestamp` 的默认值仍为 `0`。根据仓库发布历史设置时间戳，才能让带缓存的 YUM 客户端接受新索引。
 
 <span id="权限与可选工具" data-td-print-local></span>
+<span id="存储与可选工具" data-td-print-local></span>
 
-## 存储与可选工具
+## 存储与可选工具 {#storage-and-optional-tools}
 
 执行 SOW 的用户需要读取输入软件包，并能写入仓库目录。Managed 工作区应放在支持文件锁、`fsync` 与原子重命名的本地 POSIX 文件系统上。
 
@@ -136,5 +143,6 @@ Plain 模式没有数据库需要迁移。更换现有 YUM 仓库的生成工具
 | 使用 OpenPGP 密钥文件或密钥内容签署元数据 | 无 |
 | 使用 GPG 密钥标识签署元数据 | `gpg` 与 `gpg-agent` |
 | RPM 软件包签名 | `rpm` 及可用的 GPG 签名环境 |
+{.wide .expand}
 
 接下来用[快速上手](/zh/docs/start/quickstart/)进入 Plain 模式，或用[第一个工作区](/zh/docs/start/workspace/)进入 Managed 模式。

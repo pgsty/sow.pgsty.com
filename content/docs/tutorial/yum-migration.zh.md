@@ -14,7 +14,7 @@ icon: fa-solid fa-arrows-rotate
 
 <span id="1-明确迁移范围" data-td-print-local></span>
 
-## 1. 准备工作副本
+## 1. 准备工作副本 {#1-prepare-a-working-copy}
 
 备份当前软件包与元数据，再准备独立工作副本用于迁移。计划重签的 RPM 使用独立复制，不使用硬链接。检查已安装的二进制：
 
@@ -32,10 +32,13 @@ SOW="$(command -v sow)"
 | 包信任 | 保留合法上游签名，或明确换成自己的密钥 |
 | 索引信任 | 客户端启用 `repo_gpgcheck=1` 时，单独签署并验证新 `repomd.xml` |
 | 已有客户端 | 保留旧缓存，使用原来的 URL 和 repo ID 验收 |
+{.wide .expand}
 
 客户端使用模块过滤时，按需要保留仓库原有的 `module_hotfixes=1` 设置。Plain 元数据不包含模块流或 profile。
 
-## 2. 保留发布时间历史
+如果现有 `repomd.xml` 含有 `comps`、`updateinfo` 或 `modules` 等独立元数据，`sow create` 会替换该索引，并在 stderr 输出告警（使用 `--json` 时写入 `dropped_metadata`）。当 `repodata/` 由 SOW 生成后，还可以使用 [`sow prune`](/zh/docs/command/prune/) 清理旧版 RPM 并保持 `--metadata-timestamp` 单调递增；若旧索引仍带有外部元数据类型，`prune` 会拒绝执行。
+
+## 2. 保留发布时间历史 {#2-preserve-publication-history}
 
 EL7 YUM 可能拒绝最大 data 时间戳早于缓存的新索引。读取当前 `repomd.xml` 与保留副本中的 `<data><timestamp>`，取客户端可能见过的最大值。如果在线索引被重置为零，从旧副本或发布记录恢复这个值。使用 data 时间戳，不使用 `revision` 或文件修改时间。
 
@@ -49,7 +52,7 @@ EL7 YUM 可能拒绝最大 data 时间戳早于缓存的新索引。读取当前
 
 内容不变时，检查索引、引用文件校验和与签名后复用时间戳。零时间戳或已倒退的时间戳需要修复。每次传入当前时间都会改变 `repomd.xml`，此时 `create` 就无法报告空操作。
 
-## 3. 构建并签署候选
+## 3. 构建并签署候选 {#3-build-and-sign-a-candidate}
 
 下面演示一次重建。先准备独立的 `/srv/yum.candidate` 副本。
 将 `HISTORICAL_MAX` 设为从当前索引、已保存的最大发布时间和可信历史中核实的最大值。
@@ -75,15 +78,11 @@ gpg --verify /srv/yum.candidate/repodata/repomd.xml.asc \
 
 `--sign-with KEY` 签署未签名 RPM，并保留已有签名，包括供应商签名。要把全部包签名换成自己的密钥，在候选副本中增加 `--overwrite`。这会改变包文件；`create` 根据签名后的结果生成索引。最后一次 `create` 完成后，再生成索引的分离签名。
 
-对于带口令的包签名密钥，SOW 0.7.0 新增了 `--passfile PATH` 与
-`SOW_GPG_PASSFILE`；请先通过所用二进制的 `sow help create` 确认支持情况，
-详见[口令文件](/zh/docs/reference/config/#passfile)。这些设置不会影响上面单独执行的
-`gpg` 命令。无人值守签署元数据时，该命令需要自己的凭据配置，例如在现有 `--batch`
-之外增加 `--pinentry-mode loopback --passphrase-file PATH`，或使用 agent 已解锁的密钥。
+对于带口令的包签名密钥，SOW 0.7.0 新增了 `--passfile PATH` 与 `SOW_GPG_PASSFILE`，详见[口令文件](/zh/docs/reference/config/#passfile)。这些设置不会影响上面单独执行的 `gpg` 命令。无人值守签署元数据时，该命令需要自己的凭据配置，例如在现有 `--batch` 之外增加 `--pinentry-mode loopback --passphrase-file PATH`，或使用 agent 已解锁的密钥。
 
 <span id="4-切换前验收" data-td-print-local></span>
 
-## 4. 测试候选仓库
+## 4. 测试候选仓库 {#4-test-the-candidate}
 
 让测试客户端通过原来的仓库 URL 访问候选目录。保留该客户端的旧缓存、仓库 ID 与签名设置，
 然后刷新索引、下载并安装一个包。这样可以同时检查缓存兼容性、下载路径与签名。
@@ -98,7 +97,7 @@ gpg --verify /srv/yum.candidate/repodata/repomd.xml.asc \
 
 <span id="5-发布与恢复资料保留" data-td-print-local></span>
 
-## 5. 发布仓库
+## 5. 发布仓库 {#5-publish-the-repository}
 
 Plain 会替换多个文件，不提供整个目录的原子切换。发布层需要协调包文件、索引、分离签名以及
 缓存的可见顺序。SOW 0.7.0 保留当前与紧邻上一轮以校验和命名的 RPM 元数据。

@@ -24,7 +24,7 @@ cd /srv/sow
 
 `init` creates:
 
-```text
+```filetree
 /srv/sow/
 ├── sow.yml   # configuration; schema: sow/v3
 └── .sow/     # private state managed by SOW
@@ -33,7 +33,7 @@ cd /srv/sow
 Edit `sow.yml` when you need to change configuration. SOW manages the private `.sow/`
 directory. You can repeat `init` without resetting existing packages or state.
 
-## Create a Repository and two Dists {#2-create-a-repository-and-two-dists}
+## Create a repository and two Dists {#2-create-a-repository-and-two-dists}
 
 ```bash
 sow repo new local
@@ -46,7 +46,7 @@ Each Dist has one package format. `dist new` creates empty indexes for `x86_64` 
 
 The public layout is now:
 
-```text
+```filetree
 /srv/sow/local/
 ├── pool/
 └── dists/
@@ -56,8 +56,8 @@ The public layout is now:
     └── bookworm/
         ├── Release
         └── main/
-            ├── binary-amd64/{Packages,Packages.gz,by-hash/}
-            └── binary-arm64/{Packages,Packages.gz,by-hash/}
+            ├── binary-amd64/   # Packages, Packages.gz, by-hash/
+            └── binary-arm64/   # Packages, Packages.gz, by-hash/
 ```
 
 ## Add packages {#3-add-packages}
@@ -69,7 +69,7 @@ sow add /path/to/packages/*.rpm -d el9
 sow add /path/to/packages/*.deb -d bookworm
 ```
 
-Replace the input paths with real package files. SOW reads package identity and architecture, stores each accepted file in `local/pool/`, updates membership, and builds the affected Dists. Later builds use the pool, so the original input files are no longer needed by SOW.
+Replace the input paths with real package files. SOW reads package identity and architecture, stores each accepted file in `local/pool/`, updates membership, and builds the affected Dists. Later builds use the pool, so SOW no longer needs the original input files.
 
 ## Inspect and verify {#4-inspect-and-verify}
 
@@ -83,7 +83,7 @@ sow check
 `ls` lists the packages in each Dist. `status` should report `clean` and
 `ready_to_copy=true`. A successful `check` confirms that the files match the recorded build.
 
-## Serve the Repository {#5-serve-the-repository}
+## Serve the repository {#5-serve-the-repository}
 
 Publish the complete `/srv/sow/local` directory so clients can reach both indexes and package files. Keep the workspace configuration and `.sow/` outside the server root.
 

@@ -13,26 +13,13 @@ These tutorials cover repository creation, signing, publication, and updates. St
 
 <span id="which-one-first" data-td-print-local></span>
 
-{{< cards >}}
-{{< card title="Migrate an Existing YUM Repository" link="/docs/tutorial/yum-migration/" >}}
-Replace the metadata generator for a flat RPM repository while preserving publication timestamps, signatures, and client caches.
-{{< /card >}}
-{{< card title="Build a YUM Repository" link="/docs/tutorial/yum-repo/" >}}
-Create RPM architecture views, filter packages, set version limits, and configure DNF.
-{{< /card >}}
-{{< card title="Build an APT Repository" link="/docs/tutorial/apt-repo/" >}}
-Create a DEB pool with by-hash indexes and configure an APT client.
-{{< /card >}}
-{{< card title="Sign Your Repository" link="/docs/tutorial/signing/" >}}
-Sign metadata and RPM packages, then configure clients to verify signatures.
-{{< /card >}}
-{{< card title="Serve Repositories" link="/docs/tutorial/serving/" >}}
-Publish to a filesystem target and serve it with Nginx.
-{{< /card >}}
-{{< card title="Build the pigsty-infra Repository" link="/docs/tutorial/infra-repo/" >}}
-Use both package formats and architectures, test installation, and maintain rolling channels, stable releases, and monthly snapshots.
-{{< /card >}}
-{{< /cards >}}
+- [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/) — Replace the metadata generator for a flat RPM repository and prune superseded RPMs while preserving publication timestamps, signatures, and client caches.
+- [Build a YUM Repository](/docs/tutorial/yum-repo/) — Create RPM architecture views, filter packages, set version limits, and configure DNF.
+- [Build an APT Repository](/docs/tutorial/apt-repo/) — Create a DEB pool with by-hash indexes and configure an APT client.
+- [Sign Your Repository](/docs/tutorial/signing/) — Sign metadata and RPM packages, then configure clients to verify signatures.
+- [Serve Repositories](/docs/tutorial/serving/) — Publish to a filesystem target and serve it with Nginx.
+- [Build the pigsty-infra Repository](/docs/tutorial/infra-repo/) — Use both package formats and architectures, test installation, and maintain rolling channels, stable releases, and monthly snapshots.
+{.cards}
 
 <span id="conventions-used-here" data-td-print-local></span>
 

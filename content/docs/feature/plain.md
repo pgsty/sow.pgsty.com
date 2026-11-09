@@ -23,7 +23,7 @@ sow create /srv/offline
 
 SOW scans top-level regular files with `.rpm` or `.deb` suffixes. It does not recurse or
 follow package symlinks. Package names, versions, and architectures come from package
-headers. Source RPMs (`src` and `nosrc`) are rejected.
+headers. SOW rejects source RPMs (`src` and `nosrc`).
 
 | Input | Generated files |
 |---|---|
@@ -32,12 +32,12 @@ headers. Source RPMs (`src` and `nosrc`) are rejected.
 | Both formats | Both sets of indexes |
 
 RPM locations use the package basename. DEB `Filename` values use `./<basename>`.
-All valid versions are included. Different bytes with the same package coordinate cause
-a conflict. A directory with no supported packages is rejected, except when `--pigsty`
+SOW includes all valid versions. Different bytes with the same package coordinate cause
+a conflict. SOW rejects a directory with no supported packages, except when `--pigsty`
 finishes an interrupted cleanup.
 
 By default, package files and unrelated files stay unchanged. If a format disappears, SOW removes its old generated indexes.
-For RPMs, it keeps the current and immediately previous checksum-named metadata sets. It removes older SOW-shaped metadata and replaces incomplete output.
+For RPMs, it keeps the current and immediately previous checksum-named metadata sets. It removes older SOW-shaped metadata and replaces incomplete output. If `repodata/` contains non-SOW files such as SQLite databases, modulemd, comps, or `.asc` signatures, `sow create` removes those foreign files and reports them in `dropped_metadata` (`--json`) and as a stderr warning.
 Generated directories use `0755`; generated files use `0644`.
 
 <span id="the-one-pass-pipeline" data-td-print-local></span>
@@ -74,6 +74,17 @@ A small `.sow-plain-rpm-history.json` file tracks RPM metadata retention.
 Unchanged builds keep the same previous index. Keep this file when copying a directory that you will rebuild.
 Package retention remains the operator's responsibility. See [RPM index retention](/docs/command/create/#keep-the-previous-rpm-indexes).
 
+## Prune superseded RPMs
+
+Use [`sow prune`](/docs/command/prune/) to keep only the highest EVR per RPM `(name, arch)` in a Plain directory:
+
+```bash
+sow prune /srv/offline --check
+sow prune /srv/offline
+```
+
+`sow prune` compares versions with native `rpmvercmp` rules, including `~` pre-release and `^` post-release caret sorting. It updates `repodata/` before removing superseded `.rpm` files so clients never observe metadata that points to missing packages. If the directory already contains `repo_complete`, `sow prune` refreshes that marker automatically. Unlike `sow create`, `sow prune` refuses to run when `repodata/` contains foreign non-SOW metadata files.
+
 ## Interrupted builds
 
 SOW stages and checks metadata before it replaces public files. The replacements do not
@@ -100,11 +111,10 @@ sow create /srv/offline --pigsty
 package facts. It does not remove an RPM solely because its architecture is
 `i386`, `i486`, `i586`, or `i686`.
 
-Documentation packages such as `annobin-docs` are retained unless they match those cleanup rules.
+SOW retains documentation packages such as `annobin-docs` unless they match those cleanup rules.
 
 After updating indexes and removing the selected packages, SOW writes `repo_complete`.
-Each line contains a SHA-256, two spaces, and a retained package basename. Lines are
-sorted by basename.
+Each line contains a SHA-256, two spaces, and a retained package basename, sorted by basename.
 
 SOW removes an existing marker before replacing public files and writes the new marker
 last. Consumers that use this convention must wait for the marker. If the build stops
@@ -124,7 +134,7 @@ re-sign every retained RPM. It requires the host `rpm` command and a usable GPG 
 SOW signs and checks staged copies, then replaces the package files before their indexes.
 This path reads package bytes more than once.
 
-For a protected key, the development version accepts `--passfile PATH` or
+For a protected key, pass `--passfile PATH` or set
 `SOW_GPG_PASSFILE`. `--sign-with` is still required to enable signing.
 See [Password files](/docs/reference/config/#passfile) for the exact file format;
 Plain mode does not read the Managed `sow.yml` configuration.

@@ -87,13 +87,16 @@ sow help
 
 SOW 0.7.0 keeps database schema v13, configuration schema `sow/v3`, and the public directory layout.
 Workspaces already on 0.5.0 through 0.6.1 need no schema migration.
-A configuration using `passfile` cannot be loaded by 0.6.1 or older; remove those keys before downgrading.
-Repositories affected by a retained migration anchor after later builds recover in 0.7.0 without manual repair.
+SOW 0.7.0 automatically recovers repositories that a retained migration anchor blocked after later builds.
+
+> [!IMPORTANT]
+> SOW 0.6.1 and older versions reject `sow.yml` files that use `passfile`. Remove `passfile` keys before you downgrade.
 
 1. Stop all workspace writers.
 2. Back up the complete workspace with a tool that preserves hard links, such as `rsync -aH` or `tar`.
 3. Install SOW 0.7.0.
 4. Build and check each Repository in `sow.yml`:
+{.steps .td-steps-compact}
 
 ```bash
 sow version
@@ -117,7 +120,7 @@ sow check -r REPOSITORY -C /srv/sow
 
 Repeat these commands for each Repository. Migration updates the database; the rebuild applies the current RPM verification and APT metadata rules.
 Keep the backup for rollback to a version that uses an older schema.
-See [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) and the [0.6.0 release notes](/blog/release/sow-v0.6.0/).
+See [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) and the [0.7.0 release notes](/blog/release/sow-v0.7.0/).
 
 ## Upgrade a Plain repository
 
@@ -136,5 +139,6 @@ Package parsing and metadata generation run inside SOW. Optional signing needs t
 | Metadata signing with an OpenPGP key file or key material | None |
 | Metadata signing with a GPG key identifier | `gpg` and `gpg-agent` |
 | RPM package signing | `rpm` with a working GPG signing setup |
+{.wide .expand}
 
 Continue with [Quick Start](/docs/start/quickstart/) for Plain mode or [First Workspace](/docs/start/workspace/) for Managed mode.

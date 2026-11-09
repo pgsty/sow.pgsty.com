@@ -11,7 +11,11 @@ icon: fa-solid fa-cube
 
 本教程从零创建一个 Managed DEB 仓库。先安装 SOW、Python 3，并准备适合目标客户端的 DEB 文件。使用当前用户可创建、可写入的空目录 `/srv/sow`，或换成其他可写路径。
 
-## 1. 创建工作区
+{{% steps %}}
+
+<span id="1-创建工作区" data-td-print-local></span>
+
+## 创建工作区 {#1-create-the-workspace}
 
 ```bash
 mkdir -p /srv/sow
@@ -23,7 +27,9 @@ sow dist new trixie --format deb -r pigsty
 
 Dist 名称 `trixie` 对应客户端配置中的 `Suites`，可以按需要更改。它不改变软件包的发行版兼容性。
 
-## 2. 配置成员策略
+<span id="2-配置成员策略" data-td-print-local></span>
+
+## 配置成员策略 {#2-set-membership-policy}
 
 如果需要过滤或限制版本，编辑生成的 `sow.yml`：
 
@@ -50,7 +56,9 @@ sow config check
 配置中的 `x86_64`、`aarch64` 分别生成 Debian 的 `amd64`、`arm64` 索引。
 架构无关的 `all` 包进入两个视图。
 
-## 3. 添加 DEB
+<span id="3-添加-deb" data-td-print-local></span>
+
+## 添加 DEB {#3-add-debs}
 
 ```bash
 sow add /path/to/packages/*.deb -r pigsty -d trixie
@@ -59,22 +67,24 @@ sow check -r pigsty
 
 把输入路径换成实际 DEB 目录。`add` 将接受的软件包保存一次，并构建索引。公共目录树如下：
 
-```text
+```filetree
 /srv/sow/pigsty/
-├── pool/...
+├── pool/
 └── dists/trixie/
     ├── Release
     └── main/
         ├── binary-amd64/
         │   ├── Packages
         │   ├── Packages.gz
-        │   └── by-hash/SHA256/...
-        └── binary-arm64/...
+        │   └── by-hash/SHA256/
+        └── binary-arm64/
 ```
 
 `Packages` 中的 `Filename` 相对于仓库根目录。保留完整目录树，客户端才能找到软件包。SOW 生成 `by-hash` 索引，供 APT 按内容哈希获取元数据。
 
-## 4. HTTP 预览
+<span id="4-http-预览" data-td-print-local></span>
+
+## HTTP 预览 {#4-preview-over-http}
 
 在另一个终端执行以下命令，并保持运行：
 
@@ -84,7 +94,9 @@ python3 -m http.server --bind 127.0.0.1 --directory /srv/sow/pigsty 8080
 
 预览只提供仓库根目录中的文件，并且只能从本机访问。长期运行或供其他主机访问时，按[对外服务](/zh/docs/tutorial/serving/)配置。
 
-## 5. 配置 APT
+<span id="5-配置-apt" data-td-print-local></span>
+
+## 配置 APT {#5-configure-apt}
 
 在运行预览的 Linux 主机上，把以下内容保存为 `/etc/apt/sources.list.d/pigsty.sources`。ARM64 客户端将 `Architectures` 改为 `arm64`。远程客户端需先发布仓库，再换成其公共地址：
 
@@ -110,12 +122,17 @@ apt-cache policy
 预览完成后，删除测试源配置文件并停止 Python 服务器。
 
 <span id="6-安全发布" data-td-print-local></span>
+<span id="6-发布仓库" data-td-print-local></span>
 
-## 6. 发布仓库
+## 发布仓库 {#6-publish-the-repository}
 
 使用 [`sow publish`](/zh/docs/tutorial/serving/) 发布到 filesystem 或 R2 目标。它先上传软件包与索引，再更新 `Release` 及其签名。隔离主机的手工交付步骤也见该教程。
 
-## 更新仓库
+{{% /steps %}}
+
+<span id="更新仓库" data-td-print-local></span>
+
+## 更新仓库 {#update-the-repository}
 
 ```bash
 sow add /path/to/new.deb -r pigsty -d trixie

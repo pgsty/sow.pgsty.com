@@ -32,7 +32,7 @@ complete candidate membership of each selected Dist. Edit the policy, run
 ## Exclude packages
 
 Each rule contains one or more fields. All fields in a rule must match. Any pattern
-within a field can match. A package is excluded when any rule matches.
+within a field can match. SOW excludes a package when any rule matches.
 
 ```yaml
 exclude:
@@ -53,7 +53,7 @@ packages whose names start with `test-` or end with `-experimental`.
 | `format` | `rpm` or `deb` |
 
 Patterns are case-sensitive exact strings or shell globs: `*`, `?`, and `[...]`.
-Regular expressions, version comparisons, and negation are not supported. Empty rules,
+SOW does not support regular expressions, version comparisons, or negation. Empty rules,
 empty or untrimmed patterns, duplicate patterns within a field, and invalid globs are errors.
 
 SOW derives `kind` from the binary package name:
@@ -67,8 +67,8 @@ SOW derives `kind` from the binary package name:
 | DEB | `-dbg` | `dbg` |
 | Either | No matching suffix | `main` |
 
-Use `sow show PACKAGE --json` to inspect the computed kind. Pattern values are not checked
-against this table: `kind: [debug]` is valid YAML but matches no package kind.
+Use `sow show PACKAGE --json` to inspect the computed kind. SOW does not check pattern values
+against this table: `kind: [debug]` is valid YAML, but it matches no package kind.
 
 <span id="limit" data-td-print-local></span>
 
@@ -83,8 +83,8 @@ packages (`noarch` or `all`) form their own group.
 | Positive `N` | Keep the newest `N` versions in each group |
 | Negative value | Configuration error |
 
-RPM versions use epoch-version-release ordering. DEB versions use Debian version ordering.
-Versions are not sorted as plain strings.
+RPM versions use native `rpmvercmp` epoch-version-release ordering, including `~` pre-release and `^` post-release caret operators (`2.0~rc1 < 2.0 < 2.0^20250611 < 2.0.1`). DEB versions use native Debian version ordering.
+SOW never sorts versions as plain strings.
 
 With `limit: 2`, adding version 3 to a Dist that contains versions 1 and 2 removes version 1
 from membership in the same operation. An `x86_64` package and a `noarch` package count in
@@ -98,7 +98,7 @@ An input excluded from every selected Dist has item status `excluded`. Its per-D
 is `excluded` for an exclusion rule or `limited` for the version cap. Policy exclusion
 does not count as a failed input and does not make the command fail.
 
-A package can be accepted by one Dist and excluded by another. If no Dist accepts a new
+One Dist can accept a package while another Dist excludes it. If no Dist accepts a new
 package, SOW does not store an unreferenced package object for it.
 
 <span id="loosening-a-policy-never-resurrects-anything" data-td-print-local></span>
@@ -127,7 +127,7 @@ sow rm example -r demo -d el9 --check
 
 The preview reports membership removals and predicted file changes without changing repository state.
 Check `prediction_complete` in JSON before treating the file list as complete.
-`--check` cannot be combined with `--skip`, `--timeout`, or `--no-wait`.
+Do not combine `--check` with `--skip`, `--timeout`, or `--no-wait`.
 
 See [Configuration](/docs/reference/config/) for the full schema and
 [`sow add`](/docs/command/add/) for input results.

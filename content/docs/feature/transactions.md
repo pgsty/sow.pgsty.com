@@ -32,16 +32,22 @@ sow log -r demo
 | `dirty` | Run `sow build` to apply pending membership or configuration changes |
 | `recovering` | Use the recovery command for the interrupted operation, listed below |
 | `error` | Inspect the reported file or operation in the diagnostic and log |
+{.wide .expand}
 
 | Interrupted operation | Recovery command |
 |---|---|
 | `add`, `rm`, Dist change, or build | `sow build -r demo` |
 | `init`, `repo new`, or `repo rm` | Rerun the corresponding lifecycle command |
 | Publication | `sow publish TARGET` |
-| Plain index generation | Rerun `sow create` with the original options |
+| Local or target garbage collection | `sow gc -r demo` or `sow gc TARGET` |
+| Retained generation removal | `sow retain rm GENERATION -r demo` |
+| Plain index generation or RPM pruning | Rerun `sow create` or `sow prune` with the original options |
+{.wide .expand}
+
+SOW selects an active repository mutation by its pending state rather than its recorded timestamp, so system clock adjustments never hide an unfinished operation behind an older completed record. When local or target `gc` or `retain rm` stops after freezing its plan, SOW preserves that plan so rerunning the command finishes the interrupted cleanup.
 
 Recovery that must regenerate signed metadata needs access to the signing key and
-password again. Password values are not stored in journals. Use `--passfile PATH`,
+password again. SOW does not store password values in journals. Use `--passfile PATH`,
 the per-key configuration, or `SOW_GPG_PASSFILE`; see
 [Password files](/docs/reference/config/#passfile) for availability and priority.
 For a pending Workspace lifecycle journal, supply a CLI/environment override without
@@ -66,7 +72,7 @@ and [`publish`](/docs/command/publish/) for publication recovery.
 
 Workspace lifecycle recovery compares the current `sow.yml` digest with the journal's old
 and new configurations. The configuration replacement decides whether to roll back or
-finish that lifecycle change. A digest matching neither is an integrity error.
+finish that lifecycle change. A digest that matches neither configuration causes an integrity error.
 
 Repository mutations record their own state transitions:
 
@@ -77,18 +83,19 @@ planned → staged → applied → built → done
 
 | State | Meaning |
 |---|---|
-| `planned` | The operation and its intended scope are recorded |
-| `staged` | Inputs have been prepared for the next stage |
-| `applied` | Desired state has committed; the previous public generation can still be active |
-| `built` | The generated public tree has been installed |
+| `planned` | SOW recorded the operation and its intended scope |
+| `staged` | SOW prepared the inputs for the next stage |
+| `applied` | SOW committed the Desired state; the previous public generation can still be active |
+| `built` | SOW installed the generated public tree |
 | `done` | The operation is complete |
-| `done_dirty` | Desired state has committed and a build remains pending |
+| `done_dirty` | SOW committed the Desired state and left a build pending |
+{.wide .expand}
 
 Other terminal outcomes include `rolled_back` and `failed`. Read transitions and timestamps
 with `sow log OPERATION -r demo`.
 
 `--skip` normally ends at `done_dirty`. A recognized signing-policy change, configuration
-change before a build plan is frozen, or supported contract upgrade can also leave a
+change before a build plan freezes, or supported contract upgrade can also leave a
 committed operation dirty. The log records the reason. Correct the configuration if
 needed, then run `build` again.
 
@@ -115,6 +122,7 @@ package bytes → metadata → client pointers → obsolete metadata cleanup
 3. Install RPM `repomd.xml` and configured signatures, or APT `Release`, `InRelease`, and
    `Release.gpg` as applicable.
 4. Remove obsolete metadata after the replacement is durable.
+{.steps .td-steps-compact}
 
 The build keeps the immediately preceding RPM immutable metadata and APT by-hash objects
 available for readers of the previous pointer. Explicit generation retention is separate;
@@ -131,17 +139,17 @@ changes and does not perform publication or target cleanup.
 
 SOW uses advisory locks to coordinate its processes. Workspace lifecycle uses
 `.sow/workspace.lock`; repository writes use `.sow/repo-locks/<repo>.lock`.
-When both are required, the workspace lock comes first.
+When a command needs both locks, it acquires the workspace lock first.
 
 Read commands that need a consistent snapshot use shared locks. `status` probes the
 repository writer lock so it can report activity without waiting for that writer.
-Plain `create` locks its directory and parent.
+Plain `create` and `prune` lock their target directory and parent.
 
 | Option | Behavior |
 |---|---|
 | `-T 30s` | Wait up to 30 seconds for a write lock |
 | `-T 0` | Wait until the lock is available; default |
-| `-N` | Try once; exit immediately if the lock is held |
+| `-N` | Try once; exit immediately if another writer holds the lock |
 
 A failed lock attempt exits `4`. Combining `-N` with a nonzero `-T` exits `2`.
 Use only the lock options accepted by the command; read-only commands do not accept them.
@@ -153,11 +161,9 @@ Use only the lock options accepted by the command; read-only commands do not acc
 Use a local POSIX filesystem with advisory locks, `fsync`, and atomic rename. On macOS,
 use APFS. Keep public files and private staging on the same filesystem. SOW rejects symlinked
 control paths, unexpected file types, and path escapes. It checks file identity before
-replacing or removing controlled objects. Network filesystems are not supported workspace
-locations.
+replacing or removing controlled objects. Do not place a workspace on a network filesystem.
 
-Repository and Dist names use `[a-z0-9][a-z0-9._-]*`; reserved names are listed in
-[Repository layout](/docs/reference/layout/). For script responses to interruption, lock
+Repository and Dist names use `[a-z0-9][a-z0-9._-]*`; [Repository layout](/docs/reference/layout/) lists reserved names. For script responses to interruption, lock
 contention, or integrity errors, see [Exit codes](/docs/reference/exit-codes/).
 
 <span id="next" data-td-print-local></span>

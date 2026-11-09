@@ -14,7 +14,8 @@ icon: fa-solid fa-layer-group
 
 {{% steps %}}
 
-## 初始化工作区 {#1-初始化工作区}
+<span id="1-初始化工作区" data-td-print-local></span>
+## 初始化工作区 {#1-initialize-the-workspace}
 
 ```bash
 sow init /srv/sow
@@ -23,7 +24,7 @@ cd /srv/sow
 
 `init` 创建：
 
-```text
+```filetree
 /srv/sow/
 ├── sow.yml   # 配置；schema: sow/v3
 └── .sow/     # SOW 管理的私有状态
@@ -32,7 +33,8 @@ cd /srv/sow
 需要调整配置时，编辑 `sow.yml`。私有目录 `.sow/` 由 SOW 管理。
 重复执行 `init` 不会重置已有软件包或状态。
 
-## 创建仓库与两个 Dist {#2-创建-repository-与两个-dist}
+<span id="2-创建-repository-与两个-dist" data-td-print-local></span>
+## 创建仓库与两个 Dist {#2-create-a-repository-and-two-dists}
 
 ```bash
 sow repo new local
@@ -45,7 +47,7 @@ sow dist new bookworm --format deb
 
 此时公共布局为：
 
-```text
+```filetree
 /srv/sow/local/
 ├── pool/
 └── dists/
@@ -55,11 +57,12 @@ sow dist new bookworm --format deb
     └── bookworm/
         ├── Release
         └── main/
-            ├── binary-amd64/{Packages,Packages.gz,by-hash/}
-            └── binary-arm64/{Packages,Packages.gz,by-hash/}
+            ├── binary-amd64/   # Packages, Packages.gz, by-hash/
+            └── binary-arm64/   # Packages, Packages.gz, by-hash/
 ```
 
-## 添加软件包 {#3-添加软件包}
+<span id="3-添加软件包" data-td-print-local></span>
+## 添加软件包 {#3-add-packages}
 
 显式选择目标 Dist：
 
@@ -70,7 +73,8 @@ sow add /path/to/packages/*.deb -d bookworm
 
 把输入路径换成实际软件包文件。SOW 读取包身份与架构，将接受的文件存入 `local/pool/`，更新成员并构建受影响的 Dist。后续构建使用包池，SOW 不再依赖原始输入文件。
 
-## 查看与校验 {#4-查看与校验}
+<span id="4-查看与校验" data-td-print-local></span>
+## 查看与校验 {#4-inspect-and-verify}
 
 ```bash
 sow status
@@ -82,7 +86,8 @@ sow check
 `ls` 列出各 Dist 中的软件包。`status` 应显示 `clean` 与 `ready_to_copy=true`。
 `check` 成功表示文件与记录的构建结果一致。
 
-## 对外提供仓库 {#5-对外服务-repository}
+<span id="5-对外服务-repository" data-td-print-local></span>
+## 对外提供仓库 {#5-serve-the-repository}
 
 发布完整的 `/srv/sow/local` 目录，让客户端能同时访问索引与软件包。工作区配置和 `.sow/` 保留在服务器根目录之外。
 
@@ -90,7 +95,7 @@ sow check
 
 {{% /steps %}}
 
-## 批量更新
+## 批量更新 {#batch-later-updates}
 
 以后要连续添加多批软件包时，给 `add` 加上 `--skip`，最后构建一次：
 
@@ -102,13 +107,13 @@ sow build
 有待构建的成员变更时，`sow status` 显示 `dirty` 与 `ready_to_copy=false`。
 
 
-## 选择规则
+## 选择规则 {#selection-rules}
 
 上例从当前目录找到工作区，并选择其中唯一的仓库。
 在其他目录运行时，加上 `-C /srv/sow`；工作区内有多个仓库时，加上 `-r local`。
-使用 `-d NAME` 选择 Dist，可重复指定多个。完整的发现规则与默认值见[选择规则](/zh/docs/command/#repository-选择)。
+使用 `-d NAME` 选择 Dist，可重复指定多个。完整的发现规则与默认值见[选择规则](/zh/docs/command/#repository-selection)。
 
-## 下一步
+## 下一步 {#next}
 
 - [核心概念](/zh/docs/start/concepts/)
 - [搭建 YUM 仓库](/zh/docs/tutorial/yum-repo/)

@@ -13,30 +13,17 @@ icon: fa-solid fa-graduation-cap
 
 <span id="先看哪篇" data-td-print-local></span>
 
-{{< cards >}}
-{{< card title="迁移现有 YUM 仓库" link="/zh/docs/tutorial/yum-migration/" >}}
-替换平面 RPM 仓库的元数据生成工具，保留发布时间、签名与客户端缓存兼容性。
-{{< /card >}}
-{{< card title="搭建 YUM 仓库" link="/zh/docs/tutorial/yum-repo/" >}}
-创建 RPM 架构视图，过滤软件包，设置版本上限并配置 DNF。
-{{< /card >}}
-{{< card title="搭建 APT 仓库" link="/zh/docs/tutorial/apt-repo/" >}}
-创建 DEB 包池与 by-hash 索引，并配置 APT 客户端。
-{{< /card >}}
-{{< card title="仓库签名" link="/zh/docs/tutorial/signing/" >}}
-签署元数据与 RPM 软件包，再配置客户端验签。
-{{< /card >}}
-{{< card title="对外服务" link="/zh/docs/tutorial/serving/" >}}
-发布到 filesystem 目标，并用 Nginx 提供服务。
-{{< /card >}}
-{{< card title="构建 pigsty-infra 仓库" link="/zh/docs/tutorial/infra-repo/" >}}
-同时使用两种格式与架构，测试安装，维护滚动频道、稳定发布与月度快照。
-{{< /card >}}
-{{< /cards >}}
+- [迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/) — 替换平面 RPM 仓库的元数据生成工具并清理旧版 RPM，保留发布时间、签名与客户端缓存兼容性。
+- [搭建 YUM 仓库](/zh/docs/tutorial/yum-repo/) — 创建 RPM 架构视图，过滤软件包，设置版本上限并配置 DNF。
+- [搭建 APT 仓库](/zh/docs/tutorial/apt-repo/) — 创建 DEB 包池与 by-hash 索引，并配置 APT 客户端。
+- [仓库签名](/zh/docs/tutorial/signing/) — 签署元数据与 RPM 软件包，再配置客户端验签。
+- [对外服务](/zh/docs/tutorial/serving/) — 发布到 filesystem 目标，并用 Nginx 提供服务。
+- [构建 pigsty-infra 仓库](/zh/docs/tutorial/infra-repo/) — 同时使用两种格式与架构，测试安装，维护滚动频道、稳定发布与月度快照。
+{.cards}
 
 <span id="本板块约定" data-td-print-local></span>
 
-## 使用示例
+## 使用示例 {#follow-the-examples}
 
 按顺序执行命令，把大写占位符与 `/path/to/` 输入路径换成实际值。`/srv` 下的示例需要可写目录，也可以换成用户主目录下的路径。
 

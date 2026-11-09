@@ -32,7 +32,7 @@ publication target occupies that repository's or target's namespace.
 
 An RPM Dist has one metadata directory per configured architecture:
 
-```text
+```filetree
 demo/
 ├── pool/
 │   ├── e/example/example-1.0-1.x86_64.rpm
@@ -73,7 +73,7 @@ under `dists/<dist>/main/binary-<arch>/`. The Dist root contains `Release` and, 
 signed, `InRelease` and `Release.gpg`.
 
 `all` packages appear in each applicable architecture index while their payload remains
-one pool object. There are no per-view package copies or per-architecture `Release` files.
+one pool object. SOW creates no per-view package copies or per-architecture `Release` files.
 
 <span id="ordinary-clients-and-reposync-are-different-contracts" data-td-print-local></span>
 
@@ -82,7 +82,7 @@ one pool object. There are no per-view package copies or per-architecture `Relea
 Default `dnf reposync` rejects Managed RPM locations that climb above its per-repository
 download directory. Create a standalone leaf for that workflow:
 
-The RPM Dist must belong to the current Built Generation. Check the [export preconditions](/docs/command/export/) before running this command.
+The RPM Dist must belong to the current Built Generation and be clean. A clean RPM Dist can be exported even when a later build updated only another Dist, because SOW carries its unchanged view into the current Built Generation. Check the [export preconditions](/docs/command/export/) before running this command.
 
 ```bash
 sow export rpm-leaf el9 x86_64 /srv/exports/el9-x86_64 -r demo
@@ -90,17 +90,16 @@ sow export rpm-leaf el9 x86_64 /srv/exports/el9-x86_64 -r demo
 
 The export has local package paths, its own repodata, a manifest, and a `.sow-export.json`
 completion marker. Choose a destination outside the repository and all configured
-filesystem publication roots.
+filesystem publication targets' prospective roots (`endpoint + prefix`).
 
-The default copies files. `--hardlink` requires the same filesystem and makes exported
-packages share the source inode; keep those files read-only. An export does not create
-Dist membership or a retained generation and is not input to `sow publish`.
+> [!WARNING]
+> The default copies files. `--hardlink` requires the same filesystem and makes exported packages share the source inode; keep those files read-only. An export does not create Dist membership or a retained generation and is not input to `sow publish`.
 
 <span id="copy-and-publication" data-td-print-local></span>
 
 ## Deliver the complete repository
 
-Use a configured publication target for live updates. For another transport, copy the
+Use a configured publication target for live updates. When a Dist or architecture is removed, run a full-repository `sow build -r REPO` before publishing so the current Built Generation covers the whole repository and allows `sow publish` to withdraw the removed target pointers safely. For another transport, copy the
 complete settled `pool/ + dists/` tree into a separate staging directory, verify the copy,
 then switch it into service. Keep package URLs referenced by cached indexes reachable
 until those caches expire. See [Serving](/docs/tutorial/serving/) for a complete transfer procedure.

@@ -16,12 +16,13 @@ icon: fa-solid fa-key
 | RPM 元数据 | `repodata/repomd.xml.asc` | `repo_gpgcheck=1` |
 | APT 元数据 | `InRelease` 与 `Release.gpg` | `Signed-By` |
 | RPM 包体 | RPM 内嵌签名 | `gpgcheck=1` |
+{.wide .expand}
 
 APT 通过签名的 `Release` 文件验证包哈希，因此 DEB 不需要单独的包签名。先配置元数据签名；客户端要求 `gpgcheck=1` 时，再配置 RPM 软件包签名。
 
 本教程使用 [YUM](/zh/docs/tutorial/yum-repo/) 或 [APT](/zh/docs/tutorial/apt-repo/) 教程中的 `pigsty` 仓库。只执行你已创建的格式与 Dist 所对应的命令。
 
-## 1. 创建专用密钥
+## 1. 创建专用密钥 {#1-create-a-dedicated-key}
 
 先安装 GPG。下面生成一把无口令的测试密钥，并导出到私有目录。已有带口令密钥时，按下文配置 `passfile`。
 
@@ -44,7 +45,7 @@ chmod 600 /srv/sow-secrets/repo-signing.asc
 
 SOW 从公共仓库目录之外的 `/srv/sow-secrets` 读取私钥。如果 SOW 服务账户不同于当前用户，给该账户目录访问权限。向客户端分发 `repo-signing.pub`。
 
-## 2. 配置元数据签名
+## 2. 配置元数据签名 {#2-configure-metadata-signing}
 
 在 `/srv/sow/sow.yml` 中，将以下元数据配置合并到仓库已有的 `signing` 块。保留包签名策略与 Dist 定义，只加入使用的格式：
 
@@ -62,12 +63,12 @@ repos:
       # 保留已有 Dist 定义
 ```
 
-带口令的密钥应先配置口令来源，再检查或构建。开发版可在 `key` 旁增加
+带口令的密钥应先配置口令来源，再检查或构建。可在 `key` 旁增加
 `passfile: /run/secrets/gpg-password`，或执行
 `export SOW_GPG_PASSFILE=/run/secrets/gpg-password`。单次执行可以使用
 `sow build -r pigsty --passfile /run/secrets/gpg-password`，`agent://FINGERPRINT` 密钥同样支持。
 口令文件放在仓库之外，权限建议为 `0600`。内容就是口令：非空 UTF-8 单行，可以带一个
-末尾 LF 或 CRLF，空格与制表符会保留。不自动搜索默认文件。
+末尾 LF 或 CRLF。SOW 保留空格与制表符，且不自动搜索默认文件。
 优先级和完整格式见[口令文件](/zh/docs/reference/config/#passfile)。
 旧 `passphrase` 引用继续兼容。配置只保存引用，不保存秘密值。
 
@@ -80,7 +81,9 @@ sow build -r pigsty
 sow check -r pigsty
 ```
 
-## 3. 可选：查看元数据签名者 {#3-手工验证元数据}
+<span id="3-手工验证元数据" data-td-print-local></span>
+
+## 3. 可选：查看元数据签名者 {#3-verify-metadata-manually}
 
 前面的 `sow check` 已验证元数据签名。需要用 GPG 查看签名者时，执行对应 Dist 的命令：
 
@@ -97,7 +100,7 @@ gpg --verify \
 
 将显示的指纹与分发给客户端的公钥指纹比较。
 
-## 4. 可选：签署 RPM 包体
+## 4. 可选：签署 RPM 包体 {#4-optional-sign-rpm-package-bodies}
 
 新仓库应在导入 RPM 前配置包签名。在已有 `signing.rpm` 下增加以下配置：
 
@@ -116,12 +119,12 @@ repos:
 将占位符替换为 `$FPR` 中的 40 位十六进制指纹。安装 `rpm` 与 `gpg`，
 并将私钥放在 `rpm` 使用的 GPG 密钥环中。
 
-`fill` 会签署新导入的包；如果已有签名能通过配置密钥或 `trusted_keys` 验证，则保留原签名。
+`fill` 会签署新导入的包；如果已有签名能通过配置密钥或 `trusted_keys` 验证，则保留原签名。SOW 支持验证 RSA、DSA、ECDSA 与 EdDSA RPM 签名，包括保存在 RPM 签名头 tag 267（`RPMSIGTAG_DSA`）中的纯头签名。
 其他模式见 [RPM 签名策略](/zh/docs/reference/config/)。
 
 包签名密钥带口令时，在 `signing.rpm.packages` 下配置 `passfile`，或使用
 `SOW_GPG_PASSFILE`。`metadata` 下的 `passfile` 只适用于对应的元数据密钥。
-`config check` 会校验包签名前置条件，但不会通过签包来测试口令；下面的 `add`
+`config check` 会校验包签名前置条件，但不会通过签包来测试口令。下面的 `add`
 必须实际遇到需要签名的包，才会验证这条路径。
 
 SOW 在 `add` 时签署私有副本，输入文件保持不变。`build` 检查包池中的 RPM 是否满足策略，不会重签它们。
@@ -138,7 +141,7 @@ sow check -r pigsty
 
 需要独立查看包签名时，对 `pigsty/pool/` 中的包文件执行 `rpmkeys --checksig`。
 
-## 5. 启用 dnf 验签
+## 5. 启用 DNF 验签 {#5-enable-dnf-verification}
 
 先[发布已签名仓库](/zh/docs/tutorial/serving/)，再通过可信通道把公钥传到客户端：
 
@@ -161,7 +164,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-pigsty
 
 只签名元数据时，使用 `repo_gpgcheck=1` 与 `gpgcheck=0`。启用包验签时，除了自己的公钥，也要安装所信任的上游包签名公钥。随后执行 `sudo dnf makecache --refresh` 并安装一个包。
 
-## 6. 启用 APT 验签
+## 6. 启用 APT 验签 {#6-enable-apt-verification}
 
 [发布已签名仓库](/zh/docs/tutorial/serving/)后，在客户端将公钥安装为独立密钥环：
 
@@ -184,7 +187,7 @@ Signed-By: /usr/share/keyrings/pigsty-archive-keyring.gpg
 
 执行 `sudo apt update` 并安装一个包。验签失败时，核对客户端公钥环指纹与 `gpg --verify` 显示的签名者是否一致。ARM64 客户端将 `Architectures` 改为 `arm64`。
 
-## Plain 模式 RPM 签名
+## Plain 模式 RPM 签名 {#plain-mode-rpm-signing}
 
 Plain 模式可以签署 RPM 包体，但不会签署仓库元数据，也不会生成 APT `Release`：
 
@@ -193,17 +196,17 @@ sow create /srv/flat --sign-with 0123456789ABCDEF
 ```
 
 将 `0123456789ABCDEF` 换成你的密钥 ID 或指纹，匹配的私钥必须能被 `rpm` 与 GPG 使用。
-命令保留已有签名，包括上游签名。需要全部换成自己的密钥时，在独立工作副本上使用 `--overwrite`。
-密钥格式见 [`sow create`](/zh/docs/command/create/#rpm-包签名)。
+SOW 保留已有签名（包括上游签名），并识别 RPM 签名头 tag 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 与 EdDSA 纯头签名。需要全部换成自己的密钥时，在独立工作副本上使用 `--overwrite`。
+密钥格式见 [`sow create`](/zh/docs/command/create/#signing-rpms)。
 
-开发版中使用带口令的密钥时，增加 `--passfile /run/secrets/gpg-password`，或将
+使用带口令的密钥时，增加 `--passfile /run/secrets/gpg-password`，或将
 `SOW_GPG_PASSFILE` 设置为该路径。这些选项只为 SOW 签名提供口令；单独执行的
 `gpg` 命令需要自己的凭据配置。
 
 已有 YUM 仓库按[迁移指南](/zh/docs/tutorial/yum-migration/)保留发布时间，
 并在最后一次 `create` 完成后签署 `repomd.xml`。
 
-## 更换密钥
+## 更换密钥 {#key-changes}
 
 轮换元数据密钥时，先分发新公钥，再更新密钥引用，执行 `build`、`check` 与 `publish`。引用或解析出的指纹变化后，相关 Dist 会变为 dirty。
 

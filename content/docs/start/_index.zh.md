@@ -11,7 +11,7 @@ icon: fa-solid fa-rocket
 
 SOW 为 RPM 与 DEB 软件包生成 YUM 与 APT 静态仓库。安装 SOW 后，按需要选择管理方式：
 
-- **Plain 模式：** 执行 `sow create DIR`，为目录中的软件包生成索引。
+- **Plain 模式：** 执行 `sow create DIR` 为目录中的软件包生成索引，执行 `sow prune DIR` 就地清理旧版 RPM。
 - **Managed 模式：** 创建工作区，按 Dist 组织软件包、限制版本数、签署元数据并发布更新。
 
 - [安装](/zh/docs/start/install/) — 安装发布归档、Linux 软件包，或从源码构建。
@@ -20,4 +20,4 @@ SOW 为 RPM 与 DEB 软件包生成 YUM 与 APT 静态仓库。安装 SOW 后，
 - [核心概念](/zh/docs/start/concepts/) — 理解工作区、仓库、Dist 与构建快照的关系。
 {.cards}
 
-通过静态 HTTP 服务器或对象存储提供生成的文件。存储与签名要求见[安装说明](/zh/docs/start/install/#存储与可选工具)。
+通过静态 HTTP 服务器或对象存储提供生成的文件。存储与签名要求见[安装说明](/zh/docs/start/install/#storage-and-optional-tools)。

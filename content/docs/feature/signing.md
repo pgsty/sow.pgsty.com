@@ -22,6 +22,7 @@ signing separately when clients also need to verify signatures embedded in RPM f
 | `signing.rpm.metadata` | RPM index manifest | `repodata/repomd.xml.asc` | DNF `repo_gpgcheck=1` |
 | `signing.deb.metadata` | APT release manifest | `InRelease`, `Release.gpg` | APT `Signed-By` |
 | `signing.rpm.packages` | RPM package | Embedded OpenPGP signature | DNF `gpgcheck=1` |
+{.wide .expand}
 
 Metadata signing leaves package bytes unchanged. RPM package signing changes package
 bytes and therefore their SHA-256. SOW does not add signatures to DEB package files.
@@ -125,6 +126,7 @@ signing:
 | `never` | Store the input bytes unchanged |
 | `fill` | Keep a package whose signature verifies with the configured key or trusted keys; sign other packages |
 | `always` | Keep a package already signed by the configured key; re-sign other packages |
+{.wide .expand}
 
 With no key, the default mode is `never`. With a key, the default is `fill`.
 Both `fill` and `always` require a key.
@@ -132,16 +134,16 @@ Both `fill` and `always` require a key.
 Package signing uses the host `rpm --addsign` or `rpm --resign` command on a private
 copy. Install `rpm` and `gpg`, and make the matching private key available in the GPG
 environment used by `rpm`. A key reference identifies the signer; it does not import a
-private key into that environment. The original input file is unchanged.
+private key into that environment. SOW leaves the original input file unchanged.
 
 SOW checks the result's signature, package coordinate, and signature-neutral payload
 digest. If an existing object has the same coordinate and payload and satisfies the
 current policy, SOW can reuse its signed bytes. In `never` mode, reuse requires an exact
 byte match.
 
-Use RPM format v4 for package-signing workflows. SOW does not support the signature tag
-used by RPM format v6. This is separate from OpenPGP packet versions; historical CentOS
-OpenPGP v3 and v4 signatures are supported.
+Use RPM format v4 for package-signing workflows. SOW verifies RSA, DSA, ECDSA, and EdDSA RPM signatures, including header-only signatures stored in RPM signature header tag 267 (`RPMSIGTAG_DSA`). SOW does not support the signature tag
+used by RPM format v6. This is separate from OpenPGP packet versions; SOW supports historical CentOS
+OpenPGP v3 and v4 signatures.
 
 <span id="key-changes-make-dists-dirty" data-td-print-local></span>
 
@@ -157,7 +159,8 @@ in place. For a staged package-key rotation:
 1. Set the new key as current and use `mode: fill`.
 2. Keep the old public key in `trusted_keys` while old packages remain members.
 3. Add new package releases signed by the new key.
-4. Remove old trust after the old signed packages have been withdrawn or replaced.
+4. Remove old trust after you withdraw or replace the old signed packages.
+{.steps .td-steps-compact}
 
 Switching directly to `always` with a new key requires every Desired RPM to satisfy that
 key policy. If changed signatures would replace an existing package URL with different

@@ -58,7 +58,7 @@ targets:
     exclusive_write_authority: true
 ```
 
-SOW creates `/srv/repo-public/local` from `endpoint` and `prefix`. The three required booleans declare that this workspace is the source of truth and the only writer for that target. Use a separate prefix for other tools.
+SOW creates `/srv/repo-public/local` from `endpoint` and `prefix`. The three required booleans declare that this workspace is the source of truth and the only writer for that target. SOW scopes the target path overlap check to each target's prospective path, so sibling targets under `/srv/repo-public` with distinct prefixes do not block each other. Use a separate prefix for other tools.
 
 This example checks the published files through `file://` and declares no intermediary cache. If you later add a proxy or CDN, use its public Repository URL for `public_endpoint`
 and its longest cache lifetime for `max_cache_ttl`. Apply these changes through
@@ -113,6 +113,7 @@ The client addresses are:
 | DNF `baseurl` | `http://repo.example.com/local/dists/el9/$basearch/` |
 | APT `URIs` | `http://repo.example.com/local` |
 | APT `Suites` / `Components` | `bookworm` / `main` |
+{.wide .expand}
 
 Use the [YUM](/docs/tutorial/yum-repo/) or [APT](/docs/tutorial/apt-repo/) tutorial for the full source configuration. To verify signatures, distribute the public key and follow [Sign Your Repository](/docs/tutorial/signing/).
 
@@ -150,11 +151,13 @@ the copy:
 3. Verify transferred files against `sow changes 0` or an archive checksum manifest.
 4. Switch the server's path to the new release directory.
 5. Keep package and immutable metadata URLs referenced by old indexes reachable until the maximum cache lifetime expires, then clean up the old release.
+{.steps .td-steps-compact}
 
 For paths absent from the new release, the HTTP server can fall back to the previous
 release directory during that interval.
 
-Copying directly over a live tree can expose indexes before their package files arrive. Prepare the new directory first and switch it as a unit.
+> [!WARNING]
+> Copying directly over a live tree can expose indexes before their package files arrive. Prepare the new directory first and switch it as a unit.
 
 ## Serve a Plain repository
 

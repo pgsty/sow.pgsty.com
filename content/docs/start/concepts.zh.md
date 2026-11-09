@@ -10,8 +10,9 @@ icon: fa-solid fa-diagram-project
 ---
 
 <span id="选择模式" data-td-print-local></span>
+<span id="plain-还是-managed" data-td-print-local></span>
 
-## 选择模式 {#plain-还是-managed}
+## 选择模式 {#plain-or-managed}
 
 | 需求 | Plain | Managed |
 |---|---|---|
@@ -19,26 +20,28 @@ icon: fa-solid fa-diagram-project
 | 保存配置与成员关系 | 目录内容就是状态 | `sow.yml` 与私有 SQLite 数据库 |
 | 组织软件包 | 一个平面目录，可同时包含 RPM 与 DEB | 具名 Dist，每个 Dist 一种格式 |
 | 生成架构视图 | 不支持 | 支持 |
-| 过滤软件包、限制版本数 | `--pigsty` 提供 Pigsty 约定 | 每个 Dist 单独配置 |
+| 过滤软件包、限制版本数 | `sow prune DIR`（RPM 按 `NAME + ARCH` 保留最新版）与 `--pigsty` 清理 | 每个 Dist 单独配置 |
 | 签名 RPM 软件包 | 支持 | 支持 |
 | 签名仓库元数据 | 在 SOW 外单独签名 | 在 `sow.yml` 配置密钥 |
 | 记录构建快照与发布状态 | 在 SOW 外管理 | 内置 |
+{.matrix .wide .expand}
 
 如果目录已包含全部待发布软件包，使用 Plain。如果需要由 SOW 持续管理成员与仓库，使用 Managed。
 
 <span id="工作区repository-与-dist" data-td-print-local></span>
+<span id="managed-层级" data-td-print-local></span>
 
-## 工作区、仓库与 Dist {#managed-层级}
+## 工作区、仓库与 Dist {#managed-hierarchy}
 
-```text
-Workspace                    /srv/sow
-├── sow.yml                  配置
-├── .sow/                    私有状态
-└── Repository               /srv/sow/local
-    ├── pool/                软件包文件
+```filetree
+Workspace                    # /srv/sow
+├── sow.yml                  # 配置
+├── .sow/                    # 私有状态
+└── Repository/              # /srv/sow/local
+    ├── pool/                # 软件包文件
     └── dists/
-        └── Dist             具名 RPM 或 DEB 软件包集合
-            └── views        各架构的元数据
+        └── Dist/            # 具名 RPM 或 DEB 软件包集合
+            └── views/       # 各架构的元数据
 ```
 
 **工作区（Workspace）** 保存一个或多个仓库的配置与私有状态。
@@ -50,8 +53,9 @@ Workspace                    /srv/sow
 **架构视图** 保存某个架构的元数据。SOW 把 RPM `noarch` 与 DEB `all` 包加入每个适用的视图。
 
 <span id="每个软件包只存一份" data-td-print-local></span>
+<span id="一条规范包体路径" data-td-print-local></span>
 
-## 每个软件包只存一份 {#一条规范包体路径}
+## 每个软件包只存一份 {#one-canonical-payload}
 
 SOW 用完整包文件的 SHA-256 标识 **包对象（Package Object）**，从包内元数据读取包名、版本与架构。
 
@@ -62,8 +66,9 @@ RPM 元数据通过相对路径引用包池，APT `Packages` 使用相对于仓�
 部分镜像工具（包括默认 `dnf reposync`）拒绝 RPM 中指向父目录的路径。为这些工具使用 [`sow export rpm-leaf`](/zh/docs/command/export/) 导出独立 RPM 仓库。
 
 <span id="期望成员与构建快照" data-td-print-local></span>
+<span id="desired-与-built" data-td-print-local></span>
 
-## 期望成员与构建快照 {#desired-与-built}
+## 期望成员与构建快照 {#desired-and-built}
 
 **期望成员（Desired membership）** 是每个 Dist 选中的软件包集合。
 **Generation（构建快照）** 标识一次已完成的构建及其文件清单。Built Generation 指当前已完成的构建。
@@ -81,21 +86,24 @@ add / rm → 期望成员 → build → 构建快照
 | `sow check` | 检查软件包、索引、签名与状态记录，不修改文件 |
 | `sow changes [BASE_GENERATION]` | 列出指定快照到当前构建的文件变更 |
 | `sow publish TARGET` | 检查当前构建并发布到已配置目标 |
+{.wide .expand}
 
 <span id="理解仓库状态" data-td-print-local></span>
+<span id="事务与失败状态" data-td-print-local></span>
 
-## 理解仓库状态 {#事务与失败状态}
+## 理解仓库状态 {#transactions-and-failure-states}
 
 | 状态 | 含义 | 下一步 |
 |---|---|---|
 | `clean` | 成员与配置符合已构建结果 | 可以检查或发布 |
 | `dirty` | 成员或配置变更需要构建 | 执行 `build`，再执行 `check` |
-| `recovering` | 被中断的操作需要恢复 | 按报错与[恢复步骤](/zh/docs/reference/troubleshooting/#命令执行中断)处理 |
+| `recovering` | 被中断的操作需要恢复 | 按报错与[恢复步骤](/zh/docs/reference/troubleshooting/#a-command-was-interrupted)处理 |
 | `error` | 状态记录或文件发生冲突 | 查看报错与操作日志 |
+{.wide .expand}
 
 使用 [`sow log`](/zh/docs/command/log/) 查看失败或中断的操作记录。
 
-## 继续阅读
+## 继续阅读 {#continue}
 
 - [Managed 工作区](/zh/docs/feature/managed/)
 - [包池与架构视图](/zh/docs/feature/views/)

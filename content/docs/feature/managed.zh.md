@@ -13,8 +13,9 @@ icon: fa-solid fa-sitemap
 并保留操作历史。
 
 <span id="三个层级" data-td-print-local></span>
+<span id="工作区仓库与-dist" data-td-print-local></span>
 
-## 工作区、仓库与 Dist
+## 工作区、仓库与 Dist {#workspace-repository-and-dist}
 
 ```text
 Workspace（工作区）
@@ -37,10 +38,11 @@ Workspace（工作区）
 成员关系，并出现在该 Dist 的各个适用架构视图中。不同仓库分别保存自己的包对象。
 
 <span id="磁盘布局" data-td-print-local></span>
+<span id="公开文件与私有状态" data-td-print-local></span>
 
-## 公开文件与私有状态
+## 公开文件与私有状态 {#public-files-and-private-state}
 
-```text
+```filetree
 <workspace>/
 ├── sow.yml
 ├── .sow/
@@ -65,8 +67,9 @@ Workspace（工作区）
 
 <span id="sowyml-驱动一切" data-td-print-local></span>
 <span id="protected-仓库" data-td-print-local></span>
+<span id="创建与配置" data-td-print-local></span>
 
-## 创建与配置
+## 创建与配置 {#create-and-configure}
 
 ```bash
 sow init /srv/repo
@@ -89,12 +92,13 @@ sow config show --all -C /srv/repo
 `config show --all` 展开默认值。配置接受 `amd64`、`arm64`，分别规范化为
 `x86_64`、`aarch64`；DEB 索引仍使用原生名称 `amd64`、`arm64`。
 
-要防止整个仓库被删除，设置 `protected: true`。它会阻止 `repo rm`，包括带 `-f` 的调用，
+要防止删除整个仓库，设置 `protected: true`。它会阻止 `repo rm`（包括带 `-f` 的调用），
 但不限制包和 Dist 的修改。
 
 <span id="空-dist-也有合法协议发布面" data-td-print-local></span>
+<span id="期望状态与构建状态" data-td-print-local></span>
 
-## 期望状态与构建状态
+## 期望状态与构建状态 {#desired-state-and-built-state}
 
 期望状态记录各 Dist 应包含哪些包；构建状态记录最近完成的元数据构建快照。
 
@@ -109,20 +113,22 @@ sow check -C /srv/repo -r demo
 ```
 
 `dirty` 表示仓库需要构建，公开目录仍对应上一次完成的构建快照。
-策略、架构或签名变化也会使 Dist 变脏。成员关系或构建状态仍引用某个架构时，不能从配置删除它。
+策略、架构或签名变化也会使 Dist 变脏。成员关系或构建状态仍引用某个架构时，SOW 会拒绝从配置中删除它。如果已发布到目标的某个 Dist 或架构随后被移除，必须先执行覆盖整库的 `sow build -r REPO` 生成新的完整构建快照，之后 `sow publish` 才会撤下远端已移除的入口指针。
 
 新 Dist 会立即获得各架构的有效空索引。已配置元数据签名时，空 Dist 也会签名。
 移除最后一个成员后，索引为空，但入口仍保留。
 
 <span id="发现哪个工作区" data-td-print-local></span>
+<span id="查找工作区" data-td-print-local></span>
 
-## 查找工作区
+## 查找工作区 {#find-the-workspace}
 
 Managed 命令按以下顺序查找最近祖先目录中的 `sow.yml`：
 
 1. 指定 `-C/--workdir DIR` 时从 `DIR` 开始，否则从当前目录开始。
 2. 没有找到工作区时，从 `$SOW_DIR` 开始查找。
 3. 两次都没有找到时，返回工作区发现错误。
+{.steps .td-steps-compact}
 
 命令使用找到的第一个配置，即使该配置有错误。`--workdir` 只改变工作区查找起点，
 不改变进程目录。相对输入路径仍相对于当前目录：
@@ -137,8 +143,9 @@ sow add ./build/example.rpm -C /srv/repo -r demo -d el9
 Plain 命令 `sow create` 不参与工作区查找。
 
 <span id="选择哪个仓库哪个-dist" data-td-print-local></span>
+<span id="选择仓库与-dist" data-td-print-local></span>
 
-## 选择仓库与 Dist
+## 选择仓库与 Dist {#select-a-repository-and-dist}
 
 仓库选择使用第一个可用结果：
 
@@ -160,8 +167,9 @@ Plain 命令 `sow create` 不参与工作区查找。
 
 <span id="状态数据库与软件包事实" data-td-print-local></span>
 <span id="init-只做收敛不做重置" data-td-print-local></span>
+<span id="重复初始化与升级" data-td-print-local></span>
 
-## 重复初始化与升级
+## 重复初始化与升级 {#repeat-initialization-or-upgrade}
 
 再次运行 `init` 会补齐配置中尚未初始化的仓库和 Dist。已有状态只做检查，不重置构建快照。
 给已有 Dist 新增架构后，运行 `build` 生成新视图。

@@ -18,12 +18,14 @@ icon: fa-solid fa-magnifying-glass-chart
 | `changes` | 两个构建快照之间有哪些本地文件变化？ |
 | `log` | 执行了哪些操作，改变了什么？ |
 | `retain ls` | 显式保留了哪些构建快照？ |
+{.wide .expand}
 
 这些命令不修改仓库内容。
 
 <span id="status低成本状态" data-td-print-local></span>
+<span id="查看状态" data-td-print-local></span>
 
-## 查看状态
+## 查看状态 {#inspect-state}
 
 ```bash
 sow status -r demo
@@ -39,12 +41,13 @@ sow status -r demo
 | `error` | 记录或文件证据存在未解决错误 |
 
 `status` 报告状态，不计算公开文件哈希。`dirty` 状态运行 `build`；
-`recovering` 或 `error` 状态按诊断及[恢复流程](/zh/docs/feature/transactions/#恢复中断操作)处理。
+`recovering` 或 `error` 状态按诊断及[恢复流程](/zh/docs/feature/transactions/#recover-an-interrupted-operation)处理。
 交付前运行 `check`。
 
 <span id="check交付证明" data-td-print-local></span>
+<span id="校验仓库" data-td-print-local></span>
 
-## 校验仓库
+## 校验仓库 {#verify-the-repository}
 
 ```bash
 sow check -r demo
@@ -63,6 +66,7 @@ sow check -r demo
 | `index` | 索引内容和引用文件 |
 | `signature` | 已配置的元数据与 RPM 包签名 |
 | `generation-manifest` | 构建文件清单与公开目录是否一致 |
+{.wide .expand}
 
 布局转换未完成时，改为报告 `config`、`state`、`public-modes`、`layout-transition`。
 按 [`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 的说明完成或中止迁移。
@@ -71,8 +75,9 @@ sow check -r demo
 即使上一构建快照仍一致，脏仓库或恢复中的仓库也不能通过交付检查。
 
 <span id="changesgeneration-差异" data-td-print-local></span>
+<span id="比较构建快照" data-td-print-local></span>
 
-## 比较构建快照
+## 比较构建快照 {#compare-generations}
 
 ```bash
 sow changes -r demo
@@ -87,8 +92,9 @@ sow changes 42 -r demo --json
 用目标 GC 回收远端对象。
 
 <span id="generation-保留与-gc" data-td-print-local></span>
+<span id="保留构建快照与回收无用包" data-td-print-local></span>
 
-## 保留构建快照与回收无用包
+## 保留构建快照与回收无用包 {#retain-generations-and-collect-unused-packages}
 
 `retain add` 只接受当前构建快照。若 `status` 显示构建快照为 42，应在后续构建替换它之前保留：
 
@@ -99,7 +105,7 @@ sow retain ls -r demo
 
 命令校验该构建快照，保存元数据与引用；包文件仍由共享包池保存。
 不再需要构建快照 42 时，用 `sow retain rm 42 -r demo` 移除保留记录，
-再用 `sow gc -r demo` 回收无用字节。本地 `gc` 要求仓库为 clean；有待构建变更时先构建。
+再用 `sow gc -r demo` 回收无用字节。若 `retain rm` 或 `gc` 中途中断，重新执行同一命令即可继续完成已记录的计划。本地 `gc` 要求仓库为 clean；有待构建变更时先构建。
 期望成员、已构建成员、为旧客户端保留的成员记录，以及保留构建快照、恢复或发布状态
 仍需使用的包都会保留。完整规则见 [`gc`](/zh/docs/command/gc/)。
 
@@ -108,8 +114,9 @@ sow retain ls -r demo
 R2 目标只报告候选，不执行删除。
 
 <span id="操作日志" data-td-print-local></span>
+<span id="查看与导出日志" data-td-print-local></span>
 
-## 查看与导出日志
+## 查看与导出日志 {#read-and-export-the-log}
 
 ```bash
 sow log -r demo

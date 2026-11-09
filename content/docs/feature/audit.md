@@ -19,6 +19,7 @@ changes, and `log` to read operation history.
 | `changes` | Which local files changed between built generations? |
 | `log` | Which operations ran, and what did they change? |
 | `retain ls` | Which generations are explicitly retained? |
+{.wide .expand}
 
 These commands do not modify repository contents.
 
@@ -66,6 +67,7 @@ A normal check reports nine layers:
 | `index` | Index contents and referenced files |
 | `signature` | Configured metadata and RPM package signatures |
 | `generation-manifest` | Built file manifest against the public tree |
+{.wide .expand}
 
 An unfinished layout transition instead reports `config`, `state`, `public-modes`, and
 `layout-transition`. Complete or abort that migration as directed by
@@ -105,8 +107,8 @@ sow retain ls -r demo
 ```
 
 The command verifies the generation and saves its metadata and references. Package files
-remain in the shared pool. When generation 42 is no longer needed, remove its retention
-record with `sow retain rm 42 -r demo`. Then run `sow gc -r demo` to collect unused bytes.
+remain in the shared pool. When you no longer need generation 42, remove its retention
+record with `sow retain rm 42 -r demo`. Then run `sow gc -r demo` to collect unused bytes. If `retain rm` or `gc` stops mid-execution, rerun the same command to resume its recorded plan.
 Local `gc` requires a clean repository; build pending changes first. It preserves packages
 needed by Desired, built, and previous-client membership records, retained generations,
 recovery, or publication state. See [`gc`](/docs/command/gc/) for the complete rules.

@@ -42,7 +42,7 @@ applicable architecture view. Separate repositories keep separate package object
 
 ## Public files and private state
 
-```text
+```filetree
 <workspace>/
 ├── sow.yml
 ├── .sow/
@@ -95,7 +95,7 @@ Configuration accepts `amd64` and `arm64` as aliases for `x86_64` and `aarch64`.
 DEB indexes use the native names `amd64` and `arm64`.
 
 To prevent removal of a repository, set `protected: true` on it. This blocks `repo rm`,
-including `-f`; package and Dist changes remain available.
+including `-f`, while package and Dist changes remain available.
 
 <span id="empty-has-a-valid-protocol-surface" data-td-print-local></span>
 
@@ -117,7 +117,7 @@ sow check -C /srv/repo -r demo
 
 A `dirty` repository needs a build. Its public tree still represents the previous built
 generation. Policy, architecture, or signing changes can also make a Dist dirty.
-Removing an architecture still referenced by membership or built state is rejected.
+SOW rejects removing an architecture that membership or built state still references. If a Dist or architecture is removed after being published to a target, a full-repository `sow build -r REPO` must produce a new complete Built Generation before `sow publish` withdraws the removed target pointers.
 
 Every new Dist starts with valid empty indexes for its architectures. Metadata signing,
 when configured, applies to empty Dists too. Removing the last member leaves empty indexes.
@@ -131,8 +131,9 @@ Managed commands search for the nearest ancestor `sow.yml`:
 1. Start at `-C/--workdir DIR`, if supplied; otherwise start at the current directory.
 2. If no workspace is found, search from `$SOW_DIR`.
 3. If neither search succeeds, report a discovery error.
+{.steps .td-steps-compact}
 
-The first configuration found is used, even if it contains an error. `--workdir` changes
+SOW uses the first configuration it finds, even if that file contains an error. `--workdir` changes
 workspace discovery, not the process directory. Relative input paths still refer to your
 current directory:
 

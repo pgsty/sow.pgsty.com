@@ -25,12 +25,13 @@ Managed 仓库将每个包对象保存在 `pool/` 中。Dist 和架构视图只�
 <span id="rpm-view-使用计算出的父级相对-href" data-td-print-local></span>
 <span id="为什么-view-只含元数据" data-td-print-local></span>
 <span id="中性包只被选入不会复制" data-td-print-local></span>
+<span id="rpm-视图" data-td-print-local></span>
 
-## RPM 视图
+## RPM 视图 {#rpm-views}
 
 RPM Dist 为每个配置架构生成一个元数据目录：
 
-```text
+```filetree
 demo/
 ├── pool/
 │   ├── e/example/example-1.0-1.x86_64.rpm
@@ -58,8 +59,9 @@ demo/
 `sow check` 检查索引路径没有逃出仓库，并指向预期包对象。
 
 <span id="apt-view" data-td-print-local></span>
+<span id="apt-视图" data-td-print-local></span>
 
-## APT 视图
+## APT 视图 {#apt-views}
 
 APT 索引使用相对于仓库根的路径：
 
@@ -71,32 +73,34 @@ Filename: pool/e/example/example_1.0-1_amd64.deb
 和 SHA-256 by-hash 条目。Dist 根包含 `Release`，已签名时还有 `InRelease`、`Release.gpg`。
 
 `all` 包出现在每个适用架构索引中，包体仍只有一份包池对象。
-没有每视图包副本，也没有每架构 `Release` 文件。
+SOW 不生成每视图包副本，也不生成每架构 `Release` 文件。
 
 <span id="普通客户端与-reposync-是两份契约" data-td-print-local></span>
+<span id="为-dnf-reposync-导出" data-td-print-local></span>
 
-## 为 `dnf reposync` 导出
+## 为 `dnf reposync` 导出 {#export-for-dnf-reposync}
 
 默认 `dnf reposync` 会拒绝越过其单仓库下载目录的 Managed RPM 路径。
 此工作流可使用独立仓库导出：
 
-RPM Dist 必须属于当前构建快照。运行前先检查[导出前提](/zh/docs/command/export/)。
+RPM Dist 必须属于当前构建快照且处于干净状态。即使后续构建只更新了其他 Dist，只要该 RPM Dist 状态干净，也可以直接导出，因为 SOW 会把未变更的视图沿用到当前构建快照中。运行前先检查[导出前提](/zh/docs/command/export/)。
 
 ```bash
 sow export rpm-leaf el9 x86_64 /srv/exports/el9-x86_64 -r demo
 ```
 
 导出包含本地包路径、独立 repodata、清单和 `.sow-export.json` 完成标记。
-目标目录应位于仓库和所有已配置 filesystem 发布根之外。
+目标目录应位于仓库和所有已配置 filesystem 发布目标的预期路径（`endpoint + prefix`）之外。
 
-默认复制文件。`--hardlink` 要求同一文件系统，使导出包与源包共用 inode，
-因此应保持导出文件只读。导出不会创建 Dist 成员或保留构建快照，也不是 `sow publish` 的输入。
+> [!WARNING]
+> 默认复制文件。`--hardlink` 要求同一文件系统，使导出包与源包共用 inode，因此应保持导出文件只读。导出不会创建 Dist 成员或保留构建快照，也不是 `sow publish` 的输入。
 
 <span id="复制与发布" data-td-print-local></span>
+<span id="交付完整仓库" data-td-print-local></span>
 
-## 交付完整仓库
+## 交付完整仓库 {#deliver-the-complete-repository}
 
-在线更新使用已配置的发布目标。需要其他传输方式时，先将完整、已稳定的
+在线更新使用已配置的发布目标。删除某个 Dist 或架构后，先运行覆盖整库的 `sow build -r REPO` 再发布，使当前构建快照覆盖完整仓库并允许 `sow publish` 安全撤下远端已移除的入口指针。需要其他传输方式时，先将完整、已稳定的
 `pool/ + dists/` 复制到单独暂存目录，检查副本后再切换上线。缓存中的索引所引用的包 URL
 应保持可访问，直到缓存过期。完整传输流程见[对外服务](/zh/docs/tutorial/serving/)。
 只复制某个 RPM 架构目录，会使包路径无法解析。

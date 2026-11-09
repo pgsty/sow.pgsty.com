@@ -18,11 +18,12 @@ sow create /srv/offline
 
 <span id="契约" data-td-print-local></span>
 <span id="扫描与输出规则" data-td-print-local></span>
+<span id="输入与输出" data-td-print-local></span>
 
-## 输入与输出
+## 输入与输出 {#inputs-and-outputs}
 
 SOW 只扫描目录顶层以 `.rpm` 或 `.deb` 结尾的普通文件，不递归，也不跟随包文件符号链接。
-包名、版本和架构来自包内信息。源码 RPM（`src` 和 `nosrc`）会被拒绝。
+包名、版本和架构来自包内信息。SOW 会拒绝源码 RPM（`src` 和 `nosrc`）。
 
 | 输入 | 生成文件 |
 |---|---|
@@ -30,19 +31,20 @@ SOW 只扫描目录顶层以 `.rpm` 或 `.deb` 结尾的普通文件，不递归
 | DEB | `Packages` 和 `Packages.gz` |
 | 两种格式 | 两组索引 |
 
-RPM 包路径使用文件名，DEB 的 `Filename` 使用 `./<文件名>`。所有有效版本都会进入索引。
-同一包坐标对应不同字节时，构建报冲突。没有受支持包的目录会被拒绝；`--pigsty`
+RPM 包路径使用文件名，DEB 的 `Filename` 使用 `./<文件名>`。SOW 会把所有有效版本收入索引。
+同一包坐标对应不同字节时，构建报冲突。SOW 会拒绝没有受支持包的目录；`--pigsty`
 完成中断的清理操作时例外。
 
 默认保留包文件和无关文件。某种格式不再有包时，SOW 删除该格式的旧索引。
-对于 RPM，SOW 保留当前与紧邻上一轮以校验和命名的元数据，删除更早的 SOW 格式元数据，并替换不完整输出。
+对于 RPM，SOW 保留当前与紧邻上一轮以校验和命名的元数据，删除更早的 SOW 格式元数据，并替换不完整输出。若 `repodata/` 中存在 SQLite 数据库、modulemd、comps 或 `.asc` 签名等非 SOW 文件，`sow create` 会清理这些外来元数据，并在 `dropped_metadata`（`--json`）和 stderr 告警中报告。
 生成目录的权限为 `0755`，生成文件为 `0644`。
 
 <span id="单遍流水线" data-td-print-local></span>
 <span id="最终-stat-校验保证什么" data-td-print-local></span>
 <span id="确定性与-no-op" data-td-print-local></span>
+<span id="构建与重复运行" data-td-print-local></span>
 
-## 构建与重复运行
+## 构建与重复运行 {#build-and-repeat}
 
 普通未签名构建只读取每个选中包一次，同时计算 SHA-256 并解析元数据。
 `--jobs` 控制并行数，默认为逻辑 CPU 数。SOW 根据解析结果生成并检查索引。
@@ -67,9 +69,22 @@ sow create /srv/offline --metadata-timestamp 1791849600
 
 小文件 `.sow-plain-rpm-history.json` 跟踪 RPM 元数据保留范围。
 没有变化的构建仍保留同一份上一轮索引。复制目录后还要继续构建时，一并保留该文件。
-软件包保留仍由维护者负责，详见 [RPM 索引保留](/zh/docs/command/create/#保留上一轮-rpm-索引)。
+软件包保留仍由维护者负责，详见 [RPM 索引保留](/zh/docs/command/create/#keep-the-previous-rpm-indexes)。
 
-## 构建中断
+## 清理旧版 RPM {#prune-superseded-rpms}
+
+使用 [`sow prune`](/zh/docs/command/prune/) 在 Plain 目录中按每个 RPM `(name, arch)` 仅保留最高 EVR 版本：
+
+```bash
+sow prune /srv/offline --check
+sow prune /srv/offline
+```
+
+`sow prune` 按原生 `rpmvercmp` 规则（包含 `~` 预发布与 `^` 后置快照算符）比较版本。它先更新 `repodata/`，再删除被取代的 `.rpm` 文件，确保客户端不会看到指向缺失软件包的索引。如果目录中已有 `repo_complete`，`sow prune` 会自动刷新该标记。与 `sow create` 不同，当 `repodata/` 中含有非 SOW 外来元数据文件时，`sow prune` 会拒绝执行。
+
+<span id="构建中断" data-td-print-local></span>
+
+## 构建中断 {#interrupted-builds}
 
 SOW 先在暂存区生成并检查元数据，再替换公开文件。这些替换不构成跨全部 RPM 和 DEB 文件
 的单个事务，中断可能留下混合版本或不完整索引。
@@ -81,8 +96,9 @@ SOW 先在暂存区生成并检查元数据，再替换公开文件。这些替�
 事务恢复时，使用 [Managed 模式](/zh/docs/feature/managed/)。
 
 <span id="--pigsty-marker-门禁" data-td-print-local></span>
+<span id="pigsty-清理与完成标记" data-td-print-local></span>
 
-## Pigsty 清理与完成标记
+## Pigsty 清理与完成标记 {#pigsty-cleanup-and-completion-marker}
 
 ```bash
 sow create /srv/offline --pigsty
@@ -91,7 +107,7 @@ sow create /srv/offline --pigsty
 `--pigsty` 根据包内信息删除 DEB `i386` 包和 Patroni 3.0.4 包。
 它不会仅因 RPM 架构为 `i386`、`i486`、`i586` 或 `i686` 而删除该包。
 
-`annobin-docs` 等文档包会保留，除非命中上述清理规则。
+SOW 保留 `annobin-docs` 等文档包，除非命中上述清理规则。
 
 索引更新和包清理完成后，SOW 写入 `repo_complete`。每行包含 SHA-256、两个空格和保留的
 包文件名，按文件名排序。
@@ -101,8 +117,9 @@ SOW 在替换公开文件前移除旧标记，最后写入新标记。采用此�
 不带 `--pigsty` 的命令会拒绝重建。
 
 <span id="显式-rpm-签名" data-td-print-local></span>
+<span id="rpm-包签名" data-td-print-local></span>
 
-## RPM 包签名
+## RPM 包签名 {#rpm-package-signing}
 
 ```bash
 sow create /srv/offline --sign-with 6D5C5A26C36B1F73
@@ -112,15 +129,16 @@ sow create /srv/offline --sign-with 6D5C5A26C36B1F73
 签名需要主机上的 `rpm` 命令和可用 GPG 密钥。SOW 对暂存副本签名并检查，再先替换包文件、
 后替换索引。这条路径会多次读取包字节。
 
-密钥带口令时，开发版支持 `--passfile PATH` 或 `SOW_GPG_PASSFILE`；启用签名仍需
+密钥带口令时，可传入 `--passfile PATH` 或设置 `SOW_GPG_PASSFILE`；启用签名仍需
 `--sign-with`。完整文件格式见[口令文件](/zh/docs/reference/config/#passfile)。
 Plain 模式不读取 Managed 的 `sow.yml` 配置。
 
 Plain 模式不签仓库元数据。Managed 元数据签名和包签名策略见[签名](/zh/docs/feature/signing/)。
 
 <span id="锁与适用范围" data-td-print-local></span>
+<span id="并发命令" data-td-print-local></span>
 
-## 并发命令
+## 并发命令 {#concurrent-commands}
 
 `sow create` 锁住目标目录及其父目录。用 `-N` 在其他 SOW 写者占锁时立即退出，
 或用 `-T 30s` 最多等待 30 秒。默认等待到锁可用。

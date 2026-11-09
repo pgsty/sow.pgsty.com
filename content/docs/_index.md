@@ -11,13 +11,14 @@ sidebar_root_for: self
 sidebar_root_link_self: true
 search_keywords: [sow, documentation, package repository, rpm, yum, deb, apt]
 search_boost: 1.5
+outputs: [HTML, RSS, print, markdown, LLMSFULL]
 cascade:
   search_boost: 1.15
   sidebar_expanded: true
 ---
 
 SOW creates RPM/YUM and DEB/APT software repositories. Run `sow create DIR` to index
-packages in a directory. Use a Managed workspace when you need to organize packages into
+packages in a directory, or `sow prune DIR` to remove superseded RPM versions in place. Use a Managed workspace when you need to organize packages into
 Dists, limit versions, sign metadata, or publish updates.
 
 These docs cover **SOW 0.7.0**. See the [release notes](/blog/release/sow-v0.7.0/) for
@@ -44,3 +45,4 @@ for an existing Managed workspace.
 | Resolve an error or interrupted command | [Troubleshooting](/docs/reference/troubleshooting/) |
 | Check a field, path, or compatibility claim | [Reference](/docs/reference/) |
 | Understand an architecture decision | [Design Records](/blog/design/) |
+{.wide .expand}
