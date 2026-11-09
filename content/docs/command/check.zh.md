@@ -11,7 +11,9 @@ icon: fa-solid fa-list-check
 
 交付 Managed 仓库前，使用 `sow check` 检查包哈希、状态、索引、签名与构建快照清单。此命令只读；如果期望状态与已构建状态不同，先运行 `sow build`。
 
-## 语法
+<span id="语法" data-td-print-local></span>
+
+## 语法 {#synopsis}
 
 ```text
 sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json]
@@ -24,8 +26,9 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 | `-r, --repo NAME` | 选择仓库 | [选择规则](/zh/docs/command/) |
 | `-d, --dist NAME` | 校验指定 Dist；可重复 | 全部 Dist |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
-## 校验层
+## 校验层 {#verification-layers}
 
 仓库没有未完成的布局迁移时，`check` 按顺序报告九层校验：
 
@@ -40,12 +43,15 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 | `index` | 渲染索引是否与其声明的成员关系一致 | Dist |
 | `signature` | 所有已声明元数据/软件包签名是否有效 | 签名 |
 | `generation-manifest` | 构建快照清单是否与磁盘文件一致 | 一个清单 |
+{.wide .expand}
 
 仓库存在未完成的布局迁移时，`check` 报告 `config`、`state`、`public-modes` 与 `layout-transition`，随后停止。按报告中的 [`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 指令完成或中止迁移。
 
-### 软件包校验 {#物理证据与-io-契约}
+<span id="物理证据与-io-契约" data-td-print-local></span>
 
-每次运行都会重新计算包文件的哈希。同一物理文件的硬链接共用一次哈希结果。带签名的 RPM 还会进行签名校验。`checked` 统计软件包对象数量，不是文件读取次数。
+### 软件包校验 {#physical-evidence-and-io-contract}
+
+每次运行都会重新计算包文件的哈希。同一物理文件的硬链接共用一次哈希结果。带签名的 RPM 还会进行签名校验，包括签名头标签 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 和 EdDSA 数据包。`checked` 统计软件包对象数量，不是文件读取次数。
 
 ```console
 sow check
@@ -61,7 +67,9 @@ signature	ok=true	checked=9
 generation-manifest	ok=true	checked=1
 ```
 
-## dirty 不可交付
+<span id="dirty-不可交付" data-td-print-local></span>
+
+## dirty 不可交付 {#dirty-is-not-deliverable}
 
 dirty 仓库需要先构建，才能通过 `check`。旧构建快照与新的期望状态可以分别通过校验，但二者仍有差异：
 
@@ -74,7 +82,9 @@ integrity or recovery error: managed: repository is not ready to copy: repositor
 
 此时退出 `5`。运行 [`sow build`](/zh/docs/command/build/) 后，再运行 `sow check`。
 
-## 退出码
+<span id="退出码" data-td-print-local></span>
+
+## 退出码 {#exit-codes}
 
 | 代码 | 触发条件 |
 |---|---|
@@ -83,8 +93,9 @@ integrity or recovery error: managed: repository is not ready to copy: repositor
 | `2` | 用法错误、未发现工作区或隐式仓库选择有歧义 |
 | `5` | 某个校验层失败，或仓库不可交付 |
 | `6` | 显式指定的仓库或 Dist 未配置 |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [`sow status`](/zh/docs/command/status/) —— 快速查询状态
 - [`sow build`](/zh/docs/command/build/) —— 按期望状态构建索引

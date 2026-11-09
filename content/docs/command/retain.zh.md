@@ -11,7 +11,7 @@ icon: fa-solid fa-box-archive
 
 `sow retain` 保留指定构建快照所需的包文件，防止本地 GC 回收。保留内容包括包文件与冻结清单；此命令不恢复或发布旧仓库视图。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow retain add GENERATION [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json]
@@ -21,7 +21,7 @@ sow retain rm GENERATION  [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR 
 
 `GENERATION` 必须是大于零的十进制整数。
 
-## retain add
+## retain add {#retain-add}
 
 传入当前构建快照的编号。SOW 校验该快照，保存清单，并记录 GC 需要保留的包文件。应在生成下一个构建快照前添加此记录。
 
@@ -32,7 +32,7 @@ retained generation 00000000000000000012: /srv/sow/.sow/pgsql/retained/000000000
 
 重复添加同一个构建快照时，如果保留记录仍可通过校验，命令不产生变化。
 
-## retain ls
+## retain ls {#retain-ls}
 
 列出仓库的保留记录。
 
@@ -44,7 +44,7 @@ GENERATION	RECORD_IDENTITY	PATH
 
 空列表也是成功结果。
 
-## retain rm
+## retain rm {#retain-rm}
 
 移除指定构建快照的保留记录：
 
@@ -53,7 +53,7 @@ sow retain rm 12 -r pgsql
 removed retained generation 00000000000000000012
 ```
 
-该命令不删除软件包体。指定的构建快照没有保留记录时，命令成功返回，不作修改。只有在其他保留记录与操作也不再
+该命令不删除软件包体。指定的构建快照没有保留记录时，命令成功返回，不作修改。删除保留记录前，SOW 会先写入移除计划（`.sow/<repo>/retained/<GENERATION>.rm`）；如果移除过程被中断，下一次命令会继续完成计划中的移除，而不会报告记录损坏。只有在其他保留记录与操作也不再
 引用这些包体时，后续本地 [`sow gc`](/zh/docs/command/gc/) 才可能回收。
 
 保留记录损坏时，`retain rm`、`retain ls`、本地 `gc` 与 `check` 都会报告错误。`check` 的 `retained` 层会指出受影响的构建快照。需要丢弃该损坏记录时：
@@ -64,7 +64,7 @@ removed retained generation 00000000000000000012
 
 移走记录也会移除它提供的 GC 保护。
 
-## 参数
+## 参数 {#options}
 
 | 参数 | 适用命令 | 含义 |
 |---|---|---|
@@ -73,8 +73,9 @@ removed retained generation 00000000000000000012
 | `-T, --timeout DUR` | `add`、`rm` | 最长写锁等待时间 |
 | `-N, --no-wait` | `add`、`rm` | 锁被占用时立即失败 |
 | `--json` | 全部 | 输出 JSON |
+{.wide .expand}
 
-## 退出行为
+## 退出行为 {#exit-behavior}
 
 | 代码 | 触发条件 |
 |---|---|
@@ -84,8 +85,9 @@ removed retained generation 00000000000000000012
 | `4` | `add`/`rm` 无法获取写锁 |
 | `5` | 构建快照清单或仓库状态不一致 |
 | `6` | 显式仓库未配置、`retain add` 指定的不是当前构建快照编号，或其他安全规则拒绝请求 |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [`sow gc`](/zh/docs/command/gc/) —— 回收保留状态不再需要的包文件
 - [`sow changes`](/zh/docs/command/changes/) —— 查看构建快照差异

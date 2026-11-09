@@ -11,7 +11,7 @@ icon: fa-solid fa-file-export
 
 `sow export rpm-leaf` 将一个 Dist 的指定架构导出为独立 RPM 仓库。它把软件包复制到外部目录，并将元数据中的包路径改为本地 `pool/...` 路径。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAME] [--json] [--passfile PATH]
@@ -22,6 +22,7 @@ sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAM
 | `DIST` | 已配置的规范 RPM Dist 名称 |
 | `ARCH` | `x86_64` 或 `aarch64` |
 | `DIR` | 不存在或为空，且不与仓库、私有状态、filesystem 目标根重叠的目录 |
+{.wide .expand}
 
 | 选项 | 含义 | 默认值 |
 |---|---|---|
@@ -30,8 +31,9 @@ sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAM
 | `-r, --repo NAME` | 选择仓库 | 选择规则 |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
-## 输出
+## 输出 {#output}
 
 ```console
 sow export rpm-leaf el9 x86_64 /srv/export/el9-x86_64
@@ -57,11 +59,11 @@ repository ID；换 baseurl 本身不能解决。需要客户端采用新的 rep
 若必须保留旧 ID 和缓存继续更新，请使用带显式时间戳的 Plain `create`，按
 [迁移指南](/zh/docs/tutorial/yum-migration/) 维护发布时间并重签 repomd。
 
-## 复制与硬链接
+## 复制与硬链接 {#copy-versus-hard-link}
 
 默认复制文件。`--hardlink` 只适用于同一文件系统上的只读输出。修改硬链接包文件也会修改 SOW 包池中的源文件。
 
-## 退出行为
+## 退出行为 {#exit-behavior}
 
 | 代码 | 触发条件 |
 |---|---|
@@ -70,8 +72,9 @@ repository ID；换 baseurl 本身不能解决。需要客户端采用新的 rep
 | `2` | 命令语法、Dist/架构 Token 无效，或发现/隐式仓库选择有歧义 |
 | `5` | 源构建快照或仓库状态不一致 |
 | `6` | 显式仓库未配置、Dist 不是 RPM、视图/签名者不可用，或目标不安全/非空/重叠 |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [平台与集成](/zh/docs/reference/compatibility/) —— 客户端与工具兼容性
 - [仓库布局](/zh/docs/reference/layout/) —— 源目录与导出边界

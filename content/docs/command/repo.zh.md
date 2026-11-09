@@ -12,7 +12,7 @@ icon: fa-solid fa-box-archive
 
 `sow repo` 用于创建、列出、查看、升级和删除仓库。每个仓库在 `pool/` 中保存包文件，在 `dists/` 中保存索引。同一仓库的 Dist 共用包文件。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow repo ls [-C DIR] [--json]
@@ -24,7 +24,7 @@ sow repo rm NAME [-f|--force] [-C DIR] [-T DUR | -N] [--json] [--passfile PATH]
 
 `repo new`、`repo rm`、`repo migrate` 支持 `--passfile PATH`，用于签名前置检查、签名或恢复中断操作。优先级为命令行、单个密钥配置、`SOW_GPG_PASSFILE`。本页其他查询子命令不读取口令文件。详见[口令文件](/zh/docs/reference/config/#passfile)。
 
-## 命名
+## 命名 {#naming}
 
 仓库名必须匹配 `[a-z0-9][a-z0-9._-]*`，且不能是 `.`、`..`、`.sow`、`pool`、`dists`，也不能与工作区
 保留文件冲突。
@@ -36,7 +36,7 @@ operation rejected: managed: operation rejected: name ".sow" must match [a-z0-9]
 
 SOW 在 `<workspace>/<NAME>/` 创建仓库。
 
-## sow repo ls
+## sow repo ls {#sow-repo-ls}
 
 只读列出工作区里的全部仓库。
 
@@ -51,11 +51,12 @@ pgsql	false	2	2	clean	0	0
 |---|---|---|
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
 `STATUS` 取值为 `clean`、`dirty`、`recovering` 或 `error`。各状态对客户端意味着什么，见
 [事务与恢复](/zh/docs/feature/transactions/)。
 
-## sow repo new
+## sow repo new {#sow-repo-new}
 
 更新 `sow.yml`，然后创建 `<workspace>/<NAME>/{pool,dists}`、SQLite 数据库与私有状态目录。新仓库
 尚未构建，构建快照编号为 0，状态为 clean。
@@ -72,12 +73,13 @@ created pigsty: path=/srv/repo/pigsty protected=false dists=0 generation=0 statu
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
 用 `NAME` 指定新仓库的名称。
 
 对已存在的仓库再次运行时，命令报告当前状态，不会创建第二个仓库。
 
-## sow repo show
+## sow repo show {#sow-repo-show}
 
 只读显示一个仓库的细节。省略 `NAME` 时按 [CLI 全局约定](/zh/docs/command/) 中的仓库选择规则
 解析。
@@ -103,6 +105,7 @@ repository pigsty:
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-r, --repo NAME` | 省略 `NAME` 时用它选择仓库 | 按选择规则 |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
 同时给出 `NAME` 与 `-r` 时，使用相同名称：
 
@@ -111,7 +114,7 @@ sow repo show demo -r empty
 operation rejected: repo show NAME "demo" and --repo "empty" select different repositories
 ```
 
-## sow repo migrate
+## sow repo migrate {#sow-repo-migrate}
 
 从 0.3 或 0.4 工作区升级到 SOW 0.7.0 时，使用 `repo migrate`。
 已使用 0.5.0 至 0.6.1 的工作区采用 schema v13，无需迁移数据库。新建的 0.7.0 仓库也使用 schema v13。
@@ -128,7 +131,7 @@ sow build -r pigsty -C /srv/sow
 sow check -r pigsty -C /srv/sow
 ```
 
-对其他仓库重复后三条命令。迁移结果包含 `schema_from` 与 `schema_to`；重复迁移报告 `13 -> 13`。Schema v13 增加包池路径查询索引。从 v0.3 迁移时，还会应用中间版本的状态与发布记录修复。
+对其他仓库重复后三条命令。迁移结果包含 `schema_from` 与 `schema_to`；重复迁移报告 `13 -> 13`。Schema v13 增加包池路径查询索引。从 v0.3 迁移时，还会应用中间版本的状态与发布记录修复。C2 布局迁移完成后，SOW 会将迁移锚点绑定到迁移后的 Generation，使后续 `build`、`add`、`check`、`gc` 和 `repo rm` 命令可以直接执行，而不会报告锚点不匹配。
 
 写操作要求当前 schema。兼容的只读命令可以查看旧状态，但不会升级数据库。迁移后使用 SOW 0.5 或更新版本；需要返回旧 schema 时，恢复备份。
 
@@ -158,8 +161,9 @@ SOW 将非空暂存目录完整移入 `.sow/<repo>/abandoned/`。
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
-## sow repo rm
+## sow repo rm {#sow-repo-rm}
 
 删除整个仓库，包括 `sow.yml` 条目、数据库、`pool/` 中的包文件、`dists/` 中的索引与私有状态。
 
@@ -188,12 +192,14 @@ removed repository pgsql
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
-### 强制删除 {#-f-到底降级了什么}
+<span id="-f-到底降级了什么" data-td-print-local></span>
+### 强制删除 {#what--f-actually-downgrades}
 
 使用 `-f` 删除非空仓库。设置了 `protected: true` 的仓库仍然受到保护。
 
-## protected
+## protected {#protected}
 
 `sow.yml` 中的 `protected: true` 阻止删除仓库，包括使用 `-f` 的情况：
 
@@ -211,7 +217,7 @@ sow dist rm el9 -r alpha -f
 removed dist el9 from alpha
 ```
 
-## 示例
+## 示例 {#examples}
 
 为两层结构创建仓库：
 
@@ -232,7 +238,7 @@ sow repo new nightly -N
 sow repo ls --json | jq -r '.result.repositories[] | "\(.name)\t\(.status)\tgen=\(.generation)"'
 ```
 
-## 退出码
+## 退出码 {#exit-codes}
 
 | 码 | 触发条件 |
 |---|---|
@@ -242,8 +248,9 @@ sow repo ls --json | jq -r '.result.repositories[] | "\(.name)\t\(.status)\tgen=
 | `4` | 工作区锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 工作区日志的完整性或恢复错误 |
 | `6` | 名称非法、仓库不存在、非空但未给 `-f`、`protected`，或 `NAME` 与 `-r` 冲突 |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [sow dist](/zh/docs/command/dist/) —— 下一层
 - [Managed 工作区](/zh/docs/feature/managed/) —— 三层模型与发现规则

@@ -32,7 +32,9 @@ sow check -C /srv/sow -r pgsql
 ```
 
 Repeat this for each Repository. Compatible read-only commands can still inspect an older
-schema, but they do not migrate it. See [Upgrade](/docs/start/install/#upgrade-to-061).
+schema, but they do not migrate it. If a Repository migrated from C2 layout by SOW 0.5 or
+0.6 reported an invalid transition control target after a later build, upgrading to SOW
+0.7.0 recovers automatically without manual repair. See [Upgrade](/docs/start/install/#upgrade-to-070).
 
 ## Status shows pending changes
 
@@ -50,12 +52,15 @@ A local build updates local indexes. To update a configured remote target, also 
 ## A command was interrupted
 
 For Plain mode, resolve the reported input or filesystem issue, then rerun the original
-`sow create` command with the same Pigsty, timestamp, and signing options.
+`sow create` command with the same Pigsty, timestamp, and signing options, or rerun
+`sow prune` with the same `--protect` and `--metadata-timestamp` options.
 
 For an interrupted `add`, `rm`, Dist change, or build, inspect `sow log` and fix the
 reported cause. Run `sow build` for that Repository to complete recovery. Committed Desired
 changes remain part of the pending build. For interrupted `init`, `repo new`, or `repo rm`
 operations, rerun the corresponding lifecycle command to recover the workspace journal.
+For interrupted local `gc` or `retain rm` operations, rerun `sow gc` or `sow retain rm GENERATION`;
+SOW 0.7.0 resumes the persisted plan or discards an empty plan interrupted before deletion.
 
 If recovery needs a protected signing key, supply its password source again. Journals
 do not save passwords. A supported recovery command can use `--passfile PATH` or
@@ -138,6 +143,7 @@ Use the named file and the check stage to narrow the cause:
 | Signing key unavailable | Check the configured key, secret-key access, GPG agent, and current key validity. Retry the build after correcting them. |
 | RPM does not match the trust policy | Check the package signature and configured public keys. See [Signing](/docs/tutorial/signing/). |
 | Public URL returns old content | Check the HTTP root, URL prefix, cache, and `max_cache_ttl`, then retry publication. |
+{.wide .expand}
 
 `sow check` reports integrity errors; it does not rewrite damaged data. Keep the reported
 path and operation ID when investigating. The [layout reference](/docs/reference/layout/)

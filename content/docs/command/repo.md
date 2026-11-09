@@ -51,13 +51,14 @@ pgsql	false	2	2	clean	0	0
 |---|---|---|
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 `STATUS` is one of `clean`, `dirty`, `recovering` or `error`. See
 [Transactions & Recovery](/docs/feature/transactions/) for what each one implies for clients.
 
 ## sow repo new
 
-Updates `sow.yml`, then creates `<workspace>/<NAME>/{pool,dists}`, the SQLite database and
+`sow repo new` updates `sow.yml`, then creates `<workspace>/<NAME>/{pool,dists}`, the SQLite database and
 the private state directory. A new Repository is Generation 0 and clean.
 
 ```console
@@ -72,6 +73,7 @@ created pigsty: path=/srv/repo/pigsty protected=false dists=0 generation=0 statu
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 Pass the new Repository name as `NAME`.
 
@@ -104,6 +106,7 @@ repository pigsty:
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select the repository when `NAME` is omitted | selection rules |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 If you give both `NAME` and `-r`, use the same name:
 
@@ -129,7 +132,7 @@ sow build -r pigsty -C /srv/sow
 sow check -r pigsty -C /srv/sow
 ```
 
-Repeat the last three commands for each Repository. The migration reports `schema_from` and `schema_to`; a repeated migration reports `13 -> 13`. Schema v13 adds pool-path lookup indexes. Migration from v0.3 also applies the intervening state and publication repairs.
+Repeat the last three commands for each Repository. The migration reports `schema_from` and `schema_to`; a repeated migration reports `13 -> 13`. Schema v13 adds pool-path lookup indexes. Migration from v0.3 also applies the intervening state and publication repairs. When a C2 layout migration finishes, SOW binds the migration anchor to the newly migrated Generation so subsequent `build`, `add`, `check`, `gc`, and `repo rm` commands succeed without reporting an anchor mismatch.
 
 Writes require the current schema. Compatible read-only commands can inspect older state without upgrading it. After migration, use SOW 0.5 or later; restore the backup to return to the older schema.
 
@@ -139,7 +142,7 @@ Conflicting records stop the abort. A journal-bound plan also requires its recor
 
 An abort can complete before the first journal or base manifest was written, provided the trusted transition marker already exists.
 SOW keeps that marker so another `sow repo migrate NAME` can plan and resume the transition.
-After commit intent, only forward recovery is allowed.
+After commit intent, SOW allows only forward recovery.
 
 SOW moves a nonempty temporary stage intact into `.sow/<repo>/abandoned/`.
 It reports retained paths or cleanup problems on stderr and in JSON `warnings`.
@@ -159,13 +162,13 @@ If an older abort already removed the trusted marker, restore a complete matchin
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ## sow repo rm
 
-Removes a Repository, including its `sow.yml` entry, database, package files in `pool/`, indexes in `dists/`, and private state.
+`sow repo rm` removes a Repository, including its `sow.yml` entry, database, package files in `pool/`, indexes in `dists/`, and private state.
 
-Without `-f`, only an empty Repository — no Dists, no Memberships, no Package Objects — can be
-removed:
+Without `-f`, SOW removes only an empty Repository — no Dists, no Memberships, and no Package Objects:
 
 ```console
 sow repo rm infra
@@ -190,6 +193,7 @@ removed repository pgsql
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ### Force removal {#what--f-actually-downgrades}
 
@@ -244,6 +248,7 @@ sow repo ls --json | jq -r '.result.repositories[] | "\(.name)\t\(.status)\tgen=
 | `4` | Workspace lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Integrity or recovery error in the Workspace journal |
 | `6` | Invalid name, unknown Repository, non-empty without `-f`, `protected`, or `NAME` conflicting with `-r` |
+{.wide .expand}
 
 ## See also
 

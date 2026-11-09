@@ -159,5 +159,6 @@ Use text output for interactive work and `--json` for scripts. `config show` pri
 | `5` | Integrity/recovery failure, or `check` ruling the tree not deliverable |
 | `6` | Rejected operation: conflict, protected object, no match, or incompatible architecture |
 | `130` | Command interrupted by SIGINT or SIGTERM |
+{.wide .expand}
 
 See [Exit Codes](/docs/reference/exit-codes/) for command-specific triggers.

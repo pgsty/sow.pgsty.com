@@ -23,6 +23,7 @@ filesystem for the workspace, then configure HTTP or storage access for clients.
 | Linux | Yes | Yes | Archive, RPM, DEB |
 | macOS | Yes | Yes | Archive |
 | Windows | No | No | — |
+{.matrix}
 
 Release binaries use `CGO_ENABLED=0` and need no language runtime. Source builds require
 Go 1.27.3 or later. Archives include the README, changelog, Apache-2.0 license, and
@@ -36,11 +37,11 @@ rename. Network filesystems such as NFS are not supported workspace locations.
 On macOS, use APFS; SOW rejects builds when required atomic directory exchange is unavailable.
 
 Keep the workspace's public tree and private staging on the same filesystem.
-Serve only `<workspace>/<repo>/`. That complete `pool/ + dists/` tree can be copied to
+Serve only `<workspace>/<repo>/`. You can copy that complete `pool/ + dists/` tree to
 other storage without the private database or journal.
 
-Full pool paths that differ only in case are rejected. Source-directory case aliases are
-also rejected on case-insensitive filesystems. A repository created on a case-sensitive
+SOW rejects full pool paths that differ only in case. On case-insensitive filesystems,
+SOW also rejects source-directory case aliases. A repository created on a case-sensitive
 volume can contain source directories that a case-insensitive destination cannot represent;
 filesystem publication checks this before starting. See [Layout](/docs/reference/layout/).
 
@@ -98,8 +99,8 @@ for that workflow.
 ### Existing EL7 caches
 
 EL7 YUM compares metadata data timestamps with its cached repository. Plain
-`create --metadata-timestamp SECONDS` lets you preserve and advance an existing publication
-time. The default is `0`.
+`create --metadata-timestamp SECONDS` and `prune --metadata-timestamp SECONDS` let you
+preserve and advance an existing publication time. The default is `0`.
 
 Exported RPM leaves and RPM metadata generated during `sow repo migrate` use timestamp `0`, with no timestamp override.
 Later Managed builds use their recorded publication time.
@@ -110,8 +111,11 @@ To retain the old ID and cache, follow the timestamp procedure with Plain mode i
 
 ### RPM signatures
 
-Package-signing workflows support RPM format v4. RPM format v6 signature tags are not
-supported. Metadata key-reference support is separate; see [Signing](/docs/feature/signing/).
+Package-signing workflows support RPM format v4. SOW verifies RSA, DSA, ECDSA, and EdDSA
+(Ed25519) OpenPGP packets in RPM header signature tag 267 (`RPMSIGTAG_DSA`), where `rpm`
+4.16 and later store ECDSA and EdDSA signatures. Both Managed mode and Plain `create` /
+`prune` reject RPM format v6 packages and signature tags. Metadata key-reference support is
+separate; see [Signing](/docs/feature/signing/).
 
 ## Publication providers
 
@@ -137,7 +141,7 @@ The source tree contains these integration checks:
 |---|---|---|
 | CLI clean-room workflow | Linux CI | Shipping binary, mixed Plain output, Managed initialization, RPM/DEB Dists, queries, build, and check |
 | Plain APT client | `pgsty/u22` Ubuntu 22.04 container | HTTP update, discovery, version selection, download, and installation with an explicitly trusted unsigned source |
-| RPM detached-signature transitions | AlmaLinux 8/9 and `pgsty/el10` containers | DNF behavior while `repomd.xml` and its detached signature change |
+| RPM detached-signature transitions | AlmaLinux 8/9 and `pgsty/el10` containers | DNF behavior while `repomd.xml` and its detached signature change, plus password-file signing with protected GPG keys |
 | S3-compatible transport | Pinned PGSTY Silo container | Bucket listing, HEAD, GET, conditional single-part PUT, replay, and object SHA-256 metadata |
 | Release packaging | Linux CI | Four archives, two RPMs, two DEBs, checksums, package paths, and license files |
 {.wide .expand}

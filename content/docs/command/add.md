@@ -34,10 +34,11 @@ sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|-
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ## Inputs and targets
 
-`PATH` can be a file or a directory. A directory is scanned top level only unless you pass `-R`.
+`PATH` can be a file or a directory. SOW scans only the top level of a directory unless you pass `-R`.
 
 Select one Repository and one or more Dists. Use `-r` and `-d`, or the [directory-based defaults](/docs/command/). In a mixed RPM/DEB batch, each package goes only to Dists of its format. A package with no compatible target fails.
 
@@ -62,6 +63,7 @@ Each `item` line carries an overall `status` plus a per-Dist verdict in `dists=`
 | `reused` | The content already exists in this Repository; only Membership references may change |
 | `excluded` | Policy removed it from every target Dist — see the `dists=` field for `excluded` vs `limited` |
 | `failed` | The package was rejected; the `error=` field says why |
+{.wide .expand}
 
 `reused` is content idempotence: adding the same file twice never creates a second object or a
 duplicate Membership. A repeated `add` also builds the selected Dist by default. If it is already
@@ -92,7 +94,7 @@ Membership, and render into every effective architecture view of the target Dist
 ## Policy: exclude and limit
 
 After merging into the target Memberships, SOW re-evaluates `exclude` and then `limit` over the
-complete Dist candidate set. A package removed by policy is reported, not treated as a parse failure.
+complete Dist candidate set. SOW reports a package removed by policy and does not treat it as a parse failure. RPM EVR comparison follows RPM rules, including caret (`^`) snapshot versions such as `2.0^20250611 < 2.0.1`.
 
 ```console
 sow add /srv/pkg/debs -r pgsql -d trixielim
@@ -115,7 +117,7 @@ To restore a package after relaxing `exclude` or `limit`, run `sow add` again. P
 
 ## Partial batches
 
-Valid, conflict-free packages are committed even when siblings fail. Failed inputs stay where they
+SOW commits valid, conflict-free packages even when other inputs in the batch fail. Failed inputs stay where they
 are, each with its own error, and the command exits `3`:
 
 ```console
@@ -184,8 +186,9 @@ command-line override.
 | `never` | Keep the input bytes exactly |
 | `fill` | Sign when unsigned or when the signature is not trusted; keep bytes when a `trusted_keys` signature verifies. Default when a key is configured |
 | `always` | Ensure the final package is validly signed by the configured key; re-sign a stage copy otherwise |
+{.wide .expand}
 
-Without a configured key only `never` is available.
+Without a configured key only `never` is available. RPM signature verification recognizes RSA, DSA, ECDSA, and EdDSA (Ed25519) OpenPGP packets in header signature tag 267 (`RPMSIGTAG_DSA`).
 
 Repeated imports reuse identical package content. They can also reuse an RPM whose only difference is its signature, if the stored package satisfies the current signing policy. A changed payload or an incompatible stored signature causes a coordinate conflict. See [Signing Model](/docs/feature/signing/) for the matching rules.
 
@@ -200,6 +203,7 @@ Repeated imports reuse identical package content. They can also reuse an RPM who
 | `4` | Repository lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Integrity or recovery error, including a build that failed after `applied` |
 | `6` | Every input failed, or selection/signing/state preconditions reject the operation |
+{.wide .expand}
 
 ## See also
 

@@ -23,6 +23,7 @@ sow where PACKAGE [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--jso
 | `-r, --repo NAME` | Restrict the search to one Repository | all Repositories |
 | `-d, --dist NAME` | Restrict the search to named Dists; repeatable | all Dists |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ## Reference resolution
 
@@ -41,7 +42,7 @@ reference="rpm:centos-release-0:6-0.el6.centos.5.x86_64" locations=1
 repository=demo coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16 dists=el9 built_dists=el9
 ```
 
-Each location reports Desired `dists` and current `built_dists` across its Repository. Candidate lookup uses Desired membership. A package removed from every selected Dist is no longer found, even if a previous Built index still contains it. Use `sow show PACKAGE -r NAME` without `-d` to inspect such a stored object.
+Each location reports Desired `dists` and current `built_dists` across its Repository. Candidate lookup uses Desired membership. A package removed from every selected Dist does not appear, even if a previous Built index still contains it. Use `sow show PACKAGE -r NAME` without `-d` to inspect such a stored object.
 
 With `--json`, the locations appear in `result.locations`. If no package matches, the command returns an error:
 
@@ -68,6 +69,7 @@ sow where 'rpm:patroni-0:3.0.4-1.noarch' --json |
 | `2` | Usage error or Workspace not found |
 | `5` | A Repository state database is unreadable or inconsistent |
 | `6` | Explicit Repository/Dist is not configured, or the reference matched nothing/was ambiguous |
+{.wide .expand}
 
 ## See also
 

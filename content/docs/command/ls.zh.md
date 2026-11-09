@@ -11,7 +11,7 @@ icon: fa-solid fa-list
 
 `sow ls` 列出指定 Dist 的期望成员。每行还显示该包在整个仓库中的期望成员位置与已构建位置。可从输出中获取供 `show` 或 `rm` 使用的包引用。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow ls [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json]
@@ -20,11 +20,12 @@ sow ls [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json]
 | 参数 | 含义 | 默认值 |
 |---|---|---|
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
-| `-r, --repo NAME` | 选择仓库 | [选择规则](/zh/docs/command/#repository-选择) |
-| `-d, --dist NAME` | 选择 Dist；可重复 | [选择规则](/zh/docs/command/#dist-选择) |
+| `-r, --repo NAME` | 选择仓库 | [选择规则](/zh/docs/command/#repository-selection) |
+| `-d, --dist NAME` | 选择 Dist；可重复 | [选择规则](/zh/docs/command/#dist-selection) |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
-## 输出
+## 输出 {#output}
 
 ```console
 sow ls -r pigsty -d el9
@@ -40,6 +41,7 @@ sha256:d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab	rpm:epel
 | `DISTS` | 整个仓库内的期望成员位置 |
 | `BUILT_DISTS` | 当前构建快照中的成员关系 |
 | `POOL_PATH` | 包文件相对于仓库的路径 |
+{.wide .expand}
 
 首行显示所选 Dist 是否为 dirty。即使成员数量相同，配置变化也可能使 Dist 变为 dirty。
 
@@ -47,7 +49,7 @@ sha256:d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab	rpm:epel
 
 每个包只输出一行，多个 Dist 用逗号分隔。空 Dist 返回成功，输出中没有软件包行。
 
-## 选择范围
+## 选择范围 {#selection}
 
 `ls` 要求 Dist 集合无歧义。仓库包含多个 Dist 时，应传入一个或多个 `-d`，或从
 `<repo>/dists/<dist>/` 内运行。
@@ -59,7 +61,7 @@ workspace discovery error: managed: workspace discovery error: repository "pigst
 
 加上 `--json` 后，同一批记录位于 `result.packages` 中。
 
-## 示例
+## 示例 {#examples}
 
 列出尚未构建对象的精确引用：
 
@@ -74,7 +76,7 @@ sow ls -r pgsql -d el9 --json |
 sow ls -r pgsql -d el9 --json | jq -r '.result.packages[].pool_path' | sort
 ```
 
-## 退出码
+## 退出码 {#exit-codes}
 
 | 代码 | 触发条件 |
 |---|---|
@@ -83,8 +85,9 @@ sow ls -r pgsql -d el9 --json | jq -r '.result.packages[].pool_path' | sort
 | `2` | 用法错误、未发现工作区或隐式仓库/Dist 选择有歧义 |
 | `5` | 仓库状态库不可读或不一致 |
 | `6` | 显式指定的仓库或 Dist 未配置 |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [`sow show`](/zh/docs/command/show/) —— 查看一个已列出的对象
 - [`sow where`](/zh/docs/command/where/) —— 在工作区中定位对象

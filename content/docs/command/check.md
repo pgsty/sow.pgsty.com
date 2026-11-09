@@ -24,6 +24,7 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 | `-r, --repo NAME` | Select a Repository | [selection rules](/docs/command/#repository-selection) |
 | `-d, --dist NAME` | Verify named Dists; repeatable | all Dists |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ## Verification layers
 
@@ -46,7 +47,7 @@ During an unfinished layout migration, `check` reports `config`, `state`, `publi
 
 ### Package verification {#physical-evidence-and-io-contract}
 
-Each run hashes the package files again. Hard links to the same physical file share one hash check. Signed RPMs also undergo signature verification. The `checked` count refers to package objects, not file reads.
+Each run hashes the package files again. Hard links to the same physical file share one hash check. Signed RPMs also undergo signature verification, including RSA, DSA, ECDSA, and EdDSA packets in header signature tag 267 (`RPMSIGTAG_DSA`). The `checked` count refers to package objects, not file reads.
 
 ```console
 sow check
@@ -84,6 +85,7 @@ The exit code is `5`. Run [`sow build`](/docs/command/build/), then run `sow che
 | `2` | Usage error, Workspace not found, or implicit Repository selection is ambiguous |
 | `5` | A verification layer failed, or Repository is not deliverable |
 | `6` | Explicit Repository or Dist is not configured |
+{.wide .expand}
 
 ## See also
 

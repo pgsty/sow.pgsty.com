@@ -43,7 +43,7 @@ sow check -r demo
 ```
 
 A dirty repository can have consistent old indexes and still fail `check` with code `5`,
-because Desired state has not been built. Run `build` and check again.
+because you have not built the Desired state. Run `build` and check again.
 If the diagnostic reports corrupted bytes or conflicting recovery evidence, inspect that
 failure before retrying. See [Troubleshooting](/docs/reference/troubleshooting/).
 
@@ -52,10 +52,11 @@ failure before retrying. See [Troubleshooting](/docs/reference/troubleshooting/)
 
 ## Partial success
 
-For `add`, code `3` means at least one input was accepted or reused and at least one
-failed. The JSON result retains per-input outcomes. Exclusion by policy is not a failed
-input. `init` can also return `3` after creating some declared objects and failing on a
-later one.
+For `add`, code `3` means SOW accepted or reused at least one input and at least one
+input failed. The JSON result retains per-input outcomes. Exclusion by policy is not a failed
+input. `init` can return `3` after creating some declared objects and failing on a
+later one. `prune` also returns `3` if an error occurs after it publishes the filtered index
+or removes at least one RPM.
 
 Capture both output and status before deciding whether to continue:
 
@@ -113,9 +114,9 @@ The `errors` array uses these classes:
 | `6` | `rejected` |
 | `130` | `interrupted` |
 
-Branch on the code or class, not message text. Plain `create` prints its domain error to
-stderr; its JSON message can include an extra CLI category prefix. Diagnostic and partial
-results remain available when `ok` is `false`.
+Branch on the code or class, not message text. Plain `create` and `prune` print their domain
+error to stderr; their JSON message can include an extra CLI category prefix. Diagnostic and
+partial results remain available when `ok` is `false`.
 
 See [JSON output](/docs/reference/json/) and
 [Transactions and recovery](/docs/feature/transactions/).

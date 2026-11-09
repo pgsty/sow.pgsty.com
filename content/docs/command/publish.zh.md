@@ -11,7 +11,7 @@ icon: fa-solid fa-cloud-arrow-up
 
 `sow publish` 将当前构建快照复制到 `sow.yml` 的 `targets:` 中配置的目标。目标配置指定仓库与存储类型。需要发布最新期望状态时，先完成构建。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
@@ -28,16 +28,18 @@ sow publish TARGET [--abort | --rebind] [-C|--workdir DIR] [-T|--timeout DUR | -
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
 `TARGET` 必须是已配置的 `filesystem` 或 `r2` 发布目标。`--abort` 与 `--rebind` 互斥。
 
-## 发布前准备 {#安全边界}
+<span id="安全边界" data-td-print-local></span>
+## 发布前准备 {#safety-boundaries}
 
 需要包含最新软件包与策略变更时，先运行 `build`。dirty 仓库仍可以发布上一个已完成的构建快照。
 
 配置目标的 Web 服务或存储桶访问权限，使 `public_endpoint` 能读取发布文件，然后运行 `sow publish TARGET`。
 
-## 发布协议
+## 发布协议 {#publication-protocol}
 
 SOW 先核对本地文件与已完成的构建快照清单，再按以下顺序发布：
 
@@ -55,7 +57,7 @@ sow publish local
 publication demo generation=00000000000000000005 to local is already current (noop)
 ```
 
-## 重绑定可变目标配置
+## 重绑定可变目标配置 {#rebind-mutable-target-settings}
 
 首次发布会记录仓库与目标绑定。修改目标名称、公共地址或缓存 TTL 后，使用 `--rebind` 记录新设置并继续发布：
 
@@ -70,10 +72,11 @@ sow publish prod --rebind
 | 目标名称 | 仓库身份 |
 | `public_endpoint` | 存储类型、存储 `endpoint` 或区域 |
 | `max_cache_ttl` | 存储桶或 `prefix` |
+{.wide .expand}
 
-修改 `max_cache_ttl` 前，先完成目标维护。文件系统目标有未完成的删除操作时，也需先完成删除，再修改 `public_endpoint`。首次发布到新目标时，直接运行 `sow publish TARGET`。
+修改 `max_cache_ttl` 前，先完成目标维护。文件系统目标有未完成的删除操作时，也需先完成删除，再修改 `public_endpoint`。SOW 会将预期文件系统目标路径检查限定在目标自身路径上，因此共享同一父目录的相邻目标不会互相阻塞。首次发布到新目标时，直接运行 `sow publish TARGET`。
 
-## Abort 与恢复
+## Abort 与恢复 {#abort-and-recovery}
 
 发布中断后，重新运行 `sow publish TARGET` 继续发布。
 
@@ -81,7 +84,7 @@ sow publish prod --rebind
 
 已发布的包 URL 对应固定内容。内容改变时，使用新的包版本与文件名。如果远端文件与本次发布记录不符，按报告处理冲突，详见[故障处理](/zh/docs/reference/troubleshooting/)。
 
-## 公共可见性校验
+## 公共可见性校验 {#public-visibility-checks}
 
 记录发布检查点前，SOW 会通过 `public_endpoint` 读取并验证已发布文件。HTTP(S) 校验使用普通 GET 请求。内容过期或缺失时，在 `max_cache_ttl` 范围内重试。
 
@@ -89,13 +92,13 @@ sow publish prod --rebind
 每页最多并发执行八个 HEAD 请求。这是内部上限，`publish` 不接受 `--jobs`。
 上传重试只有在实际传输取得进展时，才会重置空闲超时。保留 R2 中的旧对象：目标 GC 只报告、不删除，后续发布还会核对远程前缀与已记录清单。
 
-## 移除已发布视图
+## 移除已发布视图 {#removing-a-published-view}
 
-只要目标仍在配置中，SOW 就不允许本地变更移除它已发布的入口，例如整个 Dist、RPM 架构视图或配套签名文件。
+只要目标仍在配置中，SOW 就不允许本地变更移除它已发布的入口（例如整个 Dist、RPM 架构视图或配套签名文件），并会确认所有活跃的 `current`、`previous` 和 `retained` Generation 指针都不会被撤下。
 
 需要停用该目标时，先停止向它发布，从 `sow.yml` 的 `targets:` 中删除对应配置，再运行 `sow config check`。随后可以移除本地视图。此操作保留原有远程文件与发布历史。需要发布删减后的仓库时，配置使用不同存储前缀的新目标，并将客户端切换到该目标。
 
-## 退出行为
+## 退出行为 {#exit-behavior}
 
 | 代码 | 触发条件 |
 |---|---|
@@ -105,8 +108,9 @@ sow publish prod --rebind
 | `4` | 仓库写锁不可用 |
 | `5` | 本地/发布恢复证据不一致，或源不可交付 |
 | `6` | 目标不存在/不安全，或其他安全前置条件拒绝 Publish/Abort/Rebind |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [`sow status`](/zh/docs/command/status/) 与 [`sow check`](/zh/docs/command/check/) —— 判断当前构建快照是否正是准备交付的版本
 - [`sow gc`](/zh/docs/command/gc/) —— 回收目标中不再需要的文件

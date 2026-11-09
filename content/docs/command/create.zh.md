@@ -12,7 +12,7 @@ icon: fa-solid fa-folder-tree
 
 `sow create` 在软件包所在目录生成 RPM 与 DEB 索引。需要平面仓库时使用此命令，无需创建 Managed 工作区。`DIR` 默认为当前目录。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite] [--passfile PATH]] [-T DUR | -N] [--json]
@@ -26,7 +26,7 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 
 需要在平面 RPM 仓库中按包名和架构仅保留最新版本时，使用 [`sow prune`](/zh/docs/command/prune/)。
 
-## 说明
+## 说明 {#description}
 
 `create` 读取 `DIR` 顶层的普通文件，按发现的内容渲染对应索引：有 RPM 就生成 `repodata/`，有 DEB 就
 生成 `Packages` 与 `Packages.gz`，混合目录两套一起生成。架构全部来自包头——Plain 模式没有架构参数，
@@ -36,7 +36,7 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 
 默认情况下，`create` 只更新索引并保留包文件。`--pigsty` 会删除符合规则的包，`--sign-with` 会用签名副本替换 RPM。
 
-## 参数
+## 参数 {#options}
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
@@ -52,7 +52,7 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 | `-h, --help` | 显示帮助 | — |
 {.wide .expand}
 
-## 扫描规则
+## 扫描规则 {#scan-rules}
 
 - 只考虑顶层、以 `.rpm` 或 `.deb` 结尾的普通文件。
 - 不递归、不跟随符号链接、不读工作区配置。
@@ -64,11 +64,11 @@ sow create /srv/empty
 plain: scan /srv/empty: no supported top-level regular RPM or DEB packages
 ```
 
-## 包 I/O 与最终校验
+## 包 I/O 与最终校验 {#package-io-and-final-validation}
 
 `create` 运行期间，保持输入目录不变。SOW 扫描软件包后，会在替换索引前检查文件是否变化。检测到变化时返回退出码 `5`。使用 `--jobs` 设置处理软件包的并发数。
 
-## 确定性输出与幂等
+## 确定性输出与幂等 {#deterministic-output-and-idempotence}
 
 不强制重签软件包时，相同的软件包与时间参数生成相同的元数据。`repomd.xml` 的 `<revision>` 和 data 时间戳默认为 `0`；`--metadata-timestamp` 只修改 data 时间戳。对未变化的目录使用相同选项重跑时，SOW 不改写文件，并报告 `noop=true`：
 
@@ -80,7 +80,7 @@ sow create /srv/flat
 created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=true recovered=false
 ```
 
-## 保留上一轮 RPM 索引
+## 保留上一轮 RPM 索引 {#keep-the-previous-rpm-indexes}
 
 SOW 0.7.0 保留当前与紧邻上一版 `repomd.xml` 引用的、以校验和命名的 RPM 元数据。
 客户端已获取上一版索引时，仍可在更新后下载这些元数据文件。
@@ -92,7 +92,8 @@ SOW 0.7.0 保留当前与紧邻上一版 `repomd.xml` 引用的、以校验和�
 此窗口不保留已删除的包文件，也不保留全部历史索引。
 如果客户端缓存跨越多轮更新，在发布层保留所需的软件包与元数据。
 
-## repo_complete 标记 {#repo_complete-门禁}
+<span id="repo_complete-门禁" data-td-print-local></span>
+## repo_complete 标记 {#the-repo_complete-gate}
 
 如果目录中有 `repo_complete`，使用 `--pigsty` 将它与索引一起更新。不带 `--pigsty` 运行会返回错误：
 
@@ -103,7 +104,7 @@ plain: marker gate /srv/pigsty/repo_complete: repo_complete exists; use --pigsty
 
 需要保留完成标记时，添加 `--pigsty` 后重跑；不再使用此标记时，先将它移走。
 
-## 已有 YUM 仓库的发布时间
+## 已有 YUM 仓库的发布时间 {#publication-time-for-existing-yum-repositories}
 
 `--metadata-timestamp` 设置 RPM repomd 的 data 时间戳，不改变软件包、压缩 XML 文件或 DEB 索引。默认值为 `0`，范围为 `0..253402300799` Unix 秒。此选项从 SOW 0.5.0 开始提供。
 
@@ -119,7 +120,9 @@ sow create /srv/flat --metadata-timestamp "${PUBLISH_TIME:?Set the publication t
 
 完整流程见[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)。
 
-## --pigsty
+<span id="--pigsty" data-td-print-local></span>
+
+## --pigsty {#pigsty}
 
 `--pigsty` 按以下规则清理包文件，并写入完成标记：
 
@@ -147,11 +150,11 @@ d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab  epel-release-7
 SOW 先撤下已有的 `repo_complete`，再替换索引；新元数据安装后删除命中规则的包，
 最后写入新的完成标记。调用方看到标记缺失时，应等待构建完成。
 
-## RPM 包签名
+## RPM 包签名 {#signing-rpms}
 
 `-S/--sign-with KEY` 通过本地 RPM/GPG 环境为 RPM 包签名。使用 16 位十六进制密钥 ID，或 40/64 位指纹；可以带 `0x` 或 `0X` 前缀。运行前，确保该环境中已有私钥。密钥带口令时，使用 `--passfile PATH` 或将 `SOW_GPG_PASSFILE` 设置为口令文件路径。
 
-- 默认只给没有可解析嵌入 OpenPGP 签名的 RPM 补签；已有签名的包保持原字节。
+- 默认只给没有可解析嵌入 OpenPGP 签名（签名头标签 267 中的 RSA、DSA、ECDSA、EdDSA，或旧版 PGP 标签）的 RPM 补签；已有签名的包保持原字节。
 - `--overwrite` 必须与 `--sign-with` 同用，改为对全部保留 RPM 执行 `rpm --resign`。
 - SOW 对临时副本签名，确认包身份与内容未变后替换原 RPM。索引描述最终签名后的文件。
 - `--pigsty` 清理后至少要保留一个顶层 RPM，且 `PATH` 中要有 `rpm`。
@@ -176,7 +179,8 @@ sow create /srv/flat -S ZZZZ
 usage error: --sign-with must be a 16, 40, or 64 hexadecimal GPG key ID/fingerprint
 ```
 
-## 锁与中断恢复 {#锁staging-与覆盖重建}
+<span id="锁staging-与覆盖重建" data-td-print-local></span>
+## 锁与中断恢复 {#locking-staging-and-overwrite-rebuild}
 
 `create` 在更新索引期间锁定目标目录。使用 `--timeout` 或 `--no-wait` 控制等待锁的时间。
 
@@ -184,7 +188,7 @@ usage error: --sign-with must be a 16, 40, or 64 hexadecimal GPG key ID/fingerpr
 
 使用 `--pigsty` 时，在 `repo_complete` 出现后再对外提供仓库。需要操作日志恢复时，使用 Managed 模式。
 
-## 示例
+## 示例 {#examples}
 
 给混合目录建索引：
 
@@ -226,7 +230,7 @@ sow create /srv/empty --json
 {"schema":"sow.cli/v1","command":"create","ok":false,"repository":null,"operation":null,"result":null,"errors":[{"code":6,"class":"rejected","message":"operation rejected: plain: scan /srv/empty: no supported top-level regular RPM or DEB packages"}]}
 ```
 
-## 退出码
+## 退出码 {#exit-codes}
 
 | 码 | 触发条件 |
 |---|---|
@@ -236,8 +240,9 @@ sow create /srv/empty --json
 | `4` | 目录写锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 发布前输入文件发生变化，或受控输出路径未通过完整性检查 |
 | `6` | 未找到受支持的包、已有 `repo_complete` 但未使用 `--pigsty`、对 DEB-only 目录用 `--sign-with`、坐标冲突 |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [Plain 平面仓库](/zh/docs/feature/plain/) —— `create` 背后的设计
 - [快速上手](/zh/docs/start/quickstart/) —— 五分钟平面仓库演练

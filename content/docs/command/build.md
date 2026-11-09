@@ -27,9 +27,10 @@ sow build [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
-Without `-d`, SOW builds every affected Dist in the selected Repository. With `-d`, only those
-Dists are built; unselected changes remain dirty.
+Without `-d`, SOW builds every affected Dist in the selected Repository. With `-d`, SOW builds
+only the named Dists; unselected changes remain dirty.
 
 ## Result
 
@@ -60,9 +61,9 @@ Membership. Loosening policy does not reconstruct historical members from leftov
 
 ## Commit and recovery
 
-SOW moves required pending packages into `pool/`, writes the indexes, then updates client entry points such as `repomd.xml` and `Release`. One build can include several Dists. They share the resulting Generation; unselected dirty Dists still need a build.
+SOW moves required pending packages into `pool/`, writes the indexes, then updates client entry points such as `repomd.xml` and `Release`. One build can include several Dists. They share the resulting Generation; unselected dirty Dists still need a build. SOW blocks a build if it would withdraw any client-visible entry point (`pointer`-phase file) published to a configured target.
 
-If a build stops, rerun it. SOW uses the operation journal to finish or roll back the unfinished work. If the journal, database, and files disagree, the command reports an integrity error. Use `sow check` and `sow log` to identify the affected state.
+If a build stops, rerun it. SOW selects an unfinished operation by pending state rather than wall-clock timestamp order, then uses the operation journal to finish or roll back the work. If the journal, database, and files disagree, the command reports an integrity error. Use `sow check` and `sow log` to identify the affected state.
 
 ## Publication time
 
@@ -109,6 +110,7 @@ re-signs their metadata.
 | `4` | Repository write lock unavailable |
 | `5` | Recovery cannot complete safely, or Repository is in `error` |
 | `6` | Explicit scope is not configured, or current configuration rejects existing state |
+{.wide .expand}
 
 ## See also
 

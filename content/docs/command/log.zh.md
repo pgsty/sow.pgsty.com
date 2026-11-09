@@ -12,7 +12,7 @@ icon: fa-solid fa-clipboard-list
 
 `sow log` 列出仓库操作记录，并查看单次操作的详情。使用 `log export` 将已结束的操作导出为 JSONL，使用 `log prune` 从数据库中删除符合条件的旧记录。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow log [OPERATION] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME] [--json]
@@ -22,7 +22,7 @@ sow log prune BEFORE [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|
 
 `log prune` 支持 `--passfile PATH`，用于恢复中断变更时需要的签名。优先级为命令行、单个密钥配置、`SOW_GPG_PASSFILE`。`log` 和 `log export` 不读取口令文件。详见[口令文件](/zh/docs/reference/config/#passfile)。
 
-## sow log
+## sow log {#sow-log}
 
 不带参数时，按由新到旧打印最近 50 条操作记录。
 
@@ -65,8 +65,9 @@ sow log -r pigsty --json
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
 | `-d, --dist NAME` | 只显示触及该 Dist 的操作记录 | 全部 |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
-### 查看单条 Operation
+### 查看单条 Operation {#one-operation-in-detail}
 
 传入操作记录 ID 查看摘要。加上 `--json` 后，可在 `result.detail` 中读取完整状态变化、耗时、软件包、成员与文件记录。
 
@@ -113,7 +114,7 @@ Build 操作记录还会包含进度事件。它们保持当前 state，并把�
 该字段是精确到秒的 UTC 时间戳，恢复时用于生成相同时间的元数据与签名。
 旧日志与布局迁移可能没有此字段。
 
-### 按 Dist 过滤
+### 按 Dist 过滤 {#filtering-by-dist}
 
 `-d` 把列表限制为触及该 Dist 的操作记录——一个仓库服务多个发行版时很有用：
 
@@ -121,7 +122,8 @@ Build 操作记录还会包含进度事件。它们保持当前 state，并把�
 sow log -d trixie -r pigsty
 ```
 
-## 操作状态 {#operation-生命周期}
+<span id="operation-生命周期" data-td-print-local></span>
+## 操作状态 {#operation-lifecycle}
 
 `state` 字段表示操作进行到哪一步：
 
@@ -143,10 +145,11 @@ planned → staged → applied → built → done
 | `failed` | 终态——在 `applied` 之前失败，什么都没提交 |
 | `rolled_back` | 终态——恢复在操作记录改变 Desired 之前放弃了它，例如被中断命令留下的 `planned` 操作记录 |
 | `recovering` | 非终态；下一条写命令必须先完成或回滚它 |
+{.wide .expand}
 
 仓库日志包含 `dist new` 和 `dist rm`。工作区操作 `init`、`repo new`、`repo rm` 使用独立的恢复记录，不出现在这里。
 
-## sow log export
+## sow log export {#sow-log-export}
 
 将已结束的操作导出为 JSONL，每行包含一次操作的完整记录，可用于归档或日志分析。
 
@@ -166,14 +169,16 @@ sow log export - -r pigsty | gzip > pigsty-ops-$(date +%F).jsonl.gz
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
 | `-d, --dist NAME` | 只导出触及该 Dist 的操作记录 | 全部 |
+{.wide .expand}
 
 `export` 直接输出 JSONL，不接受 `--json`。
 
-### 输出路径 {#它拒绝覆盖}
+<span id="它拒绝覆盖" data-td-print-local></span>
+### 输出路径 {#it-refuses-to-clobber}
 
 在已有目录中选择一个新文件名。文件已存在时，`log export` 返回 `6`。直接父目录必须是真实目录，不能是符号链接。在 macOS 上使用 `/private/tmp/file.jsonl`，不要使用 `/tmp/file.jsonl`。
 
-## sow log prune
+## sow log prune {#sow-log-prune}
 
 删除早于 `BEFORE` 且符合条件的已结束操作记录，并回收数据库空间。如果其他读连接正在使用数据库，记录可以先删除，空间回收会延后。此时结果显示 `compaction_deferred: true`。关闭读连接后，再运行 `prune` 回收空间。
 
@@ -194,10 +199,11 @@ pruned log repository=pigsty operation=8150803833883584722 before=2026-12-31T16:
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
 `prune` 作用于整个仓库，不接受 `-d`。
 
-### BEFORE 语法
+### BEFORE 语法 {#before-syntax}
 
 `BEFORE` 是 ISO-8601 日期 `YYYY-MM-DD`（按本地时区零点解释），或带时区的 RFC 3339 时间戳。
 
@@ -206,7 +212,8 @@ sow log prune yesterday -r pigsty
 usage error: BEFORE must be YYYY-MM-DD or an RFC 3339 timestamp with timezone
 ```
 
-### prune 保留的记录 {#prune-永不删除什么}
+<span id="prune-永不删除什么" data-td-print-local></span>
+### prune 保留的记录 {#what-prune-never-deletes}
 
 `prune` 保留以下记录：
 
@@ -217,7 +224,7 @@ usage error: BEFORE must be YYYY-MM-DD or an RFC 3339 timestamp with timezone
 
 `pruned` 显示已删除的操作记录数。
 
-## 示例
+## 示例 {#examples}
 
 排查最近一次写入：
 
@@ -244,7 +251,7 @@ sow log prune 2026-05-01 -r pgsql
 sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 ```
 
-## 退出码
+## 退出码 {#exit-codes}
 
 | 命令 | 码 | 触发条件 |
 |---|---|---|
@@ -262,7 +269,7 @@ sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 | `log prune` | `5` | 完整性或恢复错误 |
 {.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [可观测与审计](/zh/docs/feature/audit/) —— `log` 与 `status`、`check`、`changes` 的配合
 - [事务与恢复](/zh/docs/feature/transactions/) —— 中断后的恢复过程

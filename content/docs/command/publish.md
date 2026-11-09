@@ -72,8 +72,9 @@ If you renamed the target in `targets:`, use its new name.
 | target name | Repository identity |
 | `public_endpoint` | provider, storage `endpoint`, or region |
 | `max_cache_ttl` | bucket or `prefix` |
+{.wide .expand}
 
-Complete pending target maintenance before changing `max_cache_ttl`. For a filesystem target, also complete pending deletion before changing `public_endpoint`. To publish to a new target for the first time, use `sow publish TARGET` without `--rebind`.
+Complete pending target maintenance before changing `max_cache_ttl`. For a filesystem target, also complete pending deletion before changing `public_endpoint`. SOW scopes the prospective filesystem target path check so sibling targets that share a parent directory do not block each other. To publish to a new target for the first time, use `sow publish TARGET` without `--rebind`.
 
 ## Abort and recovery
 
@@ -85,7 +86,7 @@ A published package URL identifies fixed content. Use a new package version and 
 
 ## Public visibility checks
 
-Before recording a checkpoint, SOW verifies that the published files can be read through `public_endpoint`. HTTP(S) verification uses ordinary GET requests. Stale or missing content is retried up to `max_cache_ttl`.
+Before recording a checkpoint, SOW verifies that it can read the published files through `public_endpoint`. HTTP(S) verification uses ordinary GET requests. SOW retries stale or missing content up to `max_cache_ttl`.
 
 Filesystem targets support `file://` or HTTP(S) public endpoints. R2 targets require HTTP(S). Each R2 publication lists the target prefix and checks each object with HEAD. An update performs this inventory check twice.
 SOW uses up to eight concurrent HEAD requests per page. This limit is internal; `publish` has no `--jobs` option.
@@ -93,7 +94,7 @@ Upload retries do not reset the idle timeout unless data transfer makes progress
 
 ## Removing a published view
 
-While a target remains configured, its published entry points must remain available locally. These include Dists, RPM architecture views, and signing companion files.
+While a target remains configured, its published entry points must remain available locally, and local mutations verify that no active `current`, `previous`, or `retained` Generation pointer is withdrawn. These entry points include Dists, RPM architecture views, and signing companion files.
 
 To retire that target, stop publishing to it, remove its entry from `targets:` in `sow.yml`, and run `sow config check`. You can then remove the local view. This leaves the old remote files and publication history intact. To publish the reduced repository, configure a new target with a different storage prefix and update clients to use it.
 
@@ -107,6 +108,7 @@ To retire that target, stop publishing to it, remove its entry from `targets:` i
 | `4` | Repository write lock unavailable |
 | `5` | Local or publication recovery evidence is inconsistent, or source is not deliverable |
 | `6` | Target is missing/unsafe, or another safety precondition rejects publish/abort/rebind |
+{.wide .expand}
 
 ## See also
 

@@ -13,29 +13,14 @@ Use these pages to look up configuration fields, package references, file paths,
 script interfaces. For command syntax, see [Commands](/docs/command/) or run
 `sow help COMMAND`.
 
-{{< cards >}}
-{{< card title="Configuration" link="/docs/reference/config/" >}}
-Fields, defaults, validation rules, signing references, and publication targets in `sow.yml`.
-{{< /card >}}
-{{< card title="Package references" link="/docs/reference/package-ref/" >}}
-Select packages by digest, coordinate, filename, or name. Resolve ambiguous matches.
-{{< /card >}}
-{{< card title="Repository layout" link="/docs/reference/layout/" >}}
-Locate package files, indexes, private state, and publication output.
-{{< /card >}}
-{{< card title="Exit codes" link="/docs/reference/exit-codes/" >}}
-Interpret command results and choose the next action in scripts.
-{{< /card >}}
-{{< card title="JSON output" link="/docs/reference/json/" >}}
-Read the `sow.cli/v1` response and command result fields.
-{{< /card >}}
-{{< card title="Platforms and integrations" link="/docs/reference/compatibility/" >}}
-Check supported systems, filesystems, client formats, and integration coverage.
-{{< /card >}}
-{{< card title="Troubleshooting" link="/docs/reference/troubleshooting/" >}}
-Find the next step for configuration, build, signing, and publication errors.
-{{< /card >}}
-{{< /cards >}}
+- [**Configuration** — Fields, defaults, validation rules, signing references, and publication targets in `sow.yml`.](/docs/reference/config/)
+- [**Package references** — Select packages by digest, coordinate, filename, or name, and resolve ambiguous matches.](/docs/reference/package-ref/)
+- [**Repository layout** — Locate package files, indexes, private state, and publication output.](/docs/reference/layout/)
+- [**Exit codes** — Interpret command results and choose the next action in scripts.](/docs/reference/exit-codes/)
+- [**JSON output** — Read the `sow.cli/v1` response and command result fields.](/docs/reference/json/)
+- [**Platforms and integrations** — Check supported systems, filesystems, client formats, and integration coverage.](/docs/reference/compatibility/)
+- [**Troubleshooting** — Find the next step for configuration, build, signing, and publication errors.](/docs/reference/troubleshooting/)
+{.cards}
 
 <span id="conventions" data-td-print-local></span>
 

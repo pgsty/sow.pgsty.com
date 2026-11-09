@@ -12,7 +12,7 @@ icon: fa-solid fa-minus
 
 `sow rm` 从指定 Dist 移除软件包，并重建本地索引。使用 `--check` 预览删除结果，使用 `--skip` 延后构建。包文件仍保留在 `pool/` 中，由 [`sow gc`](/zh/docs/command/gc/) 回收不再需要的文件。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow rm PACKAGE... [-c|--check] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
@@ -20,7 +20,7 @@ sow rm PACKAGE... [-c|--check] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|--r
 
 `--check` 预览可能渲染带签名的元数据，同样支持 `--passfile`。参见[口令文件](/zh/docs/reference/config/#passfile)。
 
-## 参数
+## 参数 {#options}
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
@@ -34,6 +34,7 @@ sow rm PACKAGE... [-c|--check] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|--r
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
 `--check` 与 `--skip` 互斥：
 
@@ -42,7 +43,7 @@ sow rm epel-release -c --skip
 usage error: --check and --skip are mutually exclusive
 ```
 
-## 包引用
+## 包引用 {#package-references}
 
 `PACKAGE` 支持以下五种写法。完整格式与匹配规则见[包引用](/zh/docs/reference/package-ref/)，简版如下：
 
@@ -53,6 +54,7 @@ usage error: --check and --skip are mutually exclusive
 | DEB 坐标 | `deb:libpq5=18.3-1:amd64` |
 | 完整文件名 | `epel-release-7-5.noarch.rpm` |
 | 裸二进制包名 | `epel-release` |
+{.wide .expand}
 
 裸包名匹配所选 Dist 中该名称的全部版本与架构。其他引用形式必须唯一标识一个对象。有歧义时，命令返回错误并列出候选项。
 
@@ -66,7 +68,7 @@ sow rm nosuch -r pigsty -d el9
 operation rejected: managed: operation rejected: package reference not found: package reference "nosuch" matches no Desired Membership
 ```
 
-## 默认行为：移除并重建
+## 默认行为：移除并重建 {#default-behavior-remove-and-rebuild}
 
 不带 `--check` 或 `--skip` 时，`rm` 提交期望状态变更，并在返回前重建每个受影响的 Dist。pool 对象
 留在磁盘上。
@@ -83,7 +85,10 @@ membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:6-0.e
 移除一个 Dist 的最后一个成员是允许的。SOW 仍会渲染合法的空索引（配了密钥就带签名）——空的
 `Packages` 配可验签的 `InRelease`，或每架构的空 `repodata/`。
 
-## 用 --check 预览
+<span id="preview-with---check" data-td-print-local></span>
+<span id="用---check-预览" data-td-print-local></span>
+
+## 用 --check 预览 {#preview-with-check}
 
 `-c/--check` 预览移除结果与本地文件变化，不修改仓库。`removed` 只列出引用匹配到的成员。如果当前策略连带移除了其他成员，`changes` 会包含相关索引变化；实际执行后，`sow log` 会将这些成员计入移除数量。
 
@@ -110,7 +115,9 @@ sow rm centos-release -r pigsty -d el9 -c -T 5s
 usage error: rm --check does not accept --timeout or --no-wait
 ```
 
-## --skip
+<span id="--skip" data-td-print-local></span>
+
+## --skip {#skip}
 
 `--skip` 提交期望变更，公开目录保持不变。结果与已构建状态不同时，仓库为 dirty。如果移除的只是尚未构建的新成员，仓库也可能直接恢复为 clean。
 
@@ -127,11 +134,11 @@ repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5 dirty
 
 `changes` 为空是因为什么都没构建。执行 [`sow build`](/zh/docs/command/build/) 构建待处理变更。
 
-## 与策略的交互
+## 与策略的交互 {#policy-interaction}
 
 移除后，SOW 对剩余成员重新执行策略。如果从 `limit: 1` 的 Dist 中移除 `libpq5 18.3-1`，先前被排除的 `18.2-1` 仍保持排除。需要恢复它时，运行 `sow add`。
 
-## 示例
+## 示例 {#examples}
 
 先预览移除结果，再执行：
 
@@ -160,7 +167,7 @@ sow check -r pgsql
 sow rm patroni -r pgsql -d el9 -c --json | jq -r '.result.changes[] | "\(.phase)\t\(.op)\t\(.path)"'
 ```
 
-## 退出码
+## 退出码 {#exit-codes}
 
 | 码 | 触发条件 |
 |---|---|
@@ -170,8 +177,9 @@ sow rm patroni -r pgsql -d el9 -c --json | jq -r '.result.changes[] | "\(.phase)
 | `4` | 仓库锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 完整性或恢复错误 |
 | `6` | 引用无匹配，或非裸名的引用有歧义；整批拒绝，不删除任何成员 |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [包引用](/zh/docs/reference/package-ref/) —— 完整引用文法
 - [`sow ls`](/zh/docs/command/ls/)、[`show`](/zh/docs/command/show/) 与 [`where`](/zh/docs/command/where/) —— 找到要移除的精确引用

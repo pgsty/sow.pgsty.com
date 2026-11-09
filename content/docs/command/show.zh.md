@@ -11,7 +11,7 @@ icon: fa-solid fa-file-lines
 
 `sow show` 查看所选仓库中的一个软件包。文本输出包含包信息、存储位置与成员关系。需要完整的软件包记录时，加上 `--json`。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow show PACKAGE [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json]
@@ -20,11 +20,12 @@ sow show PACKAGE [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json
 | 参数 | 含义 | 默认值 |
 |---|---|---|
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
-| `-r, --repo NAME` | 选择仓库 | [选择规则](/zh/docs/command/#repository-选择) |
+| `-r, --repo NAME` | 选择仓库 | [选择规则](/zh/docs/command/#repository-selection) |
 | `-d, --dist NAME` | 将候选项收窄到指定 Dist；可重复 | 整个仓库 |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
-## 包引用
+## 包引用 {#package-reference}
 
 `PACKAGE` 可使用 `sha256:<hex>` 内容哈希、规范的 `rpm:<NEVRA>` 或
 `deb:<name>=<version>:<arch>` 坐标、完整包文件名或裸二进制包名。完整格式见
@@ -40,7 +41,7 @@ operation rejected: managed: operation rejected: package reference "libpq5" is a
 
 从错误信息或 [`sow ls`](/zh/docs/command/ls/) 复制精确坐标/SHA-256 后重试。
 
-## 输出
+## 输出 {#output}
 
 不带 `--json` 时，`show` 输出包信息、存储路径，以及期望与已构建状态中的位置：
 
@@ -59,13 +60,14 @@ dists=el9 built_dists=el9
 | `kind` | 策略分类：`main`、`debuginfo`、`debugsource`、`llvmjit`、`dbgsym`、`dbg` |
 | `source` | 标准化源码包名 |
 | `payload_sha256` | RPM 不含签名部分的摘要，用于判断是否可以复用包文件 |
-| `signature_key` | 包内签名的密钥 ID（如有） |
+| `signature_key` | 包内签名的密钥 ID（RPM 签名头标签 267 中的 RSA、DSA、ECDSA、EdDSA，或旧版 PGP 标签，如有） |
 | `storage` | 构建前为 `pending`，进入仓库树后为 `pool` |
 | `dists` / `built_dists` | 期望与当前已构建状态中的位置 |
+{.wide .expand}
 
 不带 `-d` 时，查找范围包括当前没有成员关系的已存储对象。带 `-d` 时，候选包必须属于所选 Dist 的期望成员。返回的 `dists` 与 `built_dists` 列表覆盖整个仓库。
 
-## 退出码
+## 退出码 {#exit-codes}
 
 | 代码 | 触发条件 |
 |---|---|
@@ -74,8 +76,9 @@ dists=el9 built_dists=el9
 | `2` | 用法错误、未发现工作区或隐式仓库选择有歧义 |
 | `5` | 仓库状态库不可读或不一致 |
 | `6` | 显式范围未配置，或引用没有匹配/匹配多个对象 |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [`sow ls`](/zh/docs/command/ls/) —— 从 Dist 成员关系获取精确包引用
 - [`sow where`](/zh/docs/command/where/) —— 跨仓库搜索

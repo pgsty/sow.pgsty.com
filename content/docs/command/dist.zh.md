@@ -12,7 +12,7 @@ icon: fa-solid fa-layer-group
 
 `sow dist` 管理客户端使用的发行版集合。每个 Dist 只包含 RPM 或 DEB 中的一种格式。同一仓库内的 Dist 共用 `pool/`，在 `dists/` 下各有独立索引。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow dist ls [-C DIR] [-r NAME] [--json]
@@ -23,13 +23,13 @@ sow dist rm NAME [-f|--force] [-C DIR] [-r NAME] [-T DUR | -N] [--json] [--passf
 
 `dist new`、`dist rm` 支持 `--passfile PATH`，用于签名前置检查、签名或恢复中断操作。优先级为命令行、单个密钥配置、`SOW_GPG_PASSFILE`。本页其他查询子命令不读取口令文件。详见[口令文件](/zh/docs/reference/config/#passfile)。
 
-## 命名
+## 命名 {#naming}
 
 Dist 名与仓库名规则相同：`[a-z0-9][a-z0-9._-]*`，排除 `.`、`..`、`.sow`、`pool`、`dists`。
 
 选择能说明发行版或渠道的名称，例如 `el9`、`trixie` 或 `el9-beta`。SOW 不根据名称推断包格式或策略。
 
-## sow dist ls
+## sow dist ls {#sow-dist-ls}
 
 列出所选仓库的全部 Dist。
 
@@ -53,6 +53,7 @@ el9	rpm	x86_64,aarch64	2	1	4	true	["Desired and Built membership sets differ"]
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
 表格显示架构族，JSON 还给出包生态使用的架构名。以下摘录展示 `result.dists` 中一个条目的
 `architectures` 字段，对应的 DEB 视图目录为 `binary-amd64` 与 `binary-arm64`：
@@ -69,7 +70,7 @@ el9	rpm	x86_64,aarch64	2	1	4	true	["Desired and Built membership sets differ"]
 即使成员数量相同，仓库中未完成的维护操作也可能使 Dist 显示为 dirty。
 判断 Dist 是否可以交付前，查看 `dirty_reasons` 与 `sow status`。
 
-## sow dist new
+## sow dist new {#sow-dist-new}
 
 使用 `--format rpm` 或 `--format deb` 创建 Dist。
 
@@ -92,6 +93,7 @@ created trixie: format=deb architectures=x86_64,aarch64 members=0/0 generation=2
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
 `--format` 必填，只接受 `rpm` 或 `deb`：
 
@@ -114,7 +116,8 @@ sow dist new el9 --format deb -r alpha
 operation rejected: managed: operation rejected: dist "el9" already exists with format rpm
 ```
 
-### 创建与恢复 {#三方事务}
+<span id="三方事务" data-td-print-local></span>
+### 创建与恢复 {#the-three-way-transaction}
 
 `dist new` 更新 `sow.yml` 并构建新 Dist。操作中断后，运行 `sow build` 恢复。
 
@@ -122,7 +125,7 @@ operation rejected: managed: operation rejected: dist "el9" already exists with 
 `repodata/`；DEB Dist 有空的 `Packages`、`Packages.gz`、`by-hash/SHA256/` 条目，
 以及 `Release`；配置签名时再生成 `InRelease` 与 `Release.gpg`。
 
-## sow dist show
+## sow dist show {#sow-dist-show}
 
 显示一个 Dist 的详细信息。
 
@@ -144,6 +147,7 @@ dist trixielim:
 | `-C, --workdir DIR` | 工作区发现的起始目录 | 当前目录 |
 | `-r, --repo NAME` | 选择一个仓库 | 按选择规则 |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
 JSON 还包含 `effective_config_sha256`，即解析后的 Dist 配置摘要。
 修改 `limit`、`exclude` 或签名密钥后，当前配置可能与构建快照不同。
@@ -159,7 +163,7 @@ sow dist show nope -r demo
 operation rejected: managed: operation rejected: dist "nope" does not exist
 ```
 
-## sow dist rm
+## sow dist rm {#sow-dist-rm}
 
 删除一个 Dist 的成员关系与衍生索引。
 
@@ -182,8 +186,9 @@ removed dist el9 from pgsql
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
-### 删除 Dist 不会删除 pool 字节
+### 删除 Dist 不会删除 pool 字节 {#dist-removal-does-not-delete-pool-bytes}
 
 SOW 删除该 Dist 的配置、成员关系与索引。包文件仍保存在 `pool/` 中：
 
@@ -197,11 +202,11 @@ pgsql/pool/e/epel-release/epel-release-7-5.noarch.rpm
 
 运行 [`sow gc`](/zh/docs/command/gc/) 可以回收当前状态与保留状态都不再需要的包文件。
 
-如果已配置的目标发布过这个 Dist，移除会被拒绝。详见[移除已发布视图](/zh/docs/command/publish/#移除已发布视图)。
+如果已配置的目标发布过这个 Dist，移除会被拒绝。详见[移除已发布视图](/zh/docs/command/publish/#removing-a-published-view)。
 
 仓库的 `protected: true` 只阻止仓库删除；受保护仓库上的常规 Dist 维护照常进行。
 
-## 示例
+## 示例 {#examples}
 
 在同一个仓库中创建 RPM 与 DEB Dist：
 
@@ -225,7 +230,7 @@ sow build -r pgsql -d el9-beta
 sow dist ls -r pgsql --json | jq -r '.result.dists[] | select(.dirty) | .name'
 ```
 
-## 退出码
+## 退出码 {#exit-codes}
 
 | 码 | 触发条件 |
 |---|---|
@@ -235,8 +240,9 @@ sow dist ls -r pgsql --json | jq -r '.result.dists[] | select(.dirty) | .name'
 | `4` | 工作区或仓库锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 操作日志的完整性或恢复错误 |
 | `6` | 名称非法、Dist 不存在、同名不同格式冲突、非空但未给 `-f` |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [sow repo](/zh/docs/command/repo/) —— 上一层
 - [包池与架构视图](/zh/docs/feature/views/) —— 一个 Dist 如何变成多个客户端可见视图

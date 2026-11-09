@@ -12,7 +12,7 @@ icon: fa-solid fa-file-code
 
 修改 `sow.yml` 后，运行 `sow config check`。它检查配置、签名引用及配置与既有仓库状态是否兼容。使用 `sow config show` 查看默认值与继承设置展开后的配置。两个命令都只读。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow config check [-C DIR] [--json] [--passfile PATH]
@@ -21,7 +21,7 @@ sow config show [--all] [-C DIR] [-r NAME] [-d NAME]... [--json]
 
 `config check` 支持 `--passfile PATH`，用于签名前置检查。优先级为命令行、单个密钥配置、`SOW_GPG_PASSFILE`。`config show` 不读取口令文件。详见[口令文件](/zh/docs/reference/config/#passfile)。
 
-## sow config check
+## sow config check {#sow-config-check}
 
 解析并校验完整的 `sow.yml`：schema 版本、名称、路径冲突、架构许可表、Dist 格式、成员策略与签名密钥
 引用。它会回报解析到的工作区以及校验了多少对象。
@@ -36,7 +36,7 @@ sow config check --json
 {"schema":"sow.cli/v1","command":"config check","ok":true,"repository":null,"operation":null,"result":{"workspace":"/srv/repo","repositories":1,"dists":2},"errors":[]}
 ```
 
-### 参数
+### 参数 {#options}
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
@@ -44,8 +44,9 @@ sow config check --json
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
 | `-h, --help` | 显示帮助 | — |
+{.wide .expand}
 
-### 严格拒绝未知字段
+### 严格拒绝未知字段 {#strict-field-rejection}
 
 未知配置键会产生配置错误：
 
@@ -128,7 +129,7 @@ repos:
 `show` 补上了 `protected: false`、每个 Dist 继承来的 `architectures`、`limit: 0` 与空的 `exclude`
 列表。架构以 `x86_64` 和 `aarch64` 表示；它们在 DEB 中分别写作 `amd64` 和 `arm64`。
 
-### 参数
+### 参数 {#options-1}
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
@@ -138,8 +139,10 @@ repos:
 | `-d, --dist NAME` | 选择一个 Dist；可重复 | 按选择规则 |
 | `--json` | 输出 JSON | false |
 | `-h, --help` | 显示帮助 | — |
+{.wide .expand}
 
-### 用 -r/-d 选择配置范围 {#用--r-d-做作用域投影}
+<span id="用--r-d-做作用域投影" data-td-print-local></span>
+### 用 -r/-d 选择配置范围 {#scope-projection-with--r-and--d}
 
 使用 `-r` 与 `-d` 查看指定 Dist 的实际配置：
 
@@ -168,13 +171,14 @@ repos:
 
 不带 `--all` 时，按一般规则选择仓库。如果发现起点位于某个 Dist 内，默认只显示该 Dist，除非显式传入 `-d`；否则显示所选仓库的全部 Dist。`--all` 显示整个工作区，并忽略 `-r` 与 `-d`。
 
-### 签名引用 {#秘密永不输出}
+<span id="秘密永不输出" data-td-print-local></span>
+### 签名引用 {#secrets-are-never-printed}
 
 输出包含密钥引用和解析后的指纹，不包含私钥内容或口令。
 配置中的 `passfile` 路径仍然可见；`SOW_GPG_PASSFILE` 属于运行时来源，
 不会被补入显示的配置。
 
-## 示例
+## 示例 {#examples}
 
 在 CI 里先校验再构建：
 
@@ -191,7 +195,7 @@ sow config show -r pgsql -d el9-beta > /tmp/beta.yml
 diff -u /tmp/el9.yml /tmp/beta.yml
 ```
 
-## 退出码
+## 退出码 {#exit-codes}
 
 | 码 | 触发条件 |
 |---|---|
@@ -200,10 +204,11 @@ diff -u /tmp/el9.yml /tmp/beta.yml
 | `2` | 用法或发现错误、YAML 无效、未知字段或不支持的 schema |
 | `5` | 既有状态、受控路径或恢复记录不一致 |
 | `6` | 所选对象不存在、签名配置不可用，或配置与既有状态不兼容 |
+{.wide .expand}
 
 `config check` 同时检查 YAML 文件及其与已有仓库状态的兼容性。
 
-## 参见
+## 参见 {#see-also}
 
 - [sow.yml 配置参考](/zh/docs/reference/config/) —— 全部配置键与完整示例文件
 - [成员策略](/zh/docs/feature/policy/) —— `exclude` 与 `limit` 如何求值

@@ -24,7 +24,7 @@ sow show 'rpm:example-0:1.0-1.x86_64' -r demo
 <span id="完整文件名" data-td-print-local></span>
 <span id="哪些写法不成立" data-td-print-local></span>
 
-## 支持的形式
+## 支持的形式 {#accepted-forms}
 
 | 形式 | 语法 | 匹配对象 |
 |---|---|---|
@@ -33,11 +33,12 @@ sow show 'rpm:example-0:1.0-1.x86_64' -r demo
 | DEB 坐标 | `deb:<name>=<version>:<arch>` | 完整 DEB 身份 |
 | 文件名 | `example-1.0-1.x86_64.rpm` | 已存储的包文件名 |
 | 裸包名 | `example` | 二进制包名 |
+{.wide .expand}
 
-SHA-256 必须完整且小写。缩写或大写摘要会被拒绝，退出码为 `6`。
+SHA-256 必须完整且小写。SOW 拒绝缩写或大写摘要，退出码为 `6`。
 摘要对应已存储字节；Managed RPM 签名可能使它与输入文件摘要不同。
 
-RPM 坐标始终包含 epoch，包没有 epoch 时用 `0`。带 `rpm:` 前缀的引用按完整存储坐标匹配。
+RPM 坐标始终包含 epoch，包没有 epoch 时用 `0`。SOW 按完整存储坐标匹配带 `rpm:` 前缀的引用。
 匹配时必须提供坐标的全部字段。
 
 DEB 坐标包含完整 Debian 版本（含 epoch、revision）与原生架构。
@@ -54,13 +55,16 @@ sow where 'deb:example=2:1.0-1:amd64'
 
 <span id="裸包名" data-td-print-local></span>
 
-## 包名匹配与歧义
+## 包名匹配与歧义 {#name-matching-and-ambiguity}
 
 | 命令 | 裸包名匹配多个版本或架构时 |
 |---|---|
 | `rm` | 移除所选 Dist 中的全部匹配成员 |
 | `show` | 拒绝歧义引用并列出候选 |
 | `where` | 要求唯一包身份，并返回该身份在各仓库中的位置 |
+{.wide .expand}
+
+Plain `sow prune --protect NAME` 也只接受精确的二进制 RPM 包名（不接受坐标、摘要或文件名）。
 
 按包名移除前可先预览：
 
@@ -76,7 +80,7 @@ sow rm example -r demo -d el9 --check
 
 <span id="作用域" data-td-print-local></span>
 
-## 搜索范围
+## 搜索范围 {#search-scope}
 
 `rm` 和 `where` 搜索期望成员。不带 `-d` 时，`show` 搜索全部已记录包对象，
 包括已退出 Dist 的包；带 `-d` 时，只搜索所选 Dist 的期望成员。未记录的文件不参与查询。
@@ -86,6 +90,7 @@ sow rm example -r demo -d el9 --check
 | `rm` | 一个仓库中所选 Dist 的成员 | `-r`；可重复的 `-d`，或推断出的 Dist |
 | `show` | 所选仓库的全部已记录包对象 | `-r`；`-d` 限定为所选 Dist 的期望成员 |
 | `where` | 工作区全部仓库 | 可选 `-r`、`-d` |
+{.wide .expand}
 
 `rm` 无法推断 Dist 且仓库中有多个 Dist 时，需要指定 `-d`。
 不带 `-r` 的 `where -d NAME` 搜索包含该 Dist 名称的仓库。
@@ -93,7 +98,7 @@ sow rm example -r demo -d el9 --check
 
 <span id="坐标与身份" data-td-print-local></span>
 
-## 坐标冲突
+## 坐标冲突 {#coordinate-conflicts}
 
 一个仓库内，一个坐标最多对应一个内容对象。已有坐标下加入不同包时，SOW 拒绝覆盖。
 仅改变签名也会改变完整字节身份。

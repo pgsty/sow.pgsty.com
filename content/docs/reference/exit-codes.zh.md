@@ -25,11 +25,12 @@ icon: fa-solid fa-triangle-exclamation
 | `5` | 完整性/恢复错误，或仓库尚不可交付 | 查看 `status`、`check`；构建脏仓库或恢复已记录操作 |
 | `6` | 操作被拒绝 | 修正错误指出的冲突、包引用、架构、签名或保护设置 |
 | `130` | 命令收到 SIGINT 或 SIGTERM 而中断 | 按中断操作的类型选择恢复命令 |
+{.wide .expand}
 
 <span id="0--成功或无操作" data-td-print-local></span>
 <span id="5--完整性恢复或不可交付" data-td-print-local></span>
 
-## 成功不一定表示可以交付
+## 成功不一定表示可以交付 {#success-does-not-always-mean-ready}
 
 只要能够报告状态，`status` 就返回 `0`，包括 `dirty`、`recovering`、`error`。
 其 `ready_to_copy` 字段是状态摘要，不是完整字节检查。交付前使用 `check`：
@@ -46,11 +47,12 @@ sow check -r demo
 <span id="3--部分成功" data-td-print-local></span>
 <span id="在脚本里使用" data-td-print-local></span>
 
-## 部分成功
+## 部分成功 {#partial-success}
 
-`add` 返回 `3`，表示至少一个输入被接受或复用，同时至少一个失败。
+`add` 返回 `3`，表示 SOW 接受或复用了至少一个输入，同时至少一个输入失败。
 JSON 结果保留每个输入的处理结果。策略排除不算输入失败。
 `init` 在创建部分已声明对象、后续对象失败时，也可能返回 `3`。
+`prune` 在发布筛选后的索引或删除至少一个 RPM 后发生错误时，同样返回 `3`。
 
 先保存输出与退出码，再决定是否继续：
 
@@ -79,7 +81,7 @@ sow publish mirror
 <span id="130--中断" data-td-print-local></span>
 <span id="4--锁不可用" data-td-print-local></span>
 
-## 等待锁与中断
+## 等待锁与中断 {#lock-waits-and-interruption}
 
 默认 `-T 0` 一直等待写锁，`-T 30s` 最多等待 30 秒，`-N` 只尝试一次。
 占锁时返回 `4`；`-N` 与非零 `-T` 同用返回 `2`。
@@ -91,7 +93,7 @@ SOW 处理 Ctrl-C 或 SIGTERM 中断时返回 `130`。上传进度超时等内�
 中断不会撤销已经提交的工作。先检查状态，再按[事务与恢复](/zh/docs/feature/transactions/)
 中对应的流程继续操作。
 
-## JSON 错误
+## JSON 错误 {#json-errors}
 
 使用 `--json` 时，stdout 输出结果封装，stderr 输出诊断。
 `errors` 数组使用下列分类：
@@ -106,7 +108,7 @@ SOW 处理 Ctrl-C 或 SIGTERM 中断时返回 `130`。上传进度超时等内�
 | `6` | `rejected` |
 | `130` | `interrupted` |
 
-按退出码或分类判断，不解析错误消息文本。Plain `create` 向 stderr 打印其内部错误，
+按退出码或分类判断，不解析错误消息文本。Plain `create` 与 `prune` 向 stderr 打印其内部错误，
 JSON 消息可能额外包含 CLI 分类前缀。即使 `ok` 为 `false`，诊断和部分成功结果也会保留。
 
 详见 [JSON 输出](/zh/docs/reference/json/)与

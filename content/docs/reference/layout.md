@@ -16,48 +16,51 @@ Keep workspace configuration and `.sow/` state outside the web server's document
 
 ## Plain directory
 
-```text
+```filetree
 /srv/offline/
-├── example-1.0-1.x86_64.rpm
-├── example_1.0-1_amd64.deb
-├── repodata/
-│   ├── <sha256>-primary.xml.gz
-│   ├── <sha256>-filelists.xml.gz
-│   ├── <sha256>-other.xml.gz
-│   └── repomd.xml
-├── Packages
-├── Packages.gz
-└── repo_complete                     # with --pigsty
+  example-1.0-1.x86_64.rpm
+  example_1.0-1_amd64.deb
+  repodata/
+    <sha256>-primary.xml.gz
+    <sha256>-filelists.xml.gz
+    <sha256>-other.xml.gz
+    repomd.xml
+  Packages
+  Packages.gz
+  repo_complete # with --pigsty
 ```
 
 `sow create` writes RPM metadata only when RPMs are present and DEB metadata only when
-DEBs are present. RPM locations use a bare basename; DEB locations use `./<basename>`.
-A running build uses private `.sow-plain-stage-*` directories. Exclude them from serving
+DEBs are present. `sow prune` operates on flat RPM directories, keeping the highest EVR per
+package name and architecture. RPM locations use a bare basename; DEB locations use `./<basename>`.
+A running build uses private `.sow-plain-stage-*` directories, and an active `prune` tracks
+its completion marker with `.sow-prune-repo-complete`. Exclude these private paths from serving
 and copying. A later `create` removes stale SOW temporary paths and rebuilds the indexes.
 
 `.sow-plain-rpm-history.json` records the current and previous RPM metadata references.
-Keep it when copying a directory for further `create` runs. It does not belong in a client index and is not a recovery journal.
+Keep it when copying a directory for further `create` or `prune` runs. It does not belong in a client index and is not a recovery journal.
 
 ## Managed workspace
 
-```text
+```filetree
 <workspace>/
-├── sow.yml                           # workspace configuration
-├── .sow/                             # private state
-│   ├── workspace.lock
-│   ├── workspace-ops/
-│   ├── repo-locks/<repo>.lock
-│   ├── <repo>.db
-│   └── <repo>/
-│       ├── abandoned/                # retained migration stages
-│       ├── stage/
-│       ├── recovery/
-│       ├── retained/
-│       ├── transitions/
-│       └── pending/
-└── <repo>/                           # public repository root
-    ├── pool/
-    └── dists/
+  sow.yml # workspace configuration
+  .sow/ # private state
+    workspace.lock
+    workspace-ops/
+    repo-locks/<repo>.lock
+    <repo>.db
+    <repo>/
+      abandoned/ # retained migration stages
+      stage/
+      recovery/
+      retained/ # retained generation records and .rm plans
+      transitions/
+      pending/
+      gc-plan.json # active local GC deletion plan
+  <repo>/ # public repository root
+    pool/
+    dists/
 ```
 
 The database can have SQLite WAL and shared-memory sidecar files.
@@ -96,16 +99,15 @@ those records no longer need them. Each repository owns its own pool.
 
 ## RPM Dist
 
-```text
+```filetree
 dists/el9/
-├── x86_64/repodata/
-│   ├── <sha256>-primary.xml.gz
-│   ├── <sha256>-filelists.xml.gz
-│   ├── <sha256>-other.xml.gz
-│   ├── repomd.xml
-│   └── repomd.xml.asc                # with metadata signing
-└── aarch64/repodata/
-    └── ...
+  x86_64/repodata/
+    <sha256>-primary.xml.gz
+    <sha256>-filelists.xml.gz
+    <sha256>-other.xml.gz
+    repomd.xml
+    repomd.xml.asc # with metadata signing
+  aarch64/repodata/
 ```
 
 Architecture views contain metadata only. Each package location points back to the root pool:
@@ -125,18 +127,17 @@ For a self-contained directory with local package paths, use
 
 ## DEB Dist
 
-```text
+```filetree
 dists/trixie/
-├── Release
-├── InRelease                         # with metadata signing
-├── Release.gpg                       # with metadata signing
-└── main/
-    ├── binary-amd64/
-    │   ├── Packages
-    │   ├── Packages.gz
-    │   └── by-hash/SHA256/<digest>
-    └── binary-arm64/
-        └── ...
+  Release
+  InRelease # with metadata signing
+  Release.gpg # with metadata signing
+  main/
+    binary-amd64/
+      Packages
+      Packages.gz
+      by-hash/SHA256/<digest>
+    binary-arm64/
 ```
 
 `Packages` entries use root-relative archive paths such as
@@ -150,10 +151,10 @@ Architecture `all` packages appear in each applicable index.
 
 Both target providers receive the same public layout:
 
-```text
+```filetree
 <prefix>/
-├── pool/
-└── dists/
+  pool/
+  dists/
 ```
 
 An export has its own package files, metadata, manifest, and `.sow-export.json` completion
@@ -167,7 +168,7 @@ Repository, Dist, and target names use `[a-z0-9][a-z0-9._-]*`.
 Reserved names include `.`, `..`, `.sow`, `pool`, `dists`, `sow.yml`, `workspace.lock`,
 `workspace-ops`, and `repo-locks`.
 
-A new pool path that differs only in case from a known full path is rejected, even for
+SOW rejects any new pool path that differs only in case from an existing path, even for
 identical bytes. On a case-insensitive filesystem, source directories that differ only
 in case also conflict. On a case-sensitive filesystem those source directories can remain
 distinct, so check them before moving a repository to a case-insensitive volume.

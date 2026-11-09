@@ -24,7 +24,7 @@ sow log prune BEFORE [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|
 
 ## sow log
 
-With no argument, prints the 50 most recent Operations, newest first.
+With no argument, `sow log` prints the 50 most recent Operations, newest first.
 
 ```console
 sow log -r pigsty --json
@@ -65,6 +65,7 @@ failed Operation additionally carries `error_class` and `error_message`:
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `-d, --dist NAME` | Show only Operations touching this Dist | all |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ### One Operation in detail
 
@@ -145,12 +146,13 @@ planned → staged → applied → built → done
 | `failed` | Terminal — the operation failed before `applied`, nothing was committed |
 | `rolled_back` | Terminal — recovery abandoned the operation before it changed Desired state, for example a `planned` operation left by an interrupted command |
 | `recovering` | Non-terminal; the next write command must complete or roll it back |
+{.wide .expand}
 
 The Repository log includes `dist new` and `dist rm`. Workspace operations (`init`, `repo new`, `repo rm`) use separate recovery records and do not appear here.
 
 ## sow log export
 
-Writes terminal Operations as JSONL — one complete Operation detail record per line — for archival or
+`sow log export` writes terminal Operations as JSONL — one complete Operation detail record per line — for archival or
 ingestion into a log pipeline.
 
 ```console
@@ -169,6 +171,7 @@ sow log export - -r pigsty | gzip > pigsty-ops-$(date +%F).jsonl.gz
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `-d, --dist NAME` | Export only Operations touching this Dist | all |
+{.wide .expand}
 
 `export` has no `--json`; JSONL *is* its output format.
 
@@ -178,7 +181,7 @@ Choose a new filename in an existing directory. `log export` returns `6` if the 
 
 ## sow log prune
 
-Deletes eligible completed operation records older than `BEFORE` and reclaims database space. If another reader is using the database, record deletion can finish while space reclamation waits. The result then reports `compaction_deferred: true`. Close the reader and rerun `prune` to reclaim the space.
+`sow log prune` deletes eligible completed operation records older than `BEFORE` and reclaims database space. If another reader is using the database, record deletion can finish while space reclamation waits. The result then reports `compaction_deferred: true`. Close the reader and rerun `prune` to reclaim the space.
 
 ```console
 sow log prune 2027-01-01 -r pigsty
@@ -197,6 +200,7 @@ the journal ID and `compaction_deferred` appear in `result`.
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 `prune` applies to the whole Repository and does not accept `-d`.
 

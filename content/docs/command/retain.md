@@ -34,7 +34,7 @@ Adding the same Generation again changes nothing if its retained record still pa
 
 ## retain ls
 
-Lists retained records for the Repository.
+`sow retain ls` lists retained records for the Repository.
 
 ```console
 sow retain ls -r pgsql
@@ -46,7 +46,7 @@ An empty list is a successful result.
 
 ## retain rm
 
-Removes the retention record for a Generation:
+`sow retain rm` removes the retention record for a Generation:
 
 ```console
 sow retain rm 12 -r pgsql
@@ -54,6 +54,7 @@ removed retained generation 00000000000000000012
 ```
 
 It does not delete package bytes. Removing a Generation that is not retained is an idempotent no-op.
+Before deleting a retention record, SOW writes a removal plan (`.sow/<repo>/retained/<GENERATION>.rm`). If an interruption occurs before the removal finishes, the next command completes the planned removal cleanly instead of reporting a damaged record.
 A later local [`sow gc`](/docs/command/gc/) can reclaim these packages when no other state or operation needs them.
 
 If a retained record is damaged, `retain rm`, `retain ls`, local `gc`, and `check` report the error. The `retained` layer in `check` identifies the affected Generation. To discard that damaged record:
@@ -73,6 +74,7 @@ Moving the record also removes its protection against GC.
 | `-T, --timeout DUR` | `add`, `rm` | Maximum write-lock wait |
 | `-N, --no-wait` | `add`, `rm` | Fail immediately when locked |
 | `--json` | all | Output JSON |
+{.wide .expand}
 
 ## Exit behavior
 
@@ -84,6 +86,7 @@ Moving the record also removes its protection against GC.
 | `4` | Write lock unavailable for `add` or `rm` |
 | `5` | Generation manifest or Repository state is inconsistent |
 | `6` | Explicit Repository is not configured, `retain add` does not name the current Built Generation, or another safety rule rejects the request |
+{.wide .expand}
 
 ## See also
 

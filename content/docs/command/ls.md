@@ -23,6 +23,7 @@ sow ls [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json]
 | `-r, --repo NAME` | Select a Repository | [selection rules](/docs/command/#repository-selection) |
 | `-d, --dist NAME` | Select a Dist; repeatable | [selection rules](/docs/command/#dist-selection) |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ## Output
 
@@ -40,10 +41,11 @@ sha256:d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab	rpm:epel
 | `DISTS` | Desired membership across the Repository |
 | `BUILT_DISTS` | Membership present in the current Built Generation |
 | `POOL_PATH` | Repository-relative immutable payload path |
+{.wide .expand}
 
 The first line reports whether the selected Dists are dirty. Configuration changes can make them dirty even when membership counts match.
 
-`-d` selects rows by Desired membership. The `DISTS` and `BUILT_DISTS` columns then show all locations of each returned package in the Repository. A package removed with `rm --skip` is absent from this list even while an older Built index still contains it. An empty `BUILT_DISTS` means no local Built Dist currently includes that package.
+`-d` selects rows by Desired membership. The `DISTS` and `BUILT_DISTS` columns then show all locations of each returned package in the Repository. A package that you removed with `rm --skip` is absent from this list even while an older Built index still contains it. An empty `BUILT_DISTS` means no local Built Dist currently includes that package.
 
 Each package appears once, with multiple Dists separated by commas. An empty Dist produces a successful result with no package rows.
 
@@ -83,6 +85,7 @@ sow ls -r pgsql -d el9 --json | jq -r '.result.packages[].pool_path' | sort
 | `2` | Usage error, Workspace not found, or implicit Repository/Dist selection is ambiguous |
 | `5` | Repository state database unreadable or inconsistent |
 | `6` | Explicit Repository or Dist is not configured |
+{.wide .expand}
 
 ## See also
 

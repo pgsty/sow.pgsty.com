@@ -51,6 +51,7 @@ ls -a /srv/repo
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 | `-h, --help` | Show help | — |
+{.wide .expand}
 
 ## Idempotence rules
 
@@ -61,8 +62,8 @@ A new configuration uses `schema: sow/v3` and architectures `x86_64` and `aarch6
 ## Apply a declared configuration {#converging-a-declared-configuration}
 
 If `sow.yml` already describes Repositories and Dists, `init` creates the missing directory trees,
-SQLite databases and empty indexes for them. Already-initialized objects are skipped, so the counters
-tell you exactly what this run did.
+SQLite databases and empty indexes for them. SOW skips already-initialized objects, so the counters
+tell you what this run did.
 
 ```yaml
 schema: sow/v3
@@ -148,6 +149,7 @@ sow config check -C /srv/repo
 | `3` | Partial success — some declared Repositories/Dists were committed and at least one failed |
 | `5` | The Workspace journal could not be recovered to a terminal state |
 | `6` | An existing file collides with a SOW reserved path |
+{.wide .expand}
 
 ## See also
 

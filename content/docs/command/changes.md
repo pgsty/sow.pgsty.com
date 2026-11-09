@@ -22,6 +22,7 @@ sow changes [BASE_GENERATION] [-C|--workdir DIR] [-r|--repo NAME] [--json]
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a Repository | [selection rules](/docs/command/#repository-selection) |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 The command is Repository-wide and rejects `-d/--dist`.
 
@@ -42,6 +43,7 @@ Columns are operation, phase, Repository-relative path, size, and SHA-256.
 |---|---|
 | operation | `add`, `update`, `delete` |
 | phase | `payload`, `metadata`, `pointer`, `delete` |
+{.wide .expand}
 
 Use this plan to inspect the local file delta. To deliver it, use [`sow publish`](/docs/command/publish/) or stage a complete copy and switch it into service.
 
@@ -62,7 +64,7 @@ operation rejected: managed: operation rejected: base generation 99 is outside 0
 ## Dirty and recovery states
 
 When Desired state is dirty, the header says `dirty=true`, but the plan still ends at the current
-Built Generation. Private pending payloads are excluded because they are not deliverable yet.
+Built Generation. SOW excludes private pending payloads because they are not deliverable yet.
 
 When the Repository is `recovering` or `error`, follow the diagnostic to recover or repair it before running `changes`.
 
@@ -90,6 +92,7 @@ sow changes -r pgsql --json |
 | `2` | Usage error, `-d` supplied, Workspace not found, or implicit Repository selection is ambiguous |
 | `5` | Repository is `recovering` or `error`, or state evidence is inconsistent |
 | `6` | Explicit Repository is not configured, or Base Generation is outside the valid range |
+{.wide .expand}
 
 ## See also
 

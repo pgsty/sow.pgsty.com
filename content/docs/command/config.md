@@ -23,7 +23,7 @@ sow config show [--all] [-C DIR] [-r NAME] [-d NAME]... [--json]
 
 ## sow config check
 
-Parses and validates the complete `sow.yml`: schema version, names, path collisions, the architecture
+`sow config check` parses and validates the complete `sow.yml`: schema version, names, path collisions, the architecture
 permit list, Dist formats, membership policy and signing key references. It reports the Workspace it
 resolved and how much it validated.
 
@@ -45,6 +45,7 @@ sow config check --json
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
 | `-h, --help` | Show help | — |
+{.wide .expand}
 
 ### Strict field rejection
 
@@ -65,7 +66,7 @@ configuration error: load config "/srv/repo/sow.yml": config schema must be "sow
 
 Signing checks depend on the signer:
 
-- Metadata key files are unlocked and checked for signing suitability. External GPG
+- SOW unlocks metadata key files and checks them for signing suitability. External GPG
   metadata keys also perform a small noninteractive signing probe.
 - Active RPM package signing checks the selected password file's format, `rpm`/GPG,
   and secret-key availability. It does not sign a package or prove that the password
@@ -77,7 +78,7 @@ configuration, membership, and Built state.
 
 ## sow config show
 
-Prints the effective configuration as YAML for the currently selected scope.
+`sow config show` prints the effective configuration as YAML for the currently selected scope.
 
 ```console
 sow config show
@@ -173,13 +174,12 @@ repos:
         exclude: []
 ```
 
-Without `--all`, normal Repository selection applies. If the discovery start directory is inside a Dist, that Dist is selected unless you provide `-d`. Otherwise, all Dists of the selected Repository are shown. `--all` shows the entire Workspace and ignores `-r` and `-d`.
+Without `--all`, normal Repository selection applies. If the discovery start directory is inside a Dist, SOW selects that Dist unless you provide `-d`. Otherwise, SOW shows all Dists of the selected Repository. `--all` shows the entire Workspace and ignores `-r` and `-d`.
 
 ### Signing references {#secrets-are-never-printed}
 
-The output contains key references and resolved fingerprints. Private key contents and passphrases are omitted.
-Configured `passfile` paths remain visible. The `SOW_GPG_PASSFILE` fallback is a
-runtime source and is not added to the displayed configuration.
+The output contains key references and resolved fingerprints. SOW omits private key contents and passphrases.
+Configured `passfile` paths remain visible. SOW does not add the `SOW_GPG_PASSFILE` runtime fallback to the displayed configuration.
 
 ## Examples
 
@@ -207,6 +207,7 @@ diff -u /tmp/el9.yml /tmp/beta.yml
 | `2` | Usage or discovery error, invalid YAML, unknown field, or unsupported schema |
 | `5` | Existing state, controlled paths, or recovery records are inconsistent |
 | `6` | Unknown selection, unusable signing configuration, or configuration incompatible with existing state |
+{.wide .expand}
 
 `config check` validates both the YAML file and its compatibility with existing Repository state.
 

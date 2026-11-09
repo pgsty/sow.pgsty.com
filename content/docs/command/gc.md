@@ -28,9 +28,9 @@ sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
-`gc TARGET -r NAME` is a usage error because the target already binds a Repository. `--dist` is not
-accepted in either mode.
+`gc TARGET -r NAME` is a usage error because the target already binds a Repository. Neither mode accepts `--dist`.
 
 ## Local GC
 
@@ -42,8 +42,7 @@ Run local GC after the Repository has a completed, clean build. If it is dirty, 
 - publication records;
 - active maintenance work.
 
-The operation is journaled. When payloads are removed, the Repository advances to a new Generation.
-When nothing is eligible, it is an idempotent no-op.
+SOW journals the operation and persists a local GC plan (`.sow/<repo>/gc-plan.json`) before unlinking pool payloads. If an interruption occurs after some files are deleted, a subsequent recovery replays the recorded plan, verifies that every active current, previous, and retained Generation pointer is withdrawn before retiring a Generation, and completes the new Generation. When payloads are removed, the Repository advances to a new Generation. When nothing is eligible, the command is an idempotent no-op.
 
 ```console
 sow gc -r pgsql
@@ -58,6 +57,9 @@ Target GC waits for the configured cache grace period and checks which objects a
 |---|---|
 | `filesystem` | After the grace period, conditionally delete eligible objects, verify that their public URLs are absent, and record the result |
 | `r2` | Save a report of eligible objects; leave the objects in storage |
+{.wide .expand}
+
+For `filesystem` targets, SOW scopes the prospective target path check so sibling targets that share a parent directory (such as `/srv/www/pgsql` and `/srv/www/pigsty`) do not block each other.
 
 ```console
 sow gc prod
@@ -76,6 +78,7 @@ A no-op means no maintenance is due.
 | `4` | Repository write lock unavailable |
 | `5` | Recovery, state, receipt, or manifest evidence is inconsistent |
 | `6` | Explicit Repository/target is not configured or safe, or deletion is rejected by a safety precondition |
+{.wide .expand}
 
 ## See also
 

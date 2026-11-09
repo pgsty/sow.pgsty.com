@@ -33,13 +33,14 @@ sow show 'rpm:example-0:1.0-1.x86_64' -r demo
 | DEB coordinate | `deb:<name>=<version>:<arch>` | Complete DEB identity |
 | Filename | `example-1.0-1.x86_64.rpm` | Stored package filename |
 | Bare name | `example` | Binary package name |
+{.wide .expand}
 
-SHA-256 values must be complete and lowercase. Abbreviations and uppercase digests are
-rejected with exit `6`. The digest is for the stored bytes; Managed RPM signing can make
+SHA-256 values must be complete and lowercase. SOW rejects abbreviated or uppercase digests
+with exit code `6`. The digest is for the stored bytes; Managed RPM signing can make
 it different from the input file's digest.
 
 RPM coordinates always include an epoch, using `0` when the package has none.
-A reference with the `rpm:` prefix is matched against the complete stored coordinate.
+SOW matches an `rpm:` reference against the complete stored coordinate.
 Include every coordinate component to match the package.
 
 DEB coordinates include the complete Debian version, with any epoch and revision, plus
@@ -63,6 +64,9 @@ scripts. References do not support paths, globs, regular expressions, or version
 | `rm` | Removes all matching memberships in the selected Dists |
 | `show` | Rejects the ambiguous reference and lists candidates |
 | `where` | Requires one package identity; returns all repository locations for that identity |
+{.wide .expand}
+
+Plain `sow prune --protect NAME` also accepts only an exact binary RPM package name (not coordinates, digests, or filenames).
 
 Preview a name-wide removal before applying it:
 
@@ -91,8 +95,9 @@ Desired membership in those Dists. Unrecorded files are not query results.
 | `rm` | Selected Dists of one repository | `-r`; repeatable `-d`, or inferred Dist |
 | `show` | All recorded package objects in one repository | `-r`; optional `-d` limits to Desired membership |
 | `where` | All repositories in the workspace | Optional `-r` and `-d` |
+{.wide .expand}
 
-For `rm`, if the Dist cannot be inferred and the repository has several Dists, supply
+For `rm`, if SOW cannot infer the Dist and the repository has several Dists, supply
 `-d`. Without `-r`, `where -d NAME` searches repositories containing that Dist name.
 It reports an error if the requested Dist name exists nowhere.
 

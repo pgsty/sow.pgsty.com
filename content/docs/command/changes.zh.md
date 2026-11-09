@@ -11,7 +11,7 @@ icon: fa-solid fa-code-compare
 
 `sow changes` 列出基准构建快照与当前构建快照之间的文件差异。路径相对于仓库根目录。需要包含尚未构建的期望变化时，先运行 `sow build`。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow changes [BASE_GENERATION] [-C|--workdir DIR] [-r|--repo NAME] [--json]
@@ -22,10 +22,11 @@ sow changes [BASE_GENERATION] [-C|--workdir DIR] [-r|--repo NAME] [--json]
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
 | `-r, --repo NAME` | 选择仓库 | [选择规则](/zh/docs/command/) |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
 该命令作用于整个仓库，不接受 `-d/--dist`。
 
-## 输出
+## 输出 {#output}
 
 ```console
 sow changes
@@ -42,6 +43,7 @@ delete	delete	dists/el9/x86_64/repodata/0df96f0b...-primary.xml.gz	0
 |---|---|
 | 操作 | `add`、`update`、`delete` |
 | 阶段 | `payload`、`metadata`、`pointer`、`delete` |
+{.wide .expand}
 
 此计划用于查看本地文件变化。需要交付时，使用 [`sow publish`](/zh/docs/command/publish/)，或暂存完整副本后再切换服务目录。
 
@@ -58,13 +60,13 @@ sow changes 99
 operation rejected: managed: operation rejected: base generation 99 is outside 0..2
 ```
 
-## dirty 与恢复状态
+## dirty 与恢复状态 {#dirty-and-recovery-states}
 
 期望状态尚未构建时，首行显示 `dirty=true`。结果仍以当前构建快照为终点，不包含待构建包文件。
 
 仓库为 `recovering` 或 `error` 时，先按诊断信息恢复或修复仓库，再运行 `changes`。
 
-## 示例
+## 示例 {#examples}
 
 输出当前完整清单：
 
@@ -79,7 +81,7 @@ sow changes -r pgsql --json |
   jq '.result.changes[] | select(.path | startswith("dists/el9/"))'
 ```
 
-## 退出码
+## 退出码 {#exit-codes}
 
 | 代码 | 触发条件 |
 |---|---|
@@ -88,8 +90,9 @@ sow changes -r pgsql --json |
 | `2` | 用法错误、传入 `-d`、未发现工作区或隐式仓库选择有歧义 |
 | `5` | 仓库处于 `recovering`/`error`，或状态证据不一致 |
 | `6` | 显式仓库未配置，或基准编号超出有效范围 |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [`sow build`](/zh/docs/command/build/) —— 创建新的构建快照
 - [`sow publish`](/zh/docs/command/publish/) —— 使用受支持的发布协议

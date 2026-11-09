@@ -10,7 +10,7 @@ icon: fa-solid fa-file-code
 ---
 
 `sow.yml` configures a Managed workspace. It declares repositories, Dists, package policy,
-signing, and publication targets. Plain `sow create` does not read it.
+signing, and publication targets. Plain `sow create` and `sow prune` do not read it.
 
 After editing the file, validate it and inspect the effective settings:
 
@@ -29,10 +29,10 @@ resolves signing references. `--all` expands defaults in `config show`.
 - Use one YAML document and `schema: sow/v3`.
 - Unknown fields and duplicate keys are errors.
 - Keep the file at the workspace root as a regular file with one hard link, at most 16 MiB.
-  A symlink is rejected.
+  SOW rejects a symlink.
 - `init`, `repo new/rm`, and `dist new/rm` update the file as part of their operations.
-- Edit policy, signing, and target settings in the file. Defaults are applied when read;
-  reading does not rewrite the source.
+- Edit policy, signing, and target settings in the file. SOW applies defaults when reading
+  the file and does not rewrite the source.
 
 Use [`repo migrate`](/docs/command/repo/#sow-repo-migrate) to upgrade an older repository database or layout.
 
@@ -121,9 +121,10 @@ dists:
 {.wide .expand}
 
 Adding an architecture makes the Dist dirty; run `build` to generate its view.
-Removing an architecture still referenced by membership or built state is rejected.
+SOW rejects removing an architecture that membership or built state still references.
 
-`limit` must be non-negative. RPM uses epoch-version-release ordering; DEB uses Debian
+`limit` must be non-negative. RPM uses epoch-version-release ordering (sorting caret `^`
+snapshot versions before point releases, such as `2.0^20250611 < 2.0.1`); DEB uses Debian
 version ordering. Neutral packages form a separate group. Relaxing policy does not
 restore removed members; add their package files again.
 
@@ -305,9 +306,9 @@ The option is available on `create` (with `--sign-with`), `init`, `config check`
 `add --skip` can still sign packages; `rm --check` can render signed preview metadata.
 `publish`, local/target `gc`, and `log prune` also accept it because recovery of an
 interrupted mutation can need a signer. Query commands, `config show`, and signature
-verification with `check` do not read password files. `retain` does not accept
-`--passfile`. Recovery selects the source
-again from the current invocation and configuration; password values are never journaled.
+verification with `check` do not read password files. `retain` and Plain `prune` do not
+accept `--passfile`. Recovery selects the source
+again from the current invocation and configuration; SOW never journals password values.
 
 Changing only a `passfile` path does not change a signing identity or make a Dist dirty.
 Password values never enter logs, config output, repository state, or public files.

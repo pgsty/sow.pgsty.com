@@ -19,8 +19,9 @@ sow status -r demo --json | jq '.result.status'
 ```
 
 <span id="信封结构" data-td-print-local></span>
+<span id="顶层封装" data-td-print-local></span>
 
-## 顶层封装
+## 顶层封装 {#envelope}
 
 每个 JSON 响应都有七个字段：
 
@@ -52,12 +53,12 @@ sow status -r demo --json | jq '.result.status'
 `result: null`。失败的 `check` 和部分成功的 `add` 仍可返回有用结果；
 `ok` 为 false 时也应保留它们。
 
-<span id="errors" data-td-print-local></span>
-
 数据库提交后的维护错误也可能返回已提交结果。
 重试前查看结果、`status` 和操作日志。非零退出码不代表事务已经回滚。
 
-### 错误
+<span id="错误" data-td-print-local></span>
+
+### 错误 {#errors}
 
 ```json
 {"code":3,"class":"partial","message":"managed: batch partially succeeded"}
@@ -69,8 +70,9 @@ sow status -r demo --json | jq '.result.status'
 
 <span id="operation-id-是字符串" data-td-print-local></span>
 <span id="generation-id-是固定宽度字符串" data-td-print-local></span>
+<span id="身份标识" data-td-print-local></span>
 
-### 身份标识
+### 身份标识 {#identities}
 
 操作 ID 与构建快照 ID 保持字符串类型。操作 ID 可能超出 JavaScript 精确整数范围。
 构建快照 ID 是补零至 20 位的十进制字符串：
@@ -82,22 +84,25 @@ sow status -r demo --json | jq '.result.status'
 此规则适用于 `generation`、`built_generation`、`base_generation` 和表示构建快照的 `base`。
 期望状态修订号和计数仍是 JSON 数字。
 
-顶层 `operation` 的取值如下：
+SOW 按下列规则设置顶层 `operation`：
 
 | 命令 | 值 |
 |---|---|
 | `add`、非预览 `rm`、`build`、本地 `gc` | 已分配的日志 ID |
 | `publish`、`publish --abort` | 已有的发布尝试 ID |
 | `log ID` | 请求的操作 ID |
-| 其他命令 | `null`；`log prune` 将 ID 放在 `result.operation` |
+| 其他命令（`create`、`prune`、`init`、`config`、`ls`、`show`、`where`、`retain`、`export`） | `null`；`log prune` 将 ID 放在 `result.operation` |
+{.wide .expand}
 
-`operation` 为 null 不表示只读命令。`where` 的顶层 `repository` 为 null，
-具体仓库名称在位置记录中。
+`operation` 为 null 不表示只读命令。`create`、`prune`、`init`、`config check`、`repo ls` 和 `where` 的顶层 `repository` 为 null；`where` 将具体仓库名称放在位置记录中。
 
 <span id="各命令的-result-形态" data-td-print-local></span>
 <span id="create" data-td-print-local></span>
+<span id="prune" data-td-print-local></span>
 
-## Plain `create`
+## Plain `create` 与 `prune` {#plain-create-and-prune}
+
+`sow create` 在 `result` 中返回下列字段：
 
 | 结果字段 | 含义 |
 |---|---|
@@ -110,11 +115,28 @@ sow status -r demo --json | jq '.result.status'
 | `noop` | 无需改变公开文件 |
 | `recovered` | 始终 `false`，Plain 没有日志恢复 |
 | `signed`、`signer` | 已签名文件名和可用的签名者身份 |
+| `dropped_metadata` | `create` 替换已有 `repomd.xml` 时移除的不受支持数据类型（如 `group`、`updateinfo`、`modules`），存在时返回 |
+{.wide .expand}
+
+`sow prune` 在 `result` 中返回下列字段：
+
+| 结果字段 | 含义 |
+|---|---|
+| `dir` | 目标目录路径 |
+| `dry_run` | 是否设置了 `--dry-run` |
+| `kept` | 排序后的顶层保留 RPM 文件名 |
+| `candidates` | `{path, latest}` 对象数组，列出每个待删除候选包及其保留的替换 RPM |
+| `removed` | 已删除的 RPM 文件名 |
+| `index_updated` | 是否重写了 `repodata/` |
+| `marker` | 操作完成后是否存在 `repo_complete` |
+| `noop` | 无需删除软件包且未写入索引时为 `true` |
+{.wide .expand}
 
 <span id="init" data-td-print-local></span>
 <span id="config-check-与-config-show" data-td-print-local></span>
+<span id="初始化与配置" data-td-print-local></span>
 
-## 初始化与配置
+## 初始化与配置 {#initialization-and-configuration}
 
 | 命令 | 结果 |
 |---|---|
@@ -123,12 +145,13 @@ sow status -r demo --json | jq '.result.status'
 | `config show` | 生效配置：`schema`、`architectures`、`repos`，以及存在时的 `targets` |
 
 解析后的签名设置可包含公钥指纹和证书快照摘要。指纹和摘要数组各自排序，不能按下标配对。
-详见[配置参考](/zh/docs/reference/config/#密钥引用)。
+详见[配置参考](/zh/docs/reference/config/#key-references)。
 
 <span id="repo-ls--repo-new--repo-show" data-td-print-local></span>
 <span id="dist-ls--dist-new--dist-show" data-td-print-local></span>
+<span id="仓库与-dist" data-td-print-local></span>
 
-## 仓库与 Dist
+## 仓库与 Dist {#repositories-and-dists}
 
 `repo ls` 返回 `result.repositories[]`；`repo new` 与 `repo show` 直接返回一个仓库对象。
 常见字段为 `name`、`path`、`protected`、`dists`、`generation`、`desired_revision`、
@@ -158,8 +181,9 @@ sow status -r demo --json | jq '.result.status'
 <span id="add" data-td-print-local></span>
 <span id="rm" data-td-print-local></span>
 <span id="build" data-td-print-local></span>
+<span id="addrm-与-build" data-td-print-local></span>
 
-## `add`、`rm` 与 `build`
+## `add`、`rm` 与 `build` {#add-rm-and-build}
 
 三者都报告操作后的仓库状态：`repository`、`desired_revision`、`built_generation`、`dirty`。
 
@@ -186,8 +210,9 @@ sow status -r demo --json | jq '.result.status'
 
 <span id="status" data-td-print-local></span>
 <span id="check" data-td-print-local></span>
+<span id="status-与-check" data-td-print-local></span>
 
-## `status` 与 `check`
+## `status` 与 `check` {#status-and-check}
 
 `status` 返回 `status`、`ready_to_copy`、`desired_revision`、`built_generation`、
 `dirty_dists`、`dirty_reasons`、`pending`、`repository_locked`。
@@ -204,7 +229,7 @@ sow status -r demo --json | jq '.result.status'
 存在活动布局转换时，改为前三层加 `layout-transition`。
 脏仓库可以通过各项一致性检查，但仍因尚不可交付而返回 `5`。
 
-## `changes`
+## `changes` {#changes}
 
 结果包含 `repository`、`base`、`generation`、`dirty`、`changes[]`，每项变更包含：
 
@@ -219,8 +244,9 @@ sow status -r demo --json | jq '.result.status'
 这是本地文件差异，远端变更使用 `publish` 和目标 `gc`。
 
 <span id="ls--show--where" data-td-print-local></span>
+<span id="包查询" data-td-print-local></span>
 
-## 包查询
+## 包查询 {#package-queries}
 
 | 命令 | 结果字段 |
 |---|---|
@@ -240,8 +266,9 @@ sow status -r demo --json | jq '.result.status'
 `built_dists`、`sha256` 和 `coordinate`。
 
 <span id="publishretaingcexport" data-td-print-local></span>
+<span id="发布与维护" data-td-print-local></span>
 
-## 发布与维护
+## 发布与维护 {#publication-and-maintenance}
 
 | 命令 | 主要结果字段 |
 |---|---|
@@ -257,8 +284,9 @@ sow status -r demo --json | jq '.result.status'
 
 <span id="log" data-td-print-local></span>
 <span id="log-export-不是信封" data-td-print-local></span>
+<span id="操作日志" data-td-print-local></span>
 
-## 操作日志
+## 操作日志 {#operation-logs}
 
 `log` 返回 `repository` 和按新到旧排序的 `operations[]`。
 `log ID` 返回 `repository` 与 `detail`，后者包含 `operation`、`duration_ms`、`events`、
@@ -293,8 +321,9 @@ sow log export - -r demo
 文件目标必须尚不存在，其直接父目录必须是真实目录，不能是符号链接。
 
 <span id="一个完整例子" data-td-print-local></span>
+<span id="在脚本中使用检查结果" data-td-print-local></span>
 
-## 在脚本中使用检查结果
+## 在脚本中使用检查结果 {#use-a-validation-result-in-a-script}
 
 ```bash
 #!/usr/bin/env bash

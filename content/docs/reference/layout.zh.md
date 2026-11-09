@@ -14,49 +14,50 @@ icon: fa-solid fa-folder-tree
 
 <span id="plain-模式" data-td-print-local></span>
 
-## Plain 目录
+## Plain 目录 {#plain-directory}
 
-```text
+```filetree
 /srv/offline/
-├── example-1.0-1.x86_64.rpm
-├── example_1.0-1_amd64.deb
-├── repodata/
-│   ├── <sha256>-primary.xml.gz
-│   ├── <sha256>-filelists.xml.gz
-│   ├── <sha256>-other.xml.gz
-│   └── repomd.xml
-├── Packages
-├── Packages.gz
-└── repo_complete                     # 使用 --pigsty 时
+  example-1.0-1.x86_64.rpm
+  example_1.0-1_amd64.deb
+  repodata/
+    <sha256>-primary.xml.gz
+    <sha256>-filelists.xml.gz
+    <sha256>-other.xml.gz
+    repomd.xml
+  Packages
+  Packages.gz
+  repo_complete # 使用 --pigsty 时
 ```
 
-`sow create` 在存在 RPM 时生成 RPM 元数据，存在 DEB 时生成 DEB 元数据。
-RPM 位置使用文件名，DEB 使用 `./<文件名>`。构建期间使用私有 `.sow-plain-stage-*` 目录，
-对外服务和复制时应排除这些目录。后续 `create` 会清理过时的 SOW 临时路径并重建索引。
+`sow create` 在存在 RPM 时生成 RPM 元数据，存在 DEB 时生成 DEB 元数据。`sow prune` 作用于平面 RPM 目录，按包名和架构保留 EVR 最高的版本。
+RPM 位置使用文件名，DEB 使用 `./<文件名>`。构建期间使用私有 `.sow-plain-stage-*` 目录，活动 `prune` 通过 `.sow-prune-repo-complete` 跟踪完成标记；
+对外服务和复制时应排除这些私有路径。后续 `create` 会清理过时的 SOW 临时路径并重建索引。
 
 `.sow-plain-rpm-history.json` 记录当前与上一轮 RPM 元数据引用。
-复制目录后还要执行 `create` 时，一并保留它。它不属于客户端索引，也不是恢复日志。
+复制目录后还要执行 `create` 或 `prune` 时，一并保留它。它不属于客户端索引，也不是恢复日志。
 
-## Managed 工作区
+## Managed 工作区 {#managed-workspace}
 
-```text
+```filetree
 <workspace>/
-├── sow.yml                           # 工作区配置
-├── .sow/                             # 私有状态
-│   ├── workspace.lock
-│   ├── workspace-ops/
-│   ├── repo-locks/<repo>.lock
-│   ├── <repo>.db
-│   └── <repo>/
-│       ├── abandoned/                # 中止迁移时保留的暂存文件
-│       ├── stage/
-│       ├── recovery/
-│       ├── retained/
-│       ├── transitions/
-│       └── pending/
-└── <repo>/                           # 公开仓库根
-    ├── pool/
-    └── dists/
+  sow.yml # 工作区配置
+  .sow/ # 私有状态
+    workspace.lock
+    workspace-ops/
+    repo-locks/<repo>.lock
+    <repo>.db
+    <repo>/
+      abandoned/ # 中止迁移时保留的暂存文件
+      stage/
+      recovery/
+      retained/ # 构建快照保留记录与 .rm 删除计划
+      transitions/
+      pending/
+      gc-plan.json # 活动的本地 GC 删除计划
+  <repo>/ # 公开仓库根
+    pool/
+    dists/
 ```
 
 数据库旁可能有 SQLite WAL 和共享内存文件。`.sow/` 与 pending 目录权限为私有的 `0700`。
@@ -68,7 +69,7 @@ SOW 0.7.0 使用数据库 schema v13 和配置 schema `sow/v3`，两者是独立
 
 <span id="规范包池" data-td-print-local></span>
 
-## 包池
+## 包池 {#package-pool}
 
 ```text
 pool/<prefix>/<source>/<filename>
@@ -90,18 +91,17 @@ pool/<prefix>/<source>/<filename>
 
 <span id="rpm-纯元数据视图" data-td-print-local></span>
 
-## RPM Dist
+## RPM Dist {#rpm-dist}
 
-```text
+```filetree
 dists/el9/
-├── x86_64/repodata/
-│   ├── <sha256>-primary.xml.gz
-│   ├── <sha256>-filelists.xml.gz
-│   ├── <sha256>-other.xml.gz
-│   ├── repomd.xml
-│   └── repomd.xml.asc                # 配置元数据签名时
-└── aarch64/repodata/
-    └── ...
+  x86_64/repodata/
+    <sha256>-primary.xml.gz
+    <sha256>-filelists.xml.gz
+    <sha256>-other.xml.gz
+    repomd.xml
+    repomd.xml.asc # 配置元数据签名时
+  aarch64/repodata/
 ```
 
 架构视图只包含元数据，包位置指向根包池：
@@ -117,20 +117,19 @@ dists/el9/
 
 <span id="deb-视图" data-td-print-local></span>
 
-## DEB Dist
+## DEB Dist {#deb-dist}
 
-```text
+```filetree
 dists/trixie/
-├── Release
-├── InRelease                         # 配置元数据签名时
-├── Release.gpg                       # 配置元数据签名时
-└── main/
-    ├── binary-amd64/
-    │   ├── Packages
-    │   ├── Packages.gz
-    │   └── by-hash/SHA256/<digest>
-    └── binary-arm64/
-        └── ...
+  Release
+  InRelease # 配置元数据签名时
+  Release.gpg # 配置元数据签名时
+  main/
+    binary-amd64/
+      Packages
+      Packages.gz
+      by-hash/SHA256/<digest>
+    binary-arm64/
 ```
 
 `Packages` 使用相对仓库根的路径，如
@@ -140,14 +139,14 @@ dists/trixie/
 
 <span id="发布目标" data-td-print-local></span>
 
-## 发布路径
+## 发布路径 {#publication-paths}
 
 两种发布 Provider 都接收相同公开布局：
 
-```text
+```filetree
 <prefix>/
-├── pool/
-└── dists/
+  pool/
+  dists/
 ```
 
 导出拥有自己的包文件、元数据、清单和 `.sow-export.json` 完成标记。
@@ -155,13 +154,13 @@ dists/trixie/
 
 <span id="名称与服务边界" data-td-print-local></span>
 
-## 名称与大小写
+## 名称与大小写 {#names-and-case-sensitivity}
 
 仓库、Dist 和目标名称使用 `[a-z0-9][a-z0-9._-]*`。
 保留名称包括 `.`、`..`、`.sow`、`pool`、`dists`、`sow.yml`、`workspace.lock`、
 `workspace-ops`、`repo-locks`。
 
-新包池完整路径与已知路径仅大小写不同时会被拒绝，即使字节相同。
+SOW 拒绝与已知路径仅大小写不同的新包池路径，即使字节相同。
 在大小写不敏感文件系统上，仅大小写不同的源码目录也会冲突；
 在大小写敏感文件系统上，这些源码目录可以共存，因此迁移到大小写不敏感卷前应先检查。
 

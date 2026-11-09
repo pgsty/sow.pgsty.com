@@ -12,7 +12,9 @@ icon: fa-solid fa-plus
 
 `sow add` 将软件包导入指定 Dist，并构建本地索引。它从包头读取格式与架构，再应用各 Dist 的成员策略。需要分批导入后统一构建时，使用 `--skip`。需要更新远程目标时，在构建后运行 [`sow publish`](/zh/docs/command/publish/)。
 
-## 语法
+<span id="语法" data-td-print-local></span>
+
+## 语法 {#synopsis}
 
 ```text
 sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
@@ -20,7 +22,9 @@ sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|-
 
 `--skip` 只跳过元数据构建，RPM 包签名仍可能需要口令文件。参见[口令文件](/zh/docs/reference/config/#passfile)。
 
-## 参数
+<span id="参数" data-td-print-local></span>
+
+## 参数 {#options}
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
@@ -34,8 +38,9 @@ sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|-
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
-## 输入与目标
+## 输入与目标 {#inputs-and-targets}
 
 `PATH` 可以是文件或目录。目录默认只扫描顶层，除非你加 `-R`。
 
@@ -53,7 +58,9 @@ item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=accepted format=rpm coo
 汇总行给出操作记录 ID、逐项计数、成员增减、新的期望状态修订号、构建快照，以及仓库是否
 留在 dirty 状态。随后是每个输入一行 `item`，顺序稳定。
 
-## 逐项状态
+<span id="逐项状态" data-td-print-local></span>
+
+## 逐项状态 {#item-statuses}
 
 每行 `item` 带一个总体 `status`，以及 `dists=` 中的逐 Dist 判定。
 
@@ -63,6 +70,7 @@ item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=accepted format=rpm coo
 | `reused` | 内容已存在于本仓库；可能只是新增了成员关系引用 |
 | `excluded` | 策略把它从所有目标 Dist 中移除——看 `dists=` 区分是 `excluded` 还是 `limited` |
 | `failed` | 该包被拒绝，`error=` 字段说明原因 |
+{.wide .expand}
 
 `reused` 表示复用已有内容：同一个文件加两次不会产生第二个对象或重复成员关系。默认重复执行
 `add` 时还会构建所选 Dist。Dist 已是最新状态时，构建快照不变。先前 `--skip` 或配置变更留下
@@ -77,7 +85,9 @@ item input="/srv/pkg/epel-release-7-5.noarch.rpm" status=reused format=rpm coord
 把同一个对象加进第二个 Dist 同样是 `reused`——包池只保留一份，只是多了一条成员关系。
 需要继续延后构建时，再次使用 `--skip`。
 
-## 软件包架构 {#架构是读出来的不是猜的}
+<span id="架构是读出来的不是猜的" data-td-print-local></span>
+
+## 软件包架构 {#architecture-is-read-never-guessed}
 
 `add` 从包头读取格式与原生架构，再对照工作区许可表。架构不受支持或不在配置的许可表中时，该包会被拒绝：
 
@@ -89,9 +99,9 @@ item input="/srv/pkg/centos-release-3.1-1.i386.rpm" status=failed error="managed
 RPM 的 `noarch` 与 DEB 的 `all` 是架构中性（neutral）的。它们只产生一个软件包对象与一条
 成员关系，但会渲染进目标 Dist 的每个有效架构视图。只有所选 Dist 会包含这些包。
 
-## 策略：exclude 与 limit
+## 策略：exclude 与 limit {#policy-exclude-and-limit}
 
-SOW 将输入包与 Dist 的现有成员合并，先执行 `exclude`，再执行 `limit`。被策略移除的包会显示为 `excluded`，不算解析失败。
+SOW 将输入包与 Dist 的现有成员合并，先执行 `exclude`，再执行 `limit`。被策略移除的包会显示为 `excluded`，不算解析失败。RPM EVR 比较遵循 RPM 规则，包括插入符（`^`）快照版本，如 `2.0^20250611 < 2.0.1`。
 
 ```console
 sow add /srv/pkg/debs -r pgsql -d trixielim
@@ -112,7 +122,9 @@ item input="/srv/pkg/debs/pg-sample_1.17-1_all.deb" status=reused format=deb coo
 
 放宽 `exclude` 或 `limit` 后，需要重新运行 `sow add` 来恢复软件包。策略作用于期望成员，而不是 `pool/` 中的全部残留文件。
 
-## 部分成功的批次
+<span id="部分成功的批次" data-td-print-local></span>
+
+## 部分成功的批次 {#partial-batches}
 
 即使同批有失败项，合法且无冲突的包依然会提交。失败的输入原地不动，各自带自己的错误信息，命令退出
 `3`：
@@ -139,7 +151,9 @@ sow add /srv/pkg/centos-release-3.1-1.i386.rpm -r pigsty -d el9
 
 重新添加同一个包时，保持文件名大小写一致。仅大小写不同的路径会产生冲突。在大小写不敏感的文件系统上，源码包目录名也必须可以区分，详见[工作区文件系统](/zh/docs/reference/compatibility/#工作区文件系统)。
 
-## --skip
+<span id="--skip" data-td-print-local></span>
+
+## --skip {#skip}
 
 `--skip` 提交期望成员，保持 `pool/`、`dists/` 与构建快照不变。新包存放在私有待构建目录，供后续构建使用。期望状态与已构建状态不同时，仓库为 dirty；重复添加未变化的成员可以保持 clean。
 
@@ -164,13 +178,17 @@ sow build -r pgsql -j 12
 sow check -r pgsql
 ```
 
-## 处理顺序
+<span id="处理顺序" data-td-print-local></span>
+
+## 处理顺序 {#processing-order}
 
 SOW 检查软件包，并按配置为新 RPM 签名。随后执行 `exclude` 与 `limit`，记录最终成员；未设置 `--skip` 时，继续构建。
 
 输入文件保持原样，签名在私有副本上完成。
 
-## RPM 签名模式
+<span id="rpm-签名模式" data-td-print-local></span>
+
+## RPM 签名模式 {#rpm-signing-modes}
 
 Managed 模式的 RPM 包签名在 `sow.yml` 的 `signing.rpm.packages.mode` 中配置，命令行没有覆盖开关。
 
@@ -179,12 +197,13 @@ Managed 模式的 RPM 包签名在 `sow.yml` 的 `signing.rpm.packages.mode` 中
 | `never` | 完整保留输入字节 |
 | `fill` | 无签名或签名不受信任时用配置密钥签名；已有能被 `trusted_keys` 验证的签名则保持字节。配置了密钥时的默认值 |
 | `always` | 确保最终包由配置密钥有效签名；否则对暂存副本重签 |
+{.wide .expand}
 
-没有配置密钥时只能用 `never`。
+没有配置密钥时只能用 `never`。RPM 签名验证支持签名头标签 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 和 EdDSA（Ed25519）OpenPGP 数据包。
 
 重复导入时，SOW 复用内容相同的软件包。如果 RPM 只有签名不同，且已有包满足当前签名策略，也可以复用。包内容改变或已有签名不符合策略时，会产生坐标冲突。完整匹配规则见[签名模型](/zh/docs/feature/signing/)。
 
-## 退出码
+## 退出码 {#exit-codes}
 
 | 码 | 触发条件 |
 |---|---|
@@ -195,8 +214,11 @@ Managed 模式的 RPM 包签名在 `sow.yml` 的 `signing.rpm.packages.mode` 中
 | `4` | 仓库锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 完整性或恢复错误，包括在 `applied` 之后构建失败 |
 | `6` | 全部输入失败，或选择范围、签名、状态前提不允许执行操作 |
+{.wide .expand}
 
-## 参见
+<span id="参见" data-td-print-local></span>
+
+## 参见 {#see-also}
 
 - [sow rm](/zh/docs/command/rm/) —— 反向操作
 - [sow build](/zh/docs/command/build/) —— `--skip` 之后构建

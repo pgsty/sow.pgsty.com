@@ -34,6 +34,7 @@ A `--check` preview can render signed metadata and also accepts `--passfile`. Se
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 `--check` and `--skip` are mutually exclusive:
 
@@ -54,6 +55,7 @@ usage error: --check and --skip are mutually exclusive
 | DEB coordinate | `deb:libpq5=18.3-1:amd64` |
 | Full filename | `epel-release-7-5.noarch.rpm` |
 | Bare binary name | `epel-release` |
+{.wide .expand}
 
 A bare name matches every version and architecture of that name in the selected Dists. Other reference forms must identify one object. An ambiguous reference returns an error with the matching candidates.
 
@@ -78,7 +80,7 @@ removed repository=demo operation=2283442100870457321 dists=el9 memberships=1 re
 membership dist=el9 name="centos-release" coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256:ffd9e7bdaa4884831a6c055ada01dac96b84c50a8d518dac409b445af5dadc16
 ```
 
-The summary is followed by one `change` line per affected file (eight in this run). Add `--json` to
+One `change` line per affected file follows the summary (eight in this run). Add `--json` to
 receive the same result as a stable standard envelope.
 
 Removing the last member of a Dist is fine. SOW still renders a valid, signed-if-configured empty
@@ -126,7 +128,7 @@ sow status -r pigsty
 repository=pigsty status=dirty ready_to_copy=false revision=6 generation=5 dirty_dists=el9 pending=0/0 locked=false
 ```
 
-`changes` is empty because nothing was built. Run [`sow build`](/docs/command/build/) to
+`changes` is empty because SOW built nothing. Run [`sow build`](/docs/command/build/) to
 build the pending changes.
 
 ## Policy interaction
@@ -171,7 +173,8 @@ sow rm patroni -r pgsql -d el9 -c --json | jq -r '.result.changes[] | "\(.phase)
 | `2` | Usage error — `--check` with `--skip`, `--check` with lock flags, ambiguous selection, Workspace not found |
 | `4` | Repository lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Integrity or recovery error |
-| `6` | A reference matched nothing, or a non-bare reference was ambiguous; the whole batch is rejected and no memberships are removed |
+| `6` | A reference matched nothing, or a non-bare reference was ambiguous; SOW rejects the whole batch and removes no memberships |
+{.wide .expand}
 
 ## See also
 

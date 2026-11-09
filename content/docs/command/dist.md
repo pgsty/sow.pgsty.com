@@ -54,6 +54,7 @@ el9	rpm	x86_64,aarch64	2	1	4	true	["Desired and Built membership sets differ"]
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 The table shows architecture families. JSON also shows the package ecosystem names.
 This excerpt contains the `architectures` field from one entry in `result.dists`; the DEB
@@ -94,6 +95,7 @@ created trixie: format=deb architectures=x86_64,aarch64 members=0/0 generation=2
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 `--format` is required and accepts only `rpm` or `deb`:
 
@@ -110,7 +112,7 @@ usage error: --format must be rpm or deb
 A new Dist inherits the Workspace architectures. Edit `sow.yml` to select a subset or set `limit` and `exclude`, then run `sow config check` and `sow build`.
 
 If the name and format already exist, `dist new` reports the current state.
-Using the same name with a different format is rejected:
+SOW rejects the same name with a different format:
 
 ```console
 sow dist new el9 --format deb -r alpha
@@ -145,10 +147,11 @@ dist trixielim:
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a repository | selection rules |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 JSON also includes `effective_config_sha256`, the digest of the resolved Dist configuration.
 Changing `limit`, `exclude`, or a signing key can make the current configuration differ
-from the Built Generation. SOW then marks the Dist dirty until it is rebuilt.
+from the Built Generation. SOW then marks the Dist dirty until you rebuild it.
 
 ```console
 sow dist show el9 -r pgsql --json
@@ -162,7 +165,7 @@ operation rejected: managed: operation rejected: dist "nope" does not exist
 
 ## sow dist rm
 
-Removes a Dist's Membership and derived indexes.
+`sow dist rm` removes a Dist's Membership and derived indexes.
 
 ```console
 sow dist rm el9 -r pgsql
@@ -183,6 +186,7 @@ removed dist el9 from pgsql
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ### Dist removal does not delete Pool bytes
 
@@ -198,7 +202,7 @@ pgsql/pool/e/epel-release/epel-release-7-5.noarch.rpm
 
 Run [`sow gc`](/docs/command/gc/) to reclaim package files when no current or retained state needs them.
 
-If a configured target has published this Dist, removal is rejected. See
+If a configured target has published this Dist, SOW rejects the removal. See
 [Removing a published view](/docs/command/publish/#removing-a-published-view).
 
 A Repository's `protected: true` blocks Repository deletion only; normal Dist maintenance on a
@@ -238,6 +242,7 @@ sow dist ls -r pgsql --json | jq -r '.result.dists[] | select(.dirty) | .name'
 | `4` | Workspace or Repository lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Integrity or recovery error in the Operation Journal |
 | `6` | Invalid name, unknown Dist, format conflict with an existing name, non-empty without `-f` |
+{.wide .expand}
 
 ## See also
 

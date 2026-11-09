@@ -23,6 +23,7 @@ sow status [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json]
 | `-r, --repo NAME` | Select a Repository | [selection rules](/docs/command/#repository-selection) |
 | `-d, --dist NAME` | Restrict status to these Dists; repeatable | all Dists |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ## Repository states
 
@@ -70,6 +71,7 @@ The JSON result additionally includes `dirty_reasons` and the most recent Operat
 `ready_to_copy` summarizes the recorded state. When it is false, `dirty_reasons` explains why. [`sow check`](/docs/command/check/) performs the file-content validation.
 
 Pending repository maintenance also affects Dist status, even when Desired and Built memberships match.
+When identifying an unfinished mutation, SOW selects the active non-terminal operation by its pending state rather than wall-clock timestamp order, so clock skew cannot hide an interrupted operation behind an older completed record.
 Inspect `dirty_reasons` and the pending operation, then follow the recovery command it identifies.
 The same condition appears in `dist ls` and `dist show`.
 
@@ -89,6 +91,7 @@ should inspect the structured state rather than treating those conditions as com
 | `2` | Usage error, Workspace not found, or implicit Repository selection is ambiguous |
 | `5` | State database unreadable or inconsistent |
 | `6` | Explicit Repository or Dist is not configured |
+{.wide .expand}
 
 ## See also
 

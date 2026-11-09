@@ -23,6 +23,7 @@ sow show PACKAGE [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json
 | `-r, --repo NAME` | Select a Repository | [selection rules](/docs/command/#repository-selection) |
 | `-d, --dist NAME` | Narrow candidates to these Dists; repeatable | Repository scope |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ## Package reference
 
@@ -62,9 +63,10 @@ including the normalized fields below.
 | `kind` | Policy class: `main`, `debuginfo`, `debugsource`, `llvmjit`, `dbgsym`, or `dbg` |
 | `source` | Normalized source-package name |
 | `payload_sha256` | RPM signature-neutral digest used for re-signing idempotence |
-| `signature_key` | Embedded package-signature key ID, when present |
+| `signature_key` | Embedded package-signature key ID (RSA, DSA, ECDSA, or EdDSA in RPM signature header tag 267, or legacy PGP tags), when present |
 | `storage` | `pending` before build; `pool` once placed in the local package pool |
 | `dists` / `built_dists` | Desired and current Built Membership |
+{.wide .expand}
 
 Without `-d`, lookup includes stored objects with no current membership. With `-d`, candidates must be Desired members of a selected Dist. The returned `dists` and `built_dists` lists cover the entire Repository.
 
@@ -77,6 +79,7 @@ Without `-d`, lookup includes stored objects with no current membership. With `-
 | `2` | Usage error, Workspace not found, or implicit Repository selection is ambiguous |
 | `5` | Repository state database unreadable or inconsistent |
 | `6` | Explicit scope is not configured, or the reference matched nothing/several objects |
+{.wide .expand}
 
 ## See also
 

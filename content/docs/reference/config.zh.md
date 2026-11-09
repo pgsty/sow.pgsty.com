@@ -10,7 +10,7 @@ icon: fa-solid fa-file-code
 ---
 
 `sow.yml` 配置 Managed 工作区，声明仓库、Dist、包策略、签名与发布目标。
-Plain 命令 `sow create` 不读取此文件。
+Plain 命令 `sow create` 与 `sow prune` 不读取此文件。
 
 编辑后，检查配置并查看实际生效的设置：
 
@@ -23,8 +23,9 @@ sow config show --all
 `config show --all` 展开默认值。
 
 <span id="文件是怎么读的" data-td-print-local></span>
+<span id="文件规则" data-td-print-local></span>
 
-## 文件规则
+## 文件规则 {#file-rules}
 
 - 使用一个 YAML 文档，配置 `schema: sow/v3`。
 - 未知字段和重复键都是错误。
@@ -38,8 +39,9 @@ sow config show --all
 <span id="根级字段" data-td-print-local></span>
 <span id="architectures" data-td-print-local></span>
 <span id="完整示例" data-td-print-local></span>
+<span id="工作区" data-td-print-local></span>
 
-## 工作区
+## 工作区 {#workspace}
 
 ```yaml
 schema: sow/v3
@@ -68,8 +70,9 @@ targets: {}
 <span id="repository-仓库" data-td-print-local></span>
 <span id="protected" data-td-print-local></span>
 <span id="名称约束" data-td-print-local></span>
+<span id="仓库" data-td-print-local></span>
 
-## 仓库
+## 仓库 {#repository}
 
 ```yaml
 repos:
@@ -98,7 +101,7 @@ repos:
 <span id="architectures-1" data-td-print-local></span>
 <span id="limit" data-td-print-local></span>
 
-## Dist
+## Dist {#dist}
 
 ```yaml
 dists:
@@ -116,16 +119,18 @@ dists:
 | `architectures` | 字符串列表 | 工作区列表 | 工作区架构族的非空子集 |
 | `limit` | 整数 | `0` | 每个二进制包名、规范架构分组保留的最新版本数；`0` 为全部保留 |
 | `exclude` | 规则列表 | 空 | 包排除规则 |
+{.wide .expand}
 
 增加架构会使 Dist 变脏，运行 `build` 生成视图。
 成员关系或构建状态仍引用某个架构时，不能移除该架构。
 
-`limit` 不能为负数。RPM 使用 epoch-version-release 排序，DEB 使用 Debian 版本排序。
+`limit` 不能为负数。RPM 使用 epoch-version-release 排序（插入符 `^` 快照版本排在正式修订版本之前，如 `2.0^20250611 < 2.0.1`），DEB 使用 Debian 版本排序。
 架构无关包单独成组。放宽策略不会恢复已移除成员，需要重新加入包文件。
 
 <span id="exclude" data-td-print-local></span>
+<span id="排除规则" data-td-print-local></span>
 
-### 排除规则
+### 排除规则 {#exclusion-rules}
 
 ```yaml
 exclude:
@@ -152,7 +157,9 @@ exclude:
 
 示例和结果解释见[成员策略](/zh/docs/feature/policy/)。
 
-## 签名
+<span id="签名" data-td-print-local></span>
+
+## 签名 {#signing}
 
 签名设置属于仓库。RPM 包、RPM 元数据、DEB 元数据分别配置：
 
@@ -174,8 +181,9 @@ signing:
 ```
 
 <span id="rpmpackages" data-td-print-local></span>
+<span id="rpm-包设置" data-td-print-local></span>
 
-### RPM 包设置
+### RPM 包设置 {#rpm-package-settings}
 
 | `rpm.packages` 字段 | 默认值 | 含义 |
 |---|---|---|
@@ -183,6 +191,7 @@ signing:
 | `key` | 无 | 签名密钥引用，`fill`、`always` 必填 |
 | `passfile` | 无 | 口令文件路径，需要同时配置 `key` |
 | `trusted_keys` | 空 | `fill` 接受的额外公钥引用 |
+{.wide .expand}
 
 `never` 保留输入字节；`fill` 保留可由当前密钥或受信密钥验证的包，其余包签名；
 `always` 要求当前密钥，必要时重签。`key` 的公钥部分自动受信。
@@ -192,8 +201,9 @@ signing:
 仅配置一个密钥文件不会为该环境导入私钥。
 
 <span id="rpmmetadata-与-debmetadata" data-td-print-local></span>
+<span id="元数据设置" data-td-print-local></span>
 
-### 元数据设置
+### 元数据设置 {#metadata-settings}
 
 `rpm.metadata` 与 `deb.metadata` 都接受：
 
@@ -207,8 +217,9 @@ RPM 签名生成 `repodata/repomd.xml.asc`，DEB 签名生成 `InRelease`、`Rel
 没有密钥时索引不签名。DEB 包文件不会被重签。
 
 <span id="key-引用文法" data-td-print-local></span>
+<span id="密钥引用" data-td-print-local></span>
 
-### 密钥引用
+### 密钥引用 {#key-references}
 
 | 形式 | 示例 | 内容 |
 |---|---|---|
@@ -291,7 +302,7 @@ SOW 只在签名或签名前置检查时读取所选来源。文件不存在、�
 `add --skip` 仍可能签包，`rm --check` 可能渲染带签名的预览元数据。
 `publish`、本地与目标端 `gc`、`log prune` 也支持，因为恢复中断的变更可能需要签名。
 查询命令、`config show` 和只验证签名的 `check` 不读取口令文件。
-`retain` 不接受 `--passfile`。
+`retain` 与 Plain `prune` 不接受 `--passfile`。
 恢复时从本次执行和当前配置重新选择来源，口令值不会写入恢复日志。
 
 只修改 `passfile` 路径不会改变签名身份，也不会让 Dist 变脏。
@@ -300,7 +311,9 @@ SOW 只在签名或签名前置检查时读取所选来源。文件不存在、�
 私有的 `/tmp/sow-gpg-pass-*` 目录内创建 `0600` 临时文件，调用返回后删除。
 进程被强制终止时，临时文件可能残留。
 
-### Passphrase 引用
+<span id="passphrase-引用" data-td-print-local></span>
+
+### Passphrase 引用 {#passphrase-references}
 
 元数据签名中的旧 `passphrase` 字段继续兼容路径、`file://` 和 `env://` 引用，
 现在也可配合 GPG 密钥标识使用。它优先于 `SOW_GPG_PASSFILE`，可被 `--passfile` 覆盖。
@@ -398,13 +411,14 @@ targets:
 
 首次发布绑定仓库、Provider、存储身份和前缀。修改目标名称、`public_endpoint` 或
 `max_cache_ttl` 时，使用
-[`publish --rebind`](/zh/docs/command/publish/)。
+[`publish --rebind`](/zh/docs/command/publish/#rebind-mutable-target-settings)。
 Provider、endpoint、region、bucket、prefix 和仓库身份不能重新绑定，应配置新目标。
 待完成的维护操作可能阻止修改缓存 TTL 或公开 endpoint，需先完成维护。
 
 <span id="sowyml-里没有什么" data-td-print-local></span>
+<span id="固定设置" data-td-print-local></span>
 
-## 固定设置
+## 固定设置 {#fixed-settings}
 
 仓库路径固定为 `<workspace>/<name>`，APT component 固定为 `main`。
 架构视图由 Dist 配置与包内信息派生。构建快照保留使用

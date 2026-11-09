@@ -18,9 +18,9 @@ icon: fa-solid fa-folder-tree
 sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite] [--passfile PATH]] [-T DUR | -N] [--json]
 ```
 
-`--passfile PATH` requires `--sign-with`; `SOW_GPG_PASSFILE` supplies a default password-file path but does not enable signing by itself. Use one nonempty UTF-8 line: exactly one final LF or CRLF is removed, with no trimming. Relative paths start at the current directory; no default location is searched. This interface requires SOW 0.7.0 or later; see [Password files](/docs/reference/config/#passfile).
+`--passfile PATH` requires `--sign-with`; `SOW_GPG_PASSFILE` supplies a default password-file path but does not enable signing by itself. Use one nonempty UTF-8 line: SOW removes one final LF or CRLF without trimming whitespace. Relative paths start at the current directory, and SOW searches no default location. This interface requires SOW 0.7.0 or later; see [Password files](/docs/reference/config/#passfile).
 
-An existing `repomd.xml` is replaced. Independent metadata that SOW does not generate, such as groups (`comps`), updateinfo, or modules, is not carried into the new index. From SOW 0.7.0, `create` reports those data types as a warning on standard error in human output, or in the `dropped_metadata` result field with `--json`; alternate package-index encodings (`*_db`, `*_zck`) are not reported. This keeps existing repositories rebuildable, including EL8/9 repositories that Pigsty v4.4.0 built with legacy module metadata. If clients still need the dropped records, keep maintaining that repository with the tool that produced them. [`sow prune`](/docs/command/prune/) rejects such an index instead.
+`sow create` replaces an existing `repomd.xml`. SOW does not carry independent metadata such as groups (`comps`), updateinfo, or modules into the new index. From SOW 0.7.0, `create` reports those data types as a warning on standard error in human output, or in the `dropped_metadata` result field with `--json`. It does not report alternate package-index encodings (`*_db`, `*_zck`). This keeps existing repositories rebuildable, including EL8/9 repositories that Pigsty v4.4.0 built with legacy module metadata. If clients still need the dropped records, keep maintaining that repository with the tool that produced them. [`sow prune`](/docs/command/prune/) rejects such an index instead.
 
 Type reporting requires a readable, valid prior index within the 16 MiB inspection limit. Create can still replace an oversized or malformed index without listing its data types; prune rejects an oversized prior index.
 
@@ -52,11 +52,11 @@ By default, `create` updates its indexes and preserves the package files. `--pig
 
 ## Scan rules
 
-- Only top-level regular files ending in `.rpm` or `.deb` are considered.
+- SOW considers only top-level regular files ending in `.rpm` or `.deb`.
 - No recursion, no symlink following, no Workspace config.
 - Every valid version enters the index. Two files claiming the same logical coordinate with
   different content is a hard failure.
-- A directory with no supported package is rejected in default mode. `--pigsty` accepts an empty
+- In default mode, SOW rejects a directory with no supported package. `--pigsty` accepts an empty
   package set so rerunning an interrupted cleanup can finish and write its marker.
 
 ```console
@@ -148,7 +148,7 @@ d6f332ed157de1d42058ec785b392a1cc4b5836c27830af8fbf083cce29ef0ab  epel-release-7
 
 Cleanup applies only to top-level regular package files that parsed successfully and matched a rule.
 
-Documentation packages such as `annobin-docs` are retained unless they match one of those rules.
+SOW retains documentation packages such as `annobin-docs` unless they match one of those rules.
 
 SOW removes the existing `repo_complete` before replacing indexes. It then deletes the packages matched by the cleanup rules and writes the new marker last. A missing marker means the build is incomplete.
 
@@ -156,8 +156,7 @@ SOW removes the existing `repo_complete` before replacing indexes. It then delet
 
 `-S/--sign-with KEY` signs RPM package files through the local RPM/GPG environment. Use a 16-digit hexadecimal key ID or a 40- or 64-digit fingerprint. An optional `0x` or `0X` prefix is accepted. Make the private key available in that environment before running the command. For a protected key, use `--passfile PATH` or set `SOW_GPG_PASSFILE` to its password-file path.
 
-- Default: only RPMs with no parseable embedded OpenPGP signature are signed. Anything already
-  signed keeps its bytes.
+- Default: SOW signs only RPMs that have no parseable embedded OpenPGP signature (RSA, DSA, ECDSA, or EdDSA in signature header tag 267, or legacy PGP tags). Packages that are already signed keep their bytes.
 - `--overwrite` requires `--sign-with` and switches to `rpm --resign` over every retained RPM.
 - SOW signs a temporary copy, checks that package identity and content are unchanged, then replaces the original RPM. The indexes describe the final signed file.
 - At least one top-level RPM must remain after `--pigsty` cleanup, and `rpm` must be on `PATH`.
@@ -242,6 +241,7 @@ sow create /srv/empty --json
 | `4` | Directory write lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Input set/stat changed before publication, or a controlled output path failed an integrity check |
 | `6` | No supported package found, `repo_complete` gate hit, `--sign-with` on a DEB-only directory, coordinate conflict |
+{.wide .expand}
 
 ## See also
 

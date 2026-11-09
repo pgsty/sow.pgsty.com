@@ -22,6 +22,7 @@ sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAM
 | `DIST` | Canonical configured RPM Dist name |
 | `ARCH` | `x86_64` or `aarch64` |
 | `DIR` | Absent or empty destination outside Repository, private-state, and filesystem-target roots |
+{.wide .expand}
 
 | Flag | Meaning | Default |
 |---|---|---|
@@ -30,6 +31,7 @@ sow export rpm-leaf DIST ARCH DIR [--hardlink] [-C|--workdir DIR] [-r|--repo NAM
 | `-r, --repo NAME` | Select a Repository | selection rules |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
 | `--json` | Output JSON | false |
+{.wide .expand}
 
 ## Output
 
@@ -47,7 +49,7 @@ The destination contains:
 
 The source Repository must be clean, have a completed Built Generation, and have no unfinished operation. The requested RPM view must be available in that Generation. The export is independent of the Workspace and does not protect source packages from GC.
 
-Since 0.7.0, a clean RPM Dist can be exported even when a later build updated only another Dist. Its unchanged view is carried into the current Built Generation; its own last-built Generation can be older. This applies to signed and unsigned views. The export records the current Repository Generation and uses that Generation's frozen signing identity. No rebuild of the unchanged Dist is needed.
+Since 0.7.0, you can export a clean RPM Dist even when a later build updated only another Dist. SOW carries its unchanged view into the current Built Generation, so its own last-built Generation can be older. This applies to signed and unsigned views. The export records the current Repository Generation and uses that Generation's frozen signing identity. You do not need to rebuild the unchanged Dist.
 
 If export fails, correct the reported cause and retry into a new or empty directory. The failed destination can contain partial files.
 
@@ -71,6 +73,7 @@ Copying is the default. Use `--hardlink` only for read-only output on the same f
 | `2` | Invalid syntax, malformed Dist/architecture token, discovery, or implicit Repository ambiguity |
 | `5` | Source Generation or Repository state is inconsistent |
 | `6` | Explicit Repository is not configured, Dist is not RPM, view/signer is unavailable, or destination is unsafe/non-empty/overlapping |
+{.wide .expand}
 
 ## See also
 

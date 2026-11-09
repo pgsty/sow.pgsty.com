@@ -81,22 +81,25 @@ integer range. Generation IDs are 20-digit, zero-padded decimal strings:
 This applies to `generation`, `built_generation`, `base_generation`, and generation-valued
 `base` fields. Desired revisions and counts remain JSON numbers.
 
-The top-level `operation` field is set as follows:
+SOW sets the top-level `operation` field as follows:
 
 | Command | Value |
 |---|---|
 | `add`, `rm` without preview, `build`, local `gc` | Journal ID, if allocated |
 | `publish`, `publish --abort` | Publication attempt ID, if available |
 | `log ID` | Requested operation ID |
-| Other commands | `null`; `log prune` puts its ID in `result.operation` |
+| Other commands (`create`, `prune`, `init`, `config`, `ls`, `show`, `where`, `retain`, `export`) | `null`; `log prune` puts its ID in `result.operation` |
+{.wide .expand}
 
-A null operation does not mean the command is read-only. `where` keeps the top-level
-repository null and places repository names inside its locations.
+A null operation does not mean the command is read-only. `create`, `prune`, `init`, `config check`, `repo ls`, and `where` keep the top-level `repository` null; `where` places repository names inside its locations.
 
 <span id="result-shapes" data-td-print-local></span>
 <span id="create" data-td-print-local></span>
+<span id="prune" data-td-print-local></span>
 
-## Plain `create`
+## Plain `create` and `prune`
+
+`sow create` returns these fields in `result`:
 
 | Result field | Meaning |
 |---|---|
@@ -109,6 +112,22 @@ repository null and places repository names inside its locations.
 | `noop` | No public changes were needed |
 | `recovered` | Always `false`; Plain mode has no journal recovery |
 | `signed`, `signer` | Signed filenames and signer identity, when available |
+| `dropped_metadata` | Unsupported `repomd.xml` data types (such as `group`, `updateinfo`, or `modules`) replaced by `create`, when present |
+{.wide .expand}
+
+`sow prune` returns these fields in `result`:
+
+| Result field | Meaning |
+|---|---|
+| `dir` | Target directory path |
+| `dry_run` | Whether `--dry-run` was set |
+| `kept` | Sorted basenames of retained top-level RPM packages |
+| `candidates` | Array of `{path, latest}` objects naming each removal candidate and its retained replacement RPM |
+| `removed` | Basenames of removed RPM files |
+| `index_updated` | Whether `repodata/` was rewritten |
+| `marker` | Whether `repo_complete` is present after completion |
+| `noop` | True when no package needed removal and no index write occurred |
+{.wide .expand}
 
 <span id="init" data-td-print-local></span>
 <span id="config-check-and-config-show" data-td-print-local></span>
@@ -182,7 +201,7 @@ older versions.
 `rm` returns optional `operation`, `removed[]`, selected `dists`, `changes[]`, and `check`.
 Each `removed` record has `dist`, `sha256`, `coordinate`, and `name`.
 A preview has `check: true`; only `prediction_complete: true` confirms a complete predicted
-file list. Pool bytes are not removed by `rm`.
+file list. `rm` does not remove pool bytes.
 
 `build` returns `operation`, considered `dists`, and `noop`. A no-op creates no new generation.
 
@@ -288,7 +307,7 @@ sow log -r demo --json \
 ```
 
 `log prune` returns `operation`, `repository`, `before`, `pruned`, and
-`compaction_deferred`. A date-only argument is resolved in the machine's local timezone;
+`compaction_deferred`. SOW resolves a date-only argument in the machine's local timezone;
 `before` contains the resolved timestamp.
 
 `log export` writes one complete operation record per line, without the envelope:

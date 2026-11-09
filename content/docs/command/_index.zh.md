@@ -20,7 +20,9 @@ search_boost: 1.5
 
 本文用 Desired 表示期望状态，用 Built 表示已构建状态。构建快照（Generation）是一次已完成构建的结果。
 
-## 命令索引
+<span id="命令索引" data-td-print-local></span>
+
+## 命令索引 {#command-index}
 
 `sow create` 直接在目录中构建平面仓库，`sow prune` 从平面 RPM 仓库中清理旧版本。需要通过工作区管理软件包时，先运行 `sow init`。其他 Managed 命令使用已有工作区。`help` 与 `version` 可以在任意目录运行。
 
@@ -48,7 +50,9 @@ search_boost: 1.5
 | [`sow log [OPERATION]`](/zh/docs/command/log/) | Managed | 查询、导出和裁剪操作记录 |
 {.wide .expand}
 
-## 全局语法
+<span id="全局语法" data-td-print-local></span>
+
+## 全局语法 {#global-syntax}
 
 ```text
 sow [OPTIONS] COMMAND [ARGS]
@@ -68,7 +72,9 @@ sow [OPTIONS] COMMAND [ARGS]
 支持的完整命令列表、文件格式、相对路径规则和旧 `passphrase` 兼容说明见
 [口令文件](/zh/docs/reference/config/#passfile)。
 
-## 工作区发现
+<span id="工作区发现" data-td-print-local></span>
+
+## 工作区发现 {#workspace-discovery}
 
 Managed 命令按以下规则寻找最近的 `sow.yml`：
 
@@ -81,7 +87,9 @@ Managed 命令按以下规则寻找最近的 `sow.yml`：
 `--workdir` 只改变发现起点，不会切换进程工作目录；相对位置参数仍相对于真实当前目录解析。
 `sow create` 与 `sow prune` 完全不参与工作区发现。
 
-## Repository 选择
+<span id="repository-选择" data-td-print-local></span>
+
+## Repository 选择 {#repository-selection}
 
 需要唯一仓库的命令按以下顺序选择：
 
@@ -94,7 +102,9 @@ Managed 命令按以下规则寻找最近的 `sow.yml`：
 仓库，`-r` 只用于收窄范围。发布目标自身绑定仓库，因此 `publish TARGET` 与
 `gc TARGET` 不再接受额外的仓库选择。
 
-## Dist 选择
+<span id="dist-选择" data-td-print-local></span>
+
+## Dist 选择 {#dist-selection}
 
 `add`、`rm`、`ls` 要求明确的 Dist 集合，并按以下顺序选择：
 
@@ -110,7 +120,9 @@ Managed 命令按以下规则寻找最近的 `sow.yml`：
 - `where` 默认跨工作区搜索全部匹配 Dist，`-r`/`-d` 用于收窄；
 - `changes` 作用于整个仓库，不接受 `-d`。
 
-## 锁
+<span id="锁" data-td-print-local></span>
+
+## 锁 {#locking}
 
 `create` 与 `prune` 锁定目标目录。Managed 写操作通过工作区锁和仓库锁协调。`init` 会等待锁，不提供命令行超时选项。
 
@@ -118,12 +130,16 @@ Managed 命令按以下规则寻找最近的 `sow.yml`：
 
 大多数 Managed 只读命令使用共享锁，会等待冲突的写操作完成；这些命令不接受等锁选项。`status` 通常只探测仓库锁，因此可以查看正在运行的写操作。按 Ctrl-C 可以取消等待。
 
-## 并发
+<span id="并发" data-td-print-local></span>
+
+## 并发 {#parallelism}
 
 只有需要解析软件包、哈希包体、渲染索引或执行校验的命令才接受 `-j/--jobs N`：`create`、`prune`、
 `add`、`rm`、`build`、`check` 与 `repo migrate`。默认值是逻辑 CPU 数，且不得小于 `1`。
 
-## JSON 输出
+<span id="json-输出" data-td-print-local></span>
+
+## JSON 输出 {#json-output}
 
 支持 `--json` 的命令在 stdout 输出一个带版本的封装，诊断信息仍写入 stderr：
 
@@ -144,7 +160,9 @@ Managed 命令按以下规则寻找最近的 `sow.yml`：
 
 交互操作使用文本输出，脚本使用 `--json`。`config show` 默认输出 YAML。`log export` 是例外：它直接输出 JSONL，不接受 `--json`。
 
-## 退出码
+<span id="退出码" data-td-print-local></span>
+
+## 退出码 {#exit-codes}
 
 | 代码 | 含义 |
 |---|---|
@@ -156,5 +174,6 @@ Managed 命令按以下规则寻找最近的 `sow.yml`：
 | `5` | 完整性/恢复失败，或 `check` 判定目录不可交付 |
 | `6` | 操作被拒绝：冲突、受保护对象、无匹配或架构不兼容 |
 | `130` | 命令被 SIGINT 或 SIGTERM 中断 |
+{.wide .expand}
 
 各命令的精确触发条件见[退出码](/zh/docs/reference/exit-codes/)。

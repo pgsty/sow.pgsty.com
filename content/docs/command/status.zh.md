@@ -11,7 +11,7 @@ icon: fa-solid fa-gauge-high
 
 `sow status` 显示仓库是否需要构建、待构建数据量及写锁占用情况。它读取已记录状态，不扫描包文件内容。需要验证文件内容时，使用 [`sow check`](/zh/docs/command/check/)。
 
-## 语法
+## 语法 {#synopsis}
 
 ```text
 sow status [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json]
@@ -23,8 +23,10 @@ sow status [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... [--json]
 | `-r, --repo NAME` | 选择仓库 | [选择规则](/zh/docs/command/) |
 | `-d, --dist NAME` | 只查看指定 Dist；可重复 | 全部 Dist |
 | `--json` | 输出 JSON | false |
+{.wide .expand}
 
-## 仓库状态 {#repository-状态}
+<span id="repository-状态" data-td-print-local></span>
+## 仓库状态 {#repository-states}
 
 SOW 记录期望的软件包集合，以及上一次构建完成的构建快照。
 
@@ -34,8 +36,9 @@ SOW 记录期望的软件包集合，以及上一次构建完成的构建快照�
 | `dirty` | 两种状态不同，常见于 `--skip` 或配置变化之后 | 运行 `build` 应用变更 |
 | `recovering` | 本地仓库操作被中断 | 运行 `build` 恢复 |
 | `error` | 状态、文件或恢复记录需要处理 | 查看 `dirty_reasons`，运行 `check` 与 `log` |
+{.wide .expand}
 
-## 输出
+## 输出 {#output}
 
 ```console
 sow status -r pgsql
@@ -63,15 +66,16 @@ JSON 结果还包含 `dirty_reasons` 与最近一次操作记录：
 
 `ready_to_copy` 汇总已记录的状态。为 false 时，`dirty_reasons` 给出原因。文件内容由 [`sow check`](/zh/docs/command/check/) 校验。
 
-仓库中未完成的维护操作也会影响 Dist 状态，即使期望成员与已构建成员相同。
+仓库中未完成的维护操作也会影响 Dist 状态，即使期望成员与已构建成员相同。识别未完成变更时，SOW 按待处理状态（而非系统时钟时间戳顺序）选择活跃的非终态操作，因此时钟偏移不会将中断操作掩盖在更旧的已完成记录之后。
 查看 `dirty_reasons` 和待处理操作，再按提示执行相应的恢复命令。
 `dist ls` 与 `dist show` 也会反映该状态。
 
-## 读取行为 {#只读契约}
+<span id="只读契约" data-td-print-local></span>
+## 读取行为 {#read-only-contract}
 
 `status` 读取状态，不迁移或修复数据库。它可以读取 schema v6、v12 与当前 v13 数据库。不支持或无法读取的状态返回 `5`。对旧工作区执行写操作前，先备份，再逐个运行 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。
 
-## 退出行为
+## 退出行为 {#exit-behavior}
 
 只要状态可读，`status` 在 `clean`、`dirty`、`recovering`、`error` 四种状态下都返回 `0`。
 脚本应读取结构化状态，而不是把后三者当作命令执行失败。
@@ -83,8 +87,9 @@ JSON 结果还包含 `dirty_reasons` 与最近一次操作记录：
 | `2` | 用法错误、未发现工作区或隐式仓库选择有歧义 |
 | `5` | 状态库不可读或不一致 |
 | `6` | 显式指定的仓库或 Dist 未配置 |
+{.wide .expand}
 
-## 参见
+## 参见 {#see-also}
 
 - [`sow build`](/zh/docs/command/build/) —— 构建仓库的待处理变更
 - [`sow check`](/zh/docs/command/check/) —— 检查文件完整性
