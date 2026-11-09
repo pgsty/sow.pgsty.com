@@ -2,9 +2,9 @@
 title: "SOW Design Evolution: From Route Graphs to the Repository Core"
 linkTitle: "Design Evolution"
 date: 2026-08-10
-lastmod: 2026-10-17
+lastmod: 2026-11-09
 authors: [Vonng]
-description: "How SOW moved from the v0.1 distribution platform to a repository engine, and how v0.2 through v0.6 refined that model."
+description: "How SOW moved from the v0.1 distribution platform to a repository engine, and how v0.2 through v0.7 refined that model."
 categories: [Design]
 tags: [architecture, repository, migration, decision]
 weight: 20
@@ -14,9 +14,9 @@ draft: false
 ---
 
 SOW moved from a Git-based distribution control plane in v0.1 to a repository engine in
-v0.2. This article traces that change and the refinements through v0.6.0.
+v0.2. This article traces that change and the refinements through v0.7.0.
 
-The versions below refer to released Git tags, including [v0.6.0](https://github.com/pgsty/sow/tree/v0.6.0).
+The versions below refer to released Git tags, including [v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0).
 Some archived plans used “v0.2” and
 “v0.3” for development designs. In particular, the C2 layout with RPM hardlinks inside each
 view was replaced before v0.2.0 shipped.
@@ -42,14 +42,18 @@ Four articles cover the earlier work in detail:
 | v0.4 | Single-pass verification, independent RPM trust rings, target rebind, and migration/recovery fixes | Unchanged |
 | v0.5 | Package-path reservations, removal and recovery fixes, signing checks, and reproducible Plain timestamps | Unchanged |
 | v0.6 | Previous Plain RPM indexes, recorded Managed publication times, stronger file checks, consistent state reads, and less repeated I/O | Unchanged |
+| v0.7 | Plain RPM pruning, password-file signing, tag 267 ECDSA/EdDSA verification, caret version ordering, and migration/publication/recovery fixes | Unchanged |
 {.wide .expand}
 
 The source tags preserve the earlier implementations:
 [v0.1.0](https://github.com/pgsty/sow/tree/v0.1.0),
 [v0.2.0](https://github.com/pgsty/sow/tree/v0.2.0),
 [v0.3.0](https://github.com/pgsty/sow/tree/v0.3.0),
-[v0.4.0](https://github.com/pgsty/sow/tree/v0.4.0), and
-[v0.5.0](https://github.com/pgsty/sow/tree/v0.5.0).
+[v0.4.0](https://github.com/pgsty/sow/tree/v0.4.0),
+[v0.5.0](https://github.com/pgsty/sow/tree/v0.5.0),
+[v0.6.0](https://github.com/pgsty/sow/tree/v0.6.0),
+[v0.6.1](https://github.com/pgsty/sow/tree/v0.6.1), and
+[v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0).
 
 ## v0.1: useful questions, too many product concepts
 
@@ -141,6 +145,20 @@ sets, so clients can finish fetching files from the previous index.
 
 These changes improve the existing model without another full repository scan or recovery
 state machine. See the [v0.6.0 release note](/blog/release/sow-v0.6.0/) for behavior and upgrade details.
+
+## v0.7: flat RPM pruning, password files, and recovery hardening
+
+v0.7.0 keeps schema 13 and the same public layout. It adds `sow prune` for stateless
+flat RPM directories: SOW groups `.rpm` files by `(name, arch)`, keeps only the highest
+`epoch:version-release` in each group, updates `repodata/` before deleting older RPM
+files, and rejects ambiguous top-level EVR ties before modifying files.
+
+The release also adds password-file support for encrypted signing keys (`--gpg-passphrase-file`,
+`SOW_GPG_PASSPHRASE_FILE`, and `password_file` in `sow.yml`), supports RPM header-only
+ECDSA and EdDSA signatures in tag `267`, orders RPM caret (`^`) version segments
+alongside tilde (`~`) segments, and tightens schema migration, carried-forward view
+checks, and interrupted `gc` / `retain rm` plan recovery. See the
+[v0.7.0 release note](/blog/release/sow-v0.7.0/) for the full details.
 
 ## What survived every redesign
 

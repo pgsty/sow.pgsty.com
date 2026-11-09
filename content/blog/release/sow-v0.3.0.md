@@ -8,8 +8,11 @@ categories: [Release]
 tags: [release, plain, managed, transaction]
 weight: 5
 url: "/blog/release/sow-v0.3.0/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.3.0
 draft: false
 ---
+
+{{< release-card >}}
 
 SOW 0.3.0 reduced repeated package reads and database queries. Plain generation uses one pass over package content. Managed builds cache parsed package data and commit new pool files in batches. This release also removed retired runtime and publication code.
 

@@ -2,7 +2,7 @@
 title: "The v0.2 Reset: Plain and Managed Instead of a Universal Control Plane"
 linkTitle: "v0.2 Plain/Managed Reset"
 date: 2026-07-31
-lastmod: 2026-10-17
+lastmod: 2026-11-09
 authors: [Vonng]
 description: "How SOW replaced the v0.1 Git/CAS/Edge platform with two small execution modes, explicit ownership, SQLite state, and a repository-focused release."
 categories: [Design]
@@ -21,7 +21,7 @@ control plane.
 The result was the split still used today: **Plain** rebuilds caller-owned directories;
 **Managed** maintains repositories and their history.
 
-The development design initially used C2 hardlinks inside RPM views. These were replaced
+The development design initially used C2 hardlinks inside RPM views. SOW replaced those hardlinks
 before the v0.2.0 release on August 8. Some archived plans called the C2 build “v0.2.0,” but
 the released tag already had one canonical Pool and metadata-only views.
 
@@ -73,7 +73,8 @@ Generation history, or long-lived membership state.
 
 Because the desired state is simply “the packages currently in this directory,” the
 correct recovery strategy is to rerun the build. Later releases made that principle even
-more explicit by removing Plain journals and repeated package reads.
+more explicit by removing Plain journals and repeated package reads, and `v0.7.0` added
+`sow prune` for stateless highest-EVR RPM retention under the same directory-owned recovery model.
 
 ### Managed: own lifecycle and history
 
@@ -107,9 +108,10 @@ applicable architecture without duplicating logical membership.
 | Implicit legacy topology | Strict `sow.yml` plus explicit names and selectors |
 | Cross-product publication saga | Repository build kept separate from target publication |
 | Reuse V1 packages directly | Narrow parser/renderer/version/signing ports only |
+{.wide .expand}
 
-The critical simplification was that private control state and public repository bytes
-could be understood without Git or an Edge router.
+The critical simplification was that operators can understand private control state and public repository bytes
+without Git or an Edge router.
 
 ## Desired versus Built
 
@@ -122,11 +124,11 @@ Managed mode made interrupted state explicit:
 
 Desired can advance before a new Built Generation completes. The operation journal
 records unfinished work, and status shows the difference between Desired and Built.
-Recovery uses the recorded operation phase to decide what remains to be completed.
+Recovery uses the recorded operation phase to decide what steps remain.
 
 ## P0 through P3
 
-The work was intentionally sequenced:
+The work followed a strict dependency sequence:
 
 | Phase | Contract |
 |---|---|
@@ -134,6 +136,7 @@ The work was intentionally sequenced:
 | P1 | Workspace/Repository/Dist lifecycle, strict config, package identity, membership, and query |
 | P2 | Add/remove/policy/build operations, journals, crash recovery, and safe mutation |
 | P3 | Check, Changeset, handoff, scale, compatibility, and clean-delivery evidence |
+{.wide .expand}
 
 Each phase had an API contract, implementation specification, adversarial review, and
 acceptance record.
@@ -217,5 +220,5 @@ The current forms are documented in [Get Started](/docs/start/),
   [v0.2.0 source tag](https://github.com/pgsty/sow/tree/v0.2.0)
   — the released implementation.
 
-Continue with [Design Evolution](/blog/design/evolution/) for the v0.3 through v0.6
+Continue with [Design Evolution](/blog/design/evolution/) for the v0.3 through v0.7
 changes that followed.

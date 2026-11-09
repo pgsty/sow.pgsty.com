@@ -19,7 +19,7 @@ cascade:
 ---
 
 Design records explain the choices behind SOW's repository layout, state model, and
-publication workflow. Article dates record when a decision was documented; modification
+publication workflow. Article dates record when we documented a decision; modification
 dates record later revisions.
 
 Start with these current design explanations:

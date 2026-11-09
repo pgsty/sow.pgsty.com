@@ -9,8 +9,11 @@ categories: [Release]
 tags: [release, plain, yum, signing, migration]
 weight: -10
 url: "/zh/blog/release/sow-v0.5.0/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.5.0
 draft: false
 ---
+
+{{< release-card >}}
 
 SOW 0.5.0 为已有 YUM 仓库增加发布时间参数，并修复 Managed 仓库的恢复、签名和包路径处理。
 构建过程也减少了对未变化软件包的重复校验。
@@ -18,8 +21,9 @@ SOW 0.5.0 为已有 YUM 仓库增加发布时间参数，并修复 Managed 仓�
 安装方式见[下载 SOW](/zh/download/)。使用 0.3 或 0.4 Managed 工作区时，先迁移各个 Repository，再进行写操作。
 
 <span id="升级与开发者说明" data-td-print-local></span>
+<span id="升级-managed-工作区" data-td-print-local></span>
 
-## 升级 Managed 工作区
+## 升级 Managed 工作区 {#upgrade-a-managed-workspace}
 
 1. 停止向工作区写入的命令。
 2. 备份完整工作区，包括 `sow.yml`、`.sow/` 和所有 Repository 根目录。
@@ -36,11 +40,12 @@ sow check -r pgsql -C /srv/sow
 首次构建刷新 RPM 认证与 APT 元数据记录；后续构建会复用匹配的 RPM 校验记录。
 
 迁移后的数据库使用 SOW 0.5.0 或更新版本。备份与安装步骤见
-[安装与升级](/zh/docs/start/install/#从-04-升级到-05)。
+[安装与升级](/zh/docs/start/install/#upgrade-from-04-to-05)。
 
 <span id="已有-yum-仓库的发布时间" data-td-print-local></span>
+<span id="保持-yum-发布时间递增" data-td-print-local></span>
 
-## 保持 YUM 发布时间递增
+## 保持 YUM 发布时间递增 {#preserve-yum-publication-time}
 
 如果新 `repomd.xml` 中最大的 data 时间戳早于缓存值，EL7 YUM 可能拒绝新索引。
 修改校验和、revision 或文件修改时间都不能替代这项比较。
@@ -73,7 +78,9 @@ sow create /srv/yum.candidate --metadata-timestamp "$PUBLISH_TIME"
 `--sign-with` 签署 RPM 包，不会签署索引。
 [YUM 迁移指南](/zh/docs/tutorial/yum-migration/)介绍时间戳选择、索引签名和已有客户端缓存的测试方法。
 
-## 仓库与发布修复
+<span id="仓库与发布修复" data-td-print-local></span>
+
+## 仓库与发布修复 {#repository-and-publication-fixes}
 
 - 删除 Dist 时，不再误删后来加入其他 Dist 的软件包。
 - 提交 Desired 变更前，检查签名策略和包池路径冲突。
@@ -86,7 +93,9 @@ sow create /srv/yum.candidate --metadata-timestamp "$PUBLISH_TIME"
 - 输入路径可以经过符号链接父目录；软件包文件本身仍须通过文件检查。
 - SQLite 检查点被读连接延迟时，不再将已完成的写入报告为失败。macOS 写连接使用 `fullfsync`。
 
-## 签名与命令输出
+<span id="签名与命令输出" data-td-print-local></span>
+
+## 签名与命令输出 {#signing-and-command-output}
 
 APT 验签兼容 GnuPG 的末尾换行约定。新元数据签名使用 SHA-256，新的构建会检查签名密钥当前是否可用。
 Agent 签名固定签名时间，并选择可用的签名子钥。新 APT 发布拒绝弱签名摘要；历史验签沿用记录中的规则。
@@ -96,8 +105,9 @@ Agent 签名固定签名时间，并选择可用的签名子钥。新 APT 发布
 `file://` R2 凭据必须指向普通文件。
 
 <span id="rpm-依赖兼容性" data-td-print-local></span>
+<span id="rpm-依赖" data-td-print-local></span>
 
-## RPM 依赖
+## RPM 依赖 {#rpm-dependencies}
 
 新增回归用例覆盖事务前、事务后脚本依赖，包括 Cloudberry、Percona 和 Grafana 软件包使用的组合。
 依赖渲染继续遵循现代 createrepo_c 的规则。上游变更见
@@ -107,7 +117,9 @@ Agent 签名固定签名时间，并选择可用的签名子钥。新 APT 发布
 生成的仓库元数据使用 XML，不包含 SQLite rpm-md 或模块流。
 格式与客户端覆盖见[兼容性](/zh/docs/reference/compatibility/)。
 
-## 构建与安装包
+<span id="构建与安装包" data-td-print-local></span>
+
+## 构建与安装包 {#builds-and-packages}
 
 源码构建需要 Go 1.27.1 或更新版本。本版使用 x/crypto v0.56.0 与 GoReleaser v2.18.2。
 二进制归档和原生安装包均包含 `THIRD_PARTY_NOTICES`。

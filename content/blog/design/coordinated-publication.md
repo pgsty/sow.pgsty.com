@@ -18,10 +18,10 @@ draft: false
 <span id="decision" data-td-print-local></span>
 
 SOW 0.4.0 kept the native `filesystem` and `r2` publication backends. An earlier proposal
-used rclone and added remote audit and preview commands. The native design was selected
-because SOW needs to track each conditional write and its result.
+used rclone and added remote audit and preview commands. SOW kept the native design
+because it needs to track each conditional write and its result.
 
-Current command syntax is in [`sow publish`](/docs/command/publish/).
+See [`sow publish`](/docs/command/publish/) for the current command syntax.
 
 <span id="why-the-executor-proposal-was-not-adopted" data-td-print-local></span>
 <span id="what-040-shipped" data-td-print-local></span>

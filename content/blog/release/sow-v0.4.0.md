@@ -8,8 +8,11 @@ categories: [Release]
 tags: [release, managed, signing, publish, migration]
 weight: 1
 url: "/blog/release/sow-v0.4.0/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.4.0
 draft: false
 ---
+
+{{< release-card >}}
 
 SOW 0.4.0 improved Managed repository verification and recovery. `check` reads each physical package once for its content hash. RPM verification keeps separate trust decisions for separate key sets. Publication targets can change their public URL or cache lifetime through an audited rebind operation.
 

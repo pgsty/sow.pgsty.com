@@ -24,10 +24,11 @@ decisions after the repository model changed.
 | **Evolved** | The problem remains, but ownership or implementation changed. |
 | **Migration history** | The decision governed the Pigsty/V1 cutover. |
 | **Retired** | The decision belonged to the removed Git/CAS/Route/Edge model. |
+{.wide .expand}
 
 Decision dates run from 2026-07-11 through July 28. ADR-0035 also has amendments from
 July 29 and July 31. Most early ADRs entered Git together on July 19, after implementation
-had begun. ADR-0032 is summarized without a direct link because it names obsolete
+had begun. This table summarizes ADR-0032 without a direct link because it names obsolete
 infrastructure details.
 
 ## Core state, publication, and trust

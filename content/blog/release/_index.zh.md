@@ -1,7 +1,7 @@
 ---
 title: 发布注记
 linkTitle: 发布注记
-description: SOW 发布注记，涵盖功能、性能、正确性、打包与验证。
+description: 各版本 SOW 的主要变更与升级说明。
 url: "/zh/blog/release/"
 weight: 20
 icon: fa-solid fa-tag

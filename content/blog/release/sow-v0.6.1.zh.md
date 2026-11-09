@@ -9,7 +9,10 @@ categories: [Release]
 tags: [release, maintenance, dependencies]
 weight: -30
 url: "/zh/blog/release/sow-v0.6.1/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.6.1
 ---
+
+{{< release-card >}}
 
 SOW 0.6.1 是一次维护更新，升级依赖并改善错误信息。
 命令接口、数据库 **schema v13**、配置 **sow/v3** 与公开仓库布局保持不变。
@@ -18,7 +21,9 @@ SOW 0.6.1 是一次维护更新，升级依赖并改善错误信息。
 软件包与归档见[下载页](/zh/download/)，校验和来自
 [v0.6.1 发布页](https://github.com/pgsty/sow/releases/tag/v0.6.1)。
 
-## 工具链与依赖
+<span id="工具链与依赖" data-td-print-local></span>
+
+## 工具链与依赖 {#toolchain-and-dependencies}
 
 源码构建现在要求 **Go 1.27.3 或更新版本**。所有发布二进制均使用 Go 1.27.3 构建。
 本版更新了加密、S3 访问、压缩、SQLite 与 Debian 包解析等依赖。
@@ -32,12 +37,15 @@ SOW 0.6.1 是一次维护更新，升级依赖并改善错误信息。
 | pault.ag/go/debian | 0.21.1 |
 | go.yaml.in/yaml/v3 | 3.0.5 |
 | golang.org/x/crypto / x/sys | 0.58.0 / 0.49.0 |
+{.wide .expand}
 
 YAML 解析切换到 YAML 官方团队维护的模块，现有 `sow.yml` 配置格式不变。
 RPM 解析器继续保留已有的本地安全补丁。
 第三方许可清单已更新，随每个归档与 Linux 软件包分发。
 
-## 维护修复
+<span id="维护修复" data-td-print-local></span>
+
+## 维护修复 {#maintenance-fixes}
 
 - 修复无效路径与 OpenPGP armor 类型的错误信息，不再出现 `%!w(<nil>)`。
   涉及日志导出、RPM 元数据生成、签名校验与工作区检查。
@@ -45,7 +53,9 @@ RPM 解析器继续保留已有的本地安全补丁。
 - CI 快照包直接从 Makefile 读取版本，避免遗漏硬编码版本号。
   同步更新发布工具与 GitHub Actions，包括 GoReleaser 2.18.3、deadcode 0.52.0 和 govulncheck 1.9.0。
 
-## 升级
+<span id="升级" data-td-print-local></span>
+
+## 升级 {#upgrade}
 
 更换可执行文件前，停止工作区写入任务并备份完整工作区。
 安装 0.6.1 后，对每个仓库执行构建与检查：
@@ -57,12 +67,14 @@ sow check -r REPOSITORY -C /srv/sow
 ```
 
 把 `REPOSITORY` 换成 `sow.yml` 中的仓库名。没有变化的仓库会报告空操作，保留原构建快照编号与时间戳。
-安装命令以及从 0.3、0.4 迁移的步骤，见[安装指南](/zh/docs/start/install/#升级到-061)。
+安装命令以及从 0.3、0.4 迁移的步骤，见[安装指南](/zh/docs/start/install/#upgrade-to-061)。
 
 发布验证覆盖包测试、竞态检查、APT/DNF 客户端、S3 兼容传输，以及 50,000 包的 RPM 元数据生成。
 升级与回退检查使用已发布的 0.6.0 二进制创建 RPM/DEB 工作区，由 0.6.1 操作后，再用 0.6.0 重新打开。
 
-## 漏洞扫描结果
+<span id="漏洞扫描结果" data-td-print-local></span>
+
+## 漏洞扫描结果 {#vulnerability-scan-result}
 
 源码分析与保留符号的对照构建均未发现受影响的符号或导入包。
 [GO-2026-5932](https://pkg.go.dev/vuln/GO-2026-5932) 涉及未使用的旧 `golang.org/x/crypto/openpgp` 包。

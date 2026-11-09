@@ -18,8 +18,8 @@ client tests, scale measurements, failure recovery, migration, and cloud-provide
 experiments. This article summarizes the main results and links to representative reports.
 
 Each result belongs to the source revision, fixtures, clients, and environment recorded
-in its report. Current compatibility is listed in the
-[compatibility reference](/docs/reference/compatibility/).
+in its report. The [compatibility reference](/docs/reference/compatibility/) lists
+current compatibility.
 
 ## Evidence timeline
 

@@ -20,7 +20,9 @@ v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
 每项结果对应报告中记录的源码版本、测试数据、客户端与环境。
 当前支持情况见[兼容性参考](/zh/docs/reference/compatibility/)。
 
-## 证据时间线
+<span id="证据时间线" data-td-print-local></span>
+
+## 证据时间线 {#evidence-timeline}
 
 | 时间 | 报告数 | 主要工作 |
 |---|---:|---|
@@ -34,9 +36,13 @@ v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
 | 2026-07-30–31 | 2 | 从空环境验证 APT/YUM/静态制品最小可用产品，核对最终旧版源码基线 |
 {.wide .expand}
 
-## 哪些结论有较强证据
+<span id="哪些结论有较强证据" data-td-print-local></span>
 
-### 真实客户端与大仓库
+## 哪些结论有较强证据 {#what-had-strong-supporting-evidence}
+
+<span id="真实客户端与大仓库" data-td-print-local></span>
+
+### 真实客户端与大仓库 {#real-package-clients-and-large-repositories}
 
 最早的测试使用真实 APT 与 DNF 客户端，并测量处理大仓库的成本：
 
@@ -47,7 +53,10 @@ v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
 
 这些测量支持了大仓库采用流式处理与有界并发的要求。
 
-### 协议完整性与异常情形 {#协议闭包与负反例}
+<span id="协议闭包与负反例" data-td-print-local></span>
+<span id="协议完整性与异常情形" data-td-print-local></span>
+
+### 协议完整性与异常情形 {#protocol-closure-and-negative-counterexamples}
 
 失败的实验找出了协议设计的限制：
 
@@ -60,7 +69,9 @@ v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
 
 这些实验说明，协议格式与客户端事务需要分别测试。
 
-### 故障与恢复
+<span id="故障与恢复" data-td-print-local></span>
+
+### 故障与恢复 {#failure-and-recovery}
 
 归档测试了同步、发布、物化、快照、归档和远端恢复被中断的情况。
 后期报告进一步检查文件描述符与精确路径身份，并覆盖回滚、隔离和保留核查记录。
@@ -74,7 +85,9 @@ v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
 
 这些测试促成了不同恢复路径：放弃未提交的工作，完成提交意图之后的工作，或在记录冲突时停止。
 
-### 旧系统迁移
+<span id="旧系统迁移" data-td-print-local></span>
+
+### 旧系统迁移 {#legacy-migration}
 
 迁移报告枚举了旧 Make 目标、物理布局、仓库族、客户端配置、包签名清单和回滚方式。
 修改前先使用只读副本，并核对精确回执。
@@ -83,8 +96,9 @@ v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
 把迁移假设记录为数据，在每一步前检查，切换结束后移除迁移代码。
 
 <span id="provider-与-edge-实验" data-td-print-local></span>
+<span id="云存储与边缘服务实验" data-td-print-local></span>
 
-### 云存储与边缘服务实验
+### 云存储与边缘服务实验 {#provider-and-edge-experiments}
 
 归档包含真实和模拟的 R2、MinIO、Cloudflare、COS 与边缘服务测试。
 代表性报告包括：
@@ -99,7 +113,9 @@ v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
 部分测试使用指定的非生产资源，另一些离线运行或使用模拟服务，报告中分别注明。
 在 R2、MinIO 或 COS 上测得的存储行为，对应具体服务与所测 API。
 
-## 哪些做法进入了设计方法
+<span id="哪些做法进入了设计方法" data-td-print-local></span>
+
+## 哪些做法进入了设计方法 {#what-became-part-of-the-design-method}
 
 这项工作形成了六条实践：
 
@@ -113,7 +129,9 @@ v0.1 归档包含 112 份报告，日期从 2026-07-11 到 7 月 31 日。
 这些实践用于当前[设计原则](/zh/blog/design/principles/)与
 [兼容性参考](/zh/docs/reference/compatibility/)。
 
-## 第一手资料
+<span id="第一手资料" data-td-print-local></span>
+
+## 第一手资料 {#primary-source}
 
 [v0.1.0 验证报告目录](https://github.com/pgsty/sow/tree/v0.1.0/docs/evidence)保留全部报告，
 包括命令、结果和测试条件。

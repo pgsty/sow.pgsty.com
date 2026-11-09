@@ -2,7 +2,7 @@
 title: "Publication & Recovery"
 linkTitle: "Publication & Recovery"
 date: 2026-08-08
-lastmod: 2026-10-13
+lastmod: 2026-11-09
 authors: [Vonng]
 description: "How SOW uploads a repository, resumes interrupted publication, and removes unused files."
 categories: [Design]
@@ -27,6 +27,7 @@ Each target keeps a checkpoint that identifies its last completed publication.
 | Packages, Desired state, and Built state | Publication attempts and checkpoints |
 | Generations and changesets | Remote inventory |
 | Retained package and metadata references | Grace periods and deletion records |
+{.wide .expand}
 
 <span id="publication-phases" data-td-print-local></span>
 <span id="pointer-order" data-td-print-local></span>
@@ -47,7 +48,7 @@ Package uploads create new objects or reuse identical bytes. They cannot overwri
 immutable path with different content. SOW records commit intent before it changes the
 first mutable APT index alias or protocol pointer.
 
-Within a view, referenced content is uploaded before the pointer:
+Within a view, SOW uploads referenced content before the pointer:
 
 ```text
 RPM: checksum-named metadata -> repomd.xml.asc -> repomd.xml
@@ -78,6 +79,7 @@ rather than starting from a newer local build.
 | After commit intent | Retry publication to complete the saved update |
 | Checkpoint recorded | Finish remaining maintenance; a completed target needs no update |
 | Conflicting file identity | Inspect the named file and target configuration before retrying |
+{.wide .expand}
 
 `--abort` removes eligible private filesystem staging. It keeps remote objects and records
 abandoned uploads so a later attempt can reuse matching bytes.
@@ -87,7 +89,7 @@ abandoned uploads so a later attempt can reuse matching bytes.
 ## Target identity
 
 Storage identity consists of the provider, endpoint, region, and bucket. Target identity
-also includes the prefix. The first publication binds these values to the Repository.
+also includes the prefix. The first publication binds these values to the Repository, and SOW checks prospective target paths (`endpoint + prefix`) so filesystem targets do not overlap one another or workspace paths.
 Later attempts use that binding to find the correct history.
 
 To change the target name, `public_endpoint`, or `max_cache_ttl`, edit `sow.yml` and run
@@ -103,7 +105,9 @@ A shorter TTL does not shorten an already recorded grace period.
 ## Remove a published view
 
 A configured target with an applied checkpoint prevents withdrawal of its existing Dist,
-architecture, or signature pointers. To retire that target, remove its entry from `targets`
+architecture, or signature pointers. SOW checks the complete published Generation—including
+views carried forward unchanged—and requires a full-repository `sow build -r REPO` before
+publishing a target withdrawal. To retire that target, remove its entry from `targets`
 in `sow.yml`, then run `sow config check`. This keeps the old remote files and publication
 history; it does not delete the remote repository.
 
@@ -127,6 +131,8 @@ Pool. Local garbage collection checks all of these references:
 
 It removes a package only when no reference remains and the file still matches the recorded
 identity. Keeping a Generation therefore keeps its packages without making another package tree.
+If `sow gc` or `sow retain rm` is interrupted, SOW preserves its recorded plan so rerunning
+the command finishes or discards the interrupted plan safely.
 
 Filesystem target deletion requires a known inventory, exclusive ownership, and an expired
 grace period. SOW conditionally deletes the recorded file, checks public absence, then

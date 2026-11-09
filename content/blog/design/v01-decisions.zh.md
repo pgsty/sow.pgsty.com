@@ -23,12 +23,15 @@ v0.1.0 标签中有 44 份架构决策记录（ADR），编号为 0001 至 0045�
 | **演化** | 问题仍在，但所有权或实现已经改变。 |
 | **迁移历史** | 决策用于 Pigsty/V1 切换。 |
 | **退役** | 决策属于已移除的 Git/CAS/Route/Edge 模型。 |
+{.wide .expand}
 
 决策日期从 2026-07-11 到 7 月 28 日，ADR-0035 另有 7 月 29 日与 31 日的修订。
 多数早期 ADR 在实现开始后，于 7 月 19 日集中进入 Git。
 ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 
-## 核心状态、发布与信任
+<span id="核心状态发布与信任" data-td-print-local></span>
+
+## 核心状态、发布与信任 {#core-state-publication-and-trust}
 
 | ADR | 原始决策 | 后续命运 |
 |---|---|---|
@@ -51,7 +54,9 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 | [0018](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0018-selected-set-local-materialization-transaction.md) | 选定包集合在一个有界本地事务中完成暂存、验证、提交与恢复。 | **演化。** Managed 操作使用恢复日志；Plain 暂存元数据并最后替换指针，中断后重新构建。 |
 {.wide .expand}
 
-## 旧拓扑、兼容性与迁移
+<span id="旧拓扑兼容性与迁移" data-td-print-local></span>
+
+## 旧拓扑、兼容性与迁移 {#legacy-topology-compatibility-and-migration}
 
 | ADR | 原始决策 | 后续命运 |
 |---|---|---|
@@ -71,8 +76,9 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 {.wide .expand}
 
 <span id="provider-与-edge-控制面" data-td-print-local></span>
+<span id="云端与边缘控制面" data-td-print-local></span>
 
-## 云端与边缘控制面
+## 云端与边缘控制面 {#provider-and-edge-control-plane}
 
 | ADR | 原始决策 | 后续命运 |
 |---|---|---|
@@ -86,7 +92,9 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 | [0039](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0039-caret-url-wire-canonicalization.md) | 脱字符在 Go、边缘服务、日志与源站路由中采用唯一 URL 编码。 | **演化。** 旧路由已退役，路径只编码一次的规范保留。 |
 {.wide .expand}
 
-## 有界配置与派生状态恢复
+<span id="有界配置与派生状态恢复" data-td-print-local></span>
+
+## 有界配置与派生状态恢复 {#bounded-configuration-and-derived-state-recovery}
 
 | ADR | 原始决策 | 后续命运 |
 |---|---|---|
@@ -98,7 +106,9 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 | [0045](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0045-generic-derived-state-residue-recovery.md) | 对无日志残留进行有界分类，不能静默接纳或删除。 | **保留。** 当前恢复仍区分已知状态、安全残留与冲突记录。 |
 {.wide .expand}
 
-## 账本背后的共同模式
+<span id="账本背后的共同模式" data-td-print-local></span>
+
+## 账本背后的共同模式 {#the-pattern-behind-the-ledger}
 
 延续下来的决策有几条共同规则：
 

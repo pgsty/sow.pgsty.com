@@ -2,7 +2,7 @@
 title: "发布与恢复"
 linkTitle: "发布与恢复"
 date: 2026-08-08
-lastmod: 2026-10-13
+lastmod: 2026-11-09
 authors: [Vonng]
 description: "SOW 如何上传仓库、继续中断的发布，以及清理不再使用的文件。"
 categories: [Design]
@@ -19,19 +19,22 @@ draft: false
 每个目标分别保存检查点，记录上次完成发布的内容。
 
 <span id="所有权拆分" data-td-print-local></span>
+<span id="状态归属" data-td-print-local></span>
 
-## 状态归属
+## 状态归属 {#state-ownership}
 
 | Repository 记录 | 目标记录 |
 |---|---|
 | 软件包、Desired 状态与 Built 状态 | 发布尝试与检查点 |
 | Generation 与变更集 | 远端清单 |
 | 保留的包和元数据引用 | 宽限期与删除记录 |
+{.wide .expand}
 
 <span id="发布阶段" data-td-print-local></span>
 <span id="指针顺序" data-td-print-local></span>
+<span id="发布顺序" data-td-print-local></span>
 
-## 发布顺序
+## 发布顺序 {#publication-order}
 
 ```text
 固定发布计划
@@ -57,8 +60,9 @@ APT: by-hash 与直接索引 -> Release.gpg -> InRelease/Release
 因此，客户端可能需要重试索引刷新。公共校验完成后，SOW 才记录检查点。
 
 <span id="公共验证" data-td-print-local></span>
+<span id="公共访问校验" data-td-print-local></span>
 
-## 公共访问校验
+## 公共访问校验 {#public-verification}
 
 SOW 通过 `public_endpoint` 下载变化的文件和受影响的索引入口，并核对内容。
 未变化的软件包无需重复下载。
@@ -67,8 +71,9 @@ SOW 通过 `public_endpoint` 下载变化的文件和受影响的索引入口，
 校验失败时，发布不会记录新的完成检查点。
 
 <span id="恢复结果" data-td-print-local></span>
+<span id="继续或放弃发布" data-td-print-local></span>
 
-## 继续或放弃发布
+## 继续或放弃发布 {#resume-or-abandon-an-attempt}
 
 重新运行原来的 `sow publish TARGET` 命令即可继续。恢复沿用保存的计划，不会改用更新的本地构建。
 
@@ -78,19 +83,21 @@ SOW 通过 `public_endpoint` 下载变化的文件和受影响的索引入口，
 | 已记录提交意图 | 重试发布，完成保存的更新 |
 | 已记录检查点 | 完成剩余维护；目标已完成更新时无需再次上传 |
 | 文件身份冲突 | 检查报错中的文件和目标配置，再重试 |
+{.wide .expand}
 
 `--abort` 清理符合条件的私有文件系统暂存目录，保留远端对象，并记录已放弃的上传。
 后续发布可复用字节相同的对象。
 
 <span id="持久-target-identity-与-rebind" data-td-print-local></span>
+<span id="目标身份" data-td-print-local></span>
 
-## 目标身份
+## 目标身份 {#target-identity}
 
-存储身份由后端、端点、区域和桶组成；目标身份还包括前缀。首次发布将这些值绑定到 Repository，
-后续发布据此查找对应历史。
+存储身份由后端、端点、区域和桶组成；目标身份还包括前缀。首次发布将这些值绑定到 Repository，并按预期目标路径（`endpoint + prefix`）检查文件系统目标是否彼此重叠或与工作区路径重叠；
+后续发布根据该绑定查找对应历史。
 
 修改目标名称、`public_endpoint` 或 `max_cache_ttl` 后，运行
-[`sow publish TARGET --rebind`](/zh/docs/command/publish/#重绑定可变目标配置)。
+[`sow publish TARGET --rebind`](/zh/docs/command/publish/#rebind-mutable-target-settings)。
 SOW 会追加绑定修订记录。Repository、存储身份或前缀变化时，需要配置新目标。
 
 修改 `max_cache_ttl` 前，先完成该目标尚未结束的维护。
@@ -98,10 +105,12 @@ SOW 会追加绑定修订记录。Repository、存储身份或前缀变化时，
 缩短 TTL 不会提前结束已记录的缓存宽限期。
 
 <span id="已发布指针栅栏" data-td-print-local></span>
+<span id="移除已发布的视图" data-td-print-local></span>
 
-## 移除已发布的视图
+## 移除已发布的视图 {#remove-a-published-view}
 
 目标仍在配置中且已有发布检查点时，SOW 会阻止撤销其现有 Dist、架构或签名入口。
+SOW 会检查完整的已发布 Generation（包括沿用未变更的视图），并要求在发布目标撤销前先运行全仓库构建 `sow build -r REPO`。
 需要停用该目标时，从 `sow.yml` 的 `targets` 中删除对应条目，再运行 `sow config check`。
 这会保留旧远端文件与发布历史，不会删除远端仓库。
 
@@ -110,8 +119,9 @@ SOW 会追加绑定修订记录。Repository、存储身份或前缀变化时，
 
 <span id="不复制包体的保留机制" data-td-print-local></span>
 <span id="远端删除是一项能力" data-td-print-local></span>
+<span id="保留与回收软件包" data-td-print-local></span>
 
-## 保留与回收软件包
+## 保留与回收软件包 {#retain-and-collect-packages}
 
 保留的 Generation 保存元数据、清单和指向共享 Pool 的包引用。本地垃圾回收会检查以下引用：
 
@@ -122,6 +132,7 @@ SOW 会追加绑定修订记录。Repository、存储身份或前缀变化时，
 
 只有引用全部消失，且文件仍与记录的身份一致时，SOW 才删除包。
 因此，保留 Generation 可以保留其软件包，无需再复制一棵包目录。
+如果 `sow gc` 或 `sow retain rm` 中断，SOW 会保留已记录的计划，重新运行命令即可安全完成或丢弃中断计划。
 
 文件系统目标删除要求清单完整、目标由当前工作区独占且宽限期已过。
 SOW 按记录的文件身份执行条件删除，再检查公共端点是否已返回文件不存在，最后记录结果。

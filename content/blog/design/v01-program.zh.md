@@ -21,7 +21,9 @@ v0.1 计划始于 2026-07-11，并于 7 月 31 日封存为 v0.1.0。
 发布与回滚。这个类比帮助描述了需求，也扩大了产品范围。
 Git/CAS/Route/Edge 模型后来退役，当前模型见[系统模型](/zh/blog/design/model/)。
 
-## 第一版设计要解决什么
+<span id="第一版设计要解决什么" data-td-print-local></span>
+
+## 第一版设计要解决什么 {#the-problem-the-first-design-tried-to-solve}
 
 旧系统已经发布了几十条稳定 URL，供 APT、DNF、脚本和安装入口使用。
 替代系统既要保留这些 URL，又要补足 Makefile 工作流难以可靠实现的能力：
@@ -37,9 +39,14 @@ Git/CAS/Route/Edge 模型后来退役，当前模型见[系统模型](/zh/blog/d
 
 原始计划将这些需求纳入同一套所有权模型。
 
-## v0.1 选择的模型
+<span id="v01-选择的模型" data-td-print-local></span>
 
-### Git 保存权威状态 {#git-是正典状态}
+## v0.1 选择的模型 {#the-selected-v01-model}
+
+<span id="git-是正典状态" data-td-print-local></span>
+<span id="git-保存权威状态" data-td-print-local></span>
+
+### Git 保存权威状态 {#git-was-canonical-state}
 
 `.sow/state` 是由内嵌 Go Git 库操作的普通工作树。
 清单、引用、来源记录、配置摘要、目标检查点和安全标签都保存在 Git 中。
@@ -48,19 +55,26 @@ SQLite 只提供查询数据，可以从 Git 重建。
 每次状态迁移都有持久历史，一次引用更新就是本地提交边界。
 这也要求包管理、发布、迁移和操作意图都采用同一种 Git 状态模型。
 
-### CAS 拥有字节
+<span id="cas-拥有字节" data-td-print-local></span>
+
+### CAS 拥有字节 {#cas-owned-the-bytes}
 
 包体进入以 SHA-256 命名的不可变包池，公开树通过硬链接指向包池。
 能否回收包体取决于引用可达性。这样可以低成本地去重和保留历史，
 但包池与公开树必须位于同一文件系统，路径、回执和 inode 身份也成为产品契约的一部分。
 
-### Ref 表达产品语义
+<span id="ref-表达产品语义" data-td-print-local></span>
+
+### Ref 表达产品语义 {#refs-expressed-product-meaning}
 
 Repository、View、Snapshot、Stable、History 和各目标的远端引用，描述内容的用途与保留范围。
 移动可变 View 不会删除 Stable 或历史引用。
 删除 View 只改变引用，垃圾回收仍是独立操作，执行前要检查完整引用关系。
 
-### 每个目标分别记录发布历史 {#发布是一条-saga}
+<span id="发布是一条-saga" data-td-print-local></span>
+<span id="每个目标分别记录发布历史" data-td-print-local></span>
+
+### 每个目标分别记录发布历史 {#publication-was-a-saga}
 
 Cloudflare R2 与腾讯 COS 是独立目标。
 每个目标分别准备不可变对象、持久化提交意图、移动协议指针、清理 CDN 缓存、验证公共可见性，
@@ -81,7 +95,9 @@ Cloudflare R2 与腾讯 COS 是独立目标。
 
 当前发布仍沿用这一顺序。缓存宽限期与存储服务的删除能力检查用于远端垃圾回收。
 
-### Route 与 Edge 属于仓库正确性
+<span id="route-与-edge-属于仓库正确性" data-td-print-local></span>
+
+### Route 与 Edge 属于仓库正确性 {#routes-and-edge-were-part-of-repository-correctness}
 
 公共树保留旧 URL，Route 根据 Generation（构建快照）选择不可变元数据。
 私有对象位于 Cloudflare Worker 与 EdgeOne 共享的边缘服务接口之后。
@@ -89,7 +105,9 @@ Cloudflare R2 与腾讯 COS 是独立目标。
 
 这使 CDN 路由、令牌验证、服务部署、日志接收端和缓存拓扑都成为仓库模型的前置条件。
 
-## 这套设计为什么有吸引力
+<span id="这套设计为什么有吸引力" data-td-print-local></span>
+
+## 这套设计为什么有吸引力 {#why-the-design-was-attractive}
 
 模型为各部分规定了明确规则：
 
@@ -104,7 +122,9 @@ Cloudflare R2 与腾讯 COS 是独立目标。
 
 后续版本以更少的机制保留了这些规则。
 
-## 为什么后来必须重置
+<span id="为什么后来必须重置" data-td-print-local></span>
+
+## 为什么后来必须重置 {#why-the-product-reset}
 
 到七月底，SOW v0.1 已经包含：
 
@@ -133,7 +153,9 @@ Cloudflare R2 与腾讯 COS 是独立目标。
 但下载流程会引入独立的策略、重试、来源与远端所有权模型。
 重置将包获取交给外部工具，让 SOW 专注于包接纳、仓库管理和发布。
 
-## 重置后保留下来的东西
+<span id="重置后保留下来的东西" data-td-print-local></span>
+
+## 重置后保留下来的东西 {#what-survived-the-reset}
 
 | v0.1 教训 | 当前形态 |
 |---|---|
@@ -146,8 +168,11 @@ Cloudflare R2 与腾讯 COS 是独立目标。
 | 生成的服务端配置是派生状态 | 完整仓库根目录是托管单位，服务配置由运维者管理 |
 | 兼容性需要逐项验证 | [平台与集成](/zh/docs/reference/compatibility/) |
 | 历史结果与版本绑定 | 按日期记录的设计与发布文章 |
+{.wide .expand}
 
-## 被淘汰的东西
+<span id="被淘汰的东西" data-td-print-local></span>
+
+## 被淘汰的东西 {#what-was-retired}
 
 - Git 产品状态与“SQLite 只是可丢弃缓存”的模型；
 - 跨产品 CAS 与硬链接物化层；
@@ -160,7 +185,9 @@ Cloudflare R2 与腾讯 COS 是独立目标。
 
 部分实现思想后来在更小的范围内回归。SOW 管理仓库及其发布，包获取与服务托管仍由外部工具负责。
 
-## 时间线
+<span id="时间线" data-td-print-local></span>
+
+## 时间线 {#timeline}
 
 | 日期 | 里程碑 |
 |---|---|
@@ -171,8 +198,11 @@ Cloudflare R2 与腾讯 COS 是独立目标。
 | 2026-07-22–29 | 路径身份、恶意并发写入、隔离与残留恢复 |
 | 2026-07-30–31 | 从空环境验证最小可用产品，封存 v0.1.0 源码 |
 | 2026-08-01 起 | Plain/Managed 重置，随后移除 V1 运行时 |
+{.wide .expand}
 
-## 第一手资料与后续记录
+<span id="第一手资料与后续记录" data-td-print-local></span>
+
+## 第一手资料与后续记录 {#primary-sources-and-next-records}
 
 [v0.1.0 `docs/` 树](https://github.com/pgsty/sow/tree/v0.1.0/docs)保留了原始
 [架构契约](https://github.com/pgsty/sow/blob/v0.1.0/docs/architecture.md)、

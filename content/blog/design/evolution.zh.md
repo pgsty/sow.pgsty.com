@@ -2,9 +2,9 @@
 title: "SOW 设计演进：从路由图到仓库引擎"
 linkTitle: "设计演进"
 date: 2026-08-10
-lastmod: 2026-10-17
+lastmod: 2026-11-09
 authors: [Vonng]
-description: "SOW 如何从 v0.1 软件分发平台转为仓库引擎，以及 v0.2 到 v0.6 如何改进这一模型。"
+description: "SOW 如何从 v0.1 软件分发平台转为仓库引擎，以及 v0.2 到 v0.7 如何改进这一模型。"
 categories: [Design]
 tags: [architecture, repository, migration, decision]
 weight: 20
@@ -14,9 +14,9 @@ draft: false
 ---
 
 SOW 在 v0.1 中探索了以 Git 为核心的软件分发控制面，在 v0.2 中转为仓库引擎。
-本文记录这次变化，以及后续到 v0.6.0 的改进。
+本文记录这次变化，以及后续到 v0.7.0 的改进。
 
-下文版本均对应正式 Git 标签，包括 [v0.6.0](https://github.com/pgsty/sow/tree/v0.6.0)。部分归档计划曾用“v0.2”“v0.3”指代开发中的设计；
+下文版本均对应正式 Git 标签，包括 [v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0)。部分归档计划曾用“v0.2”“v0.3”指代开发中的设计；
 其中在 RPM 视图内创建硬链接的 C2 布局，已在 v0.2.0 发布前被替换。
 
 早期工作的细节见四篇配套文章：
@@ -26,7 +26,9 @@ SOW 在 v0.1 中探索了以 Git 为核心的软件分发控制面，在 v0.2 �
 - [v0.1 到底证明了什么](/zh/blog/design/v01-evidence/)汇总 112 份按日期记录的测试与评审报告。
 - [v0.2 重置](/zh/blog/design/v02-reset/)说明 Plain/Managed 模式拆分，以及从 C2 改为单包体布局的过程。
 
-## 简要历史
+<span id="简要历史" data-td-print-local></span>
+
+## 简要历史 {#the-short-history}
 
 | 版本 | 主要变化 | 公共布局 |
 |---|---|---|
@@ -36,16 +38,22 @@ SOW 在 v0.1 中探索了以 Git 为核心的软件分发控制面，在 v0.2 �
 | v0.4 | 单遍校验、独立 RPM 信任环、目标重新绑定、迁移与恢复修复 | 不变 |
 | v0.5 | 包路径保留、移除与恢复修复、签名检查、可复现的 Plain 时间戳 | 不变 |
 | v0.6 | 保留上一版 Plain RPM 索引、记录 Managed 发布时间、强化文件检查、一致的状态读取、减少重复 I/O | 不变 |
+| v0.7 | Plain RPM 裁剪、口令文件签名、tag 267 ECDSA/EdDSA 验签、caret 版本排序，以及迁移/发布/恢复修复 | 不变 |
 {.wide .expand}
 
 早期版本的实现保存在源码标签中：
 [v0.1.0](https://github.com/pgsty/sow/tree/v0.1.0)、
 [v0.2.0](https://github.com/pgsty/sow/tree/v0.2.0)、
 [v0.3.0](https://github.com/pgsty/sow/tree/v0.3.0)、
-[v0.4.0](https://github.com/pgsty/sow/tree/v0.4.0) 和
-[v0.5.0](https://github.com/pgsty/sow/tree/v0.5.0)。
+[v0.4.0](https://github.com/pgsty/sow/tree/v0.4.0)、
+[v0.5.0](https://github.com/pgsty/sow/tree/v0.5.0)、
+[v0.6.0](https://github.com/pgsty/sow/tree/v0.6.0)、
+[v0.6.1](https://github.com/pgsty/sow/tree/v0.6.1) 和
+[v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0)。
 
-## v0.1：问题很有价值，产品概念太多
+<span id="v01问题很有价值产品概念太多" data-td-print-local></span>
+
+## v0.1：问题很有价值，产品概念太多 {#v01-useful-questions-too-many-product-concepts}
 
 第一版计划覆盖 Git 状态、内容寻址存储、Route 与 View、快照、远端存储服务、边缘鉴权和旧系统迁移。
 现存 44 份 ADR（编号至 0045）记录了这些决策及其失败情形。
@@ -56,7 +64,9 @@ SOW 在 v0.1 中探索了以 Git 为核心的软件分发控制面，在 v0.2 �
 v0.2 重置移除了 Git 权威数据库、独立 CAS 层、Route/View/Snapshot 命令模型和边缘访问控制，
 把本地仓库构建作为核心任务。
 
-## v0.2：先建立小而明确的所有权模型
+<span id="v02先建立小而明确的所有权模型" data-td-print-local></span>
+
+## v0.2：先建立小而明确的所有权模型 {#v02-establish-a-small-ownership-model}
 
 v0.2 将产品拆成两条执行路径：
 
@@ -69,7 +79,9 @@ Managed 操作日志记录中断后的恢复方式。
 
 最初的 C2 实现仍会在每个 RPM 视图中创建包体硬链接。这一布局在发布前发生了变化。
 
-## v0.2.0：把 Repository Root 变成交付单元
+<span id="v020把-repository-root-变成交付单元" data-td-print-local></span>
+
+## v0.2.0：把 Repository Root 变成交付单元 {#v020-make-repository-root-the-delivery-unit}
 
 单包体决策起草于 2026-08-05，并在 8 月 8 日随 v0.2.0 发布。
 它移除了 RPM 视图中的包体别名。一个仓库只有一套 `pool/` 与纯元数据 `dists/`，
@@ -83,14 +95,17 @@ v0.2.0 也明确区分了本地与远端状态：
 仓库之间不对包体去重。一个目标前缀只有一个所有者。
 兼容性导出在原仓库之外创建独立副本。
 
-## v0.3：在同一模型上做减法与优化
+<span id="v03在同一模型上做减法与优化" data-td-print-local></span>
+
+## v0.3：在同一模型上做减法与优化 {#v03-simplify-and-optimize-the-same-model}
 
 v0.3 保持 v0.2.0 公共布局不变。它删除了 V1 运行时与迁移测试工具，引入包属性缓存，
 并将 Plain 生成简化为可重建的单遍操作。成员关系改为批量展开，包体改为分组提交，减少文件系统操作。
 
 <span id="v04强化证据不再增加一套模型" data-td-print-local></span>
+<span id="v04强化校验与恢复" data-td-print-local></span>
 
-## v0.4：强化校验与恢复
+## v0.4：强化校验与恢复 {#v04-strengthen-verification-and-recovery}
 
 v0.4 将 Managed 深度校验改为有界单遍读取。RPM 验证必须在一个信任环内完整通过，
 不能拼接不同信任环的局部结果。显式重新绑定操作可以更新发布目标的可变设置。
@@ -99,7 +114,9 @@ v0.4 将 Managed 深度校验改为有界单遍读取。RPM 验证必须在一�
 早期协同发布提案曾考虑用 rclone 批量传输。最终设计保留原生存储适配器，
 让 SOW 在同一状态机中检查对象身份、记录回执、控制提交顺序并恢复发布。
 
-## v0.5：保留包 URL 与已提交状态
+<span id="v05保留包-url-与已提交状态" data-td-print-local></span>
+
+## v0.5：保留包 URL 与已提交状态 {#v05-preserve-package-urls-and-committed-state}
 
 v0.5.0 于 2026-09-29 发布，公共布局不变，托管状态升级为 schema 13。
 新增的包池路径索引阻止不同字节占用已有 URL，也覆盖历史发布记录中的 URL。
@@ -109,7 +126,9 @@ v0.5.0 于 2026-09-29 发布，公共布局不变，托管状态升级为 schema
 提供显式时间戳，默认值为零。完整变化见
 [v0.5.0 更新日志](https://github.com/pgsty/sow/blob/v0.5.0/CHANGELOG.md)。
 
-## v0.6：校验后复用，保留已提交结果
+<span id="v06校验后复用保留已提交结果" data-td-print-local></span>
+
+## v0.6：校验后复用，保留已提交结果 {#v06-verify-once-preserve-the-result}
 
 v0.6 保持 schema 13 和公共布局不变。每次新元数据构建都记录一个发布时间，恢复时复用原值。
 文件检查把已校验字节绑定到实际打开的文件，后续步骤可以在同一次操作内安全复用校验结果。
@@ -120,7 +139,21 @@ Plain RPM 更新保留当前与紧邻上一版元数据，让客户端能够继�
 这些变化改进现有模型，不增加全仓库扫描或另一套恢复状态机。
 行为与升级细节见 [v0.6.0 发布注记](/zh/blog/release/sow-v0.6.0/)。
 
-## 每次重构都保留下来的原则
+<span id="v07平面-rpm-裁剪口令文件与恢复加固" data-td-print-local></span>
+
+## v0.7：平面 RPM 裁剪、口令文件与恢复加固 {#v07-flat-rpm-pruning-password-files-and-recovery-hardening}
+
+v0.7.0 保持 schema 13 与公共布局不变。新增的 `sow prune` 为无状态平面 RPM 目录提供最高版本保留：
+SOW 按 `(name, arch)` 对 `.rpm` 文件分组，只保留每组中 `epoch:version-release` 最高的文件，
+先更新 `repodata/` 再删除被取代的旧 RPM 文件，并在修改文件前拒绝存在最高 EVR 并列冲突的目录。
+
+该版本还为加密签名密钥加入了口令文件支持（`--gpg-passphrase-file`、`SOW_GPG_PASSPHRASE_FILE` 与 `sow.yml` 中的 `password_file`），
+支持 tag `267` 中的 RPM 仅头部 ECDSA 与 EdDSA 签名，实现了 RPM caret（`^`）与 tilde（`~`）版本段排序，
+并加固了 schema 迁移、沿用视图检查以及中断后的 `gc` / `retain rm` 计划恢复。完整细节见 [v0.7.0 发布注记](/zh/blog/release/sow-v0.7.0/)。
+
+<span id="每次重构都保留下来的原则" data-td-print-local></span>
+
+## 每次重构都保留下来的原则 {#what-survived-every-redesign}
 
 v0.1 的部分规则继续用于更小的模型：
 

@@ -9,8 +9,11 @@ categories: [Release]
 tags: [release, plain, yum, signing, migration]
 weight: -10
 url: "/blog/release/sow-v0.5.0/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.5.0
 draft: false
 ---
+
+{{< release-card >}}
 
 SOW 0.5.0 adds publication timestamps for existing YUM repositories and fixes Managed
 repository recovery, signing, and package-path handling. It also reduces repeated package

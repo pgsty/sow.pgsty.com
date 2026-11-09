@@ -8,7 +8,10 @@ categories: [Release]
 tags: [release, managed, signing, publish, generation]
 weight: 10
 url: "/blog/release/sow-docs-launch/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.2.0
 ---
+
+{{< release-card >}}
 
 SOW 0.2.0 introduced Plain and Managed workflows for RPM and DEB repositories. It builds static package repositories with one Go executable on Linux or macOS.
 

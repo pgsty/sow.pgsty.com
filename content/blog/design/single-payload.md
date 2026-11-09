@@ -2,7 +2,7 @@
 title: "Why SOW Uses One Payload Tree per Repository"
 linkTitle: "Single-Payload Repository"
 date: 2026-08-05
-lastmod: 2026-10-17
+lastmod: 2026-11-09
 authors: [Vonng]
 description: "One package pool per repository, with metadata-only distribution views that share its files."
 categories: [Design]
@@ -15,8 +15,8 @@ icon: fa-solid fa-layer-group
 draft: false
 ---
 
-This decision was drafted on 2026-08-05 and shipped in SOW v0.2.0 on 2026-08-08.
-SOW 0.6.0 still uses this layout. Each Repository stores one package tree and lets its
+We drafted this decision on 2026-08-05 and shipped it in SOW v0.2.0 on 2026-08-08.
+SOW 0.7.0 still uses this layout. Each Repository stores one package tree and lets its
 distribution views reference that tree.
 
 ## Decision
@@ -66,7 +66,7 @@ pool path directly:
 Filename: pool/p/pkg/pkg_1.0_amd64.deb
 ```
 
-For RPM, each `<location href>` is computed from the actual view directory to the
+For RPM, SOW computes each `<location href>` from the actual view directory to the
 Pool path:
 
 ```text
@@ -83,7 +83,7 @@ Then the same metadata works under another filesystem directory, HTTP origin, bu
 
 ## Rejected alternatives
 
-| Alternative | Why it was not used |
+| Alternative | Why SOW rejected it |
 |---|---|
 | Package hardlink/copy in every RPM view | Creates path aliases and duplicate object keys |
 | Symlinked payloads | Object storage does not support them; static servers and archives handle them differently |
@@ -91,15 +91,16 @@ Then the same metadata works under another filesystem directory, HTTP origin, bu
 | Absolute URL or `xml:base` | Binds metadata to one origin and prevents unchanged relocation |
 | CDN rewrite or redirect objects | Requires extra routing configuration for the repository |
 | Workspace- or bucket-global pool | Requires cross-Repository coordination for locks, retention, and deletion |
+{.wide .expand}
 
 ## Mirror-tool compatibility is an export concern
 
 An ordinary package client only needs to resolve metadata references and fetch package
-bytes. A mirror tool may additionally insist that every package be stored below the view
-directory it was given.
+bytes. A mirror tool can also require that every package reside below the view
+directory you give it.
 
 For consumers that require a standalone RPM leaf, use `sow export rpm-leaf`. It creates
-a directory outside the Repository with package files and regenerated local metadata. Copy is the default.
+a directory outside the Repository with package files and regenerated local metadata, including when the selected RPM Dist was carried forward unchanged into the current Built Generation. Copy is the default.
 Use `--hardlink` on the same filesystem and keep exported package files read-only, because
 writing through a hardlink also changes the Pool file. The export is not a Generation, publication source, membership owner, or garbage
 collection root.
@@ -116,10 +117,9 @@ Use the listed client tests to check package installation and mirroring.
   target-prefix-scoped.
 - Each package file maps to one static object key.
 - Before deleting a payload, check its references and file identity. Do not use hardlink count
-  to determine whether it is still needed.
+  to determine whether a file is still needed.
 - Copy the Repository root, or use the export command to create a standalone RPM architecture directory.
 
-The current mechanism is documented in
-[Pool & Metadata Views](/docs/feature/views/), while [System model](/blog/design/model/)
-and [Publication and recovery](/blog/design/publication/) define the surrounding ownership
-and lifecycle rules.
+See [Pool & Metadata Views](/docs/feature/views/) for the current mechanism.
+[System model](/blog/design/model/) and [Publication and recovery](/blog/design/publication/)
+define the ownership and lifecycle rules.

@@ -2,7 +2,7 @@
 title: "Design Principles"
 linkTitle: "Principles"
 date: 2026-08-08
-lastmod: 2026-10-13
+lastmod: 2026-11-09
 authors: [Vonng]
 description: "Why SOW separates package storage, repository builds, and publication."
 categories: [Design]
@@ -30,6 +30,8 @@ where each kind of state belongs and how operations use it.
 | Target bindings and revisions | Repository and target |
 | Publication attempts and checkpoints | Repository and target prefix |
 | Remote inventory and deletion records | Repository and target prefix |
+| Plain RPM previous-index marker (`repodata/.sow-plain-rpm-history.json`) | Plain RPM directory |
+{.wide .expand}
 
 Each Repository stores its own copy of a package. Each publication target stores its own
 copy too. This keeps package retention and deletion independent across repositories and targets.
@@ -42,7 +44,8 @@ In Managed mode, `pool/` holds the package bytes. In Plain mode, the input direc
 them. Indexes and architecture views describe those packages and can be rebuilt.
 
 Managed garbage collection removes a package only after its active, retained, and recovery
-references are gone. Plain mode rebuilds indexes directly from the current directory.
+references are gone. Plain mode rebuilds indexes directly from the current directory, and
+`sow prune` updates `repodata/` for the retained highest-EVR RPMs before deleting superseded `.rpm` files.
 
 <span id="the-public-tree-is-the-delivery-unit" data-td-print-local></span>
 
@@ -73,8 +76,8 @@ with cached indexes can still use them.
 
 ## Recover according to the recorded state
 
-After an interrupted Plain build, run `sow create` again. It scans the package directory
-and rebuilds the indexes.
+After an interrupted Plain operation, run `sow create` or `sow prune` again. SOW scans the
+package directory, rebuilds the indexes, and completes any remaining Plain cleanup.
 
 A Managed publication records its plan and progress. Before commit intent, SOW can reconcile
 an attempt and abandon it. After commit intent, rerun `sow publish TARGET` to complete the

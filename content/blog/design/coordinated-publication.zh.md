@@ -24,8 +24,9 @@ SOW 0.4.0 保留了原生 `filesystem` 与 `r2` 发布后端。早期提案曾�
 
 <span id="为什么没有采用-executor-提案" data-td-print-local></span>
 <span id="040-实际交付" data-td-print-local></span>
+<span id="为什么保留原生后端" data-td-print-local></span>
 
-## 为什么保留原生后端
+## 为什么保留原生后端 {#why-keep-native-backends}
 
 发布计划为每个文件记录预期 SHA-256 和操作。后端需要创建不可变对象，避免覆盖已有内容，并按条件更新可变入口文件。
 SOW 记录操作结果，用于中断后继续发布。
@@ -42,30 +43,34 @@ SOW 记录操作结果，用于中断后继续发布。
 <span id="原生增量发布" data-td-print-local></span>
 <span id="强化公共可见性" data-td-print-local></span>
 <span id="操作者流程" data-td-print-local></span>
+<span id="发布流程" data-td-print-local></span>
 
-## 发布流程
+## 发布流程 {#publication-workflow}
 
 原生后端先上传软件包与不可变元数据，再更新仓库索引。
 随后检查公开文件，并为目标记录发布检查点。下次发布以该检查点为基准，计算需要更新的文件。
 
 <span id="操作者确认的-rebind" data-td-print-local></span>
+<span id="修改目标设置" data-td-print-local></span>
 
-## 修改目标设置
+## 修改目标设置 {#change-target-settings}
 
 目标名称、公共 URL 或缓存时间的变化记录在绑定修订中，原发布历史继续保留。
 使用不同存储位置时，需要配置新目标。
 
 <span id="恢复决策" data-td-print-local></span>
+<span id="继续中断的发布" data-td-print-local></span>
 
-## 继续中断的发布
+## 继续中断的发布 {#resume-an-interrupted-publication}
 
 SOW 为每次发布保存计划与进度。作出提交决定前，确认索引未变化后即可放弃该次发布。
 作出提交决定后，恢复流程完成已保存的计划。
 上传、校验和恢复因此可以使用同一份发布历史。
 
 <span id="明确边界" data-td-print-local></span>
+<span id="单独配置访问服务" data-td-print-local></span>
 
-## 单独配置访问服务
+## 单独配置访问服务 {#configure-serving-separately}
 
 运维人员配置 HTTP 访问、缓存与客户端信任。SOW 通过配置的公共端点检查发布结果。
 

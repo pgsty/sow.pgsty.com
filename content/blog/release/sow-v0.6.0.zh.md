@@ -9,7 +9,10 @@ categories: [Release]
 tags: [release, plain, managed, recovery, signing, performance]
 weight: -20
 url: "/zh/blog/release/sow-v0.6.0/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.6.0
 ---
+
+{{< release-card >}}
 
 SOW 0.6.0 改进仓库更新、文件校验和中断恢复，保持现有命令、配置格式与公开仓库布局不变。
 已使用 0.5.0 的 Managed 工作区无需迁移数据库。
@@ -17,7 +20,9 @@ SOW 0.6.0 改进仓库更新、文件校验和中断恢复，保持现有命令�
 本文记录自 0.5.0 以来的变化。升级步骤见[安装说明](/zh/docs/start/install/)，
 制品发布状态见[下载页](/zh/download/)。
 
-## 仓库维护者需要了解的变化
+<span id="仓库维护者需要了解的变化" data-td-print-local></span>
+
+## 仓库维护者需要了解的变化 {#changes-for-repository-operators}
 
 | 范围 | 0.6.0 的变化 | 对操作的影响 |
 |---|---|---|
@@ -29,7 +34,9 @@ SOW 0.6.0 改进仓库更新、文件校验和中断恢复，保持现有命令�
 | 大型仓库 | 复用已验证数据，限制并发工作量 | 减少构建、导入、检查和发布中的重复工作 |
 {.wide .expand}
 
-## Plain RPM 更新保留上一轮索引
+<span id="plain-rpm-更新保留上一轮索引" data-td-print-local></span>
+
+## Plain RPM 更新保留上一轮索引 {#plain-rpm-updates-keep-the-previous-indexes}
 
 客户端先下载 `repomd.xml`，再请求其中列出的元数据文件。
 如果这两步之间发生仓库更新，旧元数据可能在客户端下载前就被清理。
@@ -47,7 +54,9 @@ Plain `sow create` 现在保留当前与紧邻上一轮以校验和命名的 RPM
 Plain 时间戳仍由调用者指定，`--metadata-timestamp` 默认值仍为 `0`。
 替换其他生成工具或恢复旧软件包内容时，保留已发布的最大时间戳。
 
-## Managed 构建保留一个发布时间
+<span id="managed-构建保留一个发布时间" data-td-print-local></span>
+
+## Managed 构建保留一个发布时间 {#managed-builds-keep-one-publication-time}
 
 新的 Managed 构建在发布受影响 Dist 的索引前，记录一个精确到秒的 UTC 时间。
 APT `Release` 日期、RPM `repomd.xml` 的 data 时间戳和元数据签名共用该值。
@@ -66,7 +75,9 @@ RPM `revision` 仍使用构建快照编号。
 `rm --check` 预览仍为只读操作，预测成员、路径、动作，以及结果的修订号和构建快照编号。
 实际执行会选择自己的发布时间，因此含时间信息的字节、哈希与大小可能不同于预览。
 
-## 校验实际读取的文件
+<span id="校验实际读取的文件" data-td-print-local></span>
+
+## 校验实际读取的文件 {#verify-the-file-that-was-actually-read}
 
 元数据与软件包校验现在将摘要绑定到打开的文件身份，并在读取前后核对。
 快速校验和复用校验结果也采用相同检查。
@@ -80,7 +91,9 @@ SOW 正确处理这种情况，并保留成功校验时的文件身份。
 访问已知子路径时，父目录只需具备遍历权限，不再额外要求目录列表读取权限。
 软件包仍需可读，受控路径仍拒绝不安全的符号链接和文件类型。
 
-## 读取完整的签名密钥集合
+<span id="读取完整的签名密钥集合" data-td-print-local></span>
+
+## 读取完整的签名密钥集合 {#read-complete-signing-key-bundles}
 
 一个受信密钥文件可以包含多个公钥或连续的 ASCII 装甲密钥块。
 SOW 现在读取完整输入，不再遇到第一个块后就停止。
@@ -90,7 +103,9 @@ SOW 现在读取完整输入，不再遇到第一个块后就停止。
 将密钥集合放入 `trusted_keys`，每项元数据或软件包签名设置使用一个签名身份。
 具体规则见[签名参考](/zh/docs/feature/signing/)。
 
-## 保持状态与恢复结果一致
+<span id="保持状态与恢复结果一致" data-td-print-local></span>
+
+## 保持状态与恢复结果一致 {#keep-state-and-recovery-results-consistent}
 
 SQLite 身份检查现在保留现有连接持有的锁。
 组合仓库查询从同一个数据库快照读取相关状态。
@@ -117,7 +132,9 @@ Dist 状态也会显示未完成的仓库维护，包括本地 GC 和日志裁�
 如果旧版中止操作已经移除了可信标记，需要恢复匹配备份或创建新工作区。
 支持的恢复路径见 [`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。
 
-## 减少重复工作
+<span id="减少重复工作" data-td-print-local></span>
+
+## 减少重复工作 {#reduce-repeated-work}
 
 本版减少 I/O，没有增加额外的全仓扫描或恢复状态机：
 
@@ -135,7 +152,9 @@ R2 清单检查现在每页最多并发执行八个 HEAD 请求。
 上传重试不再仅因重新定位源文件就重启空闲超时，必须有实际传输进展。
 R2 垃圾回收仍只报告候选对象，不删除远端对象。
 
-## 构建、打包与验证
+<span id="构建打包与验证" data-td-print-local></span>
+
+## 构建、打包与验证 {#build-packaging-and-validation}
 
 源码构建要求 **Go 1.27.2 或更新版本**，质量检查使用 staticcheck 0.8.2。
 即使 Go 自动选择了下载的工具链，修补后的 RPM 解析模块也能完成上游来源验证。
@@ -153,7 +172,9 @@ R2 垃圾回收仍只报告候选对象，不删除远端对象。
 5 万包 RPM 元数据生成、打包，以及从已发布 0.5.0 二进制升级。
 部署验收仍使用实际的包管理客户端和发布目标。
 
-## 从 0.5.0 升级
+<span id="从-050-升级" data-td-print-local></span>
+
+## 从 0.5.0 升级 {#upgrade-from-050}
 
 数据库 **schema v13**、配置 **`sow/v3`** 与公开 **`pool/ + dists/`** 布局均保持不变。
 

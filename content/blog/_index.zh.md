@@ -9,16 +9,8 @@ sidebar_root_for: self
 sidebar_root_link_self: true
 images: [/images/blog/sow.webp]
 featured_image: wash
-
-outputs:
-  - HTML
-  - RSS
-  - print
 cascade:
   type: blog
-  outputs:
-    - HTML
-    - print
   images: [/images/blog/sow.webp]
   featured_image: wash
   # OINK 1.5.1 page-end share bar, scoped to the blog. Every entry is a plain
@@ -27,10 +19,9 @@ cascade:
   share: [x, linkedin, reddit, hackernews, telegram, weibo, email, copy]
   # An article says how long it takes to read; documentation pages do not.
   reading_time: true
-  params:
-    sidebar_menu_foldable: false
-    sidebar_menu_compact: false
-    sidebar_expand_levels: 3
+  sidebar_menu_foldable: false
+  sidebar_menu_compact: false
+  sidebar_expand_levels: 3
 icon: fa-solid fa-blog
 ---
 

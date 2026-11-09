@@ -2,7 +2,7 @@
 title: "为什么 SOW 每个仓库只保留一棵包体树"
 linkTitle: "单包体仓库"
 date: 2026-08-05
-lastmod: 2026-10-17
+lastmod: 2026-11-09
 authors: [Vonng]
 description: "每个仓库共用一个包池，各发行版视图只保存元数据，避免重复包副本。"
 categories: [Design]
@@ -15,12 +15,13 @@ icon: fa-solid fa-layer-group
 draft: false
 ---
 
-这项决策起草于 2026-08-05，随 2026-08-08 的 SOW v0.2.0 发布。SOW 0.6.0 仍使用这一布局：
+这项决策起草于 2026-08-05，随 2026-08-08 的 SOW v0.2.0 发布。SOW 0.7.0 仍使用这一布局：
 每个仓库保存一棵包体树，各发行版视图引用同一棵树。
 
 <span id="最终决策" data-td-print-local></span>
+<span id="决策" data-td-print-local></span>
 
-## 决策
+## 决策 {#decision}
 
 每个 Repository 的公共目录如下：
 
@@ -40,7 +41,9 @@ draft: false
 复制、静态托管、鉴权和发布都以完整的 `pool/ + dists/` 根目录为单位。
 单个架构目录是客户端视图，不是完整的软件仓库。
 
-## 从 C2 开发线到 v0.2.0
+<span id="从-c2-开发线到-v020" data-td-print-local></span>
+
+## 从 C2 开发线到 v0.2.0 {#from-the-c2-development-layout-to-v020}
 
 早期 C2 开发线在根包池中保存一份包体，再在每个 RPM 视图内创建包体硬链接。
 这让部分 `reposync` 客户端可以直接使用独立的架构目录，同时节省本地空间。
@@ -56,8 +59,9 @@ draft: false
 v0.2.0 发布前，最终布局删除了 RPM 视图中的包体别名。归档中的 C2 文档描述的是该开发线。
 
 <span id="元数据如何引用-pool" data-td-print-local></span>
+<span id="元数据如何引用包池" data-td-print-local></span>
 
-## 元数据如何引用包池
+## 元数据如何引用包池 {#how-metadata-reaches-the-pool}
 
 APT 的 `Filename` 是相对仓库根目录的路径，因此可以直接引用包体：
 
@@ -79,8 +83,9 @@ href:    ../../../pool/p/pkg/pkg-1.0-1.x86_64.rpm
 无需改写元数据。
 
 <span id="被否决的方案" data-td-print-local></span>
+<span id="其他方案" data-td-print-local></span>
 
-## 其他方案
+## 其他方案 {#rejected-alternatives}
 
 | 方案 | 未采用的原因 |
 |---|---|
@@ -90,21 +95,25 @@ href:    ../../../pool/p/pkg/pkg-1.0-1.x86_64.rpm
 | 绝对 URL 或 `xml:base` | 将元数据绑定到一个站点，搬迁时需要修改 |
 | CDN 改写或重定向对象 | 仓库依赖额外的路由配置 |
 | 工作区或桶级共享包池 | 需要跨仓库协调锁、保留与删除 |
+{.wide .expand}
 
 <span id="镜像工具兼容属于导出问题" data-td-print-local></span>
+<span id="为镜像工具导出独立目录" data-td-print-local></span>
 
-## 为镜像工具导出独立目录
+## 为镜像工具导出独立目录 {#mirror-tool-compatibility-is-an-export-concern}
 
 包管理器需要解析元数据引用并下载包体。镜像工具还可能要求所有软件包都位于指定视图目录之下。
 
-需要独立 RPM 架构目录时，运行 `sow export rpm-leaf`。命令在仓库外生成包文件和指向本地文件的元数据。
+需要独立 RPM 架构目录时，运行 `sow export rpm-leaf`。命令在仓库外生成包文件和指向本地文件的元数据；即使所选 RPM Dist 在当前已构建 Generation 中沿用了未变更视图，同样可以直接导出。
 默认复制包体；同一文件系统可使用 `--hardlink`，但导出包必须保持只读，因为写入硬链接也会修改包池文件。
 导出目录不属于 Generation，不是发布源，也不参与成员关系或垃圾回收。
 
 客户端与镜像工具测试见[兼容性参考](/zh/docs/reference/compatibility/)。
 用 [`sow check`](/zh/docs/command/check/) 校验本地路径、摘要和文件引用，用对应客户端测试安装与镜像下载。
 
-## 结果
+<span id="结果" data-td-print-local></span>
+
+## 结果 {#consequences}
 
 - 包身份、成员关系、Generation、保留与本地 GC 都在仓库内管理。
 - 发布尝试、检查点、远端清单、宽限期与删除记录按目标前缀管理。

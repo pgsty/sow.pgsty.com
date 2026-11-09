@@ -8,16 +8,20 @@ categories: [Release]
 tags: [release, managed, signing, publish, migration]
 weight: 1
 url: "/zh/blog/release/sow-v0.4.0/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.4.0
 draft: false
 ---
+
+{{< release-card >}}
 
 SOW 0.4.0 改进了 Managed 仓库的校验与恢复。`check` 只对每个物理软件包计算一次内容哈希；RPM 验签分别判断各组密钥的信任结果；发布目标可通过有记录的重绑定操作修改公共 URL 或缓存时间。
 
 Plain 行为与公共 `pool/`、`dists/` 布局保持不变。本文记录 0.4.0；升级到当前版本请按[安装指南](/zh/docs/start/install/)操作。
 
 <span id="从-03-升级" data-td-print-local></span>
+<span id="从-03-升级到-04" data-td-print-local></span>
 
-## 从 0.3 升级到 0.4
+## 从 0.3 升级到 0.4 {#upgrade-from-03-to-04}
 
 停止工作区写入，备份完整工作区并保留硬链接。安装 0.4.0 后，先迁移每个已配置的 Repository，再继续维护：
 
@@ -37,8 +41,9 @@ Schema v11 修复了 0.3 的状态错误：一个 Dist 仍为 dirty 时，Reposi
 Schema v12 为发布目标增加只追加的绑定历史。初次绑定、迁移回填与后续重绑定都有独立修订记录。
 
 <span id="每个物理包体只做一次真实性认证" data-td-print-local></span>
+<span id="每个物理软件包只计算一次内容哈希" data-td-print-local></span>
 
-## 每个物理软件包只计算一次内容哈希
+## 每个物理软件包只计算一次内容哈希 {#one-content-hash-per-physical-package}
 
 每次 `sow check` 对每个唯一物理软件包执行一次完整内容哈希，包括缓存指纹仍匹配的文件。同一文件的硬链接共用这个结果。校验结果绑定实际读取的文件，SOW 会检测检查期间的替换或修改。
 
@@ -47,8 +52,9 @@ Schema v12 为发布目标增加只追加的绑定历史。初次绑定、迁移
 包缓存只查询本次选中的摘要，并按限定批次读取 SQLite。64 MiB 测试包的重复构建不读取包内容；指纹变化与缓存缺失共用一次校验。
 
 <span id="独立-rpm-信任环" data-td-print-local></span>
+<span id="分别验证-rpm-密钥集合" data-td-print-local></span>
 
-## 分别验证 RPM 密钥集合
+## 分别验证 RPM 密钥集合 {#verify-each-rpm-trust-set-separately}
 
 RPM 签名包在每组候选密钥内独立检查。每个可识别签名包都必须在该组中通过验证，且至少一个通过的签名必须认证软件包载荷。
 
@@ -57,8 +63,9 @@ RPM 签名包在每组候选密钥内独立检查。每个可识别签名包都�
 当前策略密钥、保留的构建快照密钥与组合受信任密钥共用同一次签名读取。增加密钥只改变信任判断，不增加包读取次数。
 
 <span id="安全重绑定目标与公共验证" data-td-print-local></span>
+<span id="修改发布目标设置" data-td-print-local></span>
 
-## 修改发布目标设置
+## 修改发布目标设置 {#update-publication-target-settings}
 
 使用 `sow publish TARGET --rebind` 修改目标的可变配置，同时保留存储身份与恢复状态：
 
@@ -71,8 +78,9 @@ RPM 签名包在每组候选密钥内独立检查。每个可识别签名包都�
 普通发布会报告配置变化，并提示使用 `--rebind`。重绑定取得发布锁、记录修订，也可继续执行已作出提交决定但被中断的发布。清理未完成时，TTL 与 filesystem 公共 URL 的变更受到限制。此前记录的缓存截止时间继续生效。
 
 <span id="恢复cli-与实现收敛" data-td-print-local></span>
+<span id="检查公共文件与恢复上传" data-td-print-local></span>
 
-## 检查公共文件与恢复上传
+## 检查公共文件与恢复上传 {#check-public-files-and-recover-interrupted-uploads}
 
 Filesystem 与 R2 的 HTTP(S) 检查分别限制等待响应头和响应体停止传输的时间。只要持续接收数据，大文件传输可以超过两分钟。
 
@@ -85,7 +93,9 @@ SOW 检查普通客户端 URL。过期内容与 404 最多等待 `max_cache_ttl`
 - 每次发布只检查发生变化的公共对象，不再下载完整构建快照。
 - R2 使用可重试读写、空闲超时与限制并行数的条件式分段上传，完成上传前检查整对象 SHA-256。
 
-## CLI 与维护修复
+<span id="cli-与维护修复" data-td-print-local></span>
+
+## CLI 与维护修复 {#cli-and-maintenance-fixes}
 
 - 重复执行 `sow add` 时，即使包已在包池中，也会构建此前因 `--skip` 或配置变化而处于 dirty 状态的所选 Dist。
 - `sow rm --check` 使用与删除相同的配置检查，并返回只读预览。
@@ -94,8 +104,9 @@ SOW 检查普通客户端 URL。过期内容与 404 最多等待 `max_cache_ttl`
 - 移除已退役的 APT 构建器、外部排序、空 Dist 与 Git 跟踪的 by-hash 实现。
 
 <span id="验证与制品" data-td-print-local></span>
+<span id="构建与发布检查" data-td-print-local></span>
 
-## 构建与发布检查
+## 构建与发布检查 {#build-and-release-checks}
 
 本版使用 Go 1.27.0，0.3 使用 Go 1.26.5。AWS SDK、SQLite、压缩与密码学依赖同步更新。构建检查固定使用 staticcheck v0.8.1、deadcode v0.49.0 与 govulncheck v1.7.0。
 
@@ -104,8 +115,9 @@ SOW 检查普通客户端 URL。过期内容与 404 最多等待 `max_cache_ttl`
 本版包含四个 Linux/macOS 归档、两个 RPM、两个 DEB 与 `SHA256SUMS`。归档包含 `sow`、`README.md`、`CHANGELOG.md` 与 `LICENSE`。Linux 软件包随可执行文件安装协议文件。
 
 <span id="获取发布版本" data-td-print-local></span>
+<span id="获取-040" data-td-print-local></span>
 
-## 获取 0.4.0
+## 获取 0.4.0 {#get-version-040}
 
 从 [v0.4.0 GitHub Release](https://github.com/pgsty/sow/releases/tag/v0.4.0) 获取该版本制品与校验清单。安装后执行 `sow version`；0.3 工作区按上文迁移。
 

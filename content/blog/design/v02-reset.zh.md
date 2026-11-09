@@ -2,7 +2,7 @@
 title: "v0.2 重置：用 Plain 与 Managed 取代万能控制面"
 linkTitle: "v0.2 Plain/Managed 重置"
 date: 2026-07-31
-lastmod: 2026-10-17
+lastmod: 2026-11-09
 authors: [Vonng]
 description: "SOW 如何用 Plain 与 Managed 两条执行路径、明确所有权和 SQLite 状态，替换 v0.1 的 Git/CAS/Edge 平台。"
 categories: [Design]
@@ -22,7 +22,9 @@ draft: false
 开发设计最初在 RPM 视图内使用 C2 硬链接，随后在 8 月 8 日发布 v0.2.0 前被替换。
 部分归档计划曾把 C2 构建称为“v0.2.0”，但正式标签已经采用单一包池与纯元数据视图。
 
-## 为什么不在 V1 上逐步删功能
+<span id="为什么不在-v1-上逐步删功能" data-td-print-local></span>
+
+## 为什么不在 V1 上逐步删功能 {#why-reset-instead-of-incrementally-simplifying-v1}
 
 v0.1 把五类任务耦合在一起：
 
@@ -47,9 +49,13 @@ V1 已经为上游同步和渠道晋级积累了流式处理、模糊测试与�
 再由 SOW 负责接纳、成员关系、构建与发布。
 发布、保留、垃圾回收和外部导出后来在 v0.2.0 正式标签前回归，并遵循更小的仓库所有权模型。
 
-## 两条隔离的执行路径
+<span id="两条隔离的执行路径" data-td-print-local></span>
 
-### Plain：重建调用者拥有的目录
+## 两条隔离的执行路径 {#two-isolated-execution-modes}
+
+<span id="plain重建调用者拥有的目录" data-td-print-local></span>
+
+### Plain：重建调用者拥有的目录 {#plain-rebuild-what-the-caller-owns}
 
 Plain 模式处理调用者拥有的 RPM 或 DEB 目录：
 
@@ -61,9 +67,11 @@ sow create /srv/repo
 Plain 负责生成的元数据，不维护工作区、仓库数据库、Generation（构建快照）历史或长期成员关系。
 
 期望状态就是当前目录中的包，因此中断后重新运行构建即可恢复。
-后续版本进一步简化了这条路径，移除了 Plain 日志与重复包体读取。
+后续版本进一步简化了这条路径，移除了 Plain 日志与重复包体读取；`v0.7.0` 又在同一目录所有权与重跑恢复模型下加入了无状态最高 EVR 保留命令 `sow prune`。
 
-### Managed：拥有生命周期与历史
+<span id="managed拥有生命周期与历史" data-td-print-local></span>
+
+### Managed：拥有生命周期与历史 {#managed-own-lifecycle-and-history}
 
 Managed 模式引入包含多个独立仓库的工作区：
 
@@ -82,7 +90,9 @@ Workspace
 Dist 是具名的 RPM 或 DEB 包成员集合。架构视图是成员集合的投影。
 架构无关包（`noarch` / `all`）会进入每个适用架构，而逻辑成员关系只有一份。
 
-## 哪些决定替换了 V1 概念
+<span id="哪些决定替换了-v1-概念" data-td-print-local></span>
+
+## 哪些决定替换了 V1 概念 {#decisions-that-replaced-v1-concepts}
 
 | V1 概念 | v0.2 替代项 |
 |---|---|
@@ -93,10 +103,13 @@ Dist 是具名的 RPM 或 DEB 包成员集合。架构视图是成员集合的�
 | 隐式旧拓扑 | 严格的 `sow.yml`、显式名称与选择器 |
 | 跨产品发布流程 | 仓库构建与目标发布分离 |
 | 直接复用 V1 模块 | 只移植解析、生成、版本比较和签名等独立组件 |
+{.wide .expand}
 
 简化后，不借助 Git 或边缘路由器，也能解释私有控制状态与公共仓库内容。
 
-## Desired 与 Built
+<span id="desired-与-built" data-td-print-local></span>
+
+## Desired 与 Built {#desired-versus-built}
 
 Managed 模式明确记录中断状态：
 
@@ -108,7 +121,9 @@ Managed 模式明确记录中断状态：
 操作日志记录未完成的工作，状态查询显示 Desired 与 Built 的差异。
 恢复过程根据记录的操作阶段决定还需要完成哪些步骤。
 
-## P0 到 P3
+<span id="p0-到-p3" data-td-print-local></span>
+
+## P0 到 P3 {#p0-through-p3}
 
 实现按依赖顺序推进：
 
@@ -118,10 +133,13 @@ Managed 模式明确记录中断状态：
 | P1 | 工作区、仓库与 Dist 生命周期，严格配置，包身份、成员关系与查询 |
 | P2 | 添加、移除、策略与构建操作，日志、崩溃恢复与安全修改 |
 | P3 | 检查、变更集、交付、规模、兼容性与发布验证 |
+{.wide .expand}
 
 每个阶段都有 API 契约、实现规格、对抗评审与验收记录。
 
-## C2 Hardlink 绕路
+<span id="c2-hardlink-绕路" data-td-print-local></span>
+
+## C2 Hardlink 绕路 {#the-c2-hardlink-detour}
 
 最初的 Managed RPM 布局在根包池保存包文件原件，并在每个架构视图下创建硬链接。
 元数据使用本地 `pool/...` 路径。
@@ -150,7 +168,9 @@ Managed 模式明确记录中断状态：
 默认 EL `reposync` 因而成为已知兼容性限制，独立 RPM 叶目录改为显式外部导出。
 完整理由见[单包体仓库](/zh/blog/design/single-payload/)。
 
-## 重置复用了什么
+<span id="重置复用了什么" data-td-print-local></span>
+
+## 重置复用了什么 {#what-the-reset-reused}
 
 重置保留了不依赖 V1 所有权模型的独立组件：
 
@@ -163,7 +183,9 @@ Managed 模式明确记录中断状态：
 Git 状态、Route 回执、边缘组件、旧迁移机制与云控制面只作为参考或待移除代码，
 不再是新核心的依赖。
 
-## 从验收到发布 {#release-证据边界}
+<span id="release-证据边界" data-td-print-local></span>
+
+## 从验收到发布 {#release-evidence-boundary}
 
 开发线在 8 月 1 日记录 P0/P1 验收，8 月 2 日记录 P1–P3 验收，8 月 5 日运行本地发布检查。
 单包体实现、打包和 CI 修正进入后，最终 v0.2.0 源码于 8 月 8 日打标签。
@@ -171,7 +193,9 @@ Git 状态、Route 回执、边缘组件、旧迁移机制与云控制面只作�
 正式版本还交付了文件系统与 R2 发布、Generation 保留、外部 RPM 叶目录导出和本地垃圾回收。
 R2 远端删除从一开始就被禁用，针对 R2 的 GC 只报告候选对象。
 
-## 哪些东西仍在定义 SOW
+<span id="哪些东西仍在定义-sow" data-td-print-local></span>
+
+## 哪些东西仍在定义 SOW {#what-still-defines-sow}
 
 - Plain 与 Managed 是隔离模式，恢复成本不同。
 - 工作区负责配置与发现，仓库负责包与历史。
@@ -184,7 +208,9 @@ R2 远端删除从一开始就被禁用，针对 R2 的 GC 只报告候选对象
 当前形态见[上手文档](/zh/docs/start/)、[系统模型](/zh/blog/design/model/)与
 [设计原则](/zh/blog/design/principles/)。
 
-## 第一手设计快照
+<span id="第一手设计快照" data-td-print-local></span>
+
+## 第一手设计快照 {#primary-source-snapshots}
 
 - [v0.2 开发设计快照](https://github.com/pgsty/sow/tree/1e7eb5493cc349372fa40c2f8e6e44d8ddb7801b/design/v0.2)：
   产品需求、API、C2 架构、评审与本地验收。
@@ -193,4 +219,4 @@ R2 远端删除从一开始就被禁用，针对 R2 的 GC 只报告候选对象
 - [v0.2.0 发布注记](/zh/blog/release/sow-docs-launch/)与
   [v0.2.0 源码标签](https://github.com/pgsty/sow/tree/v0.2.0)：正式发布内容。
 
-后续 v0.3 到 v0.6 的改进见[设计演进](/zh/blog/design/evolution/)。
+后续 v0.3 到 v0.7 的改进见[设计演进](/zh/blog/design/evolution/)。

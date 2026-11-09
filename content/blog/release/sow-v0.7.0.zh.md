@@ -9,15 +9,20 @@ categories: [Release]
 tags: [release, signing, rpm, recovery]
 weight: -40
 url: "/zh/blog/release/sow-v0.7.0/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.7.0
 ---
 
-SOW 0.7.0 新增 **平面 RPM 仓库裁剪** 与统一的 **口令文件签名接口** ，并修复发布审核中发现的迁移、恢复、发布、RPM 验签与版本排序缺陷。
+{{< release-card >}}
+
+SOW 0.7.0 新增 **平面 RPM 仓库裁剪** 与统一的 **口令文件签名接口**，并修复发布审核中发现的迁移、恢复、发布、RPM 验签与版本排序缺陷。
 
 **发布状态：** SOW 0.7.0 已正式发布，可从 [GitHub](https://github.com/pgsty/sow/releases/tag/v0.7.0) 或[下载页](/zh/download/)获取。
 
-本说明覆盖 **0.6.1** 以来的变化。数据库 schema **v13** 、配置 schema **sow/v3** 与公开仓库布局保持不变，0.5.0 至 0.6.1 的工作区无需迁移数据库。
+本说明覆盖 **0.6.1** 以来的变化。数据库 schema **v13**、配置 schema **sow/v3** 与公开仓库布局保持不变，0.5.0 至 0.6.1 的工作区无需迁移数据库。
 
-## 裁剪旧版 RPM
+<span id="裁剪旧版-rpm" data-td-print-local></span>
+
+## 裁剪旧版 RPM {#prune-old-rpm-versions}
 
 `sow prune DIR` 为每组包名与架构保留最高的 Epoch/Version/Release，先发布过滤后的索引，再删除旧版 RPM。
 
@@ -35,7 +40,9 @@ Prune 面向本地发布源中顶层的普通二进制 RPM 文件。它拒绝托
 
 详见 [prune 命令参考](/zh/docs/command/prune/)。
 
-## 用口令文件签名
+<span id="用口令文件签名" data-td-print-local></span>
+
+## 用口令文件签名 {#sign-with-password-files}
 
 通过 `--passfile PATH`、`SOW_GPG_PASSFILE` 或 `sow.yml` 中每个密钥的 `passfile`，为受保护的 RPM 包签名密钥及 RPM/APT 元数据密钥提供口令，包括 GPG agent 密钥。
 
@@ -49,7 +56,9 @@ sow create ./packages --sign-with 0123456789ABCDEF --passfile /run/secrets/gpg-p
 
 各命令的支持范围及外部 GPG 要求见[口令文件契约](/zh/docs/reference/config/#passfile)。
 
-## RPM 兼容性
+<span id="rpm-兼容性" data-td-print-local></span>
+
+## RPM 兼容性 {#rpm-compatibility}
 
 - **ECDSA 与 EdDSA 签名：** 接受现代 RPM 写入 tag 267（`RPMSIGTAG_DSA`）的这两种头部签名，真实 Ed25519 与 ECDSA 签名包现在可通过验证；错误放入该标签的 RSA 签名仍会被拒绝。
 - **Caret 排序：** 修正 Version 与 Release 比较，使 `2.0^20250611` 这样的快照排在 `2.0.1` 之前，托管仓库的版本上限策略也会保留较新的正式版本。
@@ -58,7 +67,9 @@ sow create ./packages --sign-with 0123456789ABCDEF --passfile /run/secrets/gpg-p
 
 如果客户端需要额外元数据，请继续用相应的生成工具维护。重建后应重新生成外部 `repomd.xml.asc` 签名。
 
-## 托管仓库与恢复
+<span id="托管仓库与恢复" data-td-print-local></span>
+
+## 托管仓库与恢复 {#managed-repositories-and-recovery}
 
 - **迁移后的仓库保持可写。** 已完成的 C2 迁移固定引用迁移时创建的 Generation，后续构建不再使 `check`、`build`、`add` 或 `gc` 拒绝该迁移锚点；`repo rm` 也不再把已完成迁移误判为活动转换。受影响的仓库升级后即可恢复，无需手工修复数据库。
 - **保护全部已发布指针。** 撤下保护检查现在覆盖已发布 Generation 的全部指针，包括最近一次发布未改变的视图。只要配置中的目标仍在发布某个 Dist、架构或签名伴生文件，就会拒绝移除它。应先停用该目标绑定，或使用新的目标名称和前缀发布。旧的公开文件会保留，需单独清理，普通发布不会自动撤下它们。
@@ -67,7 +78,9 @@ sow create ./packages --sign-with 0123456789ABCDEF --passfile /run/secrets/gpg-p
 - **导出未重建的 Dist。** 后续 Generation 未重建、但仍为 clean 的 Dist 可执行 `export rpm-leaf`，签名和不签名两种情况均可。
 - **容忍时钟回拨。** 中断恢复通过唯一活动操作的 ID 识别任务，不再按墙上时间排序选择操作。
 
-## 依赖与发布检查
+<span id="依赖与发布检查" data-td-print-local></span>
+
+## 依赖与发布检查 {#dependencies-and-release-checks}
 
 | 组件 | 0.6.1 | 0.7.0 |
 |---|---|---|
@@ -77,12 +90,15 @@ sow create ./packages --sign-with 0123456789ABCDEF --passfile /run/secrets/gpg-p
 | Debian 包解析器 | 0.21.1 | 0.21.3 |
 | YAML | `go.yaml.in/yaml/v3` 3.0.5 | `go.yaml.in/yaml/v4` 4.0.0 |
 | GoReleaser | 2.18.3 | 2.20.0 |
+{.wide .expand}
 
-构建基线仍为 Go **1.27.3** 。YAML 保留严格的单文档校验与规范化配置输出；受限的本地 RPM 解析器补丁及第三方许可声明随依赖变更更新。
+构建基线仍为 Go **1.27.3**。YAML 保留严格的单文档校验与规范化配置输出；受限的本地 RPM 解析器补丁及第三方许可声明随依赖变更更新。
 
 Integration 新增 **EL8、EL9、EL10** 受保护密钥签名的必跑测试。EL8 检测 `rpmsign --rpmv3` 能力，只跳过工具不支持的重复签名场景。发布门禁覆盖单元和竞态测试、APT/DNF 客户端、S3 兼容发布、静态分析、漏洞可达性、可复现的干净源码构建，以及归档、RPM、DEB 内容检查。本次审核未运行可选的托管 R2 live 测试；macOS amd64 已交叉编译，但未在 arm64 审核主机上执行。
 
-## 升级
+<span id="升级" data-td-print-local></span>
+
+## 升级 {#upgrade}
 
 停止写入任务，以保留硬链接的方式备份完整工作区，安装 0.7.0，再对每个配置中的仓库执行：
 
@@ -96,4 +112,6 @@ sow check -r REPOSITORY -C /srv/sow
 
 含有 `passfile` 的配置不能由 0.6.1 或更早版本读取，降级前应删除这些字段。口令文件不允许符号链接的限制保持不变，RPM v6 仍不受支持。
 
-本版本生成 Linux 与 macOS 的 `amd64`、`arm64` 归档、两个 RPM、两个 DEB，以及 `SHA256SUMS`。详见[安装与升级说明](/zh/docs/start/install/#升级到-070)和 [0.6.1 以来的完整差异](https://github.com/pgsty/sow/compare/v0.6.1...v0.7.0)。
+本版本生成 Linux 与 macOS 的 `amd64`、`arm64` 归档、两个 RPM、两个 DEB，以及 `SHA256SUMS`。详见[安装与升级说明](/zh/docs/start/install/#upgrade-to-070)和 [0.6.1 以来的完整差异](https://github.com/pgsty/sow/compare/v0.6.1...v0.7.0)。
+
+{{< release-assets src="release/sow-checksums.txt" group="auto" >}}{{< /release-assets >}}

@@ -9,7 +9,10 @@ categories: [Release]
 tags: [release, plain, managed, recovery, signing, performance]
 weight: -20
 url: "/blog/release/sow-v0.6.0/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.6.0
 ---
+
+{{< release-card >}}
 
 SOW 0.6.0 improves repository updates, file verification, and recovery after an interruption.
 It keeps the current command set, configuration format, and public repository layout.
@@ -24,8 +27,8 @@ and the [download page](/download/) for release availability.
 |---|---|---|
 | Plain RPM updates | Keep current and immediately previous checksum-named metadata | Clients can finish fetching metadata referenced by the previous index |
 | Managed builds | Record one publication time for metadata and signatures | Recovery preserves the original time; unchanged builds keep their existing output |
-| File verification | Check file identity throughout authenticated reads | Replaced or rewritten files are detected, including rewrites that restore the modification time |
-| Signing keys | Read complete OpenPGP key bundles | All supplied trusted keys are considered; malformed input is rejected |
+| File verification | Check file identity throughout authenticated reads | SOW detects replaced or rewritten files, including rewrites that restore the modification time |
+| Signing keys | Read complete OpenPGP key bundles | SOW checks all supplied trusted keys and rejects malformed input |
 | State and recovery | Preserve locks, consistent reads, and committed results | Maintenance errors do not make completed changes appear to have rolled back |
 | Large repositories | Reuse verified data and limit parallel work | Builds, imports, checks, and publication avoid repeated work |
 {.wide .expand}
@@ -36,7 +39,7 @@ A client first downloads `repomd.xml`, then requests the metadata files named in
 An update between those requests could previously remove the old metadata files before the client fetched them.
 
 Plain `sow create` now keeps the current and immediately previous checksum-named RPM metadata sets.
-An unchanged run does not advance this window. Older metadata can be removed after the next changed index.
+An unchanged run does not advance this window. SOW can remove older metadata after the next changed index.
 
 The small `.sow-plain-rpm-history.json` file records the retained references.
 Keep it when copying a directory for further builds. It is not an operation journal; interrupted Plain builds still recover by rerunning `create`.

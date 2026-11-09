@@ -2,7 +2,7 @@
 title: "System Model"
 linkTitle: "System Model"
 date: 2026-08-08
-lastmod: 2026-10-13
+lastmod: 2026-11-09
 authors: [Vonng]
 description: "The objects and state transitions that connect packages, distributions, generations, and publication targets."
 categories: [Design]
@@ -17,7 +17,7 @@ draft: false
 
 SOW uses configuration for repository settings, SQLite for managed state, and a public
 directory for client access. The model separates the packages you select from the files
-that have been built and published.
+that SOW builds and publishes.
 
 <span id="object-hierarchy" data-td-print-local></span>
 
@@ -88,8 +88,9 @@ package input
     -> applied checkpoint
 ```
 
-Managed operations record their progress in transactions and journals. Recovery uses these
-records to finish or roll back the interrupted step.
+Managed operations record their progress in transactions and journals. SOW selects an
+active repository mutation by its pending state rather than wall-clock timestamp order, and
+recovery uses these records to finish or roll back the interrupted step.
 
 <span id="public-and-private-state" data-td-print-local></span>
 
@@ -100,6 +101,7 @@ records to finish or roll back the interrupted step.
 | `<repo>/pool/` | `sow.yml` |
 | `<repo>/dists/` | `.sow/` databases and journals |
 | Generated indexes and signatures | Locks, staging, and recovery files |
+{.wide .expand}
 
 A copy of the public tree can serve packages. To continue managing that Repository, keep
 the matching private workspace too. A public copy alone has no membership, retention,

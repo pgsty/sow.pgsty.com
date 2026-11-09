@@ -22,8 +22,8 @@ migration.
 The guiding phrase was **“Git for artifact repositories.”** Package distribution has
 immutable content, mutable names, history, promotion, publication, and rollback. The
 analogy helped describe those needs, but it also expanded the scope of the product.
-The Git/CAS/Route/Edge model was later retired; the current model is described in
-[System Model](/blog/design/model/).
+SOW later retired the Git/CAS/Route/Edge model; [System Model](/blog/design/model/)
+describes the current model.
 
 ## The problem the first design tried to solve
 
@@ -164,6 +164,7 @@ publication without also becoming a universal mirror orchestrator.
 | Generated server config is derived state | The complete Repository root is the hosting unit; serving remains explicit operator configuration |
 | Compatibility is a matrix | [Platforms & Integrations](/docs/reference/compatibility/) |
 | Historical evidence never upgrades itself | Dated Design and Release records |
+{.wide .expand}
 
 ## What was retired
 
@@ -190,6 +191,7 @@ repositories and their publication. Package acquisition and serving remain exter
 | 2026-07-22–29 | Path-identity, hostile-writer, quarantine, and residue-recovery hardening |
 | 2026-07-30–31 | Clean-room MVP evidence and v0.1.0 source seal |
 | 2026-08-01 onward | Plain/Managed reset and eventual retirement of the V1 runtime |
+{.wide .expand}
 
 ## Primary sources and next records
 

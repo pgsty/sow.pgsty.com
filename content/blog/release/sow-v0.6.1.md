@@ -9,7 +9,10 @@ categories: [Release]
 tags: [release, maintenance, dependencies]
 weight: -30
 url: "/blog/release/sow-v0.6.1/"
+release_url: https://github.com/pgsty/sow/releases/tag/v0.6.1
 ---
+
+{{< release-card >}}
 
 SOW 0.6.1 is a maintenance release with updated dependencies and clearer error messages.
 It keeps the CLI, database schema **v13**, configuration **sow/v3**, and public repository layout.
@@ -20,7 +23,7 @@ Get the packages and archives from the [download page](/download/), with checksu
 
 ## Toolchain and dependencies
 
-Source builds now require **Go 1.27.3 or newer**. All release binaries were built with Go 1.27.3.
+Source builds now require **Go 1.27.3 or newer**. All release binaries use Go 1.27.3.
 The release updates the libraries used for encryption, S3 access, compression, SQLite, and Debian package parsing.
 
 | Dependency | Version |
@@ -32,6 +35,7 @@ The release updates the libraries used for encryption, S3 access, compression, S
 | pault.ag/go/debian | 0.21.1 |
 | go.yaml.in/yaml/v3 | 3.0.5 |
 | golang.org/x/crypto / x/sys | 0.58.0 / 0.49.0 |
+{.wide .expand}
 
 YAML parsing moves to the module maintained by the YAML organization. Existing `sow.yml` files use the same format.
 The RPM parser retains its existing local security patches.
@@ -41,9 +45,9 @@ Updated third-party notices ship with every archive and Linux package.
 
 - Invalid paths and OpenPGP armor now produce useful diagnostics instead of `%!w(<nil>)`.
   The fixes cover log export, RPM metadata generation, signature validation, and workspace checks.
-  The same invalid inputs remain rejected.
+  SOW still rejects the same invalid inputs.
 - CI snapshot packages read their version from the Makefile, removing a hard-coded version.
-  Release tools and GitHub Actions are updated, including GoReleaser 2.18.3, deadcode 0.52.0, and govulncheck 1.9.0.
+  This release updates release tools and GitHub Actions, including GoReleaser 2.18.3, deadcode 0.52.0, and govulncheck 1.9.0.
 
 ## Upgrade
 
@@ -68,7 +72,7 @@ Source analysis and a control build with symbols found no affected symbols or im
 [GO-2026-5932](https://pkg.go.dev/vuln/GO-2026-5932) concerns the unused legacy `golang.org/x/crypto/openpgp` package.
 SOW uses the maintained ProtonMail fork; the legacy package is absent from all four release-target import graphs.
 
-Release binaries have their symbol tables removed. For these binaries, `govulncheck -mode=binary` falls back to module-level precision and reports that notice.
+The release build strips symbol tables from the release binaries. For these binaries, `govulncheck -mode=binary` falls back to module-level precision and reports that notice.
 This explains why its binary scan differs from the source scan.
 
 The release includes Linux and macOS archives for `amd64` and `arm64`, two RPMs, two DEBs, and `SHA256SUMS`.
