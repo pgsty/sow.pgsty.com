@@ -52,7 +52,7 @@ languages:
               description: Build and serve a repository in five steps
               url: /docs/start/quickstart/
               icon: fa-solid fa-bolt
-              keywords: [start, create, plain, repository]
+              keywords: [start, create, prune, plain, repository]
             - id: cli_reference
               title: CLI Reference
               description: Look up every SOW command and option
@@ -154,7 +154,7 @@ languages:
               title: 快速上手
               description: 五步构建并对外服务软件仓库
               icon: fa-solid fa-bolt
-              keywords: [上手, 创建, 平面仓库, 软件源]
+              keywords: [上手, 创建, 裁剪, 平面仓库, 软件源]
             - id: cli_reference
               title: CLI 命令参考
               description: 查询每一条 SOW 命令与参数
@@ -293,7 +293,7 @@ markup:
 # Outputs
 #=======================================#
 outputs:
-  home: [HTML, RSS, markdown, LLMS]
+  home: [HTML, RSS, markdown, LLMS, NAVJSON]
   page: [HTML, markdown]
   section: [HTML, RSS, print, markdown]
 
@@ -362,6 +362,7 @@ params:
 
   ui:
     compare: true
+    lastmod_commit: hash
     preset: paper
     preset_menu: [paper, slate, ink, terminal]
     # OINK applies the shared shell to product-specific content types.

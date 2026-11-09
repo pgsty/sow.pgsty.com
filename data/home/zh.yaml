@@ -51,15 +51,16 @@ capabilities:
       motto: 直接把装有软件包的目录交给 SOW
       bullets:
         - '`sow create` 就地索引目录顶层的 RPM 与 DEB 文件'
-        - 生成 rpm-md 元数据与 APT Packages 索引
+        - '`sow prune` 裁剪被取代的旧版 RPM 并更新 `repodata/`'
         - 更新后保留当前与上一轮 RPM 元数据
       value: 用静态 HTTP 服务器提供生成后的目录。
       visual:
         type: code
-        aria_label: 创建平面 RPM 与 DEB 仓库
+        aria_label: 创建并裁剪平面 RPM 与 DEB 仓库
         title: create.sh
         lines:
           - { class: p, prefix: '$ ', text: 'sow create /srv/repo --jobs 8' }
+          - { class: p, prefix: '$ ', text: 'sow prune /srv/repo --dry-run' }
           - { class: p, prefix: '$ ', text: 'python3 -m http.server 8080 --bind 127.0.0.1 --directory /srv/repo' }
     - ref: 02 / 托管模式
       title: 一份包体，多个托管视图
@@ -125,7 +126,7 @@ principles:
   items:
     - icon: fa-solid fa-rotate
       title: 重建本地索引
-      desc: Plain 模式每次读取目录。添加或删除软件包文件后，再运行 `sow create`。
+      desc: Plain 模式每次读取目录。添加软件包后运行 `sow create`，需要裁剪旧版 RPM 时运行 `sow prune`。
     - icon: fa-solid fa-list-check
       title: 查看构建状态
       desc: Managed 模式记录软件包选择与已完成的构建。运行 `sow status` 查看是否需要构建。

@@ -54,15 +54,16 @@ capabilities:
       motto: Point SOW at a directory of packages
       bullets:
         - '`sow create` indexes top-level RPM and DEB files in place'
-        - Produces rpm-md metadata and APT Packages indexes
+        - '`sow prune` removes superseded RPM versions and updates `repodata/`'
         - Keeps current and previous RPM metadata after updates
       value: Serve the resulting directory with a static HTTP server.
       visual:
         type: code
-        aria_label: Create a flat RPM and DEB repository
+        aria_label: Create and prune a flat RPM and DEB repository
         title: create.sh
         lines:
           - { class: p, prefix: '$ ', text: 'sow create /srv/repo --jobs 8' }
+          - { class: p, prefix: '$ ', text: 'sow prune /srv/repo --dry-run' }
           - { class: p, prefix: '$ ', text: 'python3 -m http.server 8080 --bind 127.0.0.1 --directory /srv/repo' }
     - ref: 02 / MANAGED
       title: One pool, many views
@@ -128,13 +129,13 @@ principles:
   items:
     - icon: fa-solid fa-rotate
       title: Rebuild local indexes
-      desc: Plain mode reads the directory each time. Run `sow create` again after adding or removing package files.
+      desc: Plain mode reads the directory each time. Run `sow create` after adding packages, or `sow prune` to remove old RPM versions.
     - icon: fa-solid fa-list-check
       title: Inspect the current build
-      desc: Managed mode records package selections and completed builds. Use `sow status` to see whether a build is needed.
+      desc: Managed mode records package selections and completed builds. Run `sow status` to check whether a build is needed.
     - icon: fa-solid fa-shield-halved
       title: Check before publication
-      desc: Run `sow check` to validate a Managed repository. Use `sow publish TARGET` to update a configured target.
+      desc: Run `sow check` to validate a Managed repository. Run `sow publish TARGET` to update a configured target.
 
 faq:
   eyebrow: Common questions
@@ -157,7 +158,7 @@ faq:
     - question: Does SOW need a daemon or database service?
       answer: |
         No. SOW runs as a command and generates static files. Managed mode uses a local SQLite database. Serve the Repository root, which contains `pool/` and `dists/`, with a static HTTP server.
-    - question: Where can a Managed repository be published?
+    - question: Where can I publish a Managed repository?
       answer: |
         Publish to a local or mounted [filesystem, or Cloudflare R2](/docs/command/publish/). Each target records its own checkpoint. `sow publish` uses that checkpoint to select the files for the next update.
 

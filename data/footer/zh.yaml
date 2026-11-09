@@ -28,5 +28,5 @@ columns:
       - { label: 软件仓库, url: 'https://pigsty.cc/docs/repo/', external: true }
       - { label: "PIG", url: "https://pig.pgsty.com/zh/", external: true }
       - { label: "PGEXT.CLOUD", url: "https://pgext.cloud/", external: true }
-      - { label: "PG 中文文档", url: "https://pgsql.cc/docs/", external: true }
       - { label: "PG 知识图谱", url: "https://pg.center/docs/reference/", external: true }
+      - { label: "PG 中文文档", url: "https://pgsql.cc/docs/", external: true }
