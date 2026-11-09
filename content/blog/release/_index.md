@@ -22,7 +22,7 @@ cascade:
 
 Read the changes and upgrade steps for each SOW release, with the newest version first.
 
-[SOW 0.7.0](/blog/release/sow-v0.7.0/) adds flat RPM pruning and password-file signing, fixes migration and recovery defects, and updates dependencies. It is currently in draft preparation; public downloads remain at 0.6.1. Workspaces on 0.5.0 through 0.6.1 need no schema migration. See the [0.7.0 upgrade guide](/docs/start/install/#upgrade-to-070).
+[SOW 0.7.0](/blog/release/sow-v0.7.0/) adds flat RPM pruning and password-file signing, fixes migration and recovery defects, and updates dependencies. Workspaces on 0.5.0 through 0.6.1 need no schema migration. See the [0.7.0 upgrade guide](/docs/start/install/#upgrade-to-070).
 
 [SOW 0.6.1](/blog/release/sow-v0.6.1/) updates Go to 1.27.3, refreshes dependencies, and improves invalid-input diagnostics.
 Workspaces already on 0.5.0 or 0.6.0 need no schema migration. See the [upgrade guide](/docs/start/install/#upgrade-to-061).
