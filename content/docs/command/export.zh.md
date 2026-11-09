@@ -45,11 +45,9 @@ exported RPM leaf el9/x86_64 generation=00000000000000000012 method=copy package
 - 导出清单；
 - `.sow-export.json` 来源记录。
 
-源仓库必须为 clean，有已完成的构建快照，且没有未完成的操作。所选 RPM 视图必须属于当前构建快照。导出物独立于工作区，不会阻止 GC 回收源仓库中的包。
+源仓库必须为 clean，有已完成的构建快照，且没有未完成的操作。所选 RPM 视图必须在当前构建快照中可用。导出物独立于工作区，不会阻止 GC 回收源仓库中的包。
 
-仓库含多个 Dist 时，后续构建可能只更新其他 Dist，而此 RPM Dist 保留旧 Generation。
-无变化的 `build` 不会推进该 Dist。导出前，用 `sow dist show DIST` 与 `sow status` 检查两者编号。
-在一次实际更新构建该 RPM Dist 后导出，或为此流程使用独立的 RPM 仓库。
+从 0.7.0 起，即使后续构建只更新了其他 Dist，原有的 clean RPM Dist 仍可导出。其未变化的视图会沿用到当前构建快照，因此该 Dist 的最后构建 Generation 可以更旧。签名和未签名视图都支持这一行为。导出物记录当前仓库的 Generation，并使用该 Generation 固定的签名身份，无需重新构建未变化的 Dist。
 
 导出失败后，修正报告的问题，再换一个不存在或为空的目录重试。失败的目标目录中可能留有部分文件。
 

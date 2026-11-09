@@ -45,11 +45,9 @@ The destination contains:
 - an export manifest;
 - `.sow-export.json` provenance.
 
-The source Repository must be clean, have a completed Built Generation, and have no unfinished operation. The requested RPM view must belong to that Generation. The export is independent of the Workspace and does not protect source packages from GC.
+The source Repository must be clean, have a completed Built Generation, and have no unfinished operation. The requested RPM view must be available in that Generation. The export is independent of the Workspace and does not protect source packages from GC.
 
-In a Repository with several Dists, a later build can update another Dist while this RPM Dist keeps an older Generation.
-A no-op `build` does not advance that Dist. Check `sow dist show DIST` and `sow status` before exporting.
-Export after an intended update builds the RPM Dist, or use a separate RPM Repository for this workflow.
+Since 0.7.0, a clean RPM Dist can be exported even when a later build updated only another Dist. Its unchanged view is carried into the current Built Generation; its own last-built Generation can be older. This applies to signed and unsigned views. The export records the current Repository Generation and uses that Generation's frozen signing identity. No rebuild of the unchanged Dist is needed.
 
 If export fails, correct the reported cause and retry into a new or empty directory. The failed destination can contain partial files.
 
