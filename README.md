@@ -1,8 +1,8 @@
 # SOW Docs
 
-This repository contains the bilingual docs for **SOW 0.6.1** and explicitly marked
-unreleased changes, including the password-file interface. SOW is the self-contained
-APT / YUM package repository manager by [Pigsty](https://pigsty.io). It uses
+This repository contains the bilingual docs for **SOW 0.7.0**. The 0.7.0 release
+is being prepared as a GitHub draft; public download channels remain pinned to 0.6.1.
+SOW is the self-contained APT / YUM package repository manager by [Pigsty](https://pigsty.io). It uses
 [Hugo](https://gohugo.io/) and the [OINK](https://github.com/pgsty/oink) docs
 theme, with English at `/` and Simplified Chinese at `/zh/`.
 
@@ -127,10 +127,12 @@ Use natural Chinese with the same meaning and sequence.
 - Preserve existing heading anchors when renaming sections. Keep historical release facts tied to their tags.
 - Verify commands, defaults, configuration, and examples against SOW source and `sow help`.
   Use actual output from the matching binary for command transcripts.
-- At release updates, set `params.version` and update the homepage, download notes, and bilingual release notes.
-  Keep `data/download/sow.yaml` at `published: false` while the matching GitHub Release is unavailable.
-  After publication, copy its `SHA256SUMS` to `assets/release/sow-checksums.txt` and restore that channel’s `checksums_src` binding.
-  Check every filename and digest against the release, then set `published: true`. The Pigsty repository is a separate rolling channel.
+- Set `params.version` to the documented version and update the homepage and bilingual release notes.
+  `data/download/sow.yaml` has its own explicit `version`: keep it at the latest public release while the new release is a draft.
+  After publication, advance that download version, update the bilingual download notes and installation examples,
+  and copy the matching `SHA256SUMS` to `assets/release/sow-checksums.txt`. Check every filename and digest before
+  setting `published: true`; a download version without public assets must use `published: false`.
+  Remove the draft notices when the release becomes public. The Pigsty repository is a separate rolling channel.
 - Keep whitespace around strong-emphasis delimiters next to Chinese prose.
   Run `make check` to check Markdown, modules, the production build, and internal links.
 

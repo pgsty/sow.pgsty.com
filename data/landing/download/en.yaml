@@ -3,7 +3,7 @@
 # data/download/sow.yaml, so version-bound commands, links, and asset digests
 # have exactly one source and cannot drift from the artifacts they name.
 #
-# Update the version note and availability text with params.version in hugo.yaml.
+# Update this availability text with the public version in data/download/sow.yaml.
 sections:
   - hero
   # Wrapped in the theme's content scope so the install commands keep the
@@ -36,7 +36,7 @@ hero:
 download:
   eyebrow: Installation
   title: Choose an installation method
-  desc: 'Download SOW 0.6.1 packages and archives below. The Pigsty repository follows its packaged version.'
+  desc: 'SOW 0.7.0 is in draft preparation. Public packages and archives below remain at 0.6.1 until publication. The Pigsty repository follows its packaged version.'
   keys: [sow]
 
 next:

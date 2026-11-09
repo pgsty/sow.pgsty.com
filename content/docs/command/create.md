@@ -20,7 +20,9 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 
 `--passfile PATH` requires `--sign-with`; `SOW_GPG_PASSFILE` supplies a default password-file path but does not enable signing by itself. Use one nonempty UTF-8 line: exactly one final LF or CRLF is removed, with no trimming. Relative paths start at the current directory; no default location is searched. This interface requires SOW 0.7.0 or later; see [Password files](/docs/reference/config/#passfile).
 
-An existing `repomd.xml` is replaced, as with `createrepo_c`. Independent metadata that SOW does not generate, such as groups (`comps`), updateinfo, or modules, is not carried into the new index. From SOW 0.7.0, `create` reports those data types as a warning on standard error and in the JSON `dropped_metadata` result field; alternate package-index encodings (`*_db`, `*_zck`) are not reported. This keeps existing repositories rebuildable, including EL8/9 repositories that Pigsty v4.4 or earlier built with legacy module metadata. If clients still need the dropped records, keep maintaining that repository with the tool that produced them. [`sow prune`](/docs/command/prune/) rejects such an index instead.
+An existing `repomd.xml` is replaced. Independent metadata that SOW does not generate, such as groups (`comps`), updateinfo, or modules, is not carried into the new index. From SOW 0.7.0, `create` reports those data types as a warning on standard error in human output, or in the `dropped_metadata` result field with `--json`; alternate package-index encodings (`*_db`, `*_zck`) are not reported. This keeps existing repositories rebuildable, including EL8/9 repositories that Pigsty v4.4.0 built with legacy module metadata. If clients still need the dropped records, keep maintaining that repository with the tool that produced them. [`sow prune`](/docs/command/prune/) rejects such an index instead.
+
+Type reporting requires a readable, valid prior index within the 16 MiB inspection limit. Create can still replace an oversized or malformed index without listing its data types; prune rejects an oversized prior index.
 
 Use [`sow prune`](/docs/command/prune/) to keep only the latest version per package name and architecture in a flat RPM repository.
 
@@ -84,7 +86,7 @@ created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=true recover
 
 ## Keep the previous RPM indexes
 
-SOW 0.6.1 keeps the checksum-named RPM metadata referenced by the current and immediately previous `repomd.xml`.
+SOW 0.7.0 keeps the checksum-named RPM metadata referenced by the current and immediately previous `repomd.xml`.
 A client that fetched the previous index can still retrieve those metadata files after an update.
 An unchanged run does not advance this retention window.
 
