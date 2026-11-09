@@ -20,11 +20,12 @@ Use these pages for command syntax, selection rules, results, and examples. Run 
 
 ## Command index
 
-`sow create` builds a flat repository directly in a directory. To manage packages in a Workspace, start with `sow init`. All other Managed commands use an existing Workspace. `help` and `version` can run anywhere.
+`sow create` builds a flat repository directly in a directory; `sow prune` removes superseded RPM versions from one. To manage packages in a Workspace, start with `sow init`. All other Managed commands use an existing Workspace. `help` and `version` can run anywhere.
 
 | Command | Mode | Purpose |
 |---|---|---|
 | [`sow create [DIR]`](/docs/command/create/) | Plain | Generate a flat RPM/DEB repository in place |
+| [`sow prune DIR`](/docs/command/prune/) | Plain | Keep the newest RPM per name and architecture |
 | [`sow init [DIR]`](/docs/command/init/) | Managed | Initialize a Workspace and create declared Repositories/Dists |
 | [`sow config check\|show`](/docs/command/config/) | Managed | Validate or print the effective configuration |
 | [`sow repo ls\|new\|show\|migrate\|rm`](/docs/command/repo/) | Managed | Create, inspect, upgrade, or remove Repositories |
@@ -58,7 +59,7 @@ Options apply only to the commands that list them. Use `--` before a positional 
 
 ## Signing passwords {#passfile}
 
-The password-file interface is an unreleased change. Check the installed binary's
+The password-file interface requires SOW 0.7.0 or later. Check the installed binary's
 command help before using it.
 
 Signing and recovery commands accept `--passfile PATH`. The environment variable
@@ -80,7 +81,7 @@ Managed commands find the nearest ancestor containing `sow.yml`:
 `--workdir` changes only the discovery start directory. It does not change the process working
 directory, so relative positional paths still resolve against the actual current directory.
 
-`sow create` never performs Workspace discovery.
+`sow create` and `sow prune` never perform Workspace discovery.
 
 ## Repository selection
 
@@ -113,7 +114,7 @@ Other commands use these defaults:
 
 ## Locking
 
-`create` locks its target directory. Managed mutations coordinate through Workspace and Repository locks. `init` waits for its locks without a CLI timeout option.
+`create` and `prune` lock their target directory. Managed mutations coordinate through Workspace and Repository locks. `init` waits for its locks without a CLI timeout option.
 
 Other write commands accept `-T/--timeout DUR` and `-N/--no-wait`. The default `--timeout 0` waits indefinitely. Positive durations use `ms`, `s`, `m`, or `h`, for example `500ms`, `30s`, or `5m`. `--no-wait` fails immediately if a lock is held. It cannot be combined with a positive timeout. Lock acquisition failure returns `4`.
 
@@ -122,7 +123,7 @@ Most read-only Managed commands use shared locks and wait for a conflicting writ
 ## Parallelism
 
 `-j/--jobs N` is available only where SOW parses packages, hashes bytes, renders indexes, or verifies
-state: `create`, `add`, `rm`, `build`, `check`, and `repo migrate`. It defaults to the logical CPU
+state: `create`, `prune`, `add`, `rm`, `build`, `check`, and `repo migrate`. It defaults to the logical CPU
 count and must be at least `1`.
 
 ## JSON output

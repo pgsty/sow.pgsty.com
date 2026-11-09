@@ -22,11 +22,12 @@ search_boost: 1.5
 
 ## 命令索引
 
-`sow create` 直接在目录中构建平面仓库。需要通过工作区管理软件包时，先运行 `sow init`。其他 Managed 命令使用已有工作区。`help` 与 `version` 可以在任意目录运行。
+`sow create` 直接在目录中构建平面仓库，`sow prune` 从平面 RPM 仓库中清理旧版本。需要通过工作区管理软件包时，先运行 `sow init`。其他 Managed 命令使用已有工作区。`help` 与 `version` 可以在任意目录运行。
 
 | 命令 | 模式 | 用途 |
 |---|---|---|
 | [`sow create [DIR]`](/zh/docs/command/create/) | Plain | 就地生成平面 RPM/DEB 仓库 |
+| [`sow prune DIR`](/zh/docs/command/prune/) | Plain | 按包名和架构保留最新 RPM |
 | [`sow init [DIR]`](/zh/docs/command/init/) | Managed | 初始化工作区并创建已声明的仓库/Dist |
 | [`sow config check\|show`](/zh/docs/command/config/) | Managed | 校验配置或打印有效配置 |
 | [`sow repo ls\|new\|show\|migrate\|rm`](/zh/docs/command/repo/) | Managed | 创建、查看、升级或删除仓库 |
@@ -60,7 +61,7 @@ sow [OPTIONS] COMMAND [ARGS]
 
 ## 签名口令 {#passfile}
 
-口令文件接口属于尚未发布的修改；使用前请查看已安装二进制的命令帮助。
+口令文件接口需要 SOW 0.7.0 或更新版本；使用前请查看已安装二进制的命令帮助。
 
 签名与恢复命令支持 `--passfile PATH`，环境变量 `SOW_GPG_PASSFILE` 提供默认文件路径。
 单个密钥的配置优先于环境变量，命令行覆盖两者。不自动搜索默认文件。
@@ -78,7 +79,7 @@ Managed 命令按以下规则寻找最近的 `sow.yml`：
 4. 仍未发现工作区则退出 `2`。
 
 `--workdir` 只改变发现起点，不会切换进程工作目录；相对位置参数仍相对于真实当前目录解析。
-`sow create` 完全不参与工作区发现。
+`sow create` 与 `sow prune` 完全不参与工作区发现。
 
 ## Repository 选择
 
@@ -111,7 +112,7 @@ Managed 命令按以下规则寻找最近的 `sow.yml`：
 
 ## 锁
 
-`create` 锁定目标目录。Managed 写操作通过工作区锁和仓库锁协调。`init` 会等待锁，不提供命令行超时选项。
+`create` 与 `prune` 锁定目标目录。Managed 写操作通过工作区锁和仓库锁协调。`init` 会等待锁，不提供命令行超时选项。
 
 其他写命令接受 `-T/--timeout DUR` 与 `-N/--no-wait`。默认 `--timeout 0` 表示无限等待。正数时长使用 `ms`、`s`、`m` 或 `h`，例如 `500ms`、`30s`、`5m`。`--no-wait` 在锁被占用时立即失败，不能与正数超时同时使用。无法获取锁时返回 `4`。
 
@@ -119,7 +120,7 @@ Managed 命令按以下规则寻找最近的 `sow.yml`：
 
 ## 并发
 
-只有需要解析软件包、哈希包体、渲染索引或执行校验的命令才接受 `-j/--jobs N`：`create`、
+只有需要解析软件包、哈希包体、渲染索引或执行校验的命令才接受 `-j/--jobs N`：`create`、`prune`、
 `add`、`rm`、`build`、`check` 与 `repo migrate`。默认值是逻辑 CPU 数，且不得小于 `1`。
 
 ## JSON 输出

@@ -1,12 +1,13 @@
 # SOW install channels, consumed by the download landing section and by the
-# `download` shortcode. `version` is deliberately absent so the record follows
-# params.version in hugo.yaml, and `tag` defaults to v{version} -- one place to
-# bump at release time.
+# `download` shortcode. This explicit version is the latest PUBLIC release,
+# independently of the documented source version in hugo.yaml. Keep it pinned
+# while the next release is a draft; `tag` defaults to v{version}.
 #
 # Only pinned channels may interpolate ${version} and ${tag}. The Pigsty
 # repository channel is rolling on purpose: it tracks whatever the infra
 # repository currently serves, which is not necessarily this tag.
 repo: pgsty/sow
+version: 0.6.1
 published: true # Set true only after the matching GitHub Release is public.
 channels:
   - id: pigsty

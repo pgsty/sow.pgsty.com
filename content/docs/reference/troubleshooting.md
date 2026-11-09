@@ -22,7 +22,7 @@ Replace `/srv/sow`, `pgsql`, and the target name `prod` below with your configur
 
 ## The database needs migration
 
-SOW 0.6.1 uses schema v13, as do 0.5.0 and 0.6.0. An upgrade from either version needs no schema migration.
+SOW 0.7.0 uses schema v13, as do 0.5.0 through 0.6.1. An upgrade from these versions needs no schema migration.
 For a 0.3 or 0.4 workspace, stop writers and back up the complete workspace. Then run:
 
 ```bash

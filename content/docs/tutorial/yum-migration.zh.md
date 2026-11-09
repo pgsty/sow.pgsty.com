@@ -10,7 +10,7 @@ icon: fa-solid fa-arrows-rotate
 ---
 
 本指南适用于 RPM 与 `repodata/` 放在同一层目录的平面仓库，例如此前用 `createrepo_c`
-维护的仓库。它使用 Plain `sow create`，不创建 Managed 工作区。以下命令以 **SOW 0.6.1** 为目标版本。
+维护的仓库。它使用 Plain `sow create`，不创建 Managed 工作区。以下命令以 **SOW 0.7.0** 为目标版本。
 
 <span id="1-明确迁移范围" data-td-print-local></span>
 
@@ -23,7 +23,7 @@ SOW="$(command -v sow)"
 "$SOW" version
 ```
 
-确认版本为 0.6.1。
+确认版本为 0.7.0。
 
 | 检查项 | 操作 |
 |---|---|
@@ -75,7 +75,7 @@ gpg --verify /srv/yum.candidate/repodata/repomd.xml.asc \
 
 `--sign-with KEY` 签署未签名 RPM，并保留已有签名，包括供应商签名。要把全部包签名换成自己的密钥，在候选副本中增加 `--overwrite`。这会改变包文件；`create` 根据签名后的结果生成索引。最后一次 `create` 完成后，再生成索引的分离签名。
 
-对于带口令的包签名密钥，尚未发布的开发版新增了 `--passfile PATH` 与
+对于带口令的包签名密钥，SOW 0.7.0 新增了 `--passfile PATH` 与
 `SOW_GPG_PASSFILE`；请先通过所用二进制的 `sow help create` 确认支持情况，
 详见[口令文件](/zh/docs/reference/config/#passfile)。这些设置不会影响上面单独执行的
 `gpg` 命令。无人值守签署元数据时，该命令需要自己的凭据配置，例如在现有 `--batch`
@@ -101,7 +101,7 @@ gpg --verify /srv/yum.candidate/repodata/repomd.xml.asc \
 ## 5. 发布仓库
 
 Plain 会替换多个文件，不提供整个目录的原子切换。发布层需要协调包文件、索引、分离签名以及
-缓存的可见顺序。SOW 0.6.1 保留当前与紧邻上一轮以校验和命名的 RPM 元数据。
+缓存的可见顺序。SOW 0.7.0 保留当前与紧邻上一轮以校验和命名的 RPM 元数据。
 没有变化的运行仍保留同一份上一轮元数据。复制目录后还要继续构建时，一并保留 `.sow-plain-rpm-history.json`。
 如果客户端缓存跨越多轮更新，在发布层继续保留所需的更早元数据与软件包。
 

@@ -237,7 +237,7 @@ SOW reads the complete bundle and rejects malformed or truncated input. It does 
 
 ### Password files {#passfile}
 
-This interface is part of the current development version (Unreleased). Check
+This interface requires SOW 0.7.0 or later. Check
 `sow help create` or `sow help config check` for support in an installed binary.
 
 Use one password-file interface for RPM packages, RPM metadata, and APT metadata,

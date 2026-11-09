@@ -18,7 +18,13 @@ icon: fa-solid fa-folder-tree
 sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite] [--passfile PATH]] [-T DUR | -N] [--json]
 ```
 
-`--passfile PATH` 需要同时指定 `--sign-with`；`SOW_GPG_PASSFILE` 可提供默认口令文件，但不会自动启用签名。文件为非空 UTF-8 单行，只去掉末尾一个 LF 或 CRLF，不做 trim。相对路径以当前目录为基准，不自动搜索默认位置。此接口尚未发布，详见[口令文件](/zh/docs/reference/config/#passfile)。
+`--passfile PATH` 需要同时指定 `--sign-with`；`SOW_GPG_PASSFILE` 可提供默认口令文件，但不会自动启用签名。文件为非空 UTF-8 单行，只去掉末尾一个 LF 或 CRLF，不做 trim。相对路径以当前目录为基准，不自动搜索默认位置。此接口需要 SOW 0.7.0 或更新版本，详见[口令文件](/zh/docs/reference/config/#passfile)。
+
+已有的 `repomd.xml` 会被替换。SOW 不生成的独立元数据，例如软件包组（`comps`）、updateinfo 或 modules，不会带入新索引。从 SOW 0.7.0 起，`create` 在文本模式下会向标准错误输出警告，使用 `--json` 时则在结果的 `dropped_metadata` 字段中列出这些数据类型；包索引的其他编码（`*_db`、`*_zck`）不会列出。这样已有仓库仍可重建，包括 Pigsty v4.4.0 在 EL8/9 上生成、带有旧版 modules 元数据的仓库。客户端仍需要被丢弃的记录时，应继续用原来的工具维护该仓库。[`sow prune`](/zh/docs/command/prune/) 遇到这类索引则会拒绝执行。
+
+类型报告要求旧索引可读、格式有效且不超过 16 MiB 检查上限。Create 仍可替换超大或格式错误的旧索引，但无法列出其中的数据类型；prune 会拒绝超大的旧索引。
+
+需要在平面 RPM 仓库中按包名和架构仅保留最新版本时，使用 [`sow prune`](/zh/docs/command/prune/)。
 
 ## 说明
 
@@ -76,7 +82,7 @@ created /srv/flat: rpm=3 deb=1 signed=0 removed=0 marker=false noop=true recover
 
 ## 保留上一轮 RPM 索引
 
-SOW 0.6.1 保留当前与紧邻上一版 `repomd.xml` 引用的、以校验和命名的 RPM 元数据。
+SOW 0.7.0 保留当前与紧邻上一版 `repomd.xml` 引用的、以校验和命名的 RPM 元数据。
 客户端已获取上一版索引时，仍可在更新后下载这些元数据文件。
 没有变化的运行不会推进保留窗口。
 

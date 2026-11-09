@@ -11,7 +11,7 @@ icon: fa-solid fa-download
 
 SOW 是一个可执行文件，不依赖守护进程、数据库服务或语言运行时。发布归档支持 Linux 与 macOS 的 `amd64`、`arm64` 架构。Linux 另有 RPM 与 DEB 安装包。
 
-从 [下载页](/zh/download/) 选择 SOW 0.6.1 制品。
+本文档以 SOW 0.7.0 为目标，当前版本处于草稿发布阶段。正式公开前，[下载页](/zh/download/) 与下方二进制安装示例仍使用已发布的 0.6.1 制品；源码构建与升级部分面向 0.7.0。
 将所选制品与 `SHA256SUMS` 下载到独立的下载目录。
 
 ## 安装归档
@@ -57,11 +57,11 @@ ARM64 主机使用以 `.aarch64.rpm` 或 `_arm64.deb` 结尾的软件包。安�
 
 ```bash
 set -euo pipefail
-git clone --branch v0.6.1 https://github.com/pgsty/sow.git
+git clone --branch v0.7.0 https://github.com/pgsty/sow.git
 cd sow
 SOW_BUILD_DIR="$(mktemp -d)"
 CGO_ENABLED=0 go build -trimpath \
-  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.6.1' \
+  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.7.0' \
   -o "$SOW_BUILD_DIR/sow" ./cmd/sow
 sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 ```
@@ -81,14 +81,18 @@ sow help
 
 <span id="升级到-060" data-td-print-local></span>
 
-## 升级到 0.6.1 {#升级到-061}
+<span id="升级到-061" data-td-print-local></span>
 
-SOW 0.6.1 保持数据库 schema v13、配置 schema `sow/v3` 与公开目录布局不变。
-已使用 0.5.0 或 0.6.0 的工作区无需迁移数据库。
+## 升级到 0.7.0 {#升级到-070}
+
+SOW 0.7.0 保持数据库 schema v13、配置 schema `sow/v3` 与公开目录布局不变。
+已使用 0.5.0 至 0.6.1 的工作区无需迁移数据库。
+使用 `passfile` 的配置不能由 0.6.1 或更早版本读取，降级前需移除这些字段。
+迁移后的仓库若在后续构建中被残留迁移锚点阻塞，升级到 0.7.0 即可恢复，无需手工修复。
 
 1. 停止工作区的全部写入任务。
 2. 用保留硬链接的工具备份完整工作区，例如 `rsync -aH` 或 `tar`。
-3. 安装 SOW 0.6.1。
+3. 安装 SOW 0.7.0。
 4. 对 `sow.yml` 中每个仓库执行构建与检查：
 
 ```bash
@@ -103,7 +107,7 @@ sow check -r REPOSITORY -C /srv/sow
 
 ### 从 0.3 或 0.4 升级 {#从-04-升级到-05}
 
-这些工作区需要在首次构建前迁移。备份工作区并安装 0.6.1 后，执行：
+这些工作区需要在首次构建前迁移。备份工作区并安装 0.7.0 后，执行：
 
 ```bash
 sow repo migrate REPOSITORY -C /srv/sow

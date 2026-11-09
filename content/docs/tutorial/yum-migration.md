@@ -11,7 +11,7 @@ icon: fa-solid fa-arrows-rotate
 
 This guide covers a flat directory of RPMs and `repodata/`, such as a repository previously
 built with `createrepo_c`. It uses Plain `sow create`, without creating a Managed workspace.
-The commands below target **SOW 0.6.1**.
+The commands below target **SOW 0.7.0**.
 
 <span id="1-establish-the-migration-boundary" data-td-print-local></span>
 
@@ -24,7 +24,7 @@ SOW="$(command -v sow)"
 "$SOW" version
 ```
 
-Confirm that the version is 0.6.1.
+Confirm that the version is 0.7.0.
 
 | Check | Action |
 |---|---|
@@ -76,7 +76,7 @@ Record `PUBLISH_TIME` in the maintenance system before publishing the candidate.
 
 `--sign-with KEY` signs unsigned RPMs and preserves existing signatures, including vendor signatures. To replace every package signature with your key, add `--overwrite` in the candidate copy. This changes package bytes; `create` builds indexes from the signed result. Generate the detached index signature after the final `create` run.
 
-For protected package-signing keys, the unreleased development version adds
+For protected package-signing keys, SOW 0.7.0 adds
 `--passfile PATH` and `SOW_GPG_PASSFILE`; check `sow help create` in the binary you use.
 See [Password files](/docs/reference/config/#passfile). These settings do not affect
 the separate `gpg` command above. For unattended metadata signing, that command needs
@@ -107,7 +107,7 @@ formatting can differ. See [Platforms & Integrations](/docs/reference/compatibil
 
 Plain replaces multiple files; it does not make the whole directory switch atomically.
 Coordinate package replacement, metadata, detached signatures, and cache visibility in
-your publication layer. SOW 0.6.1 retains the current and immediately previous SOW checksum-named RPM metadata sets.
+your publication layer. SOW 0.7.0 retains the current and immediately previous SOW checksum-named RPM metadata sets.
 Unchanged runs keep the same previous set. Keep `.sow-plain-rpm-history.json` when copying a directory for further builds.
 For clients that cache indexes across several updates, retain the required older metadata and packages in your publication layer.
 

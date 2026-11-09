@@ -11,7 +11,7 @@ icon: fa-solid fa-download
 
 SOW is one executable. It needs no daemon, database service, or language runtime. Release archives support Linux and macOS on `amd64` and `arm64`. Linux also has RPM and DEB packages.
 
-Use the [Download page](/download/) to select a SOW 0.6.1 artifact.
+These docs target SOW 0.7.0, currently a draft release. Until it is public, the [Download page](/download/) and binary installation examples below use the published 0.6.1 artifacts. The source-build and upgrade sections target 0.7.0.
 Download it and `SHA256SUMS` into a separate download directory.
 
 ## Install an archive
@@ -57,11 +57,11 @@ Install Go 1.27.3 or newer and Git. The build uses `CGO_ENABLED=0` and needs no 
 
 ```bash
 set -euo pipefail
-git clone --branch v0.6.1 https://github.com/pgsty/sow.git
+git clone --branch v0.7.0 https://github.com/pgsty/sow.git
 cd sow
 SOW_BUILD_DIR="$(mktemp -d)"
 CGO_ENABLED=0 go build -trimpath \
-  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.6.1' \
+  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.7.0' \
   -o "$SOW_BUILD_DIR/sow" ./cmd/sow
 sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 ```
@@ -81,14 +81,18 @@ sow help
 
 <span id="upgrade-to-060" data-td-print-local></span>
 
-## Upgrade to 0.6.1 {#upgrade-to-061}
+<span id="upgrade-to-061" data-td-print-local></span>
 
-SOW 0.6.1 keeps database schema v13, configuration schema `sow/v3`, and the public directory layout.
-Workspaces already on 0.5.0 or 0.6.0 need no schema migration.
+## Upgrade to 0.7.0 {#upgrade-to-070}
+
+SOW 0.7.0 keeps database schema v13, configuration schema `sow/v3`, and the public directory layout.
+Workspaces already on 0.5.0 through 0.6.1 need no schema migration.
+A configuration using `passfile` cannot be loaded by 0.6.1 or older; remove those keys before downgrading.
+Repositories affected by a retained migration anchor after later builds recover in 0.7.0 without manual repair.
 
 1. Stop all workspace writers.
 2. Back up the complete workspace with a tool that preserves hard links, such as `rsync -aH` or `tar`.
-3. Install SOW 0.6.1.
+3. Install SOW 0.7.0.
 4. Build and check each Repository in `sow.yml`:
 
 ```bash
@@ -103,7 +107,7 @@ New builds record one publication time and reuse it during recovery.
 
 ### Workspaces from 0.3 or 0.4 {#upgrade-from-04-to-05}
 
-These workspaces need migration before the first build. After backing up the workspace and installing 0.6.1, run:
+These workspaces need migration before the first build. After backing up the workspace and installing 0.7.0, run:
 
 ```bash
 sow repo migrate REPOSITORY -C /srv/sow
