@@ -11,8 +11,8 @@ icon: fa-solid fa-download
 
 SOW is one executable. It needs no daemon, database service, or language runtime. Release archives support Linux and macOS on `amd64` and `arm64`. Linux also has RPM and DEB packages.
 
-These docs target SOW 0.7.0, currently a draft release. Until it is public, the [Download page](/download/) and binary installation examples below use the published 0.6.1 artifacts. The source-build and upgrade sections target 0.7.0.
-Download it and `SHA256SUMS` into a separate download directory.
+The [Download page](/download/) provides SOW 0.7.0 packages, archives, and checksums.
+Download your chosen artifact and `SHA256SUMS` into a separate download directory.
 
 ## Install an archive
 
@@ -20,8 +20,8 @@ For Linux amd64, verify the archive, extract it, and install the executable:
 
 ```bash
 set -euo pipefail
-grep '  sow_0.6.1_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
-tar -xzf sow_0.6.1_linux_amd64.tar.gz
+grep '  sow_0.7.0_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
+tar -xzf sow_0.7.0_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
@@ -43,10 +43,10 @@ Verify the downloaded package against its entry in `SHA256SUMS`. Then run the co
 
 ```bash
 # RPM, x86_64
-sudo rpm -Uvh ./sow-0.6.1-1PGSTY.x86_64.rpm
+sudo rpm -Uvh ./sow-0.7.0-1PGSTY.x86_64.rpm
 
 # Debian or Ubuntu, amd64
-sudo apt install ./sow_0.6.1-1PGSTY_amd64.deb
+sudo apt install ./sow_0.7.0-1PGSTY_amd64.deb
 ```
 
 For ARM64, use the RPM ending in `.aarch64.rpm` or the DEB ending in `_arm64.deb`. Packages install the executable at `/usr/bin/sow`.

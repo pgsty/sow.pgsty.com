@@ -13,7 +13,7 @@ url: "/blog/release/sow-v0.7.0/"
 
 SOW 0.7.0 adds **flat RPM pruning** and a shared **password-file signing interface**. It also fixes defects in migration, recovery, publication, RPM signature verification, and version ordering found during the release review.
 
-**Availability:** this version is being prepared as a GitHub draft release. Public binary downloads remain at **0.6.1** until the draft is published. The documentation describes 0.7.0; check `sow version` before using its new options.
+**Availability:** SOW 0.7.0 is available on [GitHub](https://github.com/pgsty/sow/releases/tag/v0.7.0) and the [Download page](/download/).
 
 These notes cover the changes since **0.6.1**. Database schema **v13**, configuration schema **sow/v3**, and the public repository layout stay unchanged. Workspaces on 0.5.0 through 0.6.1 need no schema migration.
 

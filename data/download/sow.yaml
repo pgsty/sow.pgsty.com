@@ -7,7 +7,7 @@
 # repository channel is rolling on purpose: it tracks whatever the infra
 # repository currently serves, which is not necessarily this tag.
 repo: pgsty/sow
-version: 0.6.1
+version: 0.7.0
 published: true # Set true only after the matching GitHub Release is public.
 channels:
   - id: pigsty
