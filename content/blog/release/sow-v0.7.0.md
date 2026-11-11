@@ -102,4 +102,4 @@ SOW 0.6.1 and older cannot load a configuration that contains `passfile`; remove
 
 The release produces Linux and macOS archives for `amd64` and `arm64`, two RPMs, two DEBs, and `SHA256SUMS`. See the [installation guide](/docs/start/install/#upgrade-to-070) and [all changes since 0.6.1](https://github.com/pgsty/sow/compare/v0.6.1...v0.7.0).
 
-{{< release-assets src="release/sow-checksums.txt" group="auto" >}}{{< /release-assets >}}
+{{< release-assets src="release/sow-v0.7.0-checksums.txt" group="auto" >}}{{< /release-assets >}}

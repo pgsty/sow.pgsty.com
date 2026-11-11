@@ -51,6 +51,9 @@ exported RPM leaf el9/x86_64 generation=00000000000000000012 method=copy package
 
 从 0.7.0 起，即使后续构建只更新了其他 Dist，原有的 clean RPM Dist 仍可导出。其未变化的视图会沿用到当前构建快照，因此该 Dist 的最后构建 Generation 可以更旧。签名和未签名视图都支持这一行为。导出物记录当前仓库的 Generation，并使用该 Generation 固定的签名身份，无需重新构建未变化的 Dist。
 
+0.7.1 的元数据签名使用所选 Dist 已记录的构建发布时间。
+无关的 filesystem 发布目标未挂载时，仍可导出；SOW 仍会拒绝与配置目标重叠的导出路径。
+
 导出失败后，修正报告的问题，再换一个不存在或为空的目录重试。失败的目标目录中可能留有部分文件。
 
 `export rpm-leaf` 的 repomd data 时间戳固定为 `0`，没有

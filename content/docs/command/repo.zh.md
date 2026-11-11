@@ -116,8 +116,8 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate {#sow-repo-migrate}
 
-从 0.3 或 0.4 工作区升级到 SOW 0.7.0 时，使用 `repo migrate`。
-已使用 0.5.0 至 0.6.1 的工作区采用 schema v13，无需迁移数据库。新建的 0.7.0 仓库也使用 schema v13。
+从 0.3 或 0.4 工作区升级到 SOW 0.7.1 时，使用 `repo migrate`。
+已使用 0.5.0 至 0.7.0 的工作区采用 schema v13，无需迁移数据库。新建的 0.7.1 仓库也使用 schema v13。
 
 1. 停止工作区写操作。
 2. 备份整个工作区，并保留硬链接。
@@ -125,7 +125,7 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 4. 对每个仓库运行 `build` 与 `check`。
 
 ```bash
-rsync -aH /srv/sow/ /srv/sow.backup-before-0.7.0/
+rsync -aH /srv/sow/ /srv/sow.backup-before-0.7.1/
 sow repo migrate pigsty -C /srv/sow
 sow build -r pigsty -C /srv/sow
 sow check -r pigsty -C /srv/sow
@@ -134,6 +134,9 @@ sow check -r pigsty -C /srv/sow
 对其他仓库重复后三条命令。迁移结果包含 `schema_from` 与 `schema_to`；重复迁移报告 `13 -> 13`。Schema v13 增加包池路径查询索引。从 v0.3 迁移时，还会应用中间版本的状态与发布记录修复。C2 布局迁移完成后，SOW 会将迁移锚点绑定到迁移后的 Generation，使后续 `build`、`add`、`check`、`gc` 和 `repo rm` 命令可以直接执行，而不会报告锚点不匹配。
 
 写操作要求当前 schema。兼容的只读命令可以查看旧状态，但不会升级数据库。迁移后使用 SOW 0.5 或更新版本；需要返回旧 schema 时，恢复备份。
+
+已完成的迁移若留下无法证明归属的暂存文件，0.7.1 会将它们保留到 `.sow/<repo>/abandoned/` 并报告路径。
+重新运行 `sow repo migrate NAME` 可恢复该状态，让本地 GC 继续执行。删除前请检查保留的文件。
 
 `--abort` 在提交决策前放弃未完成的布局迁移计划，不会撤销已完成的 schema 升级。
 对于早期 C2 迁移，SOW 核对仓库身份，以及现有日志和数据库中的控制记录。

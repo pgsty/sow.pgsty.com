@@ -114,4 +114,4 @@ sow check -r REPOSITORY -C /srv/sow
 
 本版本生成 Linux 与 macOS 的 `amd64`、`arm64` 归档、两个 RPM、两个 DEB，以及 `SHA256SUMS`。详见[安装与升级说明](/zh/docs/start/install/#upgrade-to-070)和 [0.6.1 以来的完整差异](https://github.com/pgsty/sow/compare/v0.6.1...v0.7.0)。
 
-{{< release-assets src="release/sow-checksums.txt" group="auto" >}}{{< /release-assets >}}
+{{< release-assets src="release/sow-v0.7.0-checksums.txt" group="auto" >}}{{< /release-assets >}}

@@ -21,8 +21,8 @@ SOW creates RPM/YUM and DEB/APT software repositories. Run `sow create DIR` to i
 packages in a directory, or `sow prune DIR` to remove superseded RPM versions in place. Use a Managed workspace when you need to organize packages into
 Dists, limit versions, sign metadata, or publish updates.
 
-These docs cover **SOW 0.7.0**. See the [release notes](/blog/release/sow-v0.7.0/) for
-version changes and the [upgrade guide](/docs/start/install/#upgrade-to-070)
+These docs cover **SOW 0.7.1**. See the [release notes](/blog/release/sow-v0.7.1/) for
+version changes and the [upgrade guide](/docs/start/install/#upgrade-to-071)
 for an existing Managed workspace.
 
 - [Get Started](/docs/start/) — Install SOW, create a flat repository, and build the first Managed workspace.

@@ -51,6 +51,9 @@ The source Repository must be clean, have a completed Built Generation, and have
 
 Since 0.7.0, you can export a clean RPM Dist even when a later build updated only another Dist. SOW carries its unchanged view into the current Built Generation, so its own last-built Generation can be older. This applies to signed and unsigned views. The export records the current Repository Generation and uses that Generation's frozen signing identity. You do not need to rebuild the unchanged Dist.
 
+In 0.7.1, the metadata signature uses the selected Dist's recorded build publication time.
+An unrelated filesystem publication target can be unmounted during export. SOW still rejects a destination that overlaps a configured target.
+
 If export fails, correct the reported cause and retry into a new or empty directory. The failed destination can contain partial files.
 
 `export rpm-leaf` uses a fixed `0` repomd data timestamp and exposes no

@@ -22,7 +22,7 @@ sow log -C /srv/sow -r pgsql
 
 ## 数据库需要迁移 {#the-database-needs-migration}
 
-SOW 0.7.0 与 0.5.0 至 0.6.1 均使用 schema v13。从这些版本升级均无需迁移数据库。
+SOW 0.7.1 与 0.5.0 至 0.7.0 均使用 schema v13。从这些版本升级均无需迁移数据库。
 对于 0.3 或 0.4 工作区，先停止写入并备份完整工作区，再运行：
 
 ```bash
@@ -32,8 +32,11 @@ sow check -C /srv/sow -r pgsql
 ```
 
 对每个仓库重复这些步骤。兼容的只读命令仍可检查旧 schema，但不会自动迁移数据库。
-如果由 SOW 0.5 或 0.6 从 C2 布局迁移的仓库在后续构建后报告迁移锚点目标无效，升级到 SOW 0.7.0 即可自动恢复，无需手工修复。
-详见[升级说明](/zh/docs/start/install/#upgrade-to-070)。
+如果由 SOW 0.5 或 0.6 从 C2 布局迁移的仓库在后续构建后报告迁移锚点目标无效，升级到 SOW 0.7.1 即可自动恢复，无需手工修复。
+详见[升级说明](/zh/docs/start/install/#upgrade-to-071)。
+
+如果 C2 迁移暂存残留阻塞本地 GC，重新运行 `sow repo migrate REPOSITORY`。
+SOW 0.7.1 会将无法证明可安全清理的文件保留到 `.sow/<repo>/abandoned/` 并报告路径，删除前请先检查。
 
 ## 状态显示有待构建变更 {#status-shows-pending-changes}
 
@@ -56,7 +59,7 @@ Plain 模式下，解决报错中的输入或文件系统问题后，重新运�
 
 `add`、`rm`、Dist 修改或构建中断时，查看 `sow log`，修正报错原因，再对该仓库运行 `sow build` 完成恢复。
 已提交的 Desired 变更仍属于待构建内容。`init`、`repo new` 或 `repo rm` 中断时，重新运行对应的生命周期命令，恢复工作区日志。
-本地 `gc` 或 `retain rm` 中断时，重新运行 `sow gc` 或 `sow retain rm GENERATION`；SOW 0.7.0 会继续执行已持久化的计划，或丢弃在删除开始前中断的空计划。
+本地 `gc` 或 `retain rm` 中断时，重新运行 `sow gc` 或 `sow retain rm GENERATION`；SOW 0.7.1 会继续执行已持久化的计划，或丢弃在删除开始前中断的空计划。
 
 恢复需要带口令的签名密钥时，应再次提供口令来源，日志不会保存口令。支持该选项的恢复命令
 可使用 `--passfile PATH` 或 `SOW_GPG_PASSFILE`，单个密钥配置仍然适用。

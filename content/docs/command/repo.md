@@ -117,8 +117,8 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-Use `repo migrate` to upgrade a 0.3 or 0.4 workspace to SOW 0.7.0.
-Workspaces already on 0.5.0 through 0.6.1 use schema v13 and need no schema migration. New 0.7.0 repositories also use schema v13.
+Use `repo migrate` to upgrade a 0.3 or 0.4 workspace to SOW 0.7.1.
+Workspaces already on 0.5.0 through 0.7.0 use schema v13 and need no schema migration. New 0.7.1 repositories also use schema v13.
 
 1. Stop Workspace writers.
 2. Back up the whole Workspace, preserving hard links.
@@ -126,7 +126,7 @@ Workspaces already on 0.5.0 through 0.6.1 use schema v13 and need no schema migr
 4. Run `build` and `check` for each Repository.
 
 ```bash
-rsync -aH /srv/sow/ /srv/sow.backup-before-0.7.0/
+rsync -aH /srv/sow/ /srv/sow.backup-before-0.7.1/
 sow repo migrate pigsty -C /srv/sow
 sow build -r pigsty -C /srv/sow
 sow check -r pigsty -C /srv/sow
@@ -135,6 +135,9 @@ sow check -r pigsty -C /srv/sow
 Repeat the last three commands for each Repository. The migration reports `schema_from` and `schema_to`; a repeated migration reports `13 -> 13`. Schema v13 adds pool-path lookup indexes. Migration from v0.3 also applies the intervening state and publication repairs. When a C2 layout migration finishes, SOW binds the migration anchor to the newly migrated Generation so subsequent `build`, `add`, `check`, `gc`, and `repo rm` commands succeed without reporting an anchor mismatch.
 
 Writes require the current schema. Compatible read-only commands can inspect older state without upgrading it. After migration, use SOW 0.5 or later; restore the backup to return to the older schema.
+
+If a completed migration leaves stage files whose ownership cannot be proven, 0.7.1 preserves them under `.sow/<repo>/abandoned/` and reports the path.
+Rerun `sow repo migrate NAME` to recover this state and unblock local GC. Inspect the retained files before removing them.
 
 `--abort` abandons an unfinished layout plan before its commit decision. It does not undo a completed schema migration.
 For an earlier C2 transition, SOW checks the repository identity and available journal and database control records.

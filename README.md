@@ -1,7 +1,7 @@
 # SOW Docs
 
-This repository contains the bilingual docs for **SOW 0.7.0**. Public packages,
-archives, and installation examples use the published 0.7.0 release.
+This repository contains the bilingual docs for **SOW 0.7.1**. Public packages,
+archives, and installation examples use the published 0.7.1 release.
 SOW is the self-contained APT / YUM package repository manager by [Pigsty](https://pigsty.io). It uses
 [Hugo](https://gohugo.io/) and the [OINK](https://github.com/pgsty/oink) docs
 theme, with English at `/` and Simplified Chinese at `/zh/`.
@@ -132,6 +132,8 @@ Use natural Chinese with the same meaning and sequence.
   After publication, advance that download version, update the bilingual download notes and installation examples,
   and copy the matching `SHA256SUMS` to `assets/release/sow-checksums.txt`. Check every filename and digest before
   setting `published: true`; a download version without public assets must use `published: false`.
+  Keep a versioned checksum copy for each release note, such as `assets/release/sow-v0.7.1-checksums.txt`.
+  Historical release pages must use their own checksum copy when the current download version advances.
   Remove the draft notices when the release becomes public. The Pigsty repository is a separate rolling channel.
 - Keep whitespace around strong-emphasis delimiters next to Chinese prose.
   Run `make check` to check Markdown, modules, the production build, and internal links.

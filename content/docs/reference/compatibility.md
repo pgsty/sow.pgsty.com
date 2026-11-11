@@ -26,7 +26,7 @@ filesystem for the workspace, then configure HTTP or storage access for clients.
 {.matrix}
 
 Release binaries use `CGO_ENABLED=0` and need no language runtime. Source builds require
-Go 1.27.3 or later. Archives include the README, changelog, Apache-2.0 license, and
+Go 1.27.4 or later. Archives include the README, changelog, Apache-2.0 license, and
 third-party notices; Linux packages include license and notice files with the binary.
 Run `sow version` to inspect the binary version, platform, and build toolchain.
 

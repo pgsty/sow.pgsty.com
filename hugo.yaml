@@ -315,7 +315,7 @@ params:
   images:
     - images/sow-social-card.png
   # Documented source version; public downloads are pinned in data/download/sow.yaml.
-  version: 0.7.0
+  version: 0.7.1
   copyright:
     authors: '[PIGSTY & SOW Contributors](https://pgsty.com) · [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)'
     from_year: 2026

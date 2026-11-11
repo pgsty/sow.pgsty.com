@@ -7,7 +7,7 @@
 # repository channel is rolling on purpose: it tracks whatever the infra
 # repository currently serves, which is not necessarily this tag.
 repo: pgsty/sow
-version: 0.7.0
+version: 0.7.1
 published: true # Set true only after the matching GitHub Release is public.
 channels:
   - id: pigsty
@@ -137,11 +137,11 @@ channels:
     icon: fa-solid fa-code-branch
     url: https://github.com/pgsty/sow/tree/${tag}
     note: >-
-      Install Go 1.27.3 or newer, then build the release tag with the commands
+      Install Go 1.27.4 or newer, then build the release tag with the commands
       below. No C compiler is required. The build flags set the version shown
       by `sow version`.
     note_zh: >-
-      先安装 Go 1.27.3 或更新版本，再按以下命令构建发布标签。无需 C 编译器。
+      先安装 Go 1.27.4 或更新版本，再按以下命令构建发布标签。无需 C 编译器。
       构建参数会设置 `sow version` 显示的版本号。
     steps:
       - title: Clone, check out, build

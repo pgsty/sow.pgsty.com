@@ -22,7 +22,7 @@ Replace `/srv/sow`, `pgsql`, and the target name `prod` below with your configur
 
 ## The database needs migration
 
-SOW 0.7.0 uses schema v13, as do 0.5.0 through 0.6.1. An upgrade from these versions needs no schema migration.
+SOW 0.7.1 uses schema v13, as do 0.5.0 through 0.7.0. An upgrade from these versions needs no schema migration.
 For a 0.3 or 0.4 workspace, stop writers and back up the complete workspace. Then run:
 
 ```bash
@@ -34,7 +34,10 @@ sow check -C /srv/sow -r pgsql
 Repeat this for each Repository. Compatible read-only commands can still inspect an older
 schema, but they do not migrate it. If a Repository migrated from C2 layout by SOW 0.5 or
 0.6 reported an invalid transition control target after a later build, upgrading to SOW
-0.7.0 recovers automatically without manual repair. See [Upgrade](/docs/start/install/#upgrade-to-070).
+0.7.1 recovers automatically without manual repair. See [Upgrade](/docs/start/install/#upgrade-to-071).
+
+If leftover C2 migration stage files block local GC, rerun `sow repo migrate REPOSITORY`.
+SOW 0.7.1 preserves unproven files under `.sow/<repo>/abandoned/` and reports their location. Inspect them before removal.
 
 ## Status shows pending changes
 
@@ -60,7 +63,7 @@ reported cause. Run `sow build` for that Repository to complete recovery. Commit
 changes remain part of the pending build. For interrupted `init`, `repo new`, or `repo rm`
 operations, rerun the corresponding lifecycle command to recover the workspace journal.
 For interrupted local `gc` or `retain rm` operations, rerun `sow gc` or `sow retain rm GENERATION`;
-SOW 0.7.0 resumes the persisted plan or discards an empty plan interrupted before deletion.
+SOW 0.7.1 resumes the persisted plan or discards an empty plan interrupted before deletion.
 
 If recovery needs a protected signing key, supply its password source again. Journals
 do not save passwords. A supported recovery command can use `--passfile PATH` or
