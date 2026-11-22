@@ -115,7 +115,7 @@ recovery, or publication state. See [`gc`](/docs/command/gc/) for the complete r
 
 The previous-generation metadata kept during ordinary builds is separate from explicit
 retention. For target cleanup, run `sow gc TARGET`. Filesystem targets support conditional
-deletion after cache grace; R2 targets report candidates without deleting them.
+deletion after cache grace. On R2, review the default report or run `sow gc TARGET --delete` to reclaim eligible objects.
 
 <span id="operation-log" data-td-print-local></span>
 

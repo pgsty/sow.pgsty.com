@@ -279,8 +279,7 @@ CLI coordinate reference. `where` location coordinates already include the prefi
 | Target `gc` | `repository`, `target`, `provider`, `phase`, `reports`, `candidates`, `deleted_objects`, `deleted_bytes`, `retained_objects`, `pending_grace`, `completed_attempts`, `noop` |
 | `export rpm-leaf` | `repository`, `repository_id`, `generation`, `dist`, `arch`, `directory`, `method`, `signed`, `signer_identity`, `packages`, `files`, `manifest_sha256` |
 
-`publish --rebind` has the normal publish shape. R2 target GC reports candidates without
-deleting remote objects.
+`publish --rebind` has the normal publish shape. R2 uses the target GC result fields for both the default report and `gc TARGET --delete`. The latter records verified removals in `deleted_objects` and `deleted_bytes`.
 
 <span id="log" data-td-print-local></span>
 <span id="log-export-is-not-an-envelope" data-td-print-local></span>

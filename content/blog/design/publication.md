@@ -136,4 +136,4 @@ the command finishes or discards the interrupted plan safely.
 
 Filesystem target deletion requires a known inventory, exclusive ownership, and an expired
 grace period. SOW conditionally deletes the recorded file, checks public absence, then
-records the result. R2 target GC reports candidates and keeps the objects.
+records the result. R2 target GC records candidates by default. With `sow gc TARGET --delete`, SOW rechecks object identity, deletes eligible objects, confirms storage and public absence, and records receipts. See [target GC](/docs/command/gc/#target-gc).

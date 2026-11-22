@@ -9,13 +9,13 @@ weight: 1700
 icon: fa-solid fa-recycle
 ---
 
-Run `sow gc` to reclaim local package files that are no longer needed. Run `sow gc TARGET` to maintain a configured publication target. Filesystem targets can delete eligible objects; R2 targets only report candidates.
+Run `sow gc` to reclaim unused local package files. For an R2 target, `sow gc TARGET` records eligible objects and `sow gc TARGET --delete` removes those that still qualify.
 
 ## Synopsis
 
 ```text
 sow gc          [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
-sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
+sow gc TARGET [--delete] [-C|--workdir DIR]         [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
 
 `--passfile` supplies signing credentials when recovering an interrupted local mutation. Collection itself does not sign files. See [Password files](/docs/reference/config/#passfile) for source selection and format.
@@ -24,6 +24,7 @@ sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-
 |---|---|---|
 | `-C, --workdir DIR` | Workspace discovery start directory | current directory |
 | `-r, --repo NAME` | Select a Repository for local GC only | selection rules |
+| `--delete` | Allow physical deletion on an R2 target, including resuming an interrupted deletion | false |
 | `-T, --timeout DUR` | Maximum Repository-lock wait; `0` waits indefinitely | `0` |
 | `-N, --no-wait` | Fail immediately when the lock is held | false |
 | `--passfile PATH` | [Password file for this invocation](/docs/reference/config/#passfile) | per-key config, then `SOW_GPG_PASSFILE` |
@@ -56,10 +57,12 @@ Target GC waits for the configured cache grace period and checks which objects a
 | Provider | Behavior |
 |---|---|
 | `filesystem` | After the grace period, conditionally delete eligible objects, verify that their public URLs are absent, and record the result |
-| `r2` | Save a report of eligible objects; leave the objects in storage |
+| `r2` | Save a candidate report by default. Pass `--delete` to reclaim eligible objects after grace |
 {.wide .expand}
 
 For `filesystem` targets, SOW scopes the prospective target path check so sibling targets that share a parent directory (such as `/srv/www/pgsql` and `/srv/www/pigsty`) do not block each other.
+
+Use a target prefix written exclusively by this workspace. R2 deletion can follow a candidate report or run directly. SOW rechecks protected publications and each object's size, SHA-256 metadata and ETag before calling `DeleteObject`. The identity check and delete are separate storage requests. SOW then verifies storage absence and a public HTTP 404 and records the deletion. If the run stops partway through, rerun `sow gc TARGET --delete`.
 
 ```console
 sow gc prod

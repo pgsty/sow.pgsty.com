@@ -22,7 +22,7 @@ sow log -C /srv/sow -r pgsql
 
 ## 数据库需要迁移 {#the-database-needs-migration}
 
-SOW 0.7.1 与 0.5.0 至 0.7.0 均使用 schema v13。从这些版本升级均无需迁移数据库。
+SOW 0.8.0 与 0.5.0 至 0.7.1 均使用 schema v13，可直接升级。如果 0.7.1 的本地 GC 曾中断，先用旧版完成恢复。详见[升级说明](/zh/docs/start/install/#upgrade-to-080)。
 对于 0.3 或 0.4 工作区，先停止写入并备份完整工作区，再运行：
 
 ```bash
@@ -32,8 +32,8 @@ sow check -C /srv/sow -r pgsql
 ```
 
 对每个仓库重复这些步骤。兼容的只读命令仍可检查旧 schema，但不会自动迁移数据库。
-如果由 SOW 0.5 或 0.6 从 C2 布局迁移的仓库在后续构建后报告迁移锚点目标无效，升级到 SOW 0.7.1 即可自动恢复，无需手工修复。
-详见[升级说明](/zh/docs/start/install/#upgrade-to-071)。
+如果由 SOW 0.5 或 0.6 从 C2 布局迁移的仓库在后续构建后报告迁移锚点目标无效，SOW 0.7.1 及更新版本可自动恢复。
+详见[升级说明](/zh/docs/start/install/#upgrade-to-080)。
 
 如果 C2 迁移暂存残留阻塞本地 GC，重新运行 `sow repo migrate REPOSITORY`。
 SOW 0.7.1 会将无法证明可安全清理的文件保留到 `.sow/<repo>/abandoned/` 并报告路径，删除前请先检查。
@@ -59,7 +59,7 @@ Plain 模式下，解决报错中的输入或文件系统问题后，重新运�
 
 `add`、`rm`、Dist 修改或构建中断时，查看 `sow log`，修正报错原因，再对该仓库运行 `sow build` 完成恢复。
 已提交的 Desired 变更仍属于待构建内容。`init`、`repo new` 或 `repo rm` 中断时，重新运行对应的生命周期命令，恢复工作区日志。
-本地 `gc` 或 `retain rm` 中断时，重新运行 `sow gc` 或 `sow retain rm GENERATION`；SOW 0.7.1 会继续执行已持久化的计划，或丢弃在删除开始前中断的空计划。
+本地 `gc` 或 `retain rm` 中断时，重新运行 `sow gc` 或 `sow retain rm GENERATION`。从 0.7.1 升级前，使用 0.7.1 的二进制完成中断的本地 GC。R2 目标删除中断时，执行 `sow gc TARGET --delete` 恢复。
 
 恢复需要带口令的签名密钥时，应再次提供口令来源，日志不会保存口令。支持该选项的恢复命令
 可使用 `--passfile PATH` 或 `SOW_GPG_PASSFILE`，单个密钥配置仍然适用。
@@ -111,7 +111,7 @@ Repository、后端、存储端点、区域、桶或前缀变化时，需要新�
 
 - 先检查最终选中的路径。命令行和环境变量中的相对路径以进程当前目录为基准，
   不受 `-C` 影响；配置中的相对路径以工作区根为基准。环境变量为空与未设置不同。
-- 使用可读、无符号链接的普通文件。内容为非空 UTF-8 单行，可以带一个末尾 LF 或 CRLF；
+- 使用可读普通文件。外部 Secret 挂载可使用符号链接，解析的每一跳都须位于工作区外。工作区内须使用无符号链接的路径。内容为非空 UTF-8 单行，可以带一个末尾 LF 或 CRLF，
   空格和制表符都属于口令。文件不是 shell 脚本，也不是 `NAME=value` 赋值。
 - 所选来源不可用时直接失败，不回退或弹出输入框。外部 GPG 需要 agent 支持 loopback；
   硬件密钥仍可能要求自身的交互确认。

@@ -111,7 +111,7 @@ sow retain ls -r demo
 
 普通构建保留的前一代元数据与显式保留功能相互独立。
 目标清理使用 `sow gc TARGET`：filesystem 目标在缓存宽限期后支持条件删除，
-R2 目标只报告候选，不执行删除。
+R2 目标默认生成候选报告，使用 `sow gc TARGET --delete` 可回收符合条件的对象。
 
 <span id="操作日志" data-td-print-local></span>
 <span id="查看与导出日志" data-td-print-local></span>

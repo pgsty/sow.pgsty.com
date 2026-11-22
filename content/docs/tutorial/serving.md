@@ -170,4 +170,4 @@ inaccessible; the Nginx dotfile rule above does this.
 
 Use `provider: r2` for Cloudflare R2. Configure its endpoint, bucket, credential reference, public URL, and cache lifetime; see the [target configuration reference](/docs/reference/config/). Run an initial publication to a test prefix and check it from your package clients.
 
-R2 target garbage collection reports deletion candidates; SOW does not delete those objects. See [Platforms & Integrations](/docs/reference/compatibility/) for tested storage operations.
+Run `sow gc TARGET` to review R2 candidates after the cache grace period. If this workspace is the sole writer to the prefix, run `sow gc TARGET --delete` to reclaim eligible objects. See [target GC](/docs/command/gc/#target-gc).

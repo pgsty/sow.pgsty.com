@@ -165,4 +165,4 @@ Plain 模式直接提供传给 `sow create` 的目录。使用上例 Nginx 隐�
 
 Cloudflare R2 使用 `provider: r2`。配置 endpoint、bucket、凭据引用、公共 URL 与缓存时间，详见[目标配置参考](/zh/docs/reference/config/)。先发布到测试前缀，再从实际包管理器检查。
 
-R2 目标垃圾回收只报告待删除对象，SOW 不执行远端删除。已测试的存储操作见[平台与集成](/zh/docs/reference/compatibility/)。
+缓存宽限期过后，运行 `sow gc TARGET` 查看 R2 候选对象。确认该前缀仅由本工作区写入后，可执行 `sow gc TARGET --delete` 回收符合条件的对象。详见[目标 GC](/zh/docs/command/gc/#target-gc)。

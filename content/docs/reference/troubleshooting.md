@@ -22,7 +22,7 @@ Replace `/srv/sow`, `pgsql`, and the target name `prod` below with your configur
 
 ## The database needs migration
 
-SOW 0.7.1 uses schema v13, as do 0.5.0 through 0.7.0. An upgrade from these versions needs no schema migration.
+SOW 0.8.0 and versions 0.5.0 through 0.7.1 use schema v13. These workspaces can upgrade directly. If a 0.7.1 local GC was interrupted, finish it with the old binary before upgrading. See the [upgrade guide](/docs/start/install/#upgrade-to-080).
 For a 0.3 or 0.4 workspace, stop writers and back up the complete workspace. Then run:
 
 ```bash
@@ -34,7 +34,7 @@ sow check -C /srv/sow -r pgsql
 Repeat this for each Repository. Compatible read-only commands can still inspect an older
 schema, but they do not migrate it. If a Repository migrated from C2 layout by SOW 0.5 or
 0.6 reported an invalid transition control target after a later build, upgrading to SOW
-0.7.1 recovers automatically without manual repair. See [Upgrade](/docs/start/install/#upgrade-to-071).
+0.7.1 and later recover this state automatically. See [Upgrade](/docs/start/install/#upgrade-to-080).
 
 If leftover C2 migration stage files block local GC, rerun `sow repo migrate REPOSITORY`.
 SOW 0.7.1 preserves unproven files under `.sow/<repo>/abandoned/` and reports their location. Inspect them before removal.
@@ -62,8 +62,7 @@ For an interrupted `add`, `rm`, Dist change, or build, inspect `sow log` and fix
 reported cause. Run `sow build` for that Repository to complete recovery. Committed Desired
 changes remain part of the pending build. For interrupted `init`, `repo new`, or `repo rm`
 operations, rerun the corresponding lifecycle command to recover the workspace journal.
-For interrupted local `gc` or `retain rm` operations, rerun `sow gc` or `sow retain rm GENERATION`;
-SOW 0.7.1 resumes the persisted plan or discards an empty plan interrupted before deletion.
+For an interrupted local `gc` or `retain rm`, rerun `sow gc` or `sow retain rm GENERATION`. Before upgrading from 0.7.1, finish an interrupted local GC with the 0.7.1 binary. If an R2 target deletion was interrupted, resume it with `sow gc TARGET --delete`.
 
 If recovery needs a protected signing key, supply its password source again. Journals
 do not save passwords. A supported recovery command can use `--passfile PATH` or
@@ -125,7 +124,7 @@ not enable signing.
 - Check the selected path first. CLI/environment paths start at the process working
   directory, regardless of `-C`; config paths start at the workspace root. An empty
   environment variable is not the same as an unset one.
-- Use a readable regular file without symlinks. The password is one nonempty UTF-8
+- Use a readable regular file. An external secret mount may use symlinks if every hop stays outside the workspace. Paths inside the workspace must be free of symlinks. The password is one nonempty UTF-8
   line with an optional final LF or CRLF; spaces and tabs are significant. The file
   is not a shell script or `NAME=value` assignment.
 - An invalid selected source fails without fallback or prompting. External GPG needs

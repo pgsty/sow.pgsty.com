@@ -280,7 +280,7 @@ SOW 按下列规则设置顶层 `operation`：
 | 目标 `gc` | `repository`、`target`、`provider`、`phase`、`reports`、`candidates`、`deleted_objects`、`deleted_bytes`、`retained_objects`、`pending_grace`、`completed_attempts`、`noop` |
 | `export rpm-leaf` | `repository`、`repository_id`、`generation`、`dist`、`arch`、`directory`、`method`、`signed`、`signer_identity`、`packages`、`files`、`manifest_sha256` |
 
-`publish --rebind` 使用普通 publish 结果结构。R2 目标 GC 只报告候选，不删除远端对象。
+`publish --rebind` 使用普通 publish 结果结构。R2 的默认报告与 `gc TARGET --delete` 共用目标 GC 结果字段。后者通过 `deleted_objects` 和 `deleted_bytes` 报告经验证的删除量。
 
 <span id="log" data-td-print-local></span>
 <span id="log-export-不是信封" data-td-print-local></span>

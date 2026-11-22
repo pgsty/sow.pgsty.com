@@ -11,7 +11,7 @@ icon: fa-solid fa-download
 
 SOW is one executable. It needs no daemon, database service, or language runtime. Release archives support Linux and macOS on `amd64` and `arm64`. Linux also has RPM and DEB packages.
 
-The [Download page](/download/) provides SOW 0.7.1 packages, archives, and checksums.
+The [Download page](/download/) provides SOW 0.8.0 packages, archives, and checksums.
 Download your chosen artifact and `SHA256SUMS` into a separate download directory.
 
 ## Install an archive
@@ -20,8 +20,8 @@ For Linux amd64, verify the archive, extract it, and install the executable:
 
 ```bash
 set -euo pipefail
-grep '  sow_0.7.1_linux_amd64.tar.gz$' SHA256SUMS | sha256sum -c -
-tar -xzf sow_0.7.1_linux_amd64.tar.gz
+grep -F '  sow_0.8.0_linux_amd64.tar.gz' SHA256SUMS | sha256sum -c -
+tar -xzf sow_0.8.0_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
@@ -43,10 +43,10 @@ Verify the downloaded package against its entry in `SHA256SUMS`. Then run the co
 
 ```bash
 # RPM, x86_64
-sudo rpm -Uvh ./sow-0.7.1-1PGSTY.x86_64.rpm
+sudo rpm -Uvh ./sow-0.8.0-1PGSTY.x86_64.rpm
 
 # Debian or Ubuntu, amd64
-sudo apt install ./sow_0.7.1-1PGSTY_amd64.deb
+sudo apt install ./sow_0.8.0-1PGSTY_amd64.deb
 ```
 
 For ARM64, use the RPM ending in `.aarch64.rpm` or the DEB ending in `_arm64.deb`. Packages install the executable at `/usr/bin/sow`.
@@ -57,11 +57,11 @@ Install Go 1.27.4 or newer and Git. The build uses `CGO_ENABLED=0` and needs no 
 
 ```bash
 set -euo pipefail
-git clone --branch v0.7.1 https://github.com/pgsty/sow.git
+git clone --branch v0.8.0 https://github.com/pgsty/sow.git
 cd sow
 SOW_BUILD_DIR="$(mktemp -d)"
 CGO_ENABLED=0 go build -trimpath \
-  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.7.1' \
+  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.8.0' \
   -o "$SOW_BUILD_DIR/sow" ./cmd/sow
 sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 ```
@@ -85,19 +85,20 @@ sow help
 
 <span id="upgrade-to-070" data-td-print-local></span>
 
-## Upgrade to 0.7.1 {#upgrade-to-071}
+<span id="upgrade-to-071" data-td-print-local></span>
 
-SOW 0.7.1 keeps database schema v13, configuration schema `sow/v3`, and the public directory layout.
-Workspaces already on 0.5.0 through 0.7.0 need no schema migration.
-SOW 0.7.1 automatically recovers repositories that a retained migration anchor blocked after later builds.
+## Upgrade to 0.8.0 {#upgrade-to-080}
+
+Workspaces on 0.5.0 through 0.7.1 already use database schema v13. You can keep your `sow/v3` configuration and public URLs.
 
 > [!IMPORTANT]
 > SOW 0.6.1 and older versions reject `sow.yml` files that use `passfile`. Remove `passfile` keys before you downgrade.
 
 1. Stop all workspace writers.
 2. Back up the complete workspace with a tool that preserves hard links, such as `rsync -aH` or `tar`.
-3. Install SOW 0.7.1.
-4. Build and check each Repository in `sow.yml`:
+3. If local GC was interrupted on 0.7.1, use the **0.7.1 binary** to finish it first. Run `sow gc -r REPOSITORY -C /srv/sow` for the affected Repository. A saved plan with an empty `manifest` array requires the old binary.
+4. Install SOW 0.8.0.
+5. Build and check each Repository in `sow.yml`:
 {.steps .td-steps-compact}
 
 ```bash
@@ -112,7 +113,7 @@ New builds record one publication time and reuse it during recovery.
 
 ### Workspaces from 0.3 or 0.4 {#upgrade-from-04-to-05}
 
-These workspaces need migration before the first build. After backing up the workspace and installing 0.7.1, run:
+These workspaces need migration before the first build. After backing up the workspace and installing 0.8.0, run:
 
 ```bash
 sow repo migrate REPOSITORY -C /srv/sow
@@ -122,7 +123,7 @@ sow check -r REPOSITORY -C /srv/sow
 
 Repeat these commands for each Repository. Migration updates the database; the rebuild applies the current RPM verification and APT metadata rules.
 Keep the backup for rollback to a version that uses an older schema.
-See [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) and the [0.7.1 release notes](/blog/release/sow-v0.7.1/).
+See [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate) and the [0.8.0 release notes](/blog/release/sow-v0.8.0/).
 
 ## Upgrade a Plain repository
 

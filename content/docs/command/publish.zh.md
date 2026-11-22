@@ -88,9 +88,9 @@ sow publish prod --rebind
 
 记录发布检查点前，SOW 会通过 `public_endpoint` 读取并验证已发布文件。HTTP(S) 校验使用普通 GET 请求。内容过期或缺失时，在 `max_cache_ttl` 范围内重试。
 
-文件系统目标支持 `file://` 或 HTTP(S) 公共地址，R2 目标要求 HTTP(S)。每次 R2 发布都会列举目标前缀，并对每个对象执行 HEAD。一次更新会执行两轮这样的清单检查。
-每页最多并发执行八个 HEAD 请求。这是内部上限，`publish` 不接受 `--jobs`。
-上传重试只有在实际传输取得进展时，才会重置空闲超时。保留 R2 中的旧对象：目标 GC 只报告、不删除，后续发布还会核对远程前缀与已记录清单。
+文件系统目标支持 `file://` 或 HTTP(S) 公共地址，R2 目标要求 HTTP(S)。每次 R2 发布都会列举目标前缀。已知的不可变对象如果路径、大小和 ETag 一致，SOW 会复用先前记录的 SHA-256；其余对象通过 HEAD 核对，每页最多并发八个请求。
+
+上传取得实际进展时会重置空闲超时。缓存宽限期过后，`sow gc TARGET` 报告符合条件的 R2 对象，`sow gc TARGET --delete` 执行回收。详见[目标 GC](/zh/docs/command/gc/#target-gc)。
 
 ## 移除已发布视图 {#removing-a-published-view}
 

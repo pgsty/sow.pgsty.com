@@ -44,7 +44,7 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 | [0008](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0008-gc-reachability-and-confirmation.md) | 垃圾回收计算完整引用关系，删除前要求显式确认。 | **演化。** 当前 GC 检查引用关系与精确身份，旧 `--apply --confirm` 接口已退役；远端删除还检查缓存宽限期与存储服务能力。 |
 | [0009](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0009-forward-only-remote-generation-restore.md) | 远端 Generation 可见后，通过前向恢复完成发布。 | **保留。** 提交意图仍是放弃或核对未提交操作与前向恢复之间的边界。 |
 | [0010](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0010-repository-signing-identity-and-rotation-boundary.md) | 元数据签名绑定精确公私钥身份，密钥轮换作为整个仓库的状态变化处理。 | **演化。** 当前签名者记录与信任环仍检查精确身份，不再使用 V1 引用拓扑。 |
-| [0011](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0011-evidence-bound-remote-deletion.md) | 远端删除需要目标所有权、清单、检查点、宽限期与条件删除能力。 | **保留。** R2 不满足所需的原子删除能力，因此只报告候选对象。 |
+| [0011](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0011-evidence-bound-remote-deletion.md) | 远端删除需要目标所有权、清单、检查点、宽限期与条件删除能力。 | **演化。** R2 默认生成候选报告。0.8.0 的 `gc TARGET --delete` 重新核对对象身份，并验证存储端和公开入口均无法再取得对象。 |
 | [0012](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0012-private-origin-deployment-contract.md) | 明确规定私有源站、缓存拓扑与缓存清理映射。 | **退役。** CDN 与私有源站部署不属于当前 SOW。 |
 | [0013](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0013-persisted-publication-plans-are-untrusted.md) | 持久化计划是恢复输入，使用前要重新验证。 | **保留。** Managed 恢复仍会重新验证计划、文件、目标身份和公共交付结果。 |
 | [0014](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0014-rpm-provenance-signature-evidence-boundary.md) | RPM 来源记录保留精确签名包数据，并区分接纳策略与历史证明。 | **演化。** 当前包认证与独立信任环替代了 V1 回执编码。 |
@@ -86,7 +86,7 @@ ADR-0032 包含已废弃的基础设施细节，因此这里只提供摘要。
 | [0033](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0033-provider-scoped-readiness-registry.md) | 服务就绪检查使用独立注册表与所有权记录。 | **退役。** 服务初始化注册表已退出 SOW。 |
 | [0034](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0034-cloudflare-nonproduction-worker-bootstrap.md) | Worker 初始化使用租约、两阶段恢复、精确资源身份与可逆状态。 | **退役。** Cloudflare 部署不再由仓库引擎负责。 |
 | [0035](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0035-cloudflare-provider-attestation-and-log-sink-lease.md) | 使用前验证服务身份、运行时绑定、日志接收端与租约所有权。 | **退役。** 这套边缘控制面已退出产品。 |
-| [0036](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0036-provider-delete-capability-and-checkpoint-fenced-fallback.md) | R2 缺少条件 DeleteObject；能力探测与重复身份检查通过后，可显式启用 `checkpoint-fenced` 无条件删除。 | **演化；删除降级未继承。** 能力探测和条件不足时停止的规则保留。当前 SOW 禁用 R2 远端删除，只报告 GC 候选对象。 |
+| [0036](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0036-provider-delete-capability-and-checkpoint-fenced-fallback.md) | R2 缺少条件 DeleteObject；能力探测与重复身份检查通过后，可显式启用 `checkpoint-fenced` 无条件删除。 | **演化。** 0.8.0 允许显式启用 R2 删除，要求一个工作区独占目标前缀，分别核对对象身份与删除结果。见[目标 GC](/zh/docs/command/gc/#target-gc)。 |
 | [0037](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0037-pre-upload-confidential-edge-denial-attestation.md) | 上传机密字节前，先证明边缘服务会拒绝未授权访问。 | **退役。** 边缘访问控制现由外部部署负责。 |
 | [0038](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0038-yum-consumer-preflight-receipt.md) | YUM 切换需要有有效期的回执，绑定精确端点、Generation 与信任数据。 | **迁移历史。** 用于核对客户端切换，随后退役。 |
 | [0039](https://github.com/pgsty/sow/blob/v0.1.0/docs/adr/0039-caret-url-wire-canonicalization.md) | 脱字符在 Go、边缘服务、日志与源站路由中采用唯一 URL 编码。 | **演化。** 旧路由已退役，路径只编码一次的规范保留。 |

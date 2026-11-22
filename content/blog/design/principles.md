@@ -100,5 +100,4 @@ lists automated coverage.
 Use one workspace as the writer for each target prefix. SOW coordinates local processes
 with locks. It does not arbitrate between independent workspaces.
 
-R2 publication supports incremental uploads. R2 garbage collection reports candidates and
-keeps remote files because this backend does not implement the required conditional deletion.
+R2 publication supports incremental uploads. Garbage collection records candidates by default. With `sow gc TARGET --delete`, SOW checks object identity before deletion and verifies absence afterward. Keep exclusive write access to the prefix throughout these checks.

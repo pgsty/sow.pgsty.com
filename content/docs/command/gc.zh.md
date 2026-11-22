@@ -9,13 +9,13 @@ weight: 1700
 icon: fa-solid fa-recycle
 ---
 
-使用 `sow gc` 回收本地不再需要的包文件。使用 `sow gc TARGET` 维护配置的发布目标。文件系统目标可以删除符合条件的对象；R2 目标只报告候选对象。
+使用 `sow gc` 回收本地不再需要的包文件。对于 R2 目标，`sow gc TARGET` 记录候选对象，`sow gc TARGET --delete` 删除复核后仍符合条件的对象。
 
 ## 语法 {#synopsis}
 
 ```text
 sow gc          [-C|--workdir DIR] [-r|--repo NAME] [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
-sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
+sow gc TARGET [--delete] [-C|--workdir DIR]         [-T|--timeout DUR | -N|--no-wait] [--json] [--passfile PATH]
 ```
 
 `--passfile` 可为恢复中断的本地变更提供签名口令，文件回收本身不会签署文件。来源选择和格式见[口令文件](/zh/docs/reference/config/#passfile)。
@@ -24,6 +24,7 @@ sow gc TARGET   [-C|--workdir DIR]                  [-T|--timeout DUR | -N|--no-
 |---|---|---|
 | `-C, --workdir DIR` | 工作区发现起点 | 当前目录 |
 | `-r, --repo NAME` | 仅用于选择本地 GC 的仓库 | 选择规则 |
+| `--delete` | 允许删除 R2 目标对象，也用于继续中断的删除 | false |
 | `-T, --timeout DUR` | 最长仓库等锁时间；`0` 表示无限等待 | `0` |
 | `-N, --no-wait` | 锁被占用时立即失败 | false |
 | `--passfile PATH` | [本次签名的口令文件](/zh/docs/reference/config/#passfile) | 单个密钥配置，然后 `SOW_GPG_PASSFILE` |
@@ -56,10 +57,12 @@ local gc pgsql: generation=00000000000000000013 objects=4 bytes=1834200
 | 存储类型 | 行为 |
 |---|---|
 | `filesystem` | 宽限期到期后，按条件删除合格对象，再验证公共 URL 已无法访问该对象，并记录结果 |
-| `r2` | 保存候选对象报告，不删除对象 |
+| `r2` | 默认保存候选对象报告。传入 `--delete` 后，删除已过宽限期且符合条件的对象 |
 {.wide .expand}
 
 对于 `filesystem` 目标，SOW 会将目标路径冲突检查限定在所选目标自身路径上，因此共享同一父目录的相邻目标（如 `/srv/www/pgsql` 与 `/srv/www/pigsty`）不会互相阻塞。
+
+每个目标前缀只应由一个工作区写入。R2 删除可以直接运行，也可以先查看候选报告。SOW 会重新检查受保护的发布记录，逐个核对对象的大小、SHA-256 元数据和 ETag，再调用 `DeleteObject`。身份核对与删除是两次独立的存储请求。随后 SOW 确认存储端已无此对象、公开 URL 返回 HTTP 404，并写入删除回执。如果中途中断，重新运行 `sow gc TARGET --delete`。
 
 ```console
 sow gc prod

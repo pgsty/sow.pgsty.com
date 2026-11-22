@@ -61,6 +61,8 @@ SOW 拒绝仅大小写不同的包池完整路径。在大小写不敏感文件�
 Managed APT 使用 component `main` 和 SHA-256 by-hash 索引。
 元数据签名生成 RPM `repomd.xml.asc` 或 APT `InRelease`、`Release.gpg`。
 
+对于二进制 DEB，SOW 支持未压缩的 `control.tar`，以及 gzip、bzip2、xz 和 zstd 压缩格式。使用 `control.tar.lzma` 的包需要用受支持的控制归档重新打包，再导入 0.8.0。
+
 <span id="发布时间" data-td-print-local></span>
 
 ### 发布时间 {#publication-times}
@@ -116,7 +118,7 @@ Plain `create --metadata-timestamp SECONDS` 和 `prune --metadata-timestamp SECO
 | Provider | 发布 | 目标 GC |
 |---|---|---|
 | `filesystem` | 写入已有规范 `file://` endpoint 之下 | 缓存宽限期后条件删除，再验证公开入口已不可获取 |
-| `r2` | 通过 S3 兼容存储操作写入 | 只报告候选，不删除远端对象 |
+| `r2` | 通过 S3 兼容存储操作写入 | 默认报告候选。`gc TARGET --delete` 复核并删除合格对象，再验证对象已无法访问 |
 {.wide .expand}
 
 两者都在配置前缀下发布完整仓库。存储对应的 HTTP 服务、DNS、凭据、访问策略和缓存行为
@@ -133,14 +135,14 @@ R2 公开 endpoint 必须使用 HTTP(S)，filesystem 还支持 `file://` 验证�
 | 检查 | 环境 | 范围 |
 |---|---|---|
 | CLI 干净环境流程 | Linux CI | 交付二进制、混合 Plain 输出、Managed 初始化、RPM/DEB Dist、查询、构建与检查 |
-| Plain APT 客户端 | `pgsty/u22` Ubuntu 22.04 容器 | 显式信任未签名源时的 HTTP 更新、包发现、版本选择、下载与安装 |
-| RPM 分离签名切换 | AlmaLinux 8/9 与 `pgsty/el10` 容器 | `repomd.xml` 及分离签名切换时的 DNF 行为，以及带口令保护 GPG 密钥的口令文件签名 |
-| S3 兼容传输 | 固定版本的 PGSTY Silo 容器 | Bucket 列表、HEAD、GET、条件式单段 PUT、重放和对象 SHA-256 元数据 |
+| Plain APT 客户端 | Ubuntu 22.04 | 显式信任未签名源时的索引更新、包发现、下载与安装 |
+| 已签名的 Managed 仓库 | Ubuntu 22.04 与 AlmaLinux 9 | APT、DNF 验证元数据签名并安装软件包 |
+| RPM 签名与分离签名切换 | AlmaLinux 8、9、10 | 通过口令文件使用受保护的密钥签名，验证分离签名切换时的 DNF 行为 |
+| S3 兼容发布 | 固定版本的 PGSTY Silo 容器 | 对象传输、Managed GC 删除、重新发布相同内容，以及后续发布返回空操作 |
 | 发布打包 | Linux CI | 四个归档、两个 RPM、两个 DEB、校验和、包内路径与许可文件 |
 {.wide .expand}
 
-DNF 测试检查签名切换，APT 测试使用未签名 Plain 输出。
-完整的已签名 Managed 安装及托管 R2 条件式分段上传完成，需要在部署环境检查。
+在实际部署使用的托管 R2 端点上，另行验证条件式分段上传的完成操作。
 
 切换客户端前，运行 `sow check`，发布到目标，再使用实际客户端配置刷新索引并安装一个包。
 客户端设置见[对外服务](/zh/docs/tutorial/serving/)。

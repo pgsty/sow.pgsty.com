@@ -60,6 +60,8 @@ filesystem publication checks this before starting. See [Layout](/docs/reference
 Managed APT uses component `main` and SHA-256 by-hash indexes. Metadata signing produces
 RPM `repomd.xml.asc` or APT `InRelease` and `Release.gpg`.
 
+For binary DEBs, SOW reads `control.tar` uncompressed or compressed with gzip, bzip2, xz, or zstd. Rebuild packages that use `control.tar.lzma` with a supported control archive before importing them into 0.8.0.
+
 ### Publication times
 
 New Managed operations record one publication time when they build metadata, except `sow repo migrate`.
@@ -122,7 +124,7 @@ separate; see [Signing](/docs/feature/signing/).
 | Provider | Publication | Target GC |
 |---|---|---|
 | `filesystem` | Writes below an existing canonical `file://` endpoint | Conditional deletion after cache grace, followed by public-absence verification |
-| `r2` | Writes through S3-compatible storage operations | Reports candidates; does not delete remote objects |
+| `r2` | Writes through S3-compatible storage operations | Reports candidates by default. `gc TARGET --delete` rechecks eligible objects, deletes them and verifies absence |
 {.wide .expand}
 
 Both publish the complete repository under the configured prefix. Configure the HTTP
@@ -140,15 +142,14 @@ The source tree contains these integration checks:
 | Check | Environment | Scope |
 |---|---|---|
 | CLI clean-room workflow | Linux CI | Shipping binary, mixed Plain output, Managed initialization, RPM/DEB Dists, queries, build, and check |
-| Plain APT client | `pgsty/u22` Ubuntu 22.04 container | HTTP update, discovery, version selection, download, and installation with an explicitly trusted unsigned source |
-| RPM detached-signature transitions | AlmaLinux 8/9 and `pgsty/el10` containers | DNF behavior while `repomd.xml` and its detached signature change, plus password-file signing with protected GPG keys |
-| S3-compatible transport | Pinned PGSTY Silo container | Bucket listing, HEAD, GET, conditional single-part PUT, replay, and object SHA-256 metadata |
+| Plain APT client | Ubuntu 22.04 | Update, discovery, download, and installation from an explicitly trusted unsigned source |
+| Signed Managed clients | Ubuntu 22.04 and AlmaLinux 9 | APT and DNF verify signed repository metadata and install a package |
+| RPM signing and detached-signature transitions | AlmaLinux 8, 9, and 10 | Protected-key signing with a password file and DNF behavior while the detached signature changes |
+| S3-compatible publication | Pinned PGSTY Silo container | Object transport, Managed GC deletion, republishing identical bytes, and a subsequent no-op publish |
 | Release packaging | Linux CI | Four archives, two RPMs, two DEBs, checksums, package paths, and license files |
 {.wide .expand}
 
-The DNF test checks signature transitions; the APT test uses unsigned Plain output.
-Complete signed Managed installation and hosted R2 conditional multipart completion
-require checks in the deployment environment.
+Verify conditional multipart completion against the hosted R2 endpoint used in your deployment.
 
 Before switching clients, run `sow check`, publish to the intended target, then use the
 actual client configuration to refresh indexes and install a package. See

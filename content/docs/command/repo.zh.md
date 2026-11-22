@@ -116,8 +116,8 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate {#sow-repo-migrate}
 
-从 0.3 或 0.4 工作区升级到 SOW 0.7.1 时，使用 `repo migrate`。
-已使用 0.5.0 至 0.7.0 的工作区采用 schema v13，无需迁移数据库。新建的 0.7.1 仓库也使用 schema v13。
+从 0.3 或 0.4 工作区升级到 SOW 0.8.0 时，使用 `repo migrate`。
+0.5.0 至 0.7.1 的工作区已经采用 schema v13，详见[升级指南](/zh/docs/start/install/#upgrade-to-080)。
 
 1. 停止工作区写操作。
 2. 备份整个工作区，并保留硬链接。
@@ -125,7 +125,7 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 4. 对每个仓库运行 `build` 与 `check`。
 
 ```bash
-rsync -aH /srv/sow/ /srv/sow.backup-before-0.7.1/
+rsync -aH /srv/sow/ /srv/sow.backup-before-0.8.0/
 sow repo migrate pigsty -C /srv/sow
 sow build -r pigsty -C /srv/sow
 sow check -r pigsty -C /srv/sow

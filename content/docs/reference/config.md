@@ -227,8 +227,7 @@ RPM signing creates `repodata/repomd.xml.asc`. DEB signing creates `InRelease` a
 Environment names use `[A-Za-z_][A-Za-z0-9_]*`. A GPG key identifier is a 16-digit key ID
 or a 40- or 64-digit fingerprint. Hexadecimal letters are case-insensitive.
 
-Key files accept ASCII-armored or binary OpenPGP data and must be regular files without
-symlinks, at most 16 MiB. Relative paths resolve from the workspace root.
+Key files accept ASCII-armored or binary OpenPGP data in a regular file of up to 16 MiB. Relative paths resolve from the workspace root. Inside the workspace, every path component must be free of symlinks. An external key or trusted keyring may use symlinks when every hop and the final regular file stay outside the workspace.
 Metadata signing uses the supplied private-key material inside SOW. A GPG key identifier
 uses external `gpg`, whether supplied through `agent://` or an environment variable.
 
@@ -286,9 +285,7 @@ The file contains the password itself, with these exact rules:
   backslashes are literal; there are no comments, escapes, or `NAME=value` syntax.
 - Empty files, an empty line, NUL, embedded CR/LF, a bare final CR, and extra blank
   lines are rejected. A password consisting only of spaces is not empty.
-- Use a readable regular file with no symlinks in its path. FIFOs, directories, and
-  stdin (`-`) are not special sources. macOS system aliases `/tmp`, `/var`, and `/etc`
-  are normalized to their `/private` locations.
+- Use a readable regular file. Inside the workspace (the repository directory for Plain `create`), every path component must be free of symlinks. External mounts such as Kubernetes Secrets may use symlinks when every hop stays outside that root. macOS system aliases `/tmp`, `/var`, and `/etc` resolve to their `/private` locations.
 
 Keep the file outside the repository and public document root, normally with mode
 `0600` and a private parent directory. SOW does not require exactly `0600`, so a
@@ -329,7 +326,7 @@ historical configuration identities include the legacy reference.
 Legacy references keep their byte-oriented behavior: at most 64 KiB, nonempty, no NUL,
 remove one final LF and then one final CR. In-process legacy keys retain support for
 other bytes; external GPG requires a single line. Legacy file paths resolve from the
-workspace root and use the same regular-file and no-symlink rules as keys.
+workspace root and follow the same path rules as key files.
 
 For `config check`, reference syntax errors return `2`; unresolved or unusable
 signing references return `6`. Metadata key files are unlocked and checked for
