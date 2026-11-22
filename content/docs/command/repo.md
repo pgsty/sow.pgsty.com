@@ -136,7 +136,7 @@ Repeat the last three commands for each Repository. The migration reports `schem
 
 Writes require the current schema. Compatible read-only commands can inspect older state without upgrading it. After migration, use SOW 0.5 or later; restore the backup to return to the older schema.
 
-If a completed migration leaves stage files whose ownership cannot be proven, 0.7.1 preserves them under `.sow/<repo>/abandoned/` and reports the path.
+If a completed migration leaves stage files whose ownership cannot be proven, SOW 0.7.1 and later preserve them under `.sow/<repo>/abandoned/` and report the path.
 Rerun `sow repo migrate NAME` to recover this state and unblock local GC. Inspect the retained files before removing them.
 
 `--abort` abandons an unfinished layout plan before its commit decision. It does not undo a completed schema migration.

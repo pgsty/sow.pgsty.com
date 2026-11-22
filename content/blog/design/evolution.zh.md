@@ -2,9 +2,9 @@
 title: "SOW 设计演进：从路由图到仓库引擎"
 linkTitle: "设计演进"
 date: 2026-08-10
-lastmod: 2026-11-09
+lastmod: 2026-11-23
 authors: [Vonng]
-description: "SOW 如何从 v0.1 软件分发平台转为仓库引擎，以及 v0.2 到 v0.7 如何改进这一模型。"
+description: "SOW 如何从 v0.1 软件分发平台转为仓库引擎，以及 v0.2 到 v0.8 如何改进这一模型。"
 categories: [Design]
 tags: [architecture, repository, migration, decision]
 weight: 20
@@ -14,9 +14,9 @@ draft: false
 ---
 
 SOW 在 v0.1 中探索了以 Git 为核心的软件分发控制面，在 v0.2 中转为仓库引擎。
-本文记录这次变化，以及后续到 v0.7.0 的改进。
+本文记录这次变化，以及后续到 v0.8.0 的改进。
 
-下文版本均对应正式 Git 标签，包括 [v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0)。部分归档计划曾用“v0.2”“v0.3”指代开发中的设计；
+下文版本均对应正式 Git 标签，包括 [v0.8.0](https://github.com/pgsty/sow/tree/v0.8.0)。部分归档计划曾用“v0.2”“v0.3”指代开发中的设计；
 其中在 RPM 视图内创建硬链接的 C2 布局，已在 v0.2.0 发布前被替换。
 
 早期工作的细节见四篇配套文章：
@@ -39,6 +39,7 @@ SOW 在 v0.1 中探索了以 Git 为核心的软件分发控制面，在 v0.2 �
 | v0.5 | 包路径保留、移除与恢复修复、签名检查、可复现的 Plain 时间戳 | 不变 |
 | v0.6 | 保留上一版 Plain RPM 索引、记录 Managed 发布时间、强化文件检查、一致的状态读取、减少重复 I/O | 不变 |
 | v0.7 | Plain RPM 裁剪、口令文件签名、tag 267 ECDSA/EdDSA 验签、caret 版本排序，以及迁移/发布/恢复修复 | 不变 |
+| v0.8 | 按需 R2 条件删除（`gc TARGET --delete`）、工作区外密钥/口令符号链接挂载、移除 `control.tar.lzma`、严格 DEB/RPM 校验，以及大规模发布与分批 GC 加速 | 不变 |
 {.wide .expand}
 
 早期版本的实现保存在源码标签中：
@@ -48,8 +49,10 @@ SOW 在 v0.1 中探索了以 Git 为核心的软件分发控制面，在 v0.2 �
 [v0.4.0](https://github.com/pgsty/sow/tree/v0.4.0)、
 [v0.5.0](https://github.com/pgsty/sow/tree/v0.5.0)、
 [v0.6.0](https://github.com/pgsty/sow/tree/v0.6.0)、
-[v0.6.1](https://github.com/pgsty/sow/tree/v0.6.1) 和
-[v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0)。
+[v0.6.1](https://github.com/pgsty/sow/tree/v0.6.1)、
+[v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0)、
+[v0.7.1](https://github.com/pgsty/sow/tree/v0.7.1) 和
+[v0.8.0](https://github.com/pgsty/sow/tree/v0.8.0)。
 
 <span id="v01问题很有价值产品概念太多" data-td-print-local></span>
 
@@ -147,9 +150,15 @@ v0.7.0 保持 schema 13 与公共布局不变。新增的 `sow prune` 为无状�
 SOW 按 `(name, arch)` 对 `.rpm` 文件分组，只保留每组中 `epoch:version-release` 最高的文件，
 先更新 `repodata/` 再删除被取代的旧 RPM 文件，并在修改文件前拒绝存在最高 EVR 并列冲突的目录。
 
-该版本还为加密签名密钥加入了口令文件支持（`--gpg-passphrase-file`、`SOW_GPG_PASSPHRASE_FILE` 与 `sow.yml` 中的 `password_file`），
+该版本还为加密签名密钥加入了口令文件支持（`--passfile`、`SOW_GPG_PASSFILE` 与 `sow.yml` 中的 `passfile`），
 支持 tag `267` 中的 RPM 仅头部 ECDSA 与 EdDSA 签名，实现了 RPM caret（`^`）与 tilde（`~`）版本段排序，
-并加固了 schema 迁移、沿用视图检查以及中断后的 `gc` / `retain rm` 计划恢复。完整细节见 [v0.7.0 发布注记](/zh/blog/release/sow-v0.7.0/)。
+并加固了 schema 迁移、沿用视图检查以及中断后的 `gc` / `retain rm` 计划恢复。完整细节见 [v0.7.0 发布注记](/zh/blog/release/sow-v0.7.0/) 与 [v0.7.1 发布注记](/zh/blog/release/sow-v0.7.1/)。
+
+## v0.8：按需 R2 回收、外部密钥挂载与规模化加固 {#v08-opt-in-r2-reclamation-external-secret-mounts-and-scale-hardening}
+
+v0.8.0 保持 schema 13 与公共布局不变。它在保持 R2 默认 `gc` 只报告候选的同时，加入了显式条件删除（`sow gc TARGET --delete`）：删除每个过期候选对象前，SOW 重新核对受保护发布根、缓存宽限期、对象大小、SHA-256 元数据与 ETag，删除后验证存储端与公开 HTTP 404/410 不可访问，并写入绑定因果发布纪元的删除回执，使重复发布相同字节保持幂等。
+
+本版同时支持工作区外经符号链接挂载的口令文件、密钥文件与受信任密钥环（如 Kubernetes Secret），移除了遗留的 `.deb` `control.tar.lzma` 支持，为新发布的 `repomd.xml.asc` 强制要求 SHA-256+ 摘要，允许相邻平面仓库并行运行，并显著加速大型仓库发布与分批本地 GC。完整细节见 [v0.8.0 发布注记](/zh/blog/release/sow-v0.8.0/)。
 
 <span id="每次重构都保留下来的原则" data-td-print-local></span>
 

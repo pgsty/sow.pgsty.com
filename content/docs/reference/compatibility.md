@@ -141,6 +141,7 @@ The source tree contains these integration checks:
 
 | Check | Environment | Scope |
 |---|---|---|
+| Core contract tests | Linux and macOS CI | Repository manager, recovery, signing, and patched RPM parser unit and contract suites |
 | CLI clean-room workflow | Linux CI | Shipping binary, mixed Plain output, Managed initialization, RPM/DEB Dists, queries, build, and check |
 | Plain APT client | Ubuntu 22.04 | Update, discovery, download, and installation from an explicitly trusted unsigned source |
 | Signed Managed clients | Ubuntu 22.04 and AlmaLinux 9 | APT and DNF verify signed repository metadata and install a package |

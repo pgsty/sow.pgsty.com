@@ -18,7 +18,7 @@ columns:
   - title: 项目
     links:
       - { label: 博客, url: blog/ }
-      - { label: 发行说明, url: blog/release/ }
+      - { label: 发布注记, url: blog/release/ }
       - { label: GitHub, url: 'https://github.com/pgsty/sow', external: true }
       - { label: 问题反馈, url: 'https://github.com/pgsty/sow/issues', external: true }
       - { label: 开源协议, url: 'https://www.apache.org/licenses/LICENSE-2.0', external: true }

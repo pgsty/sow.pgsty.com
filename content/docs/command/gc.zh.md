@@ -31,7 +31,7 @@ sow gc TARGET [--delete] [-C|--workdir DIR]         [-T|--timeout DUR | -N|--no-
 | `--json` | 输出 JSON | false |
 {.wide .expand}
 
-目标自身已绑定仓库，因此 `gc TARGET -r NAME` 属于用法错误。两种模式都不接受 `--dist`。
+目标自身已绑定仓库，因此 `gc TARGET -r NAME` 属于用法错误；未指定 `TARGET` 而传入 `--delete` 同样是用法错误。两种模式都不接受 `--dist`。
 
 ## 本地 GC {#local-gc}
 
@@ -43,7 +43,7 @@ sow gc TARGET [--delete] [-C|--workdir DIR]         [-T|--timeout DUR | -N|--no-
 - 发布记录；
 - 活跃维护操作。
 
-SOW 将该操作记入日志，并在删除包池文件前持久化本地 GC 计划（`.sow/<repo>/gc-plan.json`）。如果删除部分文件后中断，后续恢复会重放记录的计划，确认所有活跃的当前、上一版和保留 Generation 指针都已撤下后再退役 Generation，并完成新 Generation 的切换。实际删除包文件时，仓库推进到新的构建快照；没有符合条件的包时，命令为幂等空操作。
+SOW 先重放中断的 `retain-remove-*` 墓碑，再将该操作记入日志，并在删除包池文件前持久化本地 GC 计划（`.sow/<repo>/recovery/<operation-id>/plan.json`）。大量不可达对象会在 64 MiB 计划上限内分批执行。如果删除部分文件后中断，后续恢复会重放记录的计划，确认所有活跃的当前、上一版和保留 Generation 指针都已撤下后再退役 Generation，并完成新 Generation 的切换。实际删除包文件时，仓库推进到新的构建快照；没有符合条件的包时，命令为幂等空操作。
 
 ```console
 sow gc -r pgsql
@@ -62,7 +62,7 @@ local gc pgsql: generation=00000000000000000013 objects=4 bytes=1834200
 
 对于 `filesystem` 目标，SOW 会将目标路径冲突检查限定在所选目标自身路径上，因此共享同一父目录的相邻目标（如 `/srv/www/pgsql` 与 `/srv/www/pigsty`）不会互相阻塞。
 
-每个目标前缀只应由一个工作区写入。R2 删除可以直接运行，也可以先查看候选报告。SOW 会重新检查受保护的发布记录，逐个核对对象的大小、SHA-256 元数据和 ETag，再调用 `DeleteObject`。身份核对与删除是两次独立的存储请求。随后 SOW 确认存储端已无此对象、公开 URL 返回 HTTP 404，并写入删除回执。如果中途中断，重新运行 `sow gc TARGET --delete`。
+每个目标前缀只应由一个工作区写入。R2 删除可以直接运行，也可以先查看候选报告。SOW 会重新检查受保护的发布记录，逐个核对对象的大小、SHA-256 元数据和 ETag，再调用 `DeleteObject`。身份核对与删除是两次独立的存储请求。随后 SOW 确认存储端已无此对象、公开 URL 返回 HTTP 404 或 410，并写入绑定因果发布纪元的删除回执。如果中途中断，重新运行 `sow gc TARGET --delete`；未加 `--delete` 运行会拒绝未完成的条件删除报告并返回退出码 `6`。
 
 ```console
 sow gc prod

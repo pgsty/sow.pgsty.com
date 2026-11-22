@@ -49,9 +49,9 @@ sow prune /srv/candidate --protect age_18 --protect age_18-llvmjit
 
 ## Integrity and recovery
 
-The replacement RPM for each removed version must pass its embedded digest and signature header checks, including RSA, DSA, ECDSA, and EdDSA packets in header signature tag 267 (`RPMSIGTAG_DSA`). SOW binds those checks and the indexed bytes to a stable file identity, including change time. It checks the replacement before each deletion and again before completion. A detected change stops further deletion, including an in-place rewrite with restored size and modification time.
+The replacement RPM for each removed version must pass its embedded digest and signature header checks, including RSA, DSA, ECDSA, and EdDSA packets in header signature tag 267 (`RPMSIGTAG_DSA`). SOW binds those checks and the indexed bytes to a stable file identity, including change time and link count. It checks the replacement before each deletion and again before completion: if only `ctime` or `nlink` changed (such as from an external hard link), SOW re-verifies the file's SHA-256 digest on the bound descriptor, so benign hard links succeed while an in-place rewrite with restored size and modification time still stops further deletion.
 
-SOW publishes the filtered index before deleting packages. If an error occurs after index publication or after some deletions, the result reports what changed and returns partial-result exit code `3`; interruption returns `130`. SOW does not restore already removed packages. Resolve the reported problem, then rerun the same command.
+SOW locks only the target directory after binding (releasing the parent lock immediately), so sibling flat directories can run concurrently. SOW publishes the filtered index before deleting packages. If an error occurs after index publication or after some deletions, the result reports what changed and returns partial-result exit code `3`; interruption returns `130`. SOW does not restore already removed packages. Resolve the reported problem, then rerun the same command.
 
 SOW withdraws an existing `repo_complete` marker during changes (tracking it via `.sow-prune-repo-complete`) and refreshes it only after completion. That pending state survives interruption. Prune creates no marker when none existed and does not apply `create --pigsty` package exclusion rules.
 
@@ -66,8 +66,8 @@ Prune rejects managed workspaces, DEB packages or indexes, package symlinks, sou
 | Code | Meaning |
 |---|---|
 | `0` | Prune succeeded, or `--dry-run` / `noop` completed |
-| `1` | Filesystem, package parsing, digest verification, or metadata rendering error |
-| `2` | Invalid flags, missing directory, or unmatched `--protect` package name |
+| `1` | Nonexistent or unreadable directory, filesystem, package parsing, digest verification, or metadata rendering error |
+| `2` | Invalid flags, missing `DIR` argument, or unmatched `--protect` package name |
 | `3` | Partial completion: failure after publishing the filtered index or removing at least one RPM |
 | `4` | Directory lock is held by another process |
 | `6` | Unsupported repository state (Managed workspace, DEB files, signed `repomd.xml`, foreign metadata, equal EVRs, or RPM v6) |

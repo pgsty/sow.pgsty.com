@@ -49,12 +49,11 @@ RPM 位置使用文件名，DEB 使用 `./<文件名>`。构建期间使用私�
     <repo>.db
     <repo>/
       abandoned/ # 中止迁移时保留的暂存文件
-      stage/
-      recovery/
-      retained/ # 构建快照保留记录与 .rm 删除计划
+      stage/ # 活动暂存文件与 retain-remove-* 移除计划/墓碑
+      recovery/ # 活动本地 GC 计划（<operation-id>/plan.json）与待清理包体
+      retained/ # 构建快照保留记录
       transitions/
       pending/
-      gc-plan.json # 活动的本地 GC 删除计划
   <repo>/ # 公开仓库根
     pool/
     dists/

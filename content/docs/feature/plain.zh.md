@@ -36,7 +36,7 @@ RPM 包路径使用文件名，DEB 的 `Filename` 使用 `./<文件名>`。SOW �
 完成中断的清理操作时例外。
 
 默认保留包文件和无关文件。某种格式不再有包时，SOW 删除该格式的旧索引。
-对于 RPM，SOW 保留当前与紧邻上一轮以校验和命名的元数据，删除更早的 SOW 格式元数据，并替换不完整输出。若 `repodata/` 中存在 SQLite 数据库、modulemd、comps 或 `.asc` 签名等非 SOW 文件，`sow create` 会清理这些外来元数据，并在 `dropped_metadata`（`--json`）和 stderr 告警中报告。
+对于 RPM，SOW 保留当前与紧邻上一轮以校验和命名的元数据，删除更早的 SOW 格式元数据，并替换不完整输出。若已有的 `repomd.xml` 列出了 SOW 不生成的独立元数据（如 `group`、`updateinfo`、`modules`），`sow create` 会替换 `repomd.xml` 且不再带入这些条目，并在 `dropped_metadata`（`--json`）和 stderr 告警中报告被丢弃的类型（不包含 `*_db`、`*_zck` 等包索引编码）。磁盘上的非 SOW 文件（包括外部 `repomd.xml.asc` 签名）保持不变，需另行刷新。`sow create` 拒绝在 Managed `.sow` 工作区内部运行，未加 `--pigsty` 时也拒绝覆盖中断的 `.sow-prune-repo-complete` 标记。
 生成目录的权限为 `0755`，生成文件为 `0644`。
 
 <span id="单遍流水线" data-td-print-local></span>
@@ -76,7 +76,7 @@ sow create /srv/offline --metadata-timestamp 1791849600
 使用 [`sow prune`](/zh/docs/command/prune/) 在 Plain 目录中按每个 RPM `(name, arch)` 仅保留最高 EVR 版本：
 
 ```bash
-sow prune /srv/offline --check
+sow prune /srv/offline --dry-run
 sow prune /srv/offline
 ```
 
@@ -140,8 +140,7 @@ Plain 模式不签仓库元数据。Managed 元数据签名和包签名策略见
 
 ## 并发命令 {#concurrent-commands}
 
-`sow create` 锁住目标目录及其父目录。用 `-N` 在其他 SOW 写者占锁时立即退出，
-或用 `-T 30s` 最多等待 30 秒。默认等待到锁可用。
+`sow create` 与 `sow prune` 锁定目标目录。它们只在绑定目标目录时短暂持有父目录锁，在等待繁忙目标前及绑定完成后即释放，因此相邻平面目录可并行运行。用 `-N` 在其他 SOW 写者占锁时立即退出，或用 `-T 30s` 最多等待 30 秒。默认等待到锁可用。
 
 完整选项与结果字段见 [`sow create`](/zh/docs/command/create/)。
 

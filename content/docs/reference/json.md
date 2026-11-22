@@ -85,13 +85,13 @@ SOW sets the top-level `operation` field as follows:
 
 | Command | Value |
 |---|---|
-| `add`, `rm` without preview, `build`, local `gc` | Journal ID, if allocated |
+| `add`, `rm` without preview, `build`, local `gc`, `log prune` | Journal ID, if allocated |
 | `publish`, `publish --abort` | Publication attempt ID, if available |
 | `log ID` | Requested operation ID |
-| Other commands (`create`, `prune`, `init`, `config`, `ls`, `show`, `where`, `retain`, `export`) | `null`; `log prune` puts its ID in `result.operation` |
+| Other commands (`create`, `prune`, `init`, `config`, `ls`, `show`, `where`, `retain`, `export`) | `null` |
 {.wide .expand}
 
-A null operation does not mean the command is read-only. `create`, `prune`, `init`, `config check`, `repo ls`, and `where` keep the top-level `repository` null; `where` places repository names inside its locations.
+A null operation does not mean the command is read-only. `create`, `prune`, `init`, `config check`, and `repo ls` keep the top-level `repository` null. `where` sets the top-level `repository` when `-r/--repo` is given and keeps it `null` when searching across all repositories; each entry in `result.locations` also carries its own `repository`.
 
 <span id="result-shapes" data-td-print-local></span>
 <span id="create" data-td-print-local></span>

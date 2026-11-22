@@ -134,6 +134,7 @@ R2 公开 endpoint 必须使用 HTTP(S)，filesystem 还支持 `file://` 验证�
 
 | 检查 | 环境 | 范围 |
 |---|---|---|
+| 核心契约测试 | Linux 与 macOS CI | 仓库引擎、恢复、签名及补丁 RPM 解析器的单元与契约测试集 |
 | CLI 干净环境流程 | Linux CI | 交付二进制、混合 Plain 输出、Managed 初始化、RPM/DEB Dist、查询、构建与检查 |
 | Plain APT 客户端 | Ubuntu 22.04 | 显式信任未签名源时的索引更新、包发现、下载与安装 |
 | 已签名的 Managed 仓库 | Ubuntu 22.04 与 AlmaLinux 9 | APT、DNF 验证元数据签名并安装软件包 |

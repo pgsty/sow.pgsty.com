@@ -52,12 +52,11 @@ Keep it when copying a directory for further `create` or `prune` runs. It does n
     <repo>.db
     <repo>/
       abandoned/ # retained migration stages
-      stage/
-      recovery/
-      retained/ # retained generation records and .rm plans
+      stage/ # active staging and retain-remove-* removal plans/tombstones
+      recovery/ # active local GC plans (<operation-id>/plan.json) and detached payloads
+      retained/ # retained generation records
       transitions/
       pending/
-      gc-plan.json # active local GC deletion plan
   <repo>/ # public repository root
     pool/
     dists/

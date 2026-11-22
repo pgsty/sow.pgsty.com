@@ -44,7 +44,7 @@ repository=demo coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256
 
 Each location reports Desired `dists` and current `built_dists` across its Repository. Candidate lookup uses Desired membership. A package removed from every selected Dist does not appear, even if a previous Built index still contains it. Use `sow show PACKAGE -r NAME` without `-d` to inspect such a stored object.
 
-With `--json`, the locations appear in `result.locations`. If no package matches, the command returns an error:
+With `--json`, the locations appear in `result.locations`, and the top-level `repository` field is set when `-r/--repo` is supplied (`null` when searching across all repositories). If no package matches, the command returns an error:
 
 ```console
 sow where nosuchpkg

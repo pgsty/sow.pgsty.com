@@ -56,7 +56,7 @@ configuration error: load config "/srv/repo/sow.yml": parse sow.yml: yaml: unmar
   line 8: field bogus_field not found in type config.DistConfig
 ```
 
-使用 `schema: sow/v3`：
+活跃工作区使用 `schema: sow/v3`（冻结的 `sow/v2` 工作区在迁移前仍支持 `config check`、`repo ls/show`、`dist ls/show` 等只读检查命令）：
 
 ```console
 sow config check

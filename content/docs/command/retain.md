@@ -54,7 +54,7 @@ removed retained generation 00000000000000000012
 ```
 
 It does not delete package bytes. Removing a Generation that is not retained is an idempotent no-op.
-Before deleting a retention record, SOW writes a removal plan (`.sow/<repo>/retained/<GENERATION>.rm`). If an interruption occurs before the removal finishes, the next command completes the planned removal cleanly instead of reporting a damaged record.
+Before deleting a retention record, SOW writes a removal plan (`.sow/<repo>/stage/retain-remove-<GENERATION>.plan.json`) and moves the record to a removal tombstone (`.sow/<repo>/stage/retain-remove-<GENERATION>`). If an interruption occurs before the removal finishes, rerunning `retain rm` or running local [`sow gc`](/docs/command/gc/) replays the tombstone cleanly (`sow check` surfaces unfinished removal stages in its `retained` layer).
 A later local [`sow gc`](/docs/command/gc/) can reclaim these packages when no other state or operation needs them.
 
 If a retained record is damaged, `retain rm`, `retain ls`, local `gc`, and `check` report the error. The `retained` layer in `check` identifies the affected Generation. To discard that damaged record:

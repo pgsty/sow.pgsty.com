@@ -37,7 +37,7 @@ a conflict. SOW rejects a directory with no supported packages, except when `--p
 finishes an interrupted cleanup.
 
 By default, package files and unrelated files stay unchanged. If a format disappears, SOW removes its old generated indexes.
-For RPMs, it keeps the current and immediately previous checksum-named metadata sets. It removes older SOW-shaped metadata and replaces incomplete output. If `repodata/` contains non-SOW files such as SQLite databases, modulemd, comps, or `.asc` signatures, `sow create` removes those foreign files and reports them in `dropped_metadata` (`--json`) and as a stderr warning.
+For RPMs, it keeps the current and immediately previous checksum-named metadata sets. It removes older SOW-shaped metadata and replaces incomplete output. If an existing `repomd.xml` lists independent metadata SOW does not generate—such as `group` (comps), `updateinfo`, or `modules`—`sow create` replaces `repomd.xml` without those entries and reports those data types in `dropped_metadata` (`--json`) and as a stderr warning (alternate package-index encodings such as `*_db` and `*_zck` are not listed). Non-SOW files on disk, including external `repomd.xml.asc` signatures, stay untouched and must be refreshed separately. `sow create` refuses to run inside a managed `.sow` workspace ancestor or over an interrupted `.sow-prune-repo-complete` marker without `--pigsty`.
 Generated directories use `0755`; generated files use `0644`.
 
 <span id="the-one-pass-pipeline" data-td-print-local></span>
@@ -79,7 +79,7 @@ Package retention remains the operator's responsibility. See [RPM index retentio
 Use [`sow prune`](/docs/command/prune/) to keep only the highest EVR per RPM `(name, arch)` in a Plain directory:
 
 ```bash
-sow prune /srv/offline --check
+sow prune /srv/offline --dry-run
 sow prune /srv/offline
 ```
 
@@ -146,9 +146,7 @@ Managed metadata signing and package-signing policy.
 
 ## Concurrent commands
 
-`sow create` locks the target directory and its parent. Use `-N` to fail immediately if
-another SOW writer holds the lock, or `-T 30s` to wait up to 30 seconds. The default waits
-until the lock becomes available.
+`sow create` and `sow prune` lock the target directory. They hold the parent directory lock only briefly while binding the target and release it before waiting on a busy target, so runs on sibling flat directories do not block each other. Use `-N` to fail immediately if another SOW writer holds the target lock, or `-T 30s` to wait up to 30 seconds. The default waits until the lock becomes available.
 
 See [`sow create`](/docs/command/create/) for all options and result fields.
 

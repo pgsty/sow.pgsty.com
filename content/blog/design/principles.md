@@ -2,7 +2,7 @@
 title: "Design Principles"
 linkTitle: "Principles"
 date: 2026-08-08
-lastmod: 2026-11-09
+lastmod: 2026-11-23
 authors: [Vonng]
 description: "Why SOW separates package storage, repository builds, and publication."
 categories: [Design]
@@ -30,7 +30,7 @@ where each kind of state belongs and how operations use it.
 | Target bindings and revisions | Repository and target |
 | Publication attempts and checkpoints | Repository and target prefix |
 | Remote inventory and deletion records | Repository and target prefix |
-| Plain RPM previous-index marker (`repodata/.sow-plain-rpm-history.json`) | Plain RPM directory |
+| Plain RPM previous-index marker (`.sow-plain-rpm-history.json`) | Plain RPM directory |
 {.wide .expand}
 
 Each Repository stores its own copy of a package. Each publication target stores its own

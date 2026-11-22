@@ -53,9 +53,9 @@ By default, `create` updates its indexes and preserves the package files. `--pig
 ## Scan rules
 
 - SOW considers only top-level regular files ending in `.rpm` or `.deb`.
-- No recursion, no symlink following, no Workspace config.
+- No recursion, no symlink following, no Workspace config. `create` rejects running inside a managed `.sow` workspace ancestor.
 - Every valid version enters the index. Two files claiming the same logical coordinate with
-  different content is a hard failure.
+  different content is a hard failure. With `--pigsty`, exclusion filtering runs before duplicate-filename checks.
 - In default mode, SOW rejects a directory with no supported package. `--pigsty` accepts an empty
   package set so rerunning an interrupted cleanup can finish and write its marker.
 
@@ -98,7 +98,7 @@ If client caches span several updates, keep the required packages and metadata i
 
 ## The repo_complete gate
 
-If the directory contains `repo_complete`, use `--pigsty` to refresh it with the indexes. Running without `--pigsty` returns an error:
+If the directory contains `repo_complete` (or an interrupted `.sow-prune-repo-complete` marker left by `sow prune`), use `--pigsty` to refresh it with the indexes. Running without `--pigsty` returns an error:
 
 ```console
 sow create /srv/pigsty
@@ -158,7 +158,7 @@ SOW removes the existing `repo_complete` before replacing indexes. It then delet
 
 - Default: SOW signs only RPMs that have no parseable embedded OpenPGP signature (RSA, DSA, ECDSA, or EdDSA in signature header tag 267, or legacy PGP tags). Packages that are already signed keep their bytes.
 - `--overwrite` requires `--sign-with` and switches to `rpm --resign` over every retained RPM.
-- SOW signs a temporary copy, checks that package identity and content are unchanged, then replaces the original RPM. The indexes describe the final signed file.
+- SOW signs a temporary copy, cryptographically verifies the resulting OpenPGP signature and checks that package identity and content are unchanged, then replaces the original RPM. The indexes describe the final signed file.
 - At least one top-level RPM must remain after `--pigsty` cleanup, and `rpm` must be on `PATH`.
 
 ```console
@@ -183,7 +183,7 @@ usage error: --sign-with must be a 16, 40, or 64 hexadecimal GPG key ID/fingerpr
 
 ## Locking, staging and overwrite rebuild
 
-`create` locks the target directory while it updates the indexes. Use `--timeout` or `--no-wait` to control lock waiting.
+`create` locks the target directory while it updates the indexes and releases the parent directory lock immediately after binding (and before waiting on a busy target), so concurrent runs on sibling flat directories do not block each other. Use `--timeout` or `--no-wait` to control lock waiting.
 
 An interruption can leave only part of the index set updated. Rerun `sow create` with the same intended options to rebuild from the current packages. Plain mode rebuilds from scratch; the result field `recovered` remains `false`.
 
@@ -240,7 +240,7 @@ sow create /srv/empty --json
 | `2` | Usage error — invalid or repeated timestamp, `--overwrite` or `--passfile` without `--sign-with`, invalid/empty/repeated `--passfile`, malformed key, `--no-wait` with a non-zero `--timeout` |
 | `4` | Directory write lock held and `--no-wait` given or `--timeout` expired |
 | `5` | Input set/stat changed before publication, or a controlled output path failed an integrity check |
-| `6` | No supported package found, `repo_complete` gate hit, `--sign-with` on a DEB-only directory, coordinate conflict |
+| `6` | No supported package found, managed `.sow` workspace ancestor, `repo_complete` / `.sow-prune-repo-complete` gate hit, `--sign-with` on a DEB-only directory, coordinate conflict |
 {.wide .expand}
 
 ## See also

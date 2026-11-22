@@ -22,6 +22,8 @@ cascade:
 
 查看各版 SOW 的变化和升级步骤，版本按从新到旧排列。
 
+[SOW 0.8.0](/zh/blog/release/sow-v0.8.0/) 新增按需 R2 条件删除（`sow gc TARGET --delete`），支持工作区外的外部密钥与口令文件符号链接挂载，移除 `.deb` 的 `control.tar.lzma` 支持，加固 DEB/RPM 校验，并提升大型仓库发布与 GC 性能。0.5.0 至 0.7.1 的工作区保持 schema v13，升级前需先完成中断的 0.7.1 本地 GC，详见 [0.8.0 升级说明](/zh/docs/start/install/#upgrade-to-080)。
+
 [SOW 0.7.1](/zh/blog/release/sow-v0.7.1/) 升级到 Go 1.27.4，更新依赖，并修复恢复、输入校验和 S3/R2 处理。0.5.0 至 0.7.0 的工作区无需迁移数据库，详见 [0.7.1 升级说明](/zh/docs/start/install/#upgrade-to-071)。
 
 [SOW 0.7.0](/zh/blog/release/sow-v0.7.0/) 新增平面 RPM 仓库裁剪与口令文件签名，修复迁移和恢复缺陷并更新依赖。0.5.0 至 0.6.1 的工作区无需迁移数据库，详见 [0.7.0 升级说明](/zh/docs/start/install/#升级到-070)。

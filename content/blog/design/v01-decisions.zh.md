@@ -2,7 +2,7 @@
 title: "SOW v0.1 决策账本：哪些被保留，哪些已退役"
 linkTitle: "v0.1 决策账本"
 date: 2026-07-12
-lastmod: 2026-10-13
+lastmod: 2026-11-23
 authors: [Vonng]
 description: "逐项整理 v0.1 现存的 44 份 ADR：当时解决什么问题，后来是延续、演化、仅服务迁移，还是随 V1 一同退役。"
 categories: [Design]

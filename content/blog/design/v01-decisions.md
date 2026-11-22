@@ -2,7 +2,7 @@
 title: "SOW v0.1 Decision Ledger: What Survived and What Was Retired"
 linkTitle: "v0.1 Decision Ledger"
 date: 2026-07-12
-lastmod: 2026-10-13
+lastmod: 2026-11-23
 authors: [Vonng]
 description: "All 44 surviving v0.1 architecture decisions: their original purpose and how each changed after the repository model reset."
 categories: [Design]

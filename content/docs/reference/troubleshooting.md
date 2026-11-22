@@ -33,11 +33,11 @@ sow check -C /srv/sow -r pgsql
 
 Repeat this for each Repository. Compatible read-only commands can still inspect an older
 schema, but they do not migrate it. If a Repository migrated from C2 layout by SOW 0.5 or
-0.6 reported an invalid transition control target after a later build, upgrading to SOW
-0.7.1 and later recover this state automatically. See [Upgrade](/docs/start/install/#upgrade-to-080).
+0.6 reported an invalid transition control target after a later build, SOW 0.7.0 and later
+recover this state automatically. See [Upgrade](/docs/start/install/#upgrade-to-080).
 
 If leftover C2 migration stage files block local GC, rerun `sow repo migrate REPOSITORY`.
-SOW 0.7.1 preserves unproven files under `.sow/<repo>/abandoned/` and reports their location. Inspect them before removal.
+SOW 0.7.1 and later preserve unproven files under `.sow/<repo>/abandoned/` and report their location. Inspect them before removal.
 
 ## Status shows pending changes
 

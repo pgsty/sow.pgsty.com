@@ -2,7 +2,7 @@
 title: "Publication & Recovery"
 linkTitle: "Publication & Recovery"
 date: 2026-08-08
-lastmod: 2026-11-09
+lastmod: 2026-11-23
 authors: [Vonng]
 description: "How SOW uploads a repository, resumes interrupted publication, and removes unused files."
 categories: [Design]
@@ -97,7 +97,7 @@ To change the target name, `public_endpoint`, or `max_cache_ttl`, edit `sow.yml`
 SOW appends a binding revision. Changes to the Repository, storage identity, or prefix require a new target.
 
 Before changing `max_cache_ttl`, complete pending target maintenance.
-For filesystem targets, finish conditional deletion before changing `public_endpoint`.
+Finish active conditional-delete maintenance before changing `public_endpoint`.
 A shorter TTL does not shorten an already recorded grace period.
 
 <span id="published-pointer-fence" data-td-print-local></span>

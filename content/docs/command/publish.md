@@ -74,7 +74,7 @@ If you renamed the target in `targets:`, use its new name.
 | `max_cache_ttl` | bucket or `prefix` |
 {.wide .expand}
 
-Complete pending target maintenance before changing `max_cache_ttl`. For a filesystem target, also complete pending deletion before changing `public_endpoint`. SOW scopes the prospective filesystem target path check so sibling targets that share a parent directory do not block each other. To publish to a new target for the first time, use `sow publish TARGET` without `--rebind`.
+Complete pending target maintenance before changing `max_cache_ttl`, and finish active conditional-delete maintenance before changing `public_endpoint`. SOW scopes the prospective filesystem target path check so sibling targets that share a parent directory do not block each other. To publish to a new target for the first time, use `sow publish TARGET` without `--rebind`.
 
 ## Abort and recovery
 

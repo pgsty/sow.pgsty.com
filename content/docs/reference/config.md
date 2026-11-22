@@ -26,9 +26,9 @@ resolves signing references. `--all` expands defaults in `config show`.
 
 ## File rules
 
-- Use one YAML document and `schema: sow/v3`.
+- Use one YAML document and `schema: sow/v3`. Read-only inspection (`config check`, `repo ls`, `repo show`, `dist ls`, `dist show`) also accepts frozen `sow/v2` workspaces before migration.
 - Unknown fields and duplicate keys are errors.
-- Keep the file at the workspace root as a regular file with one hard link, at most 16 MiB.
+- Name the file `sow.yml` (not `sow.yaml`; workspace discovery prints a hint if only `sow.yaml` exists) and keep it at the workspace root as a regular file with one hard link, at most 16 MiB.
   SOW rejects a symlink.
 - `init`, `repo new/rm`, and `dist new/rm` update the file as part of their operations.
 - Edit policy, signing, and target settings in the file. SOW applies defaults when reading
@@ -311,7 +311,7 @@ Changing only a `passfile` path does not change a signing identity or make a Dis
 Password values never enter logs, config output, repository state, or public files.
 External metadata signing passes the password through a private descriptor. RPM signing
 uses a temporary `0600` file in a private `/tmp/sow-gpg-pass-*` directory because RPM
-may invoke GPG repeatedly. SOW removes it when the signing call returns; forced process
+may invoke GPG repeatedly. SOW zero-overwrites and removes it when the signing call returns; forced process
 termination can leave it behind.
 
 ### Passphrase references

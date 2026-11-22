@@ -39,7 +39,7 @@ sow log -r demo
 | `add`、`rm`、Dist 修改或构建 | `sow build -r demo` |
 | `init`、`repo new` 或 `repo rm` | 重新运行对应的创建、删除命令 |
 | 发布 | `sow publish TARGET` |
-| 本地或目标垃圾回收 | `sow gc -r demo` 或 `sow gc TARGET` |
+| 本地或目标垃圾回收 | `sow gc -r demo`、`sow gc TARGET`，或 `sow gc TARGET --delete`（恢复中断的 R2 条件删除） |
 | 移除保留构建快照 | `sow retain rm GENERATION -r demo` |
 | Plain 索引生成或 RPM 清理 | 使用原选项重新运行 `sow create` 或 `sow prune` |
 {.wide .expand}
@@ -138,7 +138,7 @@ SOW 通过建议锁协调进程。工作区生命周期使用 `.sow/workspace.lo
 仓库写操作使用 `.sow/repo-locks/<repo>.lock`。需要两把锁时，先取工作区锁。
 
 需要一致快照的读命令使用共享锁。`status` 探测仓库写锁，无需等写者结束即可报告活动状态。
-Plain `create` 与 `prune` 锁住目标目录及其父目录。
+Plain `create` 与 `prune` 锁定目标目录并在绑定后立即释放父目录锁，相邻平面目录互不阻塞。
 
 | 选项 | 行为 |
 |---|---|

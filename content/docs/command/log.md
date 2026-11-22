@@ -190,7 +190,7 @@ pruned log repository=pigsty operation=8150803833883584722 before=2026-12-31T16:
 
 The output shows the cutoff in UTC (this example uses a workstation at UTC+8). When a reader defers space reclamation, a second line reads
 `log deletion committed; space reclamation deferred while the database is busy`; with `--json`
-the journal ID and `compaction_deferred` appear in `result`.
+the journal ID appears in both the top-level `operation` field and `result.operation`, alongside `compaction_deferred` in `result`.
 
 | Flag | Description | Default |
 |---|---|---|

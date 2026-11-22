@@ -88,13 +88,13 @@ SOW 按下列规则设置顶层 `operation`：
 
 | 命令 | 值 |
 |---|---|
-| `add`、非预览 `rm`、`build`、本地 `gc` | 已分配的日志 ID |
+| `add`、非预览 `rm`、`build`、本地 `gc`、`log prune` | 已分配的日志 ID |
 | `publish`、`publish --abort` | 已有的发布尝试 ID |
 | `log ID` | 请求的操作 ID |
-| 其他命令（`create`、`prune`、`init`、`config`、`ls`、`show`、`where`、`retain`、`export`） | `null`；`log prune` 将 ID 放在 `result.operation` |
+| 其他命令（`create`、`prune`、`init`、`config`、`ls`、`show`、`where`、`retain`、`export`） | `null` |
 {.wide .expand}
 
-`operation` 为 null 不表示只读命令。`create`、`prune`、`init`、`config check`、`repo ls` 和 `where` 的顶层 `repository` 为 null；`where` 将具体仓库名称放在位置记录中。
+`operation` 为 null 不表示只读命令。`create`、`prune`、`init`、`config check` 和 `repo ls` 的顶层 `repository` 为 null；`where` 在指定 `-r/--repo` 时将顶层 `repository` 设为该仓库名，跨全工作区搜索时为 `null`，每条位置记录自身也带有 `repository` 字段。
 
 <span id="各命令的-result-形态" data-td-print-local></span>
 <span id="create" data-td-print-local></span>

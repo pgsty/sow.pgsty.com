@@ -189,7 +189,7 @@ pruned log repository=pigsty operation=8150803833883584722 before=2026-12-31T16:
 
 输出以 UTC 显示截止时间（此处工作站时区为 UTC+8）。若有读者使空间回收
 被推迟，输出会多一行 `log deletion committed; space reclamation deferred while the database is busy`；
-使用 `--json` 时，日志 ID 与 `compaction_deferred` 位于 `result` 中。
+使用 `--json` 时，日志 ID 同时出现在顶层 `operation` 与 `result.operation` 中，`compaction_deferred` 位于 `result` 中。
 
 | 参数 | 说明 | 默认 |
 |---|---|---|

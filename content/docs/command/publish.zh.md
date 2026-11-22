@@ -74,7 +74,7 @@ sow publish prod --rebind
 | `max_cache_ttl` | 存储桶或 `prefix` |
 {.wide .expand}
 
-修改 `max_cache_ttl` 前，先完成目标维护。文件系统目标有未完成的删除操作时，也需先完成删除，再修改 `public_endpoint`。SOW 会将预期文件系统目标路径检查限定在目标自身路径上，因此共享同一父目录的相邻目标不会互相阻塞。首次发布到新目标时，直接运行 `sow publish TARGET`。
+修改 `max_cache_ttl` 前，先完成目标维护；存在正在进行的条件删除维护时，需先完成删除再修改 `public_endpoint`。SOW 会将预期文件系统目标路径检查限定在目标自身路径上，因此共享同一父目录的相邻目标不会互相阻塞。首次发布到新目标时，直接运行 `sow publish TARGET`。
 
 ## Abort 与恢复 {#abort-and-recovery}
 

@@ -101,7 +101,7 @@ RPM 包签名只检查口令格式、工具和私钥是否可用，不会签包�
 创建新元数据签名时，选中的签名密钥需要在发布时间和
 当前时间都可用。历史验证使用保留的证书。
 
-新 APT 签名使用 SHA-256。新的发布尝试要求两份 APT 签名都使用 SHA-256、SHA-384 或 SHA-512。
+新元数据签名使用 SHA-256。新的发布尝试要求两份 APT 签名（`InRelease`、`Release.gpg`）以及 RPM `repomd.xml.asc` 均使用 SHA-256、SHA-384 或 SHA-512。
 升级包含 SHA-1 元数据签名的工作区后，先运行 `build`，再开始新发布。
 已有发布尝试继续使用其记录的文件。
 
@@ -129,7 +129,7 @@ signing:
 
 没有密钥时默认 `never`，有密钥时默认 `fill`。`fill` 和 `always` 都必须配置密钥。
 
-包签名在私有副本上调用主机的 `rpm --addsign` 或 `rpm --resign`。
+包签名在私有副本上调用主机的 `rpm --addsign` 或 `rpm --resign`（设置了 `GNUPGHOME` 时自动传入 `--define "_gpg_path $GNUPGHOME"`）。
 安装 `rpm`、`gpg`，并确保 `rpm` 使用的 GPG 环境中有对应私钥。
 密钥引用只标识签名者，不会把私钥导入该环境。原始输入文件保持不变。
 

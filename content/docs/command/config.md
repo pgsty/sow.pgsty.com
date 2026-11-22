@@ -57,7 +57,7 @@ configuration error: load config "/srv/repo/sow.yml": parse sow.yml: yaml: unmar
   line 8: field bogus_field not found in type config.DistConfig
 ```
 
-Use `schema: sow/v3`:
+Use `schema: sow/v3` for active workspaces (`config check`, `repo ls/show`, and `dist ls/show` also support read-only inspection on frozen `sow/v2` workspaces before migration):
 
 ```console
 sow config check

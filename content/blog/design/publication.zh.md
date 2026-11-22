@@ -2,7 +2,7 @@
 title: "发布与恢复"
 linkTitle: "发布与恢复"
 date: 2026-08-08
-lastmod: 2026-11-09
+lastmod: 2026-11-23
 authors: [Vonng]
 description: "SOW 如何上传仓库、继续中断的发布，以及清理不再使用的文件。"
 categories: [Design]
@@ -101,7 +101,7 @@ SOW 通过 `public_endpoint` 下载变化的文件和受影响的索引入口，
 SOW 会追加绑定修订记录。Repository、存储身份或前缀变化时，需要配置新目标。
 
 修改 `max_cache_ttl` 前，先完成该目标尚未结束的维护。
-文件系统目标正在执行条件删除时，需等删除流程完成后才能修改 `public_endpoint`。
+存在正在进行的条件删除维护时，需等删除流程完成后才能修改 `public_endpoint`。
 缩短 TTL 不会提前结束已记录的缓存宽限期。
 
 <span id="已发布指针栅栏" data-td-print-local></span>

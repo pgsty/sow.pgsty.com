@@ -2,7 +2,7 @@
 title: "设计原则"
 linkTitle: "设计原则"
 date: 2026-08-08
-lastmod: 2026-11-09
+lastmod: 2026-11-23
 authors: [Vonng]
 description: "SOW 为什么分别管理软件包存储、仓库构建与发布。"
 categories: [Design]
@@ -30,7 +30,7 @@ SOW 分别管理包存储、仓库构建和发布。以下原则说明各类状�
 | 目标绑定与修订记录 | Repository 与发布目标 |
 | 发布尝试与检查点 | Repository 与目标前缀 |
 | 远端清单与删除记录 | Repository 与目标前缀 |
-| Plain RPM 上一版索引标记（`repodata/.sow-plain-rpm-history.json`） | Plain RPM 目录 |
+| Plain RPM 上一版索引标记（`.sow-plain-rpm-history.json`） | Plain RPM 目录 |
 {.wide .expand}
 
 每个 Repository 分别保存自己的包副本，每个发布目标也分别保存一份。

@@ -102,8 +102,8 @@ a package or proving the password correct. See [`config check`](/docs/command/co
 For new metadata signatures, the selected signing key must be usable at the publication
 time and at the current time. Historical verification uses the retained certificate.
 
-New APT signatures use SHA-256. A new publication requires SHA-256, SHA-384, or SHA-512 in
-both APT signature files. If upgrading a workspace with SHA-1 metadata signatures, run
+New metadata signatures use SHA-256. A new publication requires SHA-256, SHA-384, or SHA-512 in
+both APT signature files (`InRelease`, `Release.gpg`) and RPM `repomd.xml.asc`. If upgrading a workspace with SHA-1 metadata signatures, run
 `build` before starting a new publication. An existing publication attempt resumes its
 recorded files.
 
@@ -132,7 +132,7 @@ With no key, the default mode is `never`. With a key, the default is `fill`.
 Both `fill` and `always` require a key.
 
 Package signing uses the host `rpm --addsign` or `rpm --resign` command on a private
-copy. Install `rpm` and `gpg`, and make the matching private key available in the GPG
+copy (passing `--define "_gpg_path $GNUPGHOME"` when `GNUPGHOME` is set). Install `rpm` and `gpg`, and make the matching private key available in the GPG
 environment used by `rpm`. A key reference identifies the signer; it does not import a
 private key into that environment. SOW leaves the original input file unchanged.
 

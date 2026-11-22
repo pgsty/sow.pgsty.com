@@ -53,7 +53,7 @@ sow retain rm 12 -r pgsql
 removed retained generation 00000000000000000012
 ```
 
-该命令不删除软件包体。指定的构建快照没有保留记录时，命令成功返回，不作修改。删除保留记录前，SOW 会先写入移除计划（`.sow/<repo>/retained/<GENERATION>.rm`）；如果移除过程被中断，下一次命令会继续完成计划中的移除，而不会报告记录损坏。只有在其他保留记录与操作也不再
+该命令不删除软件包体。指定的构建快照没有保留记录时，命令成功返回，不作修改。删除保留记录前，SOW 会先在 `.sow/<repo>/stage/` 下写入移除计划（`retain-remove-<GENERATION>.plan.json`）并将保留目录移为墓碑（`retain-remove-<GENERATION>`）；如果移除过程被中断，重新运行 `retain rm` 或执行本地 [`sow gc`](/zh/docs/command/gc/) 会自动重放并完成清理（`sow check` 的 `retained` 层也会报告未完成的移除阶段）。只有在其他保留记录与操作也不再
 引用这些包体时，后续本地 [`sow gc`](/zh/docs/command/gc/) 才可能回收。
 
 保留记录损坏时，`retain rm`、`retain ls`、本地 `gc` 与 `check` 都会报告错误。`check` 的 `retained` 层会指出受影响的构建快照。需要丢弃该损坏记录时：

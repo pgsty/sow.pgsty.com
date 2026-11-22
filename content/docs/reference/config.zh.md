@@ -27,9 +27,9 @@ sow config show --all
 
 ## 文件规则 {#file-rules}
 
-- 使用一个 YAML 文档，配置 `schema: sow/v3`。
+- 使用一个 YAML 文档，配置 `schema: sow/v3`。冻结的 `sow/v2` 工作区在迁移前仍支持 `config check`、`repo ls`、`repo show`、`dist ls`、`dist show` 只读检查。
 - 未知字段和重复键都是错误。
-- 文件放在工作区根目录，必须是只有一个硬链接的普通文件，大小不超过 16 MiB。
+- 文件名必须是 `sow.yml`（而非 `sow.yaml`；若目录中仅有 `sow.yaml`，工作区发现会给出明确提示），放在工作区根目录，且须为只有一个硬链接的普通文件，大小不超过 16 MiB。
   不接受符号链接。
 - `init`、`repo new/rm`、`dist new/rm` 在执行相应操作时更新此文件。
 - 策略、签名和目标设置直接编辑文件。读取时应用默认值，不改写源文件。
@@ -306,7 +306,7 @@ SOW 只在签名或签名前置检查时读取所选来源。文件不存在、�
 只修改 `passfile` 路径不会改变签名身份，也不会让 Dist 变脏。
 口令值不会进入日志、配置输出、仓库状态或公开文件。
 外部元数据签名通过独立文件描述符传入口令；RPM 可能多次调用 GPG，因此签包时会在
-私有的 `/tmp/sow-gpg-pass-*` 目录内创建 `0600` 临时文件，调用返回后删除。
+私有的 `/tmp/sow-gpg-pass-*` 目录内创建 `0600` 临时文件，调用返回后先以零字节覆写再删除。
 进程被强制终止时，临时文件可能残留。
 
 <span id="passphrase-引用" data-td-print-local></span>

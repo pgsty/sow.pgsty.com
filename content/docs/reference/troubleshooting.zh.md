@@ -32,11 +32,11 @@ sow check -C /srv/sow -r pgsql
 ```
 
 对每个仓库重复这些步骤。兼容的只读命令仍可检查旧 schema，但不会自动迁移数据库。
-如果由 SOW 0.5 或 0.6 从 C2 布局迁移的仓库在后续构建后报告迁移锚点目标无效，SOW 0.7.1 及更新版本可自动恢复。
+如果由 SOW 0.5 或 0.6 从 C2 布局迁移的仓库在后续构建后报告迁移锚点目标无效，SOW 0.7.0 及更新版本可自动恢复。
 详见[升级说明](/zh/docs/start/install/#upgrade-to-080)。
 
 如果 C2 迁移暂存残留阻塞本地 GC，重新运行 `sow repo migrate REPOSITORY`。
-SOW 0.7.1 会将无法证明可安全清理的文件保留到 `.sow/<repo>/abandoned/` 并报告路径，删除前请先检查。
+SOW 0.7.1 及更新版本会将无法证明可安全清理的文件保留到 `.sow/<repo>/abandoned/` 并报告路径，删除前请先检查。
 
 ## 状态显示有待构建变更 {#status-shows-pending-changes}
 

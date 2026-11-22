@@ -31,7 +31,7 @@ sow gc TARGET [--delete] [-C|--workdir DIR]         [-T|--timeout DUR | -N|--no-
 | `--json` | Output JSON | false |
 {.wide .expand}
 
-`gc TARGET -r NAME` is a usage error because the target already binds a Repository. Neither mode accepts `--dist`.
+`gc TARGET -r NAME` is a usage error because the target already binds a Repository. Passing `--delete` without `TARGET` is also a usage error. Neither mode accepts `--dist`.
 
 ## Local GC
 
@@ -43,7 +43,7 @@ Run local GC after the Repository has a completed, clean build. If it is dirty, 
 - publication records;
 - active maintenance work.
 
-SOW journals the operation and persists a local GC plan (`.sow/<repo>/gc-plan.json`) before unlinking pool payloads. If an interruption occurs after some files are deleted, a subsequent recovery replays the recorded plan, verifies that every active current, previous, and retained Generation pointer is withdrawn before retiring a Generation, and completes the new Generation. When payloads are removed, the Repository advances to a new Generation. When nothing is eligible, the command is an idempotent no-op.
+SOW first replays any interrupted `retain-remove-*` tombstones, then journals the operation and persists a local GC plan (`.sow/<repo>/recovery/<operation-id>/plan.json`) before unlinking pool payloads. Large unreachable backlogs execute in bounded batches below the 64 MiB plan limit. If an interruption occurs after some files are deleted, a subsequent recovery replays the recorded plan, verifies that every active current, previous, and retained Generation pointer is withdrawn before retiring a Generation, and completes the new Generation. When payloads are removed, the Repository advances to a new Generation. When nothing is eligible, the command is an idempotent no-op.
 
 ```console
 sow gc -r pgsql
@@ -62,7 +62,7 @@ Target GC waits for the configured cache grace period and checks which objects a
 
 For `filesystem` targets, SOW scopes the prospective target path check so sibling targets that share a parent directory (such as `/srv/www/pgsql` and `/srv/www/pigsty`) do not block each other.
 
-Use a target prefix written exclusively by this workspace. R2 deletion can follow a candidate report or run directly. SOW rechecks protected publications and each object's size, SHA-256 metadata and ETag before calling `DeleteObject`. The identity check and delete are separate storage requests. SOW then verifies storage absence and a public HTTP 404 and records the deletion. If the run stops partway through, rerun `sow gc TARGET --delete`.
+Use a target prefix written exclusively by this workspace. R2 deletion can follow a candidate report or run directly. SOW rechecks protected publications and each object's size, SHA-256 metadata, and ETag before calling `DeleteObject`. The identity check and delete are separate storage requests. SOW then verifies storage absence and a public HTTP 404 or 410 and records a causal-epoch deletion receipt. If the run stops partway through, rerun `sow gc TARGET --delete`; running without `--delete` rejects an unfinished conditional-delete report with exit `6`.
 
 ```console
 sow gc prod

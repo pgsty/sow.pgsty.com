@@ -55,8 +55,8 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 ## 扫描规则 {#scan-rules}
 
 - 只考虑顶层、以 `.rpm` 或 `.deb` 结尾的普通文件。
-- 不递归、不跟随符号链接、不读工作区配置。
-- 所有有效版本都进入索引。两个文件对应同一逻辑坐标但内容不同时，命令报错。
+- 不递归、不跟随符号链接、不读工作区配置。`create` 拒绝在 Managed `.sow` 工作区目录内运行。
+- 所有有效版本都进入索引。两个文件对应同一逻辑坐标但内容不同时，命令报错。启用 `--pigsty` 时，先执行包过滤再检查重复文件名。
 - 默认模式要求至少有一个支持的包。`--pigsty` 允许清理后没有包，并为该空目录写入完成标记。
 
 ```console
@@ -95,7 +95,7 @@ SOW 保留当前与紧邻上一版 `repomd.xml` 引用的、以校验和命名�
 <span id="repo_complete-门禁" data-td-print-local></span>
 ## repo_complete 标记 {#the-repo_complete-gate}
 
-如果目录中有 `repo_complete`，使用 `--pigsty` 将它与索引一起更新。不带 `--pigsty` 运行会返回错误：
+如果目录中有 `repo_complete`（或 `sow prune` 中断留下的 `.sow-prune-repo-complete` 标记），使用 `--pigsty` 将它与索引一起更新。不带 `--pigsty` 运行会返回错误：
 
 ```console
 sow create /srv/pigsty
@@ -156,7 +156,7 @@ SOW 先撤下已有的 `repo_complete`，再替换索引；新元数据安装后
 
 - 默认只给没有可解析嵌入 OpenPGP 签名（签名头标签 267 中的 RSA、DSA、ECDSA、EdDSA，或旧版 PGP 标签）的 RPM 补签；已有签名的包保持原字节。
 - `--overwrite` 必须与 `--sign-with` 同用，改为对全部保留 RPM 执行 `rpm --resign`。
-- SOW 对临时副本签名，确认包身份与内容未变后替换原 RPM。索引描述最终签名后的文件。
+- SOW 对临时副本签名，执行 OpenPGP 签名密码学验证并确认包身份与内容未变后替换原 RPM。索引描述最终签名后的文件。
 - `--pigsty` 清理后至少要保留一个顶层 RPM，且 `PATH` 中要有 `rpm`。
 
 ```console
@@ -182,7 +182,7 @@ usage error: --sign-with must be a 16, 40, or 64 hexadecimal GPG key ID/fingerpr
 <span id="锁staging-与覆盖重建" data-td-print-local></span>
 ## 锁与中断恢复 {#locking-staging-and-overwrite-rebuild}
 
-`create` 在更新索引期间锁定目标目录。使用 `--timeout` 或 `--no-wait` 控制等待锁的时间。
+`create` 在更新索引期间锁定目标目录，在绑定目标后（以及等待繁忙目标前）即释放父目录锁，因此相邻平面目录可并行运行。使用 `--timeout` 或 `--no-wait` 控制等待锁的时间。
 
 中断可能使部分索引已更新、部分仍未更新。使用原定选项重新运行 `sow create`，按当前软件包重新生成全部索引。Plain 模式从头重建，因此结果字段 `recovered` 始终为 `false`。
 
@@ -239,7 +239,7 @@ sow create /srv/empty --json
 | `2` | 用法错误——时间戳非法或重复指定、`--overwrite` 或 `--passfile` 未配 `--sign-with`、`--passfile` 路径非法/为空/重复指定、密钥格式非法、`--no-wait` 与非零 `--timeout` 同用 |
 | `4` | 目录写锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 发布前输入文件发生变化，或受控输出路径未通过完整性检查 |
-| `6` | 未找到受支持的包、已有 `repo_complete` 但未使用 `--pigsty`、对 DEB-only 目录用 `--sign-with`、坐标冲突 |
+| `6` | 未找到受支持的包、位于 Managed `.sow` 工作区内、已有 `repo_complete` / `.sow-prune-repo-complete` 但未使用 `--pigsty`、对 DEB-only 目录用 `--sign-with`、坐标冲突 |
 {.wide .expand}
 
 ## 参见 {#see-also}

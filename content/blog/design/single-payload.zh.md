@@ -2,7 +2,7 @@
 title: "为什么 SOW 每个仓库只保留一棵包体树"
 linkTitle: "单包体仓库"
 date: 2026-08-05
-lastmod: 2026-11-09
+lastmod: 2026-11-23
 authors: [Vonng]
 description: "每个仓库共用一个包池，各发行版视图只保存元数据，避免重复包副本。"
 categories: [Design]
@@ -15,7 +15,7 @@ icon: fa-solid fa-layer-group
 draft: false
 ---
 
-这项决策起草于 2026-08-05，随 2026-08-08 的 SOW v0.2.0 发布。SOW 0.7.0 仍使用这一布局：
+这项决策起草于 2026-08-05，随 2026-08-08 的 SOW v0.2.0 发布。SOW 0.8.0 仍使用这一布局：
 每个仓库保存一棵包体树，各发行版视图引用同一棵树。
 
 <span id="最终决策" data-td-print-local></span>

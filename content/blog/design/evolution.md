@@ -2,9 +2,9 @@
 title: "SOW Design Evolution: From Route Graphs to the Repository Core"
 linkTitle: "Design Evolution"
 date: 2026-08-10
-lastmod: 2026-11-09
+lastmod: 2026-11-23
 authors: [Vonng]
-description: "How SOW moved from the v0.1 distribution platform to a repository engine, and how v0.2 through v0.7 refined that model."
+description: "How SOW moved from the v0.1 distribution platform to a repository engine, and how v0.2 through v0.8 refined that model."
 categories: [Design]
 tags: [architecture, repository, migration, decision]
 weight: 20
@@ -14,9 +14,9 @@ draft: false
 ---
 
 SOW moved from a Git-based distribution control plane in v0.1 to a repository engine in
-v0.2. This article traces that change and the refinements through v0.7.0.
+v0.2. This article traces that change and the refinements through v0.8.0.
 
-The versions below refer to released Git tags, including [v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0).
+The versions below refer to released Git tags, including [v0.8.0](https://github.com/pgsty/sow/tree/v0.8.0).
 Some archived plans used “v0.2” and
 “v0.3” for development designs. In particular, the C2 layout with RPM hardlinks inside each
 view was replaced before v0.2.0 shipped.
@@ -43,6 +43,7 @@ Four articles cover the earlier work in detail:
 | v0.5 | Package-path reservations, removal and recovery fixes, signing checks, and reproducible Plain timestamps | Unchanged |
 | v0.6 | Previous Plain RPM indexes, recorded Managed publication times, stronger file checks, consistent state reads, and less repeated I/O | Unchanged |
 | v0.7 | Plain RPM pruning, password-file signing, tag 267 ECDSA/EdDSA verification, caret version ordering, and migration/publication/recovery fixes | Unchanged |
+| v0.8 | Opt-in R2 conditional deletion (`gc TARGET --delete`), external secret/keyring symlinks, `control.tar.lzma` removal, stricter DEB/RPM/signature checks, and batched publication/GC | Unchanged |
 {.wide .expand}
 
 The source tags preserve the earlier implementations:
@@ -52,8 +53,10 @@ The source tags preserve the earlier implementations:
 [v0.4.0](https://github.com/pgsty/sow/tree/v0.4.0),
 [v0.5.0](https://github.com/pgsty/sow/tree/v0.5.0),
 [v0.6.0](https://github.com/pgsty/sow/tree/v0.6.0),
-[v0.6.1](https://github.com/pgsty/sow/tree/v0.6.1), and
-[v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0).
+[v0.6.1](https://github.com/pgsty/sow/tree/v0.6.1),
+[v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0),
+[v0.7.1](https://github.com/pgsty/sow/tree/v0.7.1), and
+[v0.8.0](https://github.com/pgsty/sow/tree/v0.8.0).
 
 ## v0.1: useful questions, too many product concepts
 
@@ -153,12 +156,27 @@ flat RPM directories: SOW groups `.rpm` files by `(name, arch)`, keeps only the 
 `epoch:version-release` in each group, updates `repodata/` before deleting older RPM
 files, and rejects ambiguous top-level EVR ties before modifying files.
 
-The release also adds password-file support for encrypted signing keys (`--gpg-passphrase-file`,
-`SOW_GPG_PASSPHRASE_FILE`, and `password_file` in `sow.yml`), supports RPM header-only
+The release also adds password-file support for encrypted signing keys (`--passfile`,
+`SOW_GPG_PASSFILE`, and `passfile` in `sow.yml`), supports RPM header-only
 ECDSA and EdDSA signatures in tag `267`, orders RPM caret (`^`) version segments
 alongside tilde (`~`) segments, and tightens schema migration, carried-forward view
 checks, and interrupted `gc` / `retain rm` plan recovery. See the
-[v0.7.0 release note](/blog/release/sow-v0.7.0/) for the full details.
+[v0.7.0 release note](/blog/release/sow-v0.7.0/) and [v0.7.1 release note](/blog/release/sow-v0.7.1/) for details.
+
+## v0.8: opt-in R2 reclamation, external secret mounts, and scale hardening
+
+v0.8.0 keeps schema 13 and the same public layout. It adds explicit R2 target reclamation
+(`sow gc TARGET --delete`) while leaving default R2 `gc` report-only: before deleting each
+expired candidate, SOW rechecks active protection roots, cache grace, object size, SHA-256
+metadata, and ETag, then verifies storage and public HTTP 404/410 absence and records a
+causal-epoch deletion receipt so republishing identical bytes stays idempotent.
+
+The release also allows symlinked external password files, key files, and trusted keyrings
+(such as Kubernetes Secret mounts) when every hop stays outside the workspace, drops legacy
+`.deb` `control.tar.lzma` support, enforces SHA-256+ digests on published `repomd.xml.asc`,
+allows sibling flat repositories to run concurrently, and accelerates large-repository
+publication and batched local GC. See the [v0.8.0 release note](/blog/release/sow-v0.8.0/)
+for the full details.
 
 ## What survived every redesign
 

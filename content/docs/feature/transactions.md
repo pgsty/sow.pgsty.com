@@ -39,7 +39,7 @@ sow log -r demo
 | `add`, `rm`, Dist change, or build | `sow build -r demo` |
 | `init`, `repo new`, or `repo rm` | Rerun the corresponding lifecycle command |
 | Publication | `sow publish TARGET` |
-| Local or target garbage collection | `sow gc -r demo` or `sow gc TARGET` |
+| Local or target garbage collection | `sow gc -r demo`, `sow gc TARGET`, or `sow gc TARGET --delete` (for an interrupted R2 conditional delete) |
 | Retained generation removal | `sow retain rm GENERATION -r demo` |
 | Plain index generation or RPM pruning | Rerun `sow create` or `sow prune` with the original options |
 {.wide .expand}
@@ -143,7 +143,7 @@ When a command needs both locks, it acquires the workspace lock first.
 
 Read commands that need a consistent snapshot use shared locks. `status` probes the
 repository writer lock so it can report activity without waiting for that writer.
-Plain `create` and `prune` lock their target directory and parent.
+Plain `create` and `prune` lock their target directory and release the parent lock immediately after binding, so sibling flat directories do not block each other.
 
 | Option | Behavior |
 |---|---|

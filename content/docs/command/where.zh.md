@@ -44,7 +44,7 @@ repository=demo coordinate="rpm:centos-release-0:6-0.el6.centos.5.x86_64" sha256
 
 每个位置同时给出该仓库内的期望位置 `dists` 与已构建位置 `built_dists`。查找候选包时使用期望成员集。如果包已从全部所选 Dist 中移除，命令将不再找到它，即使旧索引仍包含它。要查看这样的已存储对象，使用 `sow show PACKAGE -r NAME`，不要加 `-d`。
 
-加上 `--json` 后，位置列表位于 `result.locations`。没有匹配包时，命令返回错误：
+加上 `--json` 后，位置列表位于 `result.locations`；指定 `-r/--repo` 时顶层 `repository` 字段为所选仓库名，跨全工作区搜索时为 `null`。没有匹配包时，命令返回错误：
 
 ```console
 sow where nosuchpkg
