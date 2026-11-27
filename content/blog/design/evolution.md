@@ -2,9 +2,9 @@
 title: "SOW Design Evolution: From Route Graphs to the Repository Core"
 linkTitle: "Design Evolution"
 date: 2026-08-10
-lastmod: 2026-11-23
+lastmod: 2026-11-27
 authors: [Vonng]
-description: "How SOW moved from the v0.1 distribution platform to a repository engine, and how v0.2 through v0.8 refined that model."
+description: "How SOW moved from the v0.1 distribution platform to a repository engine, and how v0.2 through v0.9 refined that model."
 categories: [Design]
 tags: [architecture, repository, migration, decision]
 weight: 20
@@ -14,9 +14,9 @@ draft: false
 ---
 
 SOW moved from a Git-based distribution control plane in v0.1 to a repository engine in
-v0.2. This article traces that change and the refinements through v0.8.0.
+v0.2. This article traces that change and the refinements through v0.9.0.
 
-The versions below refer to released Git tags, including [v0.8.0](https://github.com/pgsty/sow/tree/v0.8.0).
+The versions below refer to released Git tags, including [v0.9.0](https://github.com/pgsty/sow/tree/v0.9.0).
 Some archived plans used “v0.2” and
 “v0.3” for development designs. In particular, the C2 layout with RPM hardlinks inside each
 view was replaced before v0.2.0 shipped.
@@ -44,6 +44,7 @@ Four articles cover the earlier work in detail:
 | v0.6 | Previous Plain RPM indexes, recorded Managed publication times, stronger file checks, consistent state reads, and less repeated I/O | Unchanged |
 | v0.7 | Plain RPM pruning, password-file signing, tag 267 ECDSA/EdDSA verification, caret version ordering, and migration/publication/recovery fixes | Unchanged |
 | v0.8 | Opt-in R2 conditional deletion (`gc TARGET --delete`), external secret/keyring symlinks, `control.tar.lzma` removal, stricter DEB/RPM/signature checks, and batched publication/GC | Unchanged |
+| v0.9 | Fault-tolerant flat `create`/`prune` (`--strict`), RPM v6 and tag `278` OPENPGP multi-signature verification, `sow.yaml` support, ECDSA/DSA metadata signing, and direct `max_cache_ttl` grace | Unchanged |
 {.wide .expand}
 
 The source tags preserve the earlier implementations:
@@ -55,8 +56,9 @@ The source tags preserve the earlier implementations:
 [v0.6.0](https://github.com/pgsty/sow/tree/v0.6.0),
 [v0.6.1](https://github.com/pgsty/sow/tree/v0.6.1),
 [v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0),
-[v0.7.1](https://github.com/pgsty/sow/tree/v0.7.1), and
-[v0.8.0](https://github.com/pgsty/sow/tree/v0.8.0).
+[v0.7.1](https://github.com/pgsty/sow/tree/v0.7.1),
+[v0.8.0](https://github.com/pgsty/sow/tree/v0.8.0), and
+[v0.9.0](https://github.com/pgsty/sow/tree/v0.9.0).
 
 ## v0.1: useful questions, too many product concepts
 
@@ -177,6 +179,21 @@ The release also allows symlinked external password files, key files, and truste
 allows sibling flat repositories to run concurrently, and accelerates large-repository
 publication and batched local GC. See the [v0.8.0 release note](/blog/release/sow-v0.8.0/)
 for the full details.
+
+## v0.9: fault-tolerant flat indexing, RPM v6, and pragmatic simplification
+
+v0.9.0 keeps schema 13 and the same public layout. Flat `create` and `prune` default to
+skipping corrupt, source, or conflicting packages with warnings while preserving a format's
+prior index if every candidate fails; `--strict` restores fail-fast rejection. Both flat
+and managed paths add full RPM format v6 and native `RPMSIGTAG_OPENPGP` (tag `278`)
+multi-signature verification, alongside identical duplicate main-header tolerance and
+Latin-1 DEB control normalization.
+
+The release also removes platform-specific SQLite C ABI code by resolving physical database
+paths for WAL sidecars, accepts both `sow.yml` and `sow.yaml`, enables ECDSA/DSA metadata
+signing and FIFO passfiles, aligns new target GC grace directly with `max_cache_ttl`, and
+hardens CDN redirect verification and cross-region R2 overlap checks. See the
+[v0.9.0 release note](/blog/release/sow-v0.9.0/) for the full details.
 
 ## What survived every redesign
 

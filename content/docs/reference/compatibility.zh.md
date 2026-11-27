@@ -27,8 +27,8 @@ SOW 在 Linux 和 macOS 上构建 RPM、DEB 仓库文件。工作区使用受支
 {.matrix}
 
 发布二进制使用 `CGO_ENABLED=0`，不需要语言运行时。源码构建要求 Go 1.27.4 或更新版本。
-归档包含 README、更新日志、Apache-2.0 许可证与第三方许可声明；
-Linux 软件包随二进制包含许可文件。用 `sow version` 查看版本、平台和构建工具链。
+归档包含 `sow` 可执行文件与 Apache-2.0 `LICENSE`；
+Linux 软件包安装 `/usr/bin/sow` 与 Apache-2.0 许可证。用 `sow version` 查看版本、平台和构建工具链。
 
 <span id="工作区文件系统" data-td-print-local></span>
 
@@ -61,7 +61,7 @@ SOW 拒绝仅大小写不同的包池完整路径。在大小写不敏感文件�
 Managed APT 使用 component `main` 和 SHA-256 by-hash 索引。
 元数据签名生成 RPM `repomd.xml.asc` 或 APT `InRelease`、`Release.gpg`。
 
-对于二进制 DEB，SOW 支持未压缩的 `control.tar`，以及 gzip、bzip2、xz 和 zstd 压缩格式。使用 `control.tar.lzma` 的包需要用受支持的控制归档重新打包，再导入 0.8.0。
+对于二进制 DEB，SOW 支持未压缩的 `control.tar`，以及 gzip、bzip2、xz 和 zstd 压缩格式，并自动将二进制 `control` 文件中遗留的 Latin-1 字节（`>= 0x80`）规范化为 UTF-8。使用 `control.tar.lzma` 的包（自 0.8.0 起不再支持）需要用受支持的控制归档重新打包后再导入。
 
 <span id="发布时间" data-td-print-local></span>
 
@@ -108,10 +108,9 @@ Plain `create --metadata-timestamp SECONDS` 和 `prune --metadata-timestamp SECO
 只改变 base URL 不够。需要保留旧 ID 和缓存时，使用 Plain 模式，按
 [YUM 迁移](/zh/docs/tutorial/yum-migration/) 的时间戳流程操作。
 
-### RPM 签名 {#rpm-signatures}
+### RPM 格式与签名 {#rpm-signatures}
 
-包签名工作流支持 RPM 格式 v4。SOW 验签支持 RPM 签名头标签 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 和 EdDSA（Ed25519）OpenPGP 数据包（`rpm` 4.16 及更新版本将 ECDSA 与 EdDSA 签名保存在该标签中）。Managed 模式与 Plain `create` / `prune` 均拒绝 RPM 格式 v6 软件包与签名标签。
-元数据密钥引用是独立功能，详见[签名](/zh/docs/feature/signing/)。
+SOW 在 Plain `create` / `prune` 与 Managed `add` / `build` / `check` 中全面支持 RPM 格式 v4 与 v6（lead 主版本 3 至 6、不带 `PAYLOADSHA256ALGO` 的 `PAYLOADSHA256`，以及原生 `RPMSIGTAG_OPENPGP` tag `278` 的 OpenPGP v4/v6 签名数组），包括双签与多签 RPM。同时继续支持验证 RPM 签名头标签 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 和 EdDSA（Ed25519）数据包及旧版 PGP 标签；当 tag `278` 存在时，以其验证结果为准。RPM 索引兼容取值完全相同的重复主头标签（如 EL10 的重复 `SOURCERPM`），同时拒绝冲突主头标签和重复签名头标签。元数据签名支持 RSA、EdDSA（Ed25519/Ed448）、ECDSA 与 DSA 密钥，详见[签名](/zh/docs/feature/signing/)。
 
 ## 发布 Provider {#publication-providers}
 

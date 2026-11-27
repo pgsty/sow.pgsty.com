@@ -60,7 +60,7 @@ dists=el9 built_dists=el9
 | `kind` | 策略分类：`main`、`debuginfo`、`debugsource`、`llvmjit`、`dbgsym`、`dbg` |
 | `source` | 标准化源码包名 |
 | `payload_sha256` | RPM 不含签名部分的摘要，用于判断是否可以复用包文件 |
-| `signature_key` | 包内签名的密钥 ID（RPM 签名头标签 267 中的 RSA、DSA、ECDSA、EdDSA，或旧版 PGP 标签，如有） |
+| `signature_key` | 包内签名的密钥 ID（RPM v6 原生 `RPMSIGTAG_OPENPGP` 标签 278、标签 267 中的 RSA/DSA/ECDSA/EdDSA，或旧版 PGP 标签，如有） |
 | `storage` | 构建前为 `pending`，进入仓库树后为 `pool` |
 | `dists` / `built_dists` | 期望与当前已构建状态中的位置 |
 {.wide .expand}

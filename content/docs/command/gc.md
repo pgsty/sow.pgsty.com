@@ -52,7 +52,7 @@ local gc pgsql: generation=00000000000000000013 objects=4 bytes=1834200
 
 ## Target GC
 
-Target GC waits for the configured cache grace period and checks which objects are still needed:
+Target GC waits for the target's configured cache grace period (`max_cache_ttl` directly for new grace records in SOW 0.9.0; existing later deadlines remain effective) and checks which objects are still needed:
 
 | Provider | Behavior |
 |---|---|

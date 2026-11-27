@@ -117,8 +117,8 @@ operation rejected: repo show NAME "demo" and --repo "empty" select different re
 
 ## sow repo migrate
 
-Use `repo migrate` to upgrade a 0.3 or 0.4 workspace to SOW 0.8.0.
-Workspaces on 0.5.0 through 0.7.1 already use the v13 schema. See the [upgrade guide](/docs/start/install/#upgrade-to-080).
+Use `repo migrate` to upgrade a 0.3 or 0.4 workspace to SOW 0.9.0.
+Workspaces on 0.5.0 through 0.8.0 already use the v13 schema. See the [upgrade guide](/docs/start/install/#upgrade-to-090).
 
 1. Stop Workspace writers.
 2. Back up the whole Workspace, preserving hard links.
@@ -126,7 +126,7 @@ Workspaces on 0.5.0 through 0.7.1 already use the v13 schema. See the [upgrade g
 4. Run `build` and `check` for each Repository.
 
 ```bash
-rsync -aH /srv/sow/ /srv/sow.backup-before-0.8.0/
+rsync -aH /srv/sow/ /srv/sow.backup-before-0.9.0/
 sow repo migrate pigsty -C /srv/sow
 sow build -r pigsty -C /srv/sow
 sow check -r pigsty -C /srv/sow

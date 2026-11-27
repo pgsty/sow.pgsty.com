@@ -58,9 +58,9 @@ targets:
     exclusive_write_authority: true
 ```
 
-SOW creates `/srv/repo-public/local` from `endpoint` and `prefix`. The three required booleans declare that this workspace is the source of truth and the only writer for that target. SOW scopes the target path overlap check to each target's prospective path, so sibling targets under `/srv/repo-public` with distinct prefixes do not block each other. Use a separate prefix for other tools.
+SOW creates `/srv/repo-public/local` from `endpoint` and `prefix`. The three authority booleans default to `true` when omitted (explicit `false` is rejected) and declare that this workspace is the source of truth and the only writer for that target. SOW scopes the target path overlap check to each target's prospective path, so sibling targets under `/srv/repo-public` with distinct prefixes do not block each other. Use a separate prefix for other tools.
 
-This example checks the published files through `file://` and declares no intermediary cache. If you later add a proxy or CDN, use its public Repository URL for `public_endpoint`
+This example checks the published files through `file://` and declares no intermediary cache (`max_cache_ttl: 0s`, which gives superseded objects zero grace in target GC). If clients cache older indexes or you add a proxy or CDN, use its public Repository URL for `public_endpoint`
 and its longest cache lifetime for `max_cache_ttl`. Apply these changes through
 [`publish --rebind`](/docs/command/publish/). SOW uses them to check delivery and decide
 when old files can be removed.

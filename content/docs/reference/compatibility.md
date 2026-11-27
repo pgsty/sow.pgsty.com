@@ -26,8 +26,8 @@ filesystem for the workspace, then configure HTTP or storage access for clients.
 {.matrix}
 
 Release binaries use `CGO_ENABLED=0` and need no language runtime. Source builds require
-Go 1.27.4 or later. Archives include the README, changelog, Apache-2.0 license, and
-third-party notices; Linux packages include license and notice files with the binary.
+Go 1.27.4 or later. Archives include the `sow` binary and the Apache-2.0 `LICENSE`;
+Linux packages install `/usr/bin/sow` and the Apache-2.0 license.
 Run `sow version` to inspect the binary version, platform, and build toolchain.
 
 ## Workspace filesystem
@@ -60,7 +60,7 @@ filesystem publication checks this before starting. See [Layout](/docs/reference
 Managed APT uses component `main` and SHA-256 by-hash indexes. Metadata signing produces
 RPM `repomd.xml.asc` or APT `InRelease` and `Release.gpg`.
 
-For binary DEBs, SOW reads `control.tar` uncompressed or compressed with gzip, bzip2, xz, or zstd. Rebuild packages that use `control.tar.lzma` with a supported control archive before importing them into 0.8.0.
+For binary DEBs, SOW reads `control.tar` uncompressed or compressed with gzip, bzip2, xz, or zstd, and normalizes legacy Latin-1 bytes (`>= 0x80`) in binary `control` files to UTF-8. Rebuild packages that use `control.tar.lzma` with a supported control archive (dropped in 0.8.0) before importing them.
 
 ### Publication times
 
@@ -111,13 +111,9 @@ Alternatively, clear that ID's metadata cache. Changing the base URL alone is in
 To retain the old ID and cache, follow the timestamp procedure with Plain mode in
 [YUM migration](/docs/tutorial/yum-migration/).
 
-### RPM signatures
+### RPM formats and signatures {#rpm-signatures}
 
-Package-signing workflows support RPM format v4. SOW verifies RSA, DSA, ECDSA, and EdDSA
-(Ed25519) OpenPGP packets in RPM header signature tag 267 (`RPMSIGTAG_DSA`), where `rpm`
-4.16 and later store ECDSA and EdDSA signatures. Both Managed mode and Plain `create` /
-`prune` reject RPM format v6 packages and signature tags. Metadata key-reference support is
-separate; see [Signing](/docs/feature/signing/).
+SOW supports RPM format v4 and RPM format v6 (lead major versions 3 through 6, `PAYLOADSHA256` without `PAYLOADSHA256ALGO`, and native `RPMSIGTAG_OPENPGP` tag `278` OpenPGP v4 and v6 signature arrays) across Plain `create` / `prune` and Managed `add` / `build` / `check`, including dual- and multi-signed RPMs. SOW also verifies RSA, DSA, ECDSA, and EdDSA (Ed25519) OpenPGP packets in RPM header signature tag `267` (`RPMSIGTAG_DSA`) and legacy PGP tags; when tag `278` is present it is authoritative. RPM indexing accepts identical duplicate main-header tags (such as EL10 duplicate `SOURCERPM`) while rejecting conflicting main tags and duplicate signature-header tags. Metadata signing supports RSA, EdDSA (Ed25519/Ed448), ECDSA, and DSA keys; see [Signing](/docs/feature/signing/).
 
 ## Publication providers
 

@@ -47,7 +47,7 @@ During an unfinished layout migration, `check` reports `config`, `state`, `publi
 
 ### Package verification {#physical-evidence-and-io-contract}
 
-Each run hashes the package files again. Hard links to the same physical file share one hash check. Signed RPMs also undergo signature verification, including RSA, DSA, ECDSA, and EdDSA packets in header signature tag 267 (`RPMSIGTAG_DSA`). The `checked` count refers to package objects, not file reads.
+Each run hashes the package files again. Hard links to the same physical file share one hash check. Signed RPMs also undergo signature verification, including RPM v6 native `RPMSIGTAG_OPENPGP` tag 278 (including dual- and multi-signed RPMs) and RSA, DSA, ECDSA, and EdDSA packets in header signature tag 267 (`RPMSIGTAG_DSA`). APT `by-hash` files fall back to content-digest verification when hard links were broken (for example after copying), and `.DS_Store` files under `.sow/` are tolerated. The `checked` count refers to package objects, not file reads.
 
 ```console
 sow check
@@ -65,7 +65,7 @@ generation-manifest	ok=true	checked=1
 
 ## Dirty is not deliverable
 
-A dirty Repository needs a build before it can pass `check`. The old Built Generation and new Desired state can each pass their own checks while differing from each other:
+A dirty Repository—including one whose `sow.yml` `limit` or `exclude` policy changed since the last build—needs a build before it can pass `check`. The old Built Generation and new Desired state can each pass their own checks while differing from each other:
 
 ```console
 sow check

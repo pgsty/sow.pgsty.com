@@ -23,7 +23,10 @@ sow create /srv/offline
 
 SOW scans top-level regular files with `.rpm` or `.deb` suffixes. It does not recurse or
 follow package symlinks. Package names, versions, and architectures come from package
-headers. SOW rejects source RPMs (`src` and `nosrc`).
+headers. By default, SOW skips corrupt or unreadable files, source RPMs (`src` and `nosrc`),
+and coordinate conflicts (including Debian version-equivalent conflicts such as `1.0-1` vs
+`1.00-1`) with warnings so remaining valid packages still index; pass `--strict` to fail
+before writing on any bad or conflicting input.
 
 | Input | Generated files |
 |---|---|
@@ -32,9 +35,12 @@ headers. SOW rejects source RPMs (`src` and `nosrc`).
 | Both formats | Both sets of indexes |
 
 RPM locations use the package basename. DEB `Filename` values use `./<basename>`.
-SOW includes all valid versions. Different bytes with the same package coordinate cause
-a conflict. SOW rejects a directory with no supported packages, except when `--pigsty`
-finishes an interrupted cleanup.
+SOW includes all valid versions. If every candidate of one format fails, SOW preserves that
+format's previous index, history, and completion state while still publishing valid packages
+of the other format (including in fresh `--pigsty` directories). An empty directory produces
+a warning by default and fails under `--strict` unless `--pigsty` is set. Human output writes
+warnings to stderr; successful `--json` output carries `warnings` and `skipped` in stdout
+and leaves stderr empty.
 
 By default, package files and unrelated files stay unchanged. If a format disappears, SOW removes its old generated indexes.
 For RPMs, it keeps the current and immediately previous checksum-named metadata sets. It removes older SOW-shaped metadata and replaces incomplete output. If an existing `repomd.xml` lists independent metadata SOW does not generate—such as `group` (comps), `updateinfo`, or `modules`—`sow create` replaces `repomd.xml` without those entries and reports those data types in `dropped_metadata` (`--json`) and as a stderr warning (alternate package-index encodings such as `*_db` and `*_zck` are not listed). Non-SOW files on disk, including external `repomd.xml.asc` signatures, stay untouched and must be refreshed separately. `sow create` refuses to run inside a managed `.sow` workspace ancestor or over an interrupted `.sow-prune-repo-complete` marker without `--pigsty`.
@@ -83,7 +89,7 @@ sow prune /srv/offline --dry-run
 sow prune /srv/offline
 ```
 
-`sow prune` compares versions with native `rpmvercmp` rules, including `~` pre-release and `^` post-release caret sorting. It updates `repodata/` before removing superseded `.rpm` files so clients never observe metadata that points to missing packages. If the directory already contains `repo_complete`, `sow prune` refreshes that marker automatically. Unlike `sow create`, `sow prune` refuses to run when `repodata/` contains foreign non-SOW metadata files.
+`sow prune` supports both RPM v4 and v6 and compares versions with native `rpmvercmp` rules, including `~` pre-release and `^` post-release caret sorting. It updates `repodata/` before removing superseded `.rpm` files so clients never observe metadata that points to missing packages. By default, corrupt packages, unmatched `--protect` names, and equal-version conflicts (retaining the whole name/architecture group) are skipped with warnings; pass `--strict` to fail before publication. In mixed RPM and DEB directories, `sow prune` preserves the DEB index and carries forward existing `repo_complete` digests for still-present DEBs without prematurely hashing newly arrived DEBs. Unlike `sow create`, `sow prune` refuses to run on live repositories when `repodata/` contains foreign non-SOW metadata files or `repomd.xml.asc`.
 
 ## Interrupted builds
 

@@ -125,7 +125,7 @@ sow create "$HOME/sow-quickstart"
 
 Unchanged package files and options produce the same metadata. A repeat run reports `noop=true`.
 
-In an RPM-only flat directory, you can also run `sow prune "$HOME/sow-quickstart" --dry-run` to preview superseded RPM versions and `sow prune "$HOME/sow-quickstart"` to delete them and refresh `repodata/`.
+In a flat directory containing RPMs, you can also run `sow prune "$HOME/sow-quickstart" --dry-run` to preview superseded RPM versions and `sow prune "$HOME/sow-quickstart"` to delete them and refresh `repodata/` (leaving any DEB indexes untouched).
 
 When replacing another YUM metadata generator, follow [Migrate an Existing YUM Repository](/docs/tutorial/yum-migration/) to preserve the timestamp that cached clients expect.
 

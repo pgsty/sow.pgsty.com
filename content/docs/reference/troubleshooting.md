@@ -22,7 +22,7 @@ Replace `/srv/sow`, `pgsql`, and the target name `prod` below with your configur
 
 ## The database needs migration
 
-SOW 0.8.0 and versions 0.5.0 through 0.7.1 use schema v13. These workspaces can upgrade directly. If a 0.7.1 local GC was interrupted, finish it with the old binary before upgrading. See the [upgrade guide](/docs/start/install/#upgrade-to-080).
+SOW 0.9.0 and versions 0.5.0 through 0.8.0 use schema v13. These workspaces can upgrade directly, and 0.9.0 directly resumes interrupted 0.7.1 local GC plans containing an empty `manifest` array. See the [upgrade guide](/docs/start/install/#upgrade-to-090).
 For a 0.3 or 0.4 workspace, stop writers and back up the complete workspace. Then run:
 
 ```bash
@@ -32,9 +32,9 @@ sow check -C /srv/sow -r pgsql
 ```
 
 Repeat this for each Repository. Compatible read-only commands can still inspect an older
-schema, but they do not migrate it. If a Repository migrated from C2 layout by SOW 0.5 or
+schema, but they do not migrate it; write commands and `init` reject an unmigrated schema v12 database with exit code `6`. If a Repository migrated from C2 layout by SOW 0.5 or
 0.6 reported an invalid transition control target after a later build, SOW 0.7.0 and later
-recover this state automatically. See [Upgrade](/docs/start/install/#upgrade-to-080).
+recover this state automatically. See [Upgrade](/docs/start/install/#upgrade-to-090).
 
 If leftover C2 migration stage files block local GC, rerun `sow repo migrate REPOSITORY`.
 SOW 0.7.1 and later preserve unproven files under `.sow/<repo>/abandoned/` and report their location. Inspect them before removal.
@@ -62,7 +62,7 @@ For an interrupted `add`, `rm`, Dist change, or build, inspect `sow log` and fix
 reported cause. Run `sow build` for that Repository to complete recovery. Committed Desired
 changes remain part of the pending build. For interrupted `init`, `repo new`, or `repo rm`
 operations, rerun the corresponding lifecycle command to recover the workspace journal.
-For an interrupted local `gc` or `retain rm`, rerun `sow gc` or `sow retain rm GENERATION`. Before upgrading from 0.7.1, finish an interrupted local GC with the 0.7.1 binary. If an R2 target deletion was interrupted, resume it with `sow gc TARGET --delete`.
+For an interrupted local `gc` or `retain rm`, rerun `sow gc` or `sow retain rm GENERATION` (including interrupted 0.7.1 empty-manifest local GC plans). If an R2 target deletion was interrupted, resume it with `sow gc TARGET --delete`.
 
 If recovery needs a protected signing key, supply its password source again. Journals
 do not save passwords. A supported recovery command can use `--passfile PATH` or
@@ -109,7 +109,7 @@ through its normal process controls. Retry your command afterward.
 For write commands that support lock options, use `--no-wait` to return immediately when
 the lock is busy, or `--timeout 30s` to bound the wait. These options do not apply to `init`
 or read commands. Shared-lock reads wait until the writer finishes or you cancel the
-command; `status` normally reports the lock state without waiting. Keep the lock files in place: SOW uses their stable paths to coordinate processes.
+command; `status` normally reports the lock state without waiting. Keep the lock files in place: SOW uses their stable paths to coordinate processes. If a populated workspace loses `.sow/workspace.lock`, stop all SOW processes and scheduled jobs for that workspace, exclusively create an empty `0600` `.sow/workspace.lock` as the workspace owner, and run `sow init` before restarting jobs.
 See [Global options](/docs/command/).
 
 ## A package, signature, or path fails validation
@@ -124,9 +124,7 @@ not enable signing.
 - Check the selected path first. CLI/environment paths start at the process working
   directory, regardless of `-C`; config paths start at the workspace root. An empty
   environment variable is not the same as an unset one.
-- Use a readable regular file. An external secret mount may use symlinks if every hop stays outside the workspace. Paths inside the workspace must be free of symlinks. The password is one nonempty UTF-8
-  line with an optional final LF or CRLF; spaces and tabs are significant. The file
-  is not a shell script or `NAME=value` assignment.
+- Regular files, symlinks (including Kubernetes Secret mounts), and named pipes (FIFOs, with a 2-second writer deadline) are supported. The password is one nonempty line (optional UTF-8 BOM and one final LF or CRLF are removed); spaces and tabs are significant. The file is not a shell script or `NAME=value` assignment.
 - An invalid selected source fails without fallback or prompting. External GPG needs
   agent support for loopback mode. A hardware key may still require its own confirmation.
 - `config check` unlocks metadata keys and probes external metadata GPG signing.

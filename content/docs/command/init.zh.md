@@ -10,7 +10,7 @@ weight: 200
 icon: fa-solid fa-seedling
 ---
 
-`sow init` 创建工作区的 `sow.yml` 与私有状态目录 `.sow/`。如果配置中已声明仓库和 Dist，它会创建尚未初始化的对象。添加声明后，可再次运行此命令完成初始化。
+`sow init` 创建工作区的 `sow.yml` 与私有状态目录 `.sow/`（已有工作区可继续使用 `sow.yml` 或 `sow.yaml`）。如果配置中已声明仓库和 Dist，它会创建尚未初始化的对象。添加声明后，可再次运行此命令完成初始化。
 
 ## 语法 {#synopsis}
 
@@ -110,7 +110,7 @@ sow init . --json
 
 ## 锁与恢复 {#locking-and-recovery}
 
-初始化中断后，对同一目录重新运行 `sow init`。SOW 先完成或回滚被中断的操作，再初始化其余声明对象。有其他工作区写操作时，它会等待该操作结束。
+初始化中断后，对同一目录重新运行 `sow init`。SOW 先完成或回滚被中断的操作，在持有 `.sow/workspace.lock` 下修复缺失的单仓库锁文件，再初始化其余声明对象。有其他工作区写操作时，它会等待该操作结束。如果已有数据的 `.sow/` 丢失了 `.sow/workspace.lock`，`init` 会报完整性错误，需先停止所有写入进程、由工作区所有者创建空的 `0600` `.sow/workspace.lock` 文件后再重新运行 `sow init`。
 
 ## 示例 {#examples}
 
@@ -149,7 +149,7 @@ sow config check -C /srv/repo
 | `2` | 用法错误，或已存在的 `sow.yml` 解析/校验不通过 |
 | `3` | 部分成功——部分声明的仓库/Dist 已提交，至少一个失败 |
 | `5` | 工作区日志无法恢复到终态 |
-| `6` | 已有文件与 SOW 保留路径冲突 |
+| `6` | 已有文件与 SOW 保留路径冲突，或声明的仓库数据库需要先执行 `sow repo migrate` |
 {.wide .expand}
 
 ## 参见 {#see-also}

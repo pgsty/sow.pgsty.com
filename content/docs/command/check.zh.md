@@ -51,7 +51,7 @@ sow check [-j|--jobs N] [-C|--workdir DIR] [-r|--repo NAME] [-d|--dist NAME]... 
 
 ### 软件包校验 {#physical-evidence-and-io-contract}
 
-每次运行都会重新计算包文件的哈希。同一物理文件的硬链接共用一次哈希结果。带签名的 RPM 还会进行签名校验，包括签名头标签 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 和 EdDSA 数据包。`checked` 统计软件包对象数量，不是文件读取次数。
+每次运行都会重新计算包文件的哈希。同一物理文件的硬链接共用一次哈希结果。带签名的 RPM 还会进行签名校验，包括 RPM v6 原生 `RPMSIGTAG_OPENPGP` 标签 278（含双签与多签 RPM），以及签名头标签 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 和 EdDSA 数据包。若 APT `by-hash` 文件因复制等操作断开硬链接，会回退按内容摘要校验；`.sow/` 下的 `.DS_Store` 文件也会被容忍。`checked` 统计软件包对象数量，不是文件读取次数。
 
 ```console
 sow check
@@ -71,7 +71,7 @@ generation-manifest	ok=true	checked=1
 
 ## dirty 不可交付 {#dirty-is-not-deliverable}
 
-dirty 仓库需要先构建，才能通过 `check`。旧构建快照与新的期望状态可以分别通过校验，但二者仍有差异：
+dirty 仓库（包括上次构建后修改了 `sow.yml` 中的 `limit` 或 `exclude` 策略的情况）需要先构建，才能通过 `check`。旧构建快照与新的期望状态可以分别通过校验，但二者仍有差异：
 
 ```console
 sow check

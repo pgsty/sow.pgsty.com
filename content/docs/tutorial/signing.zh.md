@@ -67,8 +67,7 @@ repos:
 `passfile: /run/secrets/gpg-password`，或执行
 `export SOW_GPG_PASSFILE=/run/secrets/gpg-password`。单次执行可以使用
 `sow build -r pigsty --passfile /run/secrets/gpg-password`，`agent://FINGERPRINT` 密钥同样支持。
-口令文件放在仓库之外，权限建议为 `0600`。内容就是口令：非空 UTF-8 单行，可以带一个
-末尾 LF 或 CRLF。SOW 保留空格与制表符，且不自动搜索默认文件。
+口令文件放在仓库之外，权限建议为 `0600`（支持普通文件、符号链接与 2 秒超时的命名管道）。内容就是口令：非空单行，自动移除可选 UTF-8 BOM 及末尾一个 LF 或 CRLF。SOW 保留空格与制表符，且不自动搜索默认文件。
 优先级和完整格式见[口令文件](/zh/docs/reference/config/#passfile)。
 旧 `passphrase` 引用继续兼容。配置只保存引用，不保存秘密值。
 
@@ -119,7 +118,7 @@ repos:
 将占位符替换为 `$FPR` 中的 40 位十六进制指纹。安装 `rpm` 与 `gpg`，
 并将私钥放在 `rpm` 使用的 GPG 密钥环中。
 
-`fill` 会签署新导入的包；如果已有签名能通过配置密钥或 `trusted_keys` 验证，则保留原签名。SOW 支持验证 RSA、DSA、ECDSA 与 EdDSA RPM 签名，包括保存在 RPM 签名头 tag 267（`RPMSIGTAG_DSA`）中的纯头签名。
+`fill` 会签署新导入的包；如果已有签名能通过配置密钥或 `trusted_keys` 验证，则保留原签名。SOW 同时支持验证 RPM v4 与 RPM v6 签名，包括原生 `RPMSIGTAG_OPENPGP` tag 278（含双签与多签 RPM），以及保存在 RPM 签名头 tag 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 与 EdDSA 纯头签名。
 其他模式见 [RPM 签名策略](/zh/docs/reference/config/)。
 
 包签名密钥带口令时，在 `signing.rpm.packages` 下配置 `passfile`，或使用
@@ -196,7 +195,7 @@ sow create /srv/flat --sign-with 0123456789ABCDEF
 ```
 
 将 `0123456789ABCDEF` 换成你的密钥 ID 或指纹，匹配的私钥必须能被 `rpm` 与 GPG 使用。
-SOW 保留已有签名（包括上游签名），并识别 RPM 签名头 tag 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 与 EdDSA 纯头签名。需要全部换成自己的密钥时，在独立工作副本上使用 `--overwrite`。
+SOW 保留已有签名（包括上游签名），同时识别 RPM v6 原生 `RPMSIGTAG_OPENPGP` tag 278 以及签名头 tag 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 与 EdDSA 纯头签名。需要全部换成自己的密钥时，在独立工作副本上使用 `--overwrite`。
 密钥格式见 [`sow create`](/zh/docs/command/create/#signing-rpms)。
 
 使用带口令的密钥时，增加 `--passfile /run/secrets/gpg-password`，或将

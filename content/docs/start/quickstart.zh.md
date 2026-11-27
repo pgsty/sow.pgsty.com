@@ -129,7 +129,7 @@ sow create "$HOME/sow-quickstart"
 
 包文件与参数不变时，生成的元数据也不变，重复运行会报告 `noop=true`。
 
-对于只包含 RPM 的平面目录，也可以运行 `sow prune "$HOME/sow-quickstart" --dry-run` 预览旧版 RPM，再执行 `sow prune "$HOME/sow-quickstart"` 删除旧版文件并刷新 `repodata/`。
+在包含 RPM 的平面目录中，也可以运行 `sow prune "$HOME/sow-quickstart" --dry-run` 预览旧版 RPM，再执行 `sow prune "$HOME/sow-quickstart"` 删除旧版文件并刷新 `repodata/`（不会改动已有的 DEB 索引）。
 
 替换其他 YUM 元数据生成工具时，按[迁移现有 YUM 仓库](/zh/docs/tutorial/yum-migration/)保留客户端缓存所需的时间戳。
 

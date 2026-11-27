@@ -42,7 +42,7 @@ sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|-
 
 ## 输入与目标 {#inputs-and-targets}
 
-`PATH` 可以是文件或目录。目录默认只扫描顶层，除非你加 `-R`。
+`PATH` 可以是文件或目录。目录默认只扫描顶层，除非你加 `-R`。递归扫描会忽略不可读的非包文件，并正确跟随显式传入或包路径上的符号链接。
 
 选择一个仓库和一个或多个 Dist。可用 `-r`、`-d` 指定，也可按[当前目录自动选择](/zh/docs/command/)。混合添加 RPM 与 DEB 时，每个包只进入格式相同的 Dist。没有兼容目标的包会被拒绝。
 
@@ -199,7 +199,7 @@ Managed 模式的 RPM 包签名在 `sow.yml` 的 `signing.rpm.packages.mode` 中
 | `always` | 确保最终包由配置密钥有效签名；否则对暂存副本重签 |
 {.wide .expand}
 
-没有配置密钥时只能用 `never`。RPM 签名验证支持签名头标签 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 和 EdDSA（Ed25519）OpenPGP 数据包。
+没有配置密钥时只能用 `never`。RPM 签名验证同时支持 RPM 格式 v4 与 v6，包括原生 `RPMSIGTAG_OPENPGP` 标签 278（含双签与多签 RPM），以及签名头标签 267（`RPMSIGTAG_DSA`）中的 RSA、DSA、ECDSA 和 EdDSA（Ed25519）OpenPGP 数据包。
 
 重复导入时，SOW 复用内容相同的软件包。如果 RPM 只有签名不同，且已有包满足当前签名策略，也可以复用。包内容改变或已有签名不符合策略时，会产生坐标冲突。完整匹配规则见[签名模型](/zh/docs/feature/signing/)。
 

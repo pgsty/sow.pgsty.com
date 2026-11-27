@@ -15,10 +15,10 @@ icon: fa-solid fa-folder-tree
 ## 语法 {#synopsis}
 
 ```text
-sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--overwrite] [--passfile PATH]] [-T DUR | -N] [--json]
+sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [--strict] [-S KEY [--overwrite] [--passfile PATH]] [-T DUR | -N] [--json]
 ```
 
-`--passfile PATH` 需要同时指定 `--sign-with`；`SOW_GPG_PASSFILE` 可提供默认口令文件，但不会自动启用签名。文件为非空 UTF-8 单行，只去掉末尾一个 LF 或 CRLF，不做 trim。相对路径以当前目录为基准，不自动搜索默认位置。此接口需要 SOW 0.7.0 或更新版本，详见[口令文件](/zh/docs/reference/config/#passfile)。
+`--passfile PATH` 需要同时指定 `--sign-with`；`SOW_GPG_PASSFILE` 可提供默认口令文件，但不会自动启用签名。文件为非空单行，自动移除可选 UTF-8 BOM 及末尾一个 LF 或 CRLF，不做 trim；支持普通文件、符号链接与命名管道（写端超时 2 秒）。相对路径以当前目录为基准，不自动搜索默认位置，详见[口令文件](/zh/docs/reference/config/#passfile)。
 
 已有的 `repomd.xml` 会被替换。SOW 不生成的独立元数据，例如软件包组（`comps`）、updateinfo 或 modules，不会带入新索引。从 SOW 0.7.0 起，`create` 在文本模式下会向标准错误输出警告，使用 `--json` 时则在结果的 `dropped_metadata` 字段中列出这些数据类型；包索引的其他编码（`*_db`、`*_zck`）不会列出。这样已有仓库仍可重建，包括 Pigsty v4.4.0 在 EL8/9 上生成、带有旧版 modules 元数据的仓库。客户端仍需要被丢弃的记录时，应继续用原来的工具维护该仓库。[`sow prune`](/zh/docs/command/prune/) 遇到这类索引则会拒绝执行。
 
@@ -42,7 +42,8 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 |---|---|---|
 | `-j, --jobs N` | 处理软件包的并发工作线程数 | 逻辑 CPU 数 |
 | `--metadata-timestamp SECONDS` | RPM repomd 的 data 时间戳，取值 `0` 至 `253402300799` 的 Unix 秒；不影响 DEB、包时间或 gzip 头 | `0` |
-| `--pigsty` | 启用 Pigsty 兼容清理与完成标记 | 关闭 |
+| `--pigsty` | 启用 Pigsty 兼容清理与 `repo_complete` 门禁 | 关闭 |
+| `--strict` | 遇到损坏、不可读、源码、冲突包（或非 `--pigsty` 空目录）时以非零退出失败，而不是跳过并告警 | 关闭 |
 | `-S, --sign-with KEY` | 用 GPG 密钥 ID 或指纹为未签名 RPM 补签 | 关闭 |
 | `--passfile PATH` | 为 `--sign-with` 提供口令文件 | `SOW_GPG_PASSFILE`，再沿用 RPM/GPG 行为 |
 | `--overwrite` | 重签全部 RPM；必须与 `--sign-with` 同用 | 关闭 |
@@ -56,11 +57,13 @@ sow create [DIR] [-j N] [--metadata-timestamp SECONDS] [--pigsty] [-S KEY [--ove
 
 - 只考虑顶层、以 `.rpm` 或 `.deb` 结尾的普通文件。
 - 不递归、不跟随符号链接、不读工作区配置。`create` 拒绝在 Managed `.sow` 工作区目录内运行。
-- 所有有效版本都进入索引。两个文件对应同一逻辑坐标但内容不同时，命令报错。启用 `--pigsty` 时，先执行包过滤再检查重复文件名。
-- 默认模式要求至少有一个支持的包。`--pigsty` 允许清理后没有包，并为该空目录写入完成标记。
+- 默认容错模式下，损坏或不可读包、源码 RPM（`src`/`nosrc`）以及坐标冲突（含 Debian 版本等价冲突，如 `1.0-1` 与 `1.00-1`）会被跳过并输出告警，其余合法包继续进入索引。启用 `--pigsty` 时，先执行包过滤再检查重复文件名。
+- 当某一种格式的全部候选包都失败时，SOW 会保留该格式原有的索引、历史记录与完成状态，同时正常发布另一种格式的合法包（包括全新的 `--pigsty` 目录）。
+- 文本模式将告警输出到 stderr；成功的 `--json` 输出将 `warnings` 与 `skipped` 写入 stdout 信封并保持 stderr 为空。
+- 传入 `--strict` 后，遇到任何被跳过的包、坐标冲突或空目录（未加 `--pigsty`）都会在写入前失败退出。
 
 ```console
-sow create /srv/empty
+sow create /srv/empty --strict
 plain: scan /srv/empty: no supported top-level regular RPM or DEB packages
 ```
 
@@ -154,9 +157,9 @@ SOW 先撤下已有的 `repo_complete`，再替换索引；新元数据安装后
 
 `-S/--sign-with KEY` 通过本地 RPM/GPG 环境为 RPM 包签名。使用 16 位十六进制密钥 ID，或 40/64 位指纹；可以带 `0x` 或 `0X` 前缀。运行前，确保该环境中已有私钥。密钥带口令时，使用 `--passfile PATH` 或将 `SOW_GPG_PASSFILE` 设置为口令文件路径。
 
-- 默认只给没有可解析嵌入 OpenPGP 签名（签名头标签 267 中的 RSA、DSA、ECDSA、EdDSA，或旧版 PGP 标签）的 RPM 补签；已有签名的包保持原字节。
+- 默认只给没有可解析嵌入 OpenPGP 签名（原生 RPM 6 `RPMSIGTAG_OPENPGP` 标签 278、签名头标签 267 中的 RSA/DSA/ECDSA/EdDSA，或旧版 PGP 标签）的 RPM 补签；已有签名的包保持原字节。
 - `--overwrite` 必须与 `--sign-with` 同用，改为对全部保留 RPM 执行 `rpm --resign`。
-- SOW 对临时副本签名，执行 OpenPGP 签名密码学验证并确认包身份与内容未变后替换原 RPM。索引描述最终签名后的文件。
+- SOW 对临时副本签名，执行 OpenPGP 签名密码学验证（支持 RPM v4 与 RPM v6 tag 278，含多签 RPM）并确认包身份与内容未变后替换原 RPM。索引描述最终签名后的文件。
 - `--pigsty` 清理后至少要保留一个顶层 RPM，且 `PATH` 中要有 `rpm`。
 
 ```console
@@ -236,10 +239,10 @@ sow create /srv/empty --json
 |---|---|
 | `0` | 索引写出成功，或输入未变化产生 no-op |
 | `1` | 目录不可读或不存在、包解析失败、渲染失败、签名工具失败，或签名需要的口令文件不存在、不可读、格式错误 |
-| `2` | 用法错误——时间戳非法或重复指定、`--overwrite` 或 `--passfile` 未配 `--sign-with`、`--passfile` 路径非法/为空/重复指定、密钥格式非法、`--no-wait` 与非零 `--timeout` 同用 |
+| `2` | 用法错误——时间戳非法、`--overwrite` 或 `--passfile` 未配 `--sign-with`、`--passfile` 路径非法/为空、密钥格式非法、`--no-wait` 与非零 `--timeout` 同用 |
 | `4` | 目录写锁被占用，且给了 `--no-wait` 或 `--timeout` 到期 |
 | `5` | 发布前输入文件发生变化，或受控输出路径未通过完整性检查 |
-| `6` | 未找到受支持的包、位于 Managed `.sow` 工作区内、已有 `repo_complete` / `.sow-prune-repo-complete` 但未使用 `--pigsty`、对 DEB-only 目录用 `--sign-with`、坐标冲突 |
+| `6` | 位于 Managed `.sow` 工作区内、已有 `repo_complete` / `.sow-prune-repo-complete` 但未使用 `--pigsty`、对 DEB-only 目录用 `--sign-with`，或在 `--strict` 模式下遇到空目录、被跳过的包或坐标冲突 |
 {.wide .expand}
 
 ## 参见 {#see-also}

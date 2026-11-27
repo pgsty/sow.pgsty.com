@@ -123,11 +123,11 @@ sow check -C /srv/repo -r demo
 
 ## 查找工作区 {#find-the-workspace}
 
-Managed 命令按以下顺序查找最近祖先目录中的 `sow.yml`：
+Managed 命令按以下顺序查找最近祖先目录中的 `sow.yml` 或 `sow.yaml`：
 
-1. 指定 `-C/--workdir DIR` 时从 `DIR` 开始，否则从当前目录开始。
-2. 没有找到工作区时，从 `$SOW_DIR` 开始查找。
-3. 两次都没有找到时，返回工作区发现错误。
+1. 指定 `-C/--workdir DIR` 时，仅从 `DIR` 向上查找（不回退到当前目录或 `$SOW_DIR`）。
+2. 否则先从当前目录向上查找，未找到时再从 `$SOW_DIR` 查找。
+3. 均未找到时，返回工作区发现错误。
 {.steps .td-steps-compact}
 
 命令使用找到的第一个配置，即使该配置有错误。`--workdir` 只改变工作区查找起点，
@@ -177,7 +177,7 @@ Plain 命令 `sow create` 不参与工作区查找。
 初始化已提交部分对象、后续又失败时，命令返回退出码 `3` 并报告已完成内容。
 修正错误后再次运行 `init`。
 
-SOW 0.8.0 与 0.5.0 至 0.7.1 均使用数据库 schema v13。已有工作区请按[升级步骤](/zh/docs/start/install/#upgrade-to-080)操作。
+SOW 0.9.0 与 0.5.0 至 0.8.0 均使用数据库 schema v13。已有工作区请按[升级步骤](/zh/docs/start/install/#upgrade-to-090)操作。
 对于 0.3 或 0.4 工作区，先备份完整工作区，再执行
 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate)。
 不要手动修改 SQLite schema 版本。

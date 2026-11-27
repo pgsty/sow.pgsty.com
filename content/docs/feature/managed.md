@@ -126,10 +126,10 @@ when configured, applies to empty Dists too. Removing the last member leaves emp
 
 ## Find the workspace
 
-Managed commands search for the nearest ancestor `sow.yml`:
+Managed commands search for the nearest ancestor `sow.yml` or `sow.yaml`:
 
-1. Start at `-C/--workdir DIR`, if supplied; otherwise start at the current directory.
-2. If no workspace is found, search from `$SOW_DIR`.
+1. If `-C/--workdir DIR` is supplied, search upward from `DIR` only (without falling back to the current directory or `$SOW_DIR`).
+2. Otherwise search upward from the current directory, and if no workspace is found, search from `$SOW_DIR`.
 3. If neither search succeeds, report a discovery error.
 {.steps .td-steps-compact}
 
@@ -181,7 +181,7 @@ existing Dist, run `build` to create its new view.
 If initialization commits some objects and then fails, it returns exit `3` and reports
 what completed. Resolve the error and rerun `init`.
 
-SOW 0.8.0 and versions 0.5.0 through 0.7.1 use schema v13. Follow the [upgrade steps](/docs/start/install/#upgrade-to-080) for an existing workspace.
+SOW 0.9.0 and versions 0.5.0 through 0.8.0 use schema v13. Follow the [upgrade steps](/docs/start/install/#upgrade-to-090) for an existing workspace.
 For a 0.3 or 0.4 workspace, back up the complete workspace, then run
 [`sow repo migrate`](/docs/command/repo/#sow-repo-migrate).
 Do not edit the SQLite schema version manually.

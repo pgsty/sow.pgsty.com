@@ -55,7 +55,7 @@ sow [OPTIONS] COMMAND [ARGS]
 Running `sow` with no arguments prints the command list and exits `0`. Use `sow help COMMAND` or
 `sow help COMMAND SUBCOMMAND` for built-in usage. `sow version` and `sow --version` print version and build information.
 
-Options apply only to the commands that list them. Use `--` before a positional argument that starts with `-`. Unknown or repeated single-value options return exit code `2`.
+Options apply only to the commands that list them. Use `--` before a positional argument that starts with `-`. Repeated single-value flags use last-wins semantics, boolean flags accept `=true` or `=false`, and unknown options return exit code `2`.
 
 ## Signing passwords {#passfile}
 
@@ -70,12 +70,11 @@ relative-path rules, and legacy `passphrase` compatibility.
 
 ## Workspace discovery
 
-Managed commands find the nearest ancestor containing `sow.yml`:
+Managed commands find the nearest ancestor containing `sow.yml` or `sow.yaml`:
 
-1. Start at `-C/--workdir DIR`, when supplied; otherwise start at the current directory.
-2. Search upward and stop at the first `sow.yml`.
-3. If that search finds nothing, repeat from `SOW_DIR` when set. An explicit `-C` suppresses the
-   current-directory candidate, but not the `SOW_DIR` fallback.
+1. If `-C/--workdir DIR` is supplied, search upward from `DIR` only (never falling back to the current directory or `SOW_DIR`).
+2. Otherwise search upward from the current directory; if nothing is found and `SOW_DIR` is set, repeat from `SOW_DIR`.
+3. Stop at the first directory containing `sow.yml` or `sow.yaml` (if both regular files exist in the same directory, exit `2`; a legacy repository directory named `sow.yaml` beside `sow.yml` is tolerated).
 4. If no Workspace is found, exit `2`.
 
 `--workdir` changes only the discovery start directory. It does not change the process working
@@ -116,7 +115,7 @@ Other commands use these defaults:
 
 `create` and `prune` lock their target directory. Managed mutations coordinate through Workspace and Repository locks. `init` waits for its locks without a CLI timeout option.
 
-Other write commands accept `-T/--timeout DUR` and `-N/--no-wait`. The default `--timeout 0` waits indefinitely. Positive durations use `ms`, `s`, `m`, or `h`, for example `500ms`, `30s`, or `5m`. `--no-wait` fails immediately if a lock is held. It cannot be combined with a positive timeout. Lock acquisition failure returns `4`.
+Other write commands accept `-T/--timeout DUR` and `-N/--no-wait`. The default `--timeout 0` (or `0s`) waits indefinitely. Positive durations use `ms`, `s`, `m`, or `h`, for example `500ms`, `30s`, or `5m`. `--no-wait` fails immediately if a lock is held. It cannot be combined with a positive timeout. Lock acquisition failure returns `4`.
 
 Most read-only Managed commands use shared locks and wait for a conflicting writer. They do not accept lock wait options. `status` normally probes the Repository lock so you can inspect an active writer. Cancel a waiting command with Ctrl-C.
 

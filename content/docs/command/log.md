@@ -177,7 +177,7 @@ sow log export - -r pigsty | gzip > pigsty-ops-$(date +%F).jsonl.gz
 
 ### Output path {#it-refuses-to-clobber}
 
-Choose a new filename in an existing directory. `log export` returns `6` if the file already exists. Its immediate parent must be a real directory, not a symbolic link. On macOS, use `/private/tmp/file.jsonl` instead of `/tmp/file.jsonl`.
+Choose a new filename in an existing directory. `log export` returns `6` if the file already exists. Symlinked parent directories (such as `/tmp` on macOS) are resolved to their physical directory before atomic creation and directory sync.
 
 ## sow log prune
 
@@ -261,7 +261,7 @@ sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 | `log` | `5` | State database unreadable |
 | `log` | `6` | The given Operation ID does not exist, or several different `-d` values were given |
 | `log export` | `0` | Export written |
-| `log export` | `1` | I/O failure writing the target, or the parent is not a real directory |
+| `log export` | `1` | I/O failure writing or syncing the target, or the parent directory does not exist |
 | `log export` | `2` | Usage error or ambiguous selection |
 | `log export` | `6` | Target already exists |
 | `log prune` | `0` | Prune completed, including pruning nothing |

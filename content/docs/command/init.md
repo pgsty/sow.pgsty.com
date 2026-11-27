@@ -10,7 +10,7 @@ weight: 200
 icon: fa-solid fa-seedling
 ---
 
-`sow init` creates a Workspace with `sow.yml` and private `.sow/` state. If the configuration already declares Repositories and Dists, it creates the missing ones. Run it again to complete initialization after adding declarations.
+`sow init` creates a Workspace with `sow.yml` and private `.sow/` state (existing workspaces configured with either `sow.yml` or `sow.yaml` are accepted). If the configuration already declares Repositories and Dists, it creates the missing ones. Run it again to complete initialization after adding declarations.
 
 ## Synopsis
 
@@ -109,7 +109,7 @@ sow init . --json
 
 ## Locking and recovery
 
-If initialization is interrupted, rerun `sow init` for the same directory. SOW first completes or rolls back the interrupted operation, then initializes any remaining declared objects. It waits for other Workspace writers to finish.
+If initialization is interrupted, rerun `sow init` for the same directory. SOW first completes or rolls back the interrupted operation, repairs any missing per-repository lock files under `.sow/workspace.lock`, and initializes any remaining declared objects. It waits for other Workspace writers to finish. If a populated `.sow/` directory has lost `.sow/workspace.lock`, `init` fails with an integrity error until all writers are stopped and the owner creates an empty `0600` `.sow/workspace.lock` before rerunning `sow init`.
 
 ## Examples
 
@@ -148,7 +148,7 @@ sow config check -C /srv/repo
 | `2` | Usage error, or an existing `sow.yml` that fails to parse or validate |
 | `3` | Partial success — some declared Repositories/Dists were committed and at least one failed |
 | `5` | The Workspace journal could not be recovered to a terminal state |
-| `6` | An existing file collides with a SOW reserved path |
+| `6` | An existing file collides with a SOW reserved path, or a declared Repository database requires `sow repo migrate` |
 {.wide .expand}
 
 ## See also

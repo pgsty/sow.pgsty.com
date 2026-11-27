@@ -2,9 +2,9 @@
 title: "SOW 设计演进：从路由图到仓库引擎"
 linkTitle: "设计演进"
 date: 2026-08-10
-lastmod: 2026-11-23
+lastmod: 2026-11-27
 authors: [Vonng]
-description: "SOW 如何从 v0.1 软件分发平台转为仓库引擎，以及 v0.2 到 v0.8 如何改进这一模型。"
+description: "SOW 如何从 v0.1 软件分发平台转为仓库引擎，以及 v0.2 到 v0.9 如何改进这一模型。"
 categories: [Design]
 tags: [architecture, repository, migration, decision]
 weight: 20
@@ -14,9 +14,9 @@ draft: false
 ---
 
 SOW 在 v0.1 中探索了以 Git 为核心的软件分发控制面，在 v0.2 中转为仓库引擎。
-本文记录这次变化，以及后续到 v0.8.0 的改进。
+本文记录这次变化，以及后续到 v0.9.0 的改进。
 
-下文版本均对应正式 Git 标签，包括 [v0.8.0](https://github.com/pgsty/sow/tree/v0.8.0)。部分归档计划曾用“v0.2”“v0.3”指代开发中的设计；
+下文版本均对应正式 Git 标签，包括 [v0.9.0](https://github.com/pgsty/sow/tree/v0.9.0)。部分归档计划曾用“v0.2”“v0.3”指代开发中的设计；
 其中在 RPM 视图内创建硬链接的 C2 布局，已在 v0.2.0 发布前被替换。
 
 早期工作的细节见四篇配套文章：
@@ -40,6 +40,7 @@ SOW 在 v0.1 中探索了以 Git 为核心的软件分发控制面，在 v0.2 �
 | v0.6 | 保留上一版 Plain RPM 索引、记录 Managed 发布时间、强化文件检查、一致的状态读取、减少重复 I/O | 不变 |
 | v0.7 | Plain RPM 裁剪、口令文件签名、tag 267 ECDSA/EdDSA 验签、caret 版本排序，以及迁移/发布/恢复修复 | 不变 |
 | v0.8 | 按需 R2 条件删除（`gc TARGET --delete`）、工作区外密钥/口令符号链接挂载、移除 `control.tar.lzma`、严格 DEB/RPM 校验，以及大规模发布与分批 GC 加速 | 不变 |
+| v0.9 | 平面 `create`/`prune` 默认容错与 `--strict`、RPM v6 与 tag `278` 原生 OPENPGP 多签名验签、`sow.yaml` 支持、ECDSA/DSA 元数据签名，以及按 `max_cache_ttl` 直接生效的目标 GC 宽限期 | 不变 |
 {.wide .expand}
 
 早期版本的实现保存在源码标签中：
@@ -51,8 +52,9 @@ SOW 在 v0.1 中探索了以 Git 为核心的软件分发控制面，在 v0.2 �
 [v0.6.0](https://github.com/pgsty/sow/tree/v0.6.0)、
 [v0.6.1](https://github.com/pgsty/sow/tree/v0.6.1)、
 [v0.7.0](https://github.com/pgsty/sow/tree/v0.7.0)、
-[v0.7.1](https://github.com/pgsty/sow/tree/v0.7.1) 和
-[v0.8.0](https://github.com/pgsty/sow/tree/v0.8.0)。
+[v0.7.1](https://github.com/pgsty/sow/tree/v0.7.1)、
+[v0.8.0](https://github.com/pgsty/sow/tree/v0.8.0) 和
+[v0.9.0](https://github.com/pgsty/sow/tree/v0.9.0)。
 
 <span id="v01问题很有价值产品概念太多" data-td-print-local></span>
 
@@ -159,6 +161,12 @@ SOW 按 `(name, arch)` 对 `.rpm` 文件分组，只保留每组中 `epoch:versi
 v0.8.0 保持 schema 13 与公共布局不变。它在保持 R2 默认 `gc` 只报告候选的同时，加入了显式条件删除（`sow gc TARGET --delete`）：删除每个过期候选对象前，SOW 重新核对受保护发布根、缓存宽限期、对象大小、SHA-256 元数据与 ETag，删除后验证存储端与公开 HTTP 404/410 不可访问，并写入绑定因果发布纪元的删除回执，使重复发布相同字节保持幂等。
 
 本版同时支持工作区外经符号链接挂载的口令文件、密钥文件与受信任密钥环（如 Kubernetes Secret），移除了遗留的 `.deb` `control.tar.lzma` 支持，为新发布的 `repomd.xml.asc` 强制要求 SHA-256+ 摘要，允许相邻平面仓库并行运行，并显著加速大型仓库发布与分批本地 GC。完整细节见 [v0.8.0 发布注记](/zh/blog/release/sow-v0.8.0/)。
+
+## v0.9：平面索引默认容错、RPM v6 与务实精简 {#v09-fault-tolerant-flat-indexing-rpm-v6-and-pragmatic-simplification}
+
+v0.9.0 保持 schema 13 与公共布局不变。平面 `create` 与 `prune` 默认跳过损坏、源码或坐标冲突的软件包并输出告警，且某格式全部候选包失败时保留该格式旧索引；`--strict` 用于恢复遇错即停。平面与托管路径同时支持 RPM 格式 v6 与原生 `RPMSIGTAG_OPENPGP`（tag `278`）多签名验证，兼容重复同值主头标签与 Latin-1 DEB 控制元数据自动转 UTF-8。
+
+本版同时通过解析物理数据库路径探测 WAL 伴随文件移除了平台专用 SQLite C ABI 代码，统一接受 `sow.yml` 与 `sow.yaml`，新增 ECDSA/DSA 元数据签名与 FIFO 口令文件支持，使新建目标 GC 宽限期直接遵循 `max_cache_ttl`，并加固 CDN 重定向校验与跨区域 R2 重叠检查。完整细节见 [v0.9.0 发布注记](/zh/blog/release/sow-v0.9.0/)。
 
 <span id="每次重构都保留下来的原则" data-td-print-local></span>
 

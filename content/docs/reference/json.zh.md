@@ -11,7 +11,7 @@ icon: fa-solid fa-code
 
 <span id="stdout-与-stderr" data-td-print-local></span>
 
-数据命令使用 `--json` 后，会向 stdout 输出一个以换行结束的 JSON 文档，诊断写入 stderr。
+数据命令使用 `--json` 后，会向 stdout 输出一个以换行结束的 JSON 文档，诊断写入 stderr；平面 `create` 与 `prune` 成功时，告警与跳过记录写入 stdout 的 JSON 封装中，stderr 保持为空。
 `log export` 例外：它输出 JSON Lines，不接受 `--json`。
 
 ```bash
@@ -110,6 +110,8 @@ SOW 按下列规则设置顶层 `operation`：
 | `rpm`、`deb` | 进入索引的包数量 |
 | `kept` | 排序后的保留包文件名 |
 | `removed` | `--pigsty` 删除的文件 |
+| `skipped` | 默认容错模式下跳过的包数组（每项含 `path` 与 `reason`），存在时返回 |
+| `warnings` | 扫描或发布期间产生的告警字符串数组，存在时返回 |
 | `marker` | 是否生成完成标记 |
 | `marker_sha256` | 标记摘要，生成标记时存在 |
 | `noop` | 无需改变公开文件 |
@@ -127,6 +129,8 @@ SOW 按下列规则设置顶层 `operation`：
 | `kept` | 排序后的顶层保留 RPM 文件名 |
 | `candidates` | `{path, latest}` 对象数组，列出每个待删除候选包及其保留的替换 RPM |
 | `removed` | 已删除的 RPM 文件名 |
+| `skipped` | 默认容错模式下跳过的 RPM 数组（每项含 `path` 与 `reason`），存在时返回 |
+| `warnings` | 告警字符串数组（如损坏包、同版本冲突或未匹配的 `--protect` 名称），存在时返回 |
 | `index_updated` | 是否重写了 `repodata/` |
 | `marker` | 操作完成后是否存在 `repo_complete` |
 | `noop` | 无需删除软件包且未写入索引时为 `true` |
@@ -318,7 +322,7 @@ sow log export operations.jsonl -r demo
 sow log export - -r demo
 ```
 
-文件目标必须尚不存在，其直接父目录必须是真实目录，不能是符号链接。
+文件目标必须尚不存在；符号链接父目录（例如 macOS 的 `/tmp`）会在原子创建并同步父目录前解析为真实物理目录。
 
 <span id="一个完整例子" data-td-print-local></span>
 <span id="在脚本中使用检查结果" data-td-print-local></span>

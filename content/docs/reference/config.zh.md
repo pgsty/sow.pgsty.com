@@ -29,8 +29,7 @@ sow config show --all
 
 - 使用一个 YAML 文档，配置 `schema: sow/v3`。冻结的 `sow/v2` 工作区在迁移前仍支持 `config check`、`repo ls`、`repo show`、`dist ls`、`dist show` 只读检查。
 - 未知字段和重复键都是错误。
-- 文件名必须是 `sow.yml`（而非 `sow.yaml`；若目录中仅有 `sow.yaml`，工作区发现会给出明确提示），放在工作区根目录，且须为只有一个硬链接的普通文件，大小不超过 16 MiB。
-  不接受符号链接。
+- 文件名支持 `sow.yml` 或 `sow.yaml`，放在工作区根目录且大小不超过 16 MiB（`sow init` 创建 `sow.yml` 并拒绝符号链接；发现与读取支持指向普通文件的符号链接）。不能同时存在两个普通文件 `sow.yml` 与 `sow.yaml`；使用 `sow.yml` 时，仍兼容名为 `sow.yaml` 的已有仓库目录。
 - `init`、`repo new/rm`、`dist new/rm` 在执行相应操作时更新此文件。
 - 策略、签名和目标设置直接编辑文件。读取时应用默认值，不改写源文件。
 
@@ -232,8 +231,8 @@ RPM 签名生成 `repodata/repomd.xml.asc`，DEB 签名生成 `InRelease`、`Rel
 环境变量名称使用 `[A-Za-z_][A-Za-z0-9_]*`。GPG 密钥标识可以是 16 位 key ID，
 或 40、64 位指纹，十六进制字母不区分大小写。
 
-密钥文件支持 ASCII 装甲格式和二进制 OpenPGP 数据，必须是大小不超过 16 MiB 的普通文件。相对路径从工作区根开始解析。工作区内的路径各级均须为真实路径。外部密钥文件和受信任密钥环可以使用符号链接，解析途经的位置和最终文件都须位于工作区之外。
-提供私钥内容时，元数据签名在 SOW 进程内完成；引用解析为 GPG 密钥标识时，调用外部 `gpg`，
+密钥文件支持 ASCII 装甲格式（容忍装甲围栏外的说明文本）和二进制 OpenPGP 数据，大小不超过 16 MiB。相对路径从工作区根开始解析，支持普通文件与符号链接（包括 Kubernetes Secret 挂载）。
+元数据签名支持 RSA、EdDSA（Ed25519/Ed448）、ECDSA 与 DSA 密钥；提供私钥内容时，签名在 SOW 进程内完成；引用解析为 GPG 密钥标识时，调用外部 `gpg`，
 无论该标识来自 `agent://` 还是环境变量。
 
 签名 `key` 引用必须解析为一个主密钥。
@@ -279,12 +278,12 @@ sow build -r demo
 
 文件直接保存口令，格式规则如下：
 
-- 单行、非空、UTF-8 编码，不带 BOM；含可选末尾换行在内，最多 64 KiB。
+- 单行、非空，含可选末尾换行在内最多 64 KiB；会自动移除可选的 UTF-8 BOM。
 - 可以没有末尾换行；恰好移除末尾的一个 LF 或 CRLF。
 - 不做 trim：首尾空格和制表符都是口令的一部分。引号、`#`、反斜杠也按字面处理，
   不支持注释、转义或 `NAME=value` 语法。
 - 拒绝空文件、空行、NUL、中间的 CR/LF、单独的末尾 CR 和多余空行。只含空格的口令不算空。
-- 使用可读普通文件。工作区内的路径各级均须为真实路径，Plain `create` 以仓库目录为边界。外部挂载（例如 Kubernetes Secret）可以使用符号链接，解析的每一跳都须位于该边界之外。macOS 的 `/tmp`、`/var`、`/etc` 会规范化为对应的 `/private` 路径。
+- 支持可读普通文件、符号链接（含 Kubernetes Secret 挂载）与命名管道（FIFO）。FIFO 写入端有 2 秒时间提供口令并关闭写端。请将凭据放在公开目录之外。
 
 建议放在仓库与公开服务目录之外，文件权限设为 `0600`，父目录仅允许所需用户访问。
 SOW 不强制要求权限恰好为 `0600`，因此访问控制适当的只读 secret 挂载也可使用。
@@ -306,8 +305,8 @@ SOW 只在签名或签名前置检查时读取所选来源。文件不存在、�
 只修改 `passfile` 路径不会改变签名身份，也不会让 Dist 变脏。
 口令值不会进入日志、配置输出、仓库状态或公开文件。
 外部元数据签名通过独立文件描述符传入口令；RPM 可能多次调用 GPG，因此签包时会在
-私有的 `/tmp/sow-gpg-pass-*` 目录内创建 `0600` 临时文件，调用返回后先以零字节覆写再删除。
-进程被强制终止时，临时文件可能残留。
+`$TMPDIR`（默认 `/tmp`）下的私有 `sow-gpg-pass-*` 目录内创建 `0600` 临时文件，调用返回后先以零字节覆写再删除。
+进程被强制终止时，临时文件可能残留。工具失败时，SOW 会从最多 4 KiB 的子进程 stderr 中提取摘要返回。
 
 <span id="passphrase-引用" data-td-print-local></span>
 
@@ -356,24 +355,24 @@ targets:
 |---|---|---|
 | `repository` | 是 | 已有仓库名称 |
 | `provider` | 是 | `filesystem` 或 `r2` |
-| `endpoint` | 是 | 无尾部斜杠的规范 `file:///absolute/path`，R2 使用 `https://host` |
-| `region` | 仅 R2 | 必须为 `auto`，filesystem 禁止 |
-| `bucket` | 仅 R2 | 小写、符合 DNS 标签规则的桶名，filesystem 禁止 |
+| `endpoint` | 是 | `file:///absolute/path`，R2 使用 `https://host`（或 `http://localhost`）；大小写与末尾斜杠自动规范化 |
+| `region` | 否（仅 R2） | 默认 `auto`，允许小写 `[a-z0-9-]{1,64}`；filesystem 禁止 |
+| `bucket` | 仅 R2 | 小写 DNS 兼容桶名（支持 `a-z`、`0-9`、`-` 和 `.`，不含 `..`）；filesystem 禁止 |
 | `prefix` | 否 | 相对存储前缀，空值使用存储命名空间根 |
 | `credential` | 仅 R2 | `env://NAME` 或 `file:///absolute/path`，filesystem 禁止 |
-| `public_endpoint` | 是 | 以 `/` 结尾的规范验证 URL；filesystem 接受 HTTP(S) 或 `file://`，R2 接受 HTTP(S) |
-| `max_cache_ttl` | 是 | 规范的非负 Go duration，零值也要显式写 `0s` |
-| `authoritative_workspace` | 是 | 必须为 `true` |
-| `single_writer` | 是 | 必须为 `true` |
-| `exclusive_write_authority` | 是 | 必须为 `true` |
+| `public_endpoint` | 是 | 验证 URL（自动补全末尾 `/`）；filesystem 接受 HTTP(S) 或 `file://`，R2 接受 HTTP(S) |
+| `max_cache_ttl` | 是 | 非负 Go duration（如 `0`、`0s`、`5m`、`24h`），自动规范化 |
+| `authoritative_workspace` | 否 | 默认为 `true`；显式写 `false` 或 `null` 会报错 |
+| `single_writer` | 否 | 默认为 `true`；显式写 `false` 或 `null` 会报错 |
+| `exclusive_write_authority` | 否 | 默认为 `true`；显式写 `false` 或 `null` 会报错 |
 {.wide .expand}
 
-最后三个字段声明此工作区负责发布，并且是目标命名空间的唯一写者。
-同一存储上的目标前缀不能重叠，filesystem 目标也不能指向重叠目录。
+最后三个字段声明此工作区负责发布且是目标命名空间的唯一写者，省略时默认均为 `true`。
+同一存储上的目标前缀不能重叠：对于 R2，同一 `(endpoint, bucket)` 下即使 `region` 拼写不同（如 `auto` 与 `us-east-1`），重叠前缀也会被拒绝；filesystem 目标也不能指向重叠目录。
 
-使用规范时长，如 `0s`、`30m0s`、`24h0m0s`；`24h` 会被拒绝。
+支持 `0`、`5m`、`24h` 等简写 Go 时长并自动规范化（例如 `24h0m0s`）。
 时长上限低于 Go 最大 duration，为缓存宽限期预留空间。
-该值应覆盖公开服务使用的最长缓存寿命。
+`max_cache_ttl` 应覆盖公开服务使用的最长缓存寿命：从 SOW 0.9.0 起，新建目标 GC 宽限期记录直接使用该值而不再附加 30 天下限，因此 `0s` 表示新记录无宽限期。
 
 发布前先创建 filesystem endpoint 目录。它必须是真实的规范目录，不能是符号链接。
 SOW 在其下创建 prefix。

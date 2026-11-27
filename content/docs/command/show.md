@@ -63,7 +63,7 @@ including the normalized fields below.
 | `kind` | Policy class: `main`, `debuginfo`, `debugsource`, `llvmjit`, `dbgsym`, or `dbg` |
 | `source` | Normalized source-package name |
 | `payload_sha256` | RPM signature-neutral digest used for re-signing idempotence |
-| `signature_key` | Embedded package-signature key ID (RSA, DSA, ECDSA, or EdDSA in RPM signature header tag 267, or legacy PGP tags), when present |
+| `signature_key` | Embedded package-signature key ID (RPM v6 native `RPMSIGTAG_OPENPGP` tag 278, RSA/DSA/ECDSA/EdDSA in tag 267, or legacy PGP tags), when present |
 | `storage` | `pending` before build; `pool` once placed in the local package pool |
 | `dists` / `built_dists` | Desired and current Built Membership |
 {.wide .expand}

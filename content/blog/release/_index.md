@@ -22,6 +22,8 @@ cascade:
 
 Read the changes and upgrade steps for each SOW release, with the newest version first.
 
+[SOW 0.9.0](/blog/release/sow-v0.9.0/) makes flat `create` and `prune` fault-tolerant by default with a `--strict` opt-in, adds RPM format v6 and native OPENPGP multi-signature verification, accepts both `sow.yml` and `sow.yaml`, supports ECDSA/DSA metadata keys and FIFO passfiles, and aligns target GC grace directly with `max_cache_ttl`. Workspaces on 0.5.0 through 0.8.0 keep schema v13; review any target with `max_cache_ttl: 0s` before upgrading. See the [0.9.0 upgrade guide](/docs/start/install/#upgrade-to-090).
+
 [SOW 0.8.0](/blog/release/sow-v0.8.0/) adds opt-in R2 conditional deletion (`sow gc TARGET --delete`), allows external secret and keyring symlinks outside the workspace, drops `.deb` `control.tar.lzma` support, hardens DEB/RPM verification, and accelerates large-repository publication and GC. Workspaces on 0.5.0 through 0.7.1 keep schema v13; complete any interrupted 0.7.1 local GC before upgrading. See the [0.8.0 upgrade guide](/docs/start/install/#upgrade-to-080).
 
 [SOW 0.7.1](/blog/release/sow-v0.7.1/) upgrades to Go 1.27.4, refreshes dependencies, and fixes recovery, input validation, and S3/R2 handling. Workspaces on 0.5.0 through 0.7.0 need no schema migration. See the [0.7.1 upgrade guide](/docs/start/install/#upgrade-to-071).

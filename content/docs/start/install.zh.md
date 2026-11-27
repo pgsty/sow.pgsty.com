@@ -11,7 +11,7 @@ icon: fa-solid fa-download
 
 SOW 是一个可执行文件，不依赖守护进程、数据库服务或语言运行时。发布归档支持 Linux 与 macOS 的 `amd64`、`arm64` 架构。Linux 另有 RPM 与 DEB 安装包。
 
-[下载页](/zh/download/)提供 SOW 0.8.0 软件包、归档与校验值。
+[下载页](/zh/download/)提供 SOW 0.9.0 软件包、归档与校验值。
 将所选制品与 `SHA256SUMS` 下载到独立的下载目录。
 
 ## 安装归档 {#install-an-archive}
@@ -20,8 +20,8 @@ SOW 是一个可执行文件，不依赖守护进程、数据库服务或语言�
 
 ```bash
 set -euo pipefail
-grep -F '  sow_0.8.0_linux_amd64.tar.gz' SHA256SUMS | sha256sum -c -
-tar -xzf sow_0.8.0_linux_amd64.tar.gz
+grep -F '  sow_0.9.0_linux_amd64.tar.gz' SHA256SUMS | sha256sum -c -
+tar -xzf sow_0.9.0_linux_amd64.tar.gz
 sudo install -m 0755 sow /usr/local/bin/sow
 ```
 
@@ -43,10 +43,10 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ```bash
 # RPM，x86_64
-sudo rpm -Uvh ./sow-0.8.0-1PGSTY.x86_64.rpm
+sudo rpm -Uvh ./sow-0.9.0-1PGSTY.x86_64.rpm
 
 # Debian 或 Ubuntu，amd64
-sudo apt install ./sow_0.8.0-1PGSTY_amd64.deb
+sudo apt install ./sow_0.9.0-1PGSTY_amd64.deb
 ```
 
 ARM64 主机使用以 `.aarch64.rpm` 或 `_arm64.deb` 结尾的软件包。安装后的可执行文件位于 `/usr/bin/sow`。
@@ -57,11 +57,11 @@ ARM64 主机使用以 `.aarch64.rpm` 或 `_arm64.deb` 结尾的软件包。安�
 
 ```bash
 set -euo pipefail
-git clone --branch v0.8.0 https://github.com/pgsty/sow.git
+git clone --branch v0.9.0 https://github.com/pgsty/sow.git
 cd sow
 SOW_BUILD_DIR="$(mktemp -d)"
 CGO_ENABLED=0 go build -trimpath \
-  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.8.0' \
+  -ldflags='-s -w -X github.com/pgsty/sow/internal/v2cli.Version=0.9.0' \
   -o "$SOW_BUILD_DIR/sow" ./cmd/sow
 sudo install -m 0755 "$SOW_BUILD_DIR/sow" /usr/local/bin/sow
 ```
@@ -89,18 +89,22 @@ sow help
 
 <span id="upgrade-to-071" data-td-print-local></span>
 
-## 升级到 0.8.0 {#upgrade-to-080}
+<span id="upgrade-to-080" data-td-print-local></span>
 
-0.5.0 至 0.7.1 的工作区已经使用数据库 schema v13，可继续使用原有的 `sow/v3` 配置和公开 URL。
+## 升级到 0.9.0 {#upgrade-to-090}
 
-> [!IMPORTANT]
-> SOW 0.6.1 及更早版本不支持读取包含 `passfile` 的 `sow.yml`。降级前请先移除 `passfile` 字段。
+0.5.0 至 0.8.0 的工作区已经使用数据库 schema v13，可继续使用原有的 `sow/v3` 配置和公开 URL。此前在 0.7.1 中断且包含空 `manifest` 数组的本地 GC 计划，现在可直接由 0.9.0 恢复。
+
+> [!WARNING]
+> 升级前请检查是否将发布目标配置为 `max_cache_ttl: 0s`。从 SOW 0.9.0 开始，新建目标 GC 宽限期记录直接遵循 `max_cache_ttl`，不再强制 30 天下限，因此 `0s` TTL 下被取代的对象可能在下次目标 GC 时即满足删除条件；此前已记录的较晚 `NotBefore` 截止时间仍继续生效。
+
+SOW 0.6.1 及更早版本不支持读取包含 `passfile` 的 `sow.yml`，降级前请先移除 `passfile` 字段。
 
 1. 停止工作区的全部写入任务。
 2. 用保留硬链接的工具备份完整工作区，例如 `rsync -aH` 或 `tar`。
-3. 如果 0.7.1 的本地 GC 曾经中断，先用 0.7.1 的二进制对受影响的仓库执行 `sow gc -r REPOSITORY -C /srv/sow`，完成恢复。旧计划中 `manifest` 为空数组时，需要旧版处理。
-4. 安装 SOW 0.8.0。
-5. 对 `sow.yml` 中每个仓库执行构建与检查：
+3. 检查目标配置中的 `max_cache_ttl: 0s`；如果客户端需要更长的保留窗口，可通过 `sow publish TARGET --rebind` 调整。
+4. 安装 SOW 0.9.0。
+5. 对 `sow.yml`（或 `sow.yaml`）中每个仓库执行构建与检查：
 {.steps .td-steps-compact}
 
 ```bash
@@ -116,7 +120,7 @@ sow check -r REPOSITORY -C /srv/sow
 <span id="从-04-升级到-05" data-td-print-local></span>
 ### 从 0.3 或 0.4 升级 {#upgrade-from-04-to-05}
 
-这些工作区需要在首次构建前迁移。备份工作区并安装 0.8.0 后，执行：
+这些工作区需要在首次构建前迁移。备份工作区并安装 0.9.0 后，执行：
 
 ```bash
 sow repo migrate REPOSITORY -C /srv/sow
@@ -126,7 +130,7 @@ sow check -r REPOSITORY -C /srv/sow
 
 对每个仓库重复执行。迁移更新数据库，重建应用当前的 RPM 验签与 APT 元数据规则。
 需要回退到使用旧 schema 的版本时，恢复备份。
-详情见 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 与 [0.8.0 发布说明](/zh/blog/release/sow-v0.8.0/)。
+详情见 [`sow repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 与 [0.9.0 发布说明](/zh/blog/release/sow-v0.9.0/)。
 
 ## 升级 Plain 仓库 {#upgrade-a-plain-repository}
 

@@ -23,7 +23,7 @@ sow create /srv/offline
 ## 输入与输出 {#inputs-and-outputs}
 
 SOW 只扫描目录顶层以 `.rpm` 或 `.deb` 结尾的普通文件，不递归，也不跟随包文件符号链接。
-包名、版本和架构来自包内信息。SOW 会拒绝源码 RPM（`src` 和 `nosrc`）。
+包名、版本和架构来自包内信息。默认容错模式下，SOW 会跳过损坏或不可读文件、源码 RPM（`src` 与 `nosrc`）以及坐标冲突（含 Debian 版本等价冲突，如 `1.0-1` 与 `1.00-1`）并输出告警，确保其余合法包仍能进入索引；传入 `--strict` 可在写入前遇错即停。
 
 | 输入 | 生成文件 |
 |---|---|
@@ -32,8 +32,7 @@ SOW 只扫描目录顶层以 `.rpm` 或 `.deb` 结尾的普通文件，不递归
 | 两种格式 | 两组索引 |
 
 RPM 包路径使用文件名，DEB 的 `Filename` 使用 `./<文件名>`。SOW 会把所有有效版本收入索引。
-同一包坐标对应不同字节时，构建报冲突。SOW 会拒绝没有受支持包的目录；`--pigsty`
-完成中断的清理操作时例外。
+当某一种格式的全部候选包都失败时，SOW 会保留该格式原有的索引、历史记录与完成状态，同时正常发布另一种格式的合法包（包括全新的 `--pigsty` 目录）。空目录在默认模式下仅输出告警，在 `--strict` 模式下（未加 `--pigsty` 时）会拒绝执行。文本模式将告警写入 stderr；成功的 `--json` 输出在 stdout 中返回 `warnings` 与 `skipped`，保持 stderr 为空。
 
 默认保留包文件和无关文件。某种格式不再有包时，SOW 删除该格式的旧索引。
 对于 RPM，SOW 保留当前与紧邻上一轮以校验和命名的元数据，删除更早的 SOW 格式元数据，并替换不完整输出。若已有的 `repomd.xml` 列出了 SOW 不生成的独立元数据（如 `group`、`updateinfo`、`modules`），`sow create` 会替换 `repomd.xml` 且不再带入这些条目，并在 `dropped_metadata`（`--json`）和 stderr 告警中报告被丢弃的类型（不包含 `*_db`、`*_zck` 等包索引编码）。磁盘上的非 SOW 文件（包括外部 `repomd.xml.asc` 签名）保持不变，需另行刷新。`sow create` 拒绝在 Managed `.sow` 工作区内部运行，未加 `--pigsty` 时也拒绝覆盖中断的 `.sow-prune-repo-complete` 标记。
@@ -80,7 +79,7 @@ sow prune /srv/offline --dry-run
 sow prune /srv/offline
 ```
 
-`sow prune` 按原生 `rpmvercmp` 规则（包含 `~` 预发布与 `^` 后置快照算符）比较版本。它先更新 `repodata/`，再删除被取代的 `.rpm` 文件，确保客户端不会看到指向缺失软件包的索引。如果目录中已有 `repo_complete`，`sow prune` 会自动刷新该标记。与 `sow create` 不同，当 `repodata/` 中含有非 SOW 外来元数据文件时，`sow prune` 会拒绝执行。
+`sow prune` 同时支持 RPM v4 与 v6，按原生 `rpmvercmp` 规则（包含 `~` 预发布与 `^` 后置快照算符）比较版本。它先更新 `repodata/`，再删除被取代的 `.rpm` 文件，确保客户端不会看到指向缺失软件包的索引。默认容错模式下，损坏包、未匹配的 `--protect` 名称和同版本冲突（保留整个包名与架构分组）会输出告警并安全跳过；传入 `--strict` 可在发布前遇错即停。在 RPM 与 DEB 混合目录中，`sow prune` 保留 DEB 索引并在 `repo_complete` 中沿用仍在目录内的已记录 DEB 摘要，不提前对新到达的未索引 DEB 计算哈希。与 `sow create` 不同，当 `repodata/` 中含有非 SOW 外来元数据文件或 `repomd.xml.asc` 时，`sow prune` 在非预览执行时会拒绝运行。
 
 <span id="构建中断" data-td-print-local></span>
 

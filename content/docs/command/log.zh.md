@@ -176,7 +176,7 @@ sow log export - -r pigsty | gzip > pigsty-ops-$(date +%F).jsonl.gz
 <span id="它拒绝覆盖" data-td-print-local></span>
 ### 输出路径 {#it-refuses-to-clobber}
 
-在已有目录中选择一个新文件名。文件已存在时，`log export` 返回 `6`。直接父目录必须是真实目录，不能是符号链接。在 macOS 上使用 `/private/tmp/file.jsonl`，不要使用 `/tmp/file.jsonl`。
+在已有目录中选择一个新文件名。文件已存在时，`log export` 返回 `6`。符号链接父目录（例如 macOS 的 `/tmp`）会在原子创建并同步父目录前解析为真实物理目录。
 
 ## sow log prune {#sow-log-prune}
 
@@ -260,7 +260,7 @@ sow log -d el9 -r pgsql --json | jq -r '.result.operations[0].id'
 | `log` | `5` | 状态数据库不可读 |
 | `log` | `6` | 给定的操作记录 ID 不存在，或给出了多个不同的 `-d` |
 | `log export` | `0` | 导出成功 |
-| `log export` | `1` | 写目标时 I/O 失败，或父目录不是真实目录 |
+| `log export` | `1` | 写目标或同步父目录时 I/O 失败，或父目录不存在 |
 | `log export` | `2` | 用法错误或选择有歧义 |
 | `log export` | `6` | 目标已存在 |
 | `log prune` | `0` | 清理完成，包括一条都没清 |

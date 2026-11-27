@@ -57,9 +57,9 @@ targets:
     exclusive_write_authority: true
 ```
 
-SOW 根据 `endpoint` 与 `prefix` 创建 `/srv/repo-public/local`。三个必填布尔值声明：本工作区是该目标的权威来源，也是唯一写入者。SOW 按每个目标的完整预期路径（`endpoint + prefix`）检查路径重叠，因此 `/srv/repo-public` 下不同前缀的同级目标不会互相阻塞。其他工具使用独立前缀。
+SOW 根据 `endpoint` 与 `prefix` 创建 `/srv/repo-public/local`。最后三个权限布尔字段省略时默认为 `true`（显式写 `false` 会被拒绝），声明本工作区是该目标的权威来源与唯一写入者。SOW 按每个目标的完整预期路径（`endpoint + prefix`）检查路径重叠，因此 `/srv/repo-public` 下不同前缀的同级目标不会互相阻塞。其他工具使用独立前缀。
 
-本例通过 `file://` 检查发布文件，并声明没有中间缓存。以后增加代理或 CDN 时，把 `public_endpoint` 改为公共仓库 URL，
+本例通过 `file://` 检查发布文件，并声明没有中间缓存（`max_cache_ttl: 0s` 表示目标 GC 中被取代对象无宽限期）。如果客户端会缓存旧索引，或以后增加代理与 CDN，把 `public_endpoint` 改为公共仓库 URL，
 把 `max_cache_ttl` 设为其最长缓存时间，并通过 [`publish --rebind`](/zh/docs/command/publish/) 应用变更。
 SOW 据此检查交付结果，并确定旧文件何时可以删除。
 

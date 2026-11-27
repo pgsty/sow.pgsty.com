@@ -68,8 +68,8 @@ Add `passfile: /run/secrets/gpg-password` next to `key`,
 or run `export SOW_GPG_PASSFILE=/run/secrets/gpg-password`. For one invocation, use
 `sow build -r pigsty --passfile /run/secrets/gpg-password`. This also works with
 `agent://FINGERPRINT` keys. Keep the file outside the repository, normally mode `0600`.
-Its contents are the password itself: one nonempty UTF-8 line, with an optional final
-LF or CRLF. SOW preserves spaces and tabs and searches no default file.
+Its contents are the password itself: one nonempty line (regular files, symlinks, and named pipes with a 2-second deadline are supported), with an optional UTF-8 BOM and final
+LF or CRLF removed. SOW preserves spaces and tabs and searches no default file.
 See [Password files](/docs/reference/config/#passfile) for priority and format details.
 Existing `passphrase` references continue to work. Configuration stores references, not secret values.
 
@@ -120,7 +120,7 @@ Replace the placeholder with the 40-hex fingerprint in `$FPR`. Install `rpm` and
 and make the secret key available in the GPG keyring used by `rpm`.
 
 `fill` signs newly imported packages unless their signatures already verify against the
-configured key or `trusted_keys`. SOW verifies RSA, DSA, ECDSA, and EdDSA RPM signatures, including header-only signatures stored in RPM signature header tag 267 (`RPMSIGTAG_DSA`). See [RPM signing policy](/docs/reference/config/) for
+configured key or `trusted_keys`. SOW verifies both RPM v4 and RPM v6 signatures, including native `RPMSIGTAG_OPENPGP` tag 278 (dual- and multi-signed RPMs included) and RSA, DSA, ECDSA, and EdDSA header-only signatures stored in tag 267 (`RPMSIGTAG_DSA`). See [RPM signing policy](/docs/reference/config/) for
 other modes.
 
 For a protected package-signing key, configure `passfile` under `signing.rpm.packages`
@@ -201,7 +201,7 @@ sow create /srv/flat --sign-with 0123456789ABCDEF
 ```
 
 Replace `0123456789ABCDEF` with your key ID or fingerprint. The matching private key must
-be available to `rpm` and GPG. SOW preserves existing signatures, including upstream signatures, and recognizes RSA, DSA, ECDSA, and EdDSA header-only signatures in RPM signature header tag 267 (`RPMSIGTAG_DSA`). To replace all RPM signatures with your key, use `--overwrite` on a separate
+be available to `rpm` and GPG. SOW preserves existing signatures, including upstream signatures, and recognizes both RPM v6 native `RPMSIGTAG_OPENPGP` tag 278 and RSA, DSA, ECDSA, and EdDSA header-only signatures in tag 267 (`RPMSIGTAG_DSA`). To replace all RPM signatures with your key, use `--overwrite` on a separate
 working copy. See [`sow create`](/docs/command/create/#signing-rpms) for key formats.
 
 For a protected key, add

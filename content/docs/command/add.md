@@ -38,7 +38,7 @@ sow add PATH... [-R|--recursive] [--skip] [-j|--jobs N] [-C|--workdir DIR] [-r|-
 
 ## Inputs and targets
 
-`PATH` can be a file or a directory. SOW scans only the top level of a directory unless you pass `-R`.
+`PATH` can be a file or a directory. SOW scans only the top level of a directory unless you pass `-R`. Recursive scans ignore unreadable non-package files and follow explicit or package symlinks cleanly.
 
 Select one Repository and one or more Dists. Use `-r` and `-d`, or the [directory-based defaults](/docs/command/). In a mixed RPM/DEB batch, each package goes only to Dists of its format. A package with no compatible target fails.
 
@@ -188,7 +188,7 @@ command-line override.
 | `always` | Ensure the final package is validly signed by the configured key; re-sign a stage copy otherwise |
 {.wide .expand}
 
-Without a configured key only `never` is available. RPM signature verification recognizes RSA, DSA, ECDSA, and EdDSA (Ed25519) OpenPGP packets in header signature tag 267 (`RPMSIGTAG_DSA`).
+Without a configured key only `never` is available. RPM signature verification supports both RPM format v4 and v6, including native `RPMSIGTAG_OPENPGP` tag 278 (dual- and multi-signed RPMs included) and RSA, DSA, ECDSA, and EdDSA (Ed25519) OpenPGP packets in header signature tag 267 (`RPMSIGTAG_DSA`).
 
 Repeated imports reuse identical package content. They can also reuse an RPM whose only difference is its signature, if the stored package satisfies the current signing policy. A changed payload or an incompatible stored signature causes a coordinate conflict. See [Signing Model](/docs/feature/signing/) for the matching rules.
 

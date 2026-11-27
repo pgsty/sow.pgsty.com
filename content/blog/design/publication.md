@@ -2,7 +2,7 @@
 title: "Publication & Recovery"
 linkTitle: "Publication & Recovery"
 date: 2026-08-08
-lastmod: 2026-11-23
+lastmod: 2026-11-27
 authors: [Vonng]
 description: "How SOW uploads a repository, resumes interrupted publication, and removes unused files."
 categories: [Design]
@@ -64,6 +64,7 @@ SOW downloads changed files and affected index entry points through `public_endp
 Unchanged packages do not need another download.
 
 The public endpoint can still return cached files. SOW waits and retries within `max_cache_ttl`.
+HTTP(S) verification follows CDN redirects while blocking HTTPS-to-HTTP downgrades, verifying connected dial addresses against private loopback and link-local ranges, and refusing cross-origin redirects through an HTTP proxy.
 If verification fails, SOW does not record a new completed checkpoint.
 
 <span id="recovery-outcomes" data-td-print-local></span>

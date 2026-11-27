@@ -86,7 +86,7 @@ A published package URL identifies fixed content. Use a new package version and 
 
 ## Public visibility checks
 
-Before recording a checkpoint, SOW verifies that it can read the published files through `public_endpoint`. HTTP(S) verification uses ordinary GET requests. SOW retries stale or missing content up to `max_cache_ttl`.
+Before recording a checkpoint, SOW verifies that it can read the published files through `public_endpoint`. HTTP(S) verification uses ordinary GET requests, follows CDN redirects while blocking HTTPS-to-HTTP downgrades and verifying connected dial addresses against private loopback/link-local ranges, and refuses cross-origin redirects through an HTTP proxy (configure the final public URL directly or route that host without a proxy). SOW retries stale or missing content up to `max_cache_ttl`. Harmless foreign files outside `pool/` and `dists/` at the target root are ignored.
 
 Filesystem targets support `file://` or HTTP(S) public endpoints. R2 targets require HTTP(S). Each R2 publication lists the target prefix. For a known immutable object, a matching path, size, and ETag let SOW reuse its recorded SHA-256. Other objects require HEAD, with up to eight concurrent checks per page.
 

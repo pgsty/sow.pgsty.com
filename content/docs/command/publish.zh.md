@@ -86,7 +86,7 @@ sow publish prod --rebind
 
 ## 公共可见性校验 {#public-visibility-checks}
 
-记录发布检查点前，SOW 会通过 `public_endpoint` 读取并验证已发布文件。HTTP(S) 校验使用普通 GET 请求。内容过期或缺失时，在 `max_cache_ttl` 范围内重试。
+记录发布检查点前，SOW 会通过 `public_endpoint` 读取并验证已发布文件。HTTP(S) 校验使用普通 GET 请求，支持跟随 CDN 重定向，同时逐跳禁止 HTTPS 降级为 HTTP、检查实际连接的拨号 IP 以拦截私有回环与链路本地地址，并拒绝经 HTTP 代理跳转至跨源目标（此时请直接配置最终公开 URL 或直连该主机）。内容过期或缺失时，在 `max_cache_ttl` 范围内重试。目标根目录中位于 `pool/` 与 `dists/` 之外的无害外部文件会被忽略。
 
 文件系统目标支持 `file://` 或 HTTP(S) 公共地址，R2 目标要求 HTTP(S)。每次 R2 发布都会列举目标前缀。已知的不可变对象如果路径、大小和 ETag 一致，SOW 会复用先前记录的 SHA-256；其余对象通过 HEAD 核对，每页最多并发八个请求。
 

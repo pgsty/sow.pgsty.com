@@ -7,7 +7,7 @@
 # repository channel is rolling on purpose: it tracks whatever the infra
 # repository currently serves, which is not necessarily this tag.
 repo: pgsty/sow
-version: 0.8.0
+version: 0.9.0
 published: true # Set true only after the matching GitHub Release is public.
 channels:
   - id: pigsty
@@ -74,10 +74,10 @@ channels:
     note: >-
       Use these packages to install a specific version or prepare an offline
       installation. They carry the `1PGSTY` release suffix, install SOW at
-      `/usr/bin/sow`, and ship the Apache-2.0 licence and third-party notices.
+      `/usr/bin/sow`, and ship the Apache-2.0 license.
     note_zh: >-
       需要固定版本或离线安装时，选择以下安装包。安装包带 `1PGSTY` 发布后缀，把可执行文件
-      装到 `/usr/bin/sow`，并随包安装 Apache-2.0 许可证与第三方许可声明。
+      装到 `/usr/bin/sow`，并随包安装 Apache-2.0 许可证。
     steps:
       - title: RPM · x86_64 / aarch64
         title_zh: RPM · x86_64 / aarch64
@@ -102,10 +102,10 @@ channels:
     note: >-
       Use an archive on Linux or macOS when you want to choose the installation
       directory. Builds are available for `amd64` and `arm64`.
-      Archives include the executable, documentation, and license files.
+      Archives include the executable and the Apache-2.0 license.
     note_zh: >-
       在 Linux 或 macOS 上自行指定安装目录时，选择二进制归档。支持 `amd64` 与 `arm64`。
-      归档包含可执行文件、文档与许可文件。
+      归档包含可执行文件与 Apache-2.0 许可证。
     steps:
       - title: Linux · amd64
         title_zh: Linux · amd64

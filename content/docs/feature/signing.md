@@ -75,7 +75,7 @@ password source for one invocation, including `build`.
 | `agent://KEY_ID_OR_FINGERPRINT` | Key available through the local GPG environment | External `gpg` |
 {.wide .expand}
 
-Key files support ASCII-armored and binary OpenPGP data. A GPG key identifier is a
+Key files support ASCII-armored (tolerating human-readable comment lines outside armor fences) and binary OpenPGP data. Metadata signing accepts RSA, EdDSA (Ed25519/Ed448), ECDSA, and DSA keys. A GPG key identifier is a
 16-digit key ID or a 40- or 64-digit fingerprint. References that resolve to a GPG key
 identifier use external `gpg` for private-key access. An explicit password file enables
 noninteractive unlocking through GPG loopback mode.
@@ -89,7 +89,7 @@ Legacy metadata `passphrase` references remain supported at the per-key priority
 `passfile` and `passphrase` cannot both be nonempty on one key. All three signing settings
 accept `passfile`, including `agent://` keys.
 
-Password files contain one nonempty UTF-8 line. SOW removes exactly one final LF or
+Password files contain one nonempty line (regular files, symlinks, and named pipes with a 2-second writer deadline are supported). SOW removes an optional UTF-8 BOM and one final LF or
 CRLF and preserves spaces and tabs. It does not search a default path or fall back
 from an invalid selected source. See [Password files](/docs/reference/config/#passfile)
 for the full format, relative-path rules, permissions, and recovery command coverage.
@@ -141,9 +141,7 @@ digest. If an existing object has the same coordinate and payload and satisfies 
 current policy, SOW can reuse its signed bytes. In `never` mode, reuse requires an exact
 byte match.
 
-Use RPM format v4 for package-signing workflows. SOW verifies RSA, DSA, ECDSA, and EdDSA RPM signatures, including header-only signatures stored in RPM signature header tag 267 (`RPMSIGTAG_DSA`). SOW does not support the signature tag
-used by RPM format v6. This is separate from OpenPGP packet versions; SOW supports historical CentOS
-OpenPGP v3 and v4 signatures.
+Package-signing workflows support both RPM format v4 and RPM format v6. SOW verifies native RPM v6 `RPMSIGTAG_OPENPGP` tag `278` (OpenPGP v4 and v6 signature arrays, including dual- and multi-signed RPMs) as well as RSA, DSA, ECDSA, and EdDSA RPM signatures in tag `267` (`RPMSIGTAG_DSA`) and legacy PGP tags, including historical CentOS OpenPGP v3 and v4 signatures. When tag `278` is present, it is authoritative.
 
 <span id="key-changes-make-dists-dirty" data-td-print-local></span>
 

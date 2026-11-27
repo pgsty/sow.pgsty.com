@@ -31,7 +31,7 @@ Keep workspace configuration and `.sow/` state outside the web server's document
 ```
 
 `sow create` writes RPM metadata only when RPMs are present and DEB metadata only when
-DEBs are present. `sow prune` operates on flat RPM directories, keeping the highest EVR per
+DEBs are present. `sow prune` prunes RPMs in flat directories (including mixed RPM/DEB directories, where it preserves the DEB index and existing `repo_complete` DEB entries), keeping the highest EVR per
 package name and architecture. RPM locations use a bare basename; DEB locations use `./<basename>`.
 A running build uses private `.sow-plain-stage-*` directories, and an active `prune` tracks
 its completion marker with `.sow-prune-repo-complete`. Exclude these private paths from serving
@@ -66,7 +66,7 @@ The database can have SQLite WAL and shared-memory sidecar files.
 `.sow/` and pending directories are private (`0700`). Pending payload files use `0644`
 so they can be promoted to public paths without changing their mode.
 
-SOW 0.8.0 uses database schema v13 and configuration schema `sow/v3`. These are separate
+SOW 0.9.0 uses database schema v13 and configuration schema `sow/v3` (stored in `sow.yml` or `sow.yaml`). These are separate
 version identifiers. Back up the complete workspace before
 [`repo migrate`](/docs/command/repo/#sow-repo-migrate). Keep the database with its matching
 private and public state; do not edit its schema version or rebuildable cache by hand.

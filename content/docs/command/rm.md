@@ -90,10 +90,10 @@ index — an empty `Packages` with a verifiable `InRelease`, or empty per-archit
 
 `-c/--check` previews the removal and resulting local file changes without modifying the Repository. `removed` lists memberships matched by your references. If the current policy removes additional members, their index changes appear in `changes`; their membership count appears in `sow log` after the removal runs.
 
-Preview predicts membership removals, policy results, file paths, actions, Generation, and revision.
+Preview predicts membership removals, policy results, file paths, actions, Generation, and revision without modifying the Repository or touching `.sow/<repo>/stage`.
 These match execution when package references, selected Dists, repository state, configuration, and signing keys remain unchanged.
-Execution records its own publication time when it rebuilds metadata.
-Indexes and signatures that contain time values can therefore differ in bytes, hashes, and sizes.
+Execution records its own publication time when it rebuilds metadata, and non-deterministic algorithms such as ECDSA and DSA can produce different signature bytes in a fresh build.
+Indexes and signatures can therefore differ in bytes, hashes, and sizes between preview and execution; crash recovery still reuses staged or installed metadata.
 
 ```console
 sow rm centos-release -r demo -d el9 -c

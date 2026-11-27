@@ -2,7 +2,7 @@
 title: "发布与恢复"
 linkTitle: "发布与恢复"
 date: 2026-08-08
-lastmod: 2026-11-23
+lastmod: 2026-11-27
 authors: [Vonng]
 description: "SOW 如何上传仓库、继续中断的发布，以及清理不再使用的文件。"
 categories: [Design]
@@ -68,6 +68,7 @@ SOW 通过 `public_endpoint` 下载变化的文件和受影响的索引入口，
 未变化的软件包无需重复下载。
 
 公共端点可能仍返回缓存中的旧文件。SOW 会在 `max_cache_ttl` 内等待并重试。
+HTTP(S) 校验支持跟随 CDN 重定向，同时逐跳禁止 HTTPS 降级为 HTTP、检查实际连接的拨号 IP 以拦截私有回环与链路本地地址，并拒绝经 HTTP 代理跳转至跨源目标。
 校验失败时，发布不会记录新的完成检查点。
 
 <span id="恢复结果" data-td-print-local></span>

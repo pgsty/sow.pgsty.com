@@ -10,7 +10,7 @@ icon: fa-solid fa-arrows-rotate
 ---
 
 本指南适用于 RPM 与 `repodata/` 放在同一层目录的平面仓库，例如此前用 `createrepo_c`
-维护的仓库。它使用 Plain `sow create`，不创建 Managed 工作区。以下命令以 **SOW 0.8.0** 为目标版本。
+维护的仓库。它使用 Plain `sow create`，不创建 Managed 工作区。以下命令以 **SOW 0.9.0** 为目标版本。
 
 <span id="1-明确迁移范围" data-td-print-local></span>
 
@@ -23,7 +23,7 @@ SOW="$(command -v sow)"
 "$SOW" version
 ```
 
-确认版本为 0.8.0。
+确认版本为 0.9.0。
 
 | 检查项 | 操作 |
 |---|---|

@@ -30,7 +30,7 @@ icon: fa-solid fa-folder-tree
   repo_complete # 使用 --pigsty 时
 ```
 
-`sow create` 在存在 RPM 时生成 RPM 元数据，存在 DEB 时生成 DEB 元数据。`sow prune` 作用于平面 RPM 目录，按包名和架构保留 EVR 最高的版本。
+`sow create` 在存在 RPM 时生成 RPM 元数据，存在 DEB 时生成 DEB 元数据。`sow prune` 裁剪平面目录中的 RPM（在 RPM/DEB 混合目录中会保留 DEB 索引和已有的 `repo_complete` DEB 摘要），按包名和架构保留 EVR 最高的版本。
 RPM 位置使用文件名，DEB 使用 `./<文件名>`。构建期间使用私有 `.sow-plain-stage-*` 目录，活动 `prune` 通过 `.sow-prune-repo-complete` 跟踪完成标记；
 对外服务和复制时应排除这些私有路径。后续 `create` 会清理过时的 SOW 临时路径并重建索引。
 
@@ -62,7 +62,7 @@ RPM 位置使用文件名，DEB 使用 `./<文件名>`。构建期间使用私�
 数据库旁可能有 SQLite WAL 和共享内存文件。`.sow/` 与 pending 目录权限为私有的 `0700`。
 待构建包文件使用 `0644`，进入公开路径时无需改变权限。
 
-SOW 0.8.0 使用数据库 schema v13 和配置 schema `sow/v3`，两者是独立的版本标识。
+SOW 0.9.0 使用数据库 schema v13 和配置 schema `sow/v3`（保存在 `sow.yml` 或 `sow.yaml` 中），两者是独立的版本标识。
 执行 [`repo migrate`](/zh/docs/command/repo/#sow-repo-migrate) 前备份完整工作区。
 数据库应与匹配的私有、公开状态一起保存；不要手动修改 schema 版本或可重建缓存。
 

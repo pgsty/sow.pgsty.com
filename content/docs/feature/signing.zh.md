@@ -78,7 +78,7 @@ Managed 的密钥与签名策略来自 `sow.yml`；`--passfile PATH` 可为本�
 | `agent://KEY_ID_OR_FINGERPRINT` | 本地 GPG 环境可用的密钥 | 外部 `gpg` |
 {.wide .expand}
 
-密钥文件支持 ASCII 装甲格式和二进制 OpenPGP 数据。GPG 密钥标识可以是 16 位 key ID，
+密钥文件支持 ASCII 装甲格式（容忍装甲围栏外的说明文本）和二进制 OpenPGP 数据。元数据签名支持 RSA、EdDSA（Ed25519/Ed448）、ECDSA 与 DSA 密钥。GPG 密钥标识可以是 16 位 key ID，
 或 40、64 位指纹。引用解析为 GPG 密钥标识时，使用外部 `gpg` 访问私钥；
 显式指定口令文件后，通过 GPG loopback 模式非交互解锁。
 
@@ -90,7 +90,7 @@ SOW 读取整个密钥集合，拒绝格式错误或被截断的输入，不会�
 旧元数据配置的 `passphrase` 引用继续兼容，优先级与单个密钥配置相同；
 同一密钥的两个字段不能都非空。三种签名设置都接受 `passfile`，包括 `agent://` 密钥。
 
-口令文件为非空 UTF-8 单行。SOW 只移除末尾一个 LF 或 CRLF，保留空格与制表符。
+口令文件为非空单行（支持普通文件、符号链接及 2 秒超时的命名管道）。SOW 自动移除可选 UTF-8 BOM 及末尾一个 LF 或 CRLF，保留空格与制表符。
 不搜索默认路径，所选来源不可用时直接失败。完整格式、相对路径基准、权限及恢复命令范围
 见[口令文件](/zh/docs/reference/config/#passfile)。
 
@@ -136,8 +136,7 @@ signing:
 SOW 检查签名结果、包坐标及排除签名头后的包体摘要。已有对象的坐标和包体相同、
 且符合当前策略时，可复用已有签名字节。`never` 模式要求字节完全相同才能复用。
 
-包签名工作流请使用 RPM 格式 v4。SOW 支持验证 RSA、DSA、ECDSA 与 EdDSA RPM 签名，包括保存在 RPM 签名头 tag 267（`RPMSIGTAG_DSA`）中的纯头签名。SOW 不支持 RPM 格式 v6 使用的签名标签。
-这与 OpenPGP 签名报文版本不同；SOW 支持历史 CentOS 的 OpenPGP v3、v4 签名。
+包签名工作流同时支持 RPM 格式 v4 与 v6。SOW 支持验证原生 RPM v6 `RPMSIGTAG_OPENPGP` tag `278`（OpenPGP v4 与 v6 签名数组，含双签与多签 RPM），以及保存在 RPM 签名头 tag `267`（`RPMSIGTAG_DSA`）和旧版 PGP 标签中的 RSA、DSA、ECDSA 与 EdDSA 签名（包括历史 CentOS 的 OpenPGP v3、v4 签名）。当 tag `278` 存在时，以其验证结果为准。
 
 <span id="更换密钥会让-dist-变-dirty" data-td-print-local></span>
 <span id="更换密钥" data-td-print-local></span>

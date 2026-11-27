@@ -12,8 +12,9 @@ icon: fa-solid fa-code
 <span id="stdout-and-stderr" data-td-print-local></span>
 
 Use `--json` on data commands to read one newline-terminated JSON document from stdout.
-Diagnostics go to stderr. `log export` is the exception: it writes JSON Lines and does
-not accept `--json`.
+Diagnostics go to stderr; for successful flat `create` and `prune` runs, warnings and skipped
+entries are returned inside the stdout JSON envelope and stderr stays empty. `log export` is
+the exception: it writes JSON Lines and does not accept `--json`.
 
 ```bash
 sow status -r demo --json | jq '.result.status'
@@ -107,6 +108,8 @@ A null operation does not mean the command is read-only. `create`, `prune`, `ini
 | `rpm`, `deb` | Indexed package counts |
 | `kept` | Sorted included filenames |
 | `removed` | Files removed by `--pigsty` |
+| `skipped` | Array of `{path, reason}` objects for packages skipped in default fault-tolerant mode, when present |
+| `warnings` | Warning strings reported during scan or publication, when present |
 | `marker` | Whether the completion marker was produced |
 | `marker_sha256` | Marker digest, present with the marker |
 | `noop` | No public changes were needed |
@@ -124,6 +127,8 @@ A null operation does not mean the command is read-only. `create`, `prune`, `ini
 | `kept` | Sorted basenames of retained top-level RPM packages |
 | `candidates` | Array of `{path, latest}` objects naming each removal candidate and its retained replacement RPM |
 | `removed` | Basenames of removed RPM files |
+| `skipped` | Array of `{path, reason}` objects for skipped RPM files in default fault-tolerant mode, when present |
+| `warnings` | Warning strings (such as corrupt packages, equal-version conflicts, or unmatched `--protect` names), when present |
 | `index_updated` | Whether `repodata/` was rewritten |
 | `marker` | Whether `repo_complete` is present after completion |
 | `noop` | True when no package needed removal and no index write occurred |
@@ -316,7 +321,7 @@ sow log export operations.jsonl -r demo
 sow log export - -r demo
 ```
 
-A file target must be new and its immediate parent must be a real directory, not a symlink.
+A file target must be new; symlinked parent directories (such as `/tmp` on macOS) are resolved to their physical directory before atomic creation and directory sync.
 
 <span id="a-worked-example" data-td-print-local></span>
 

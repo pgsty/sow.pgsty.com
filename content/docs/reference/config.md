@@ -28,8 +28,7 @@ resolves signing references. `--all` expands defaults in `config show`.
 
 - Use one YAML document and `schema: sow/v3`. Read-only inspection (`config check`, `repo ls`, `repo show`, `dist ls`, `dist show`) also accepts frozen `sow/v2` workspaces before migration.
 - Unknown fields and duplicate keys are errors.
-- Name the file `sow.yml` (not `sow.yaml`; workspace discovery prints a hint if only `sow.yaml` exists) and keep it at the workspace root as a regular file with one hard link, at most 16 MiB.
-  SOW rejects a symlink.
+- Name the file `sow.yml` or `sow.yaml` and keep it at the workspace root as a regular file of at most 16 MiB (`sow init` creates `sow.yml` and rejects a symlink; discovery and reads follow a symlink to a regular file). Having both `sow.yml` and `sow.yaml` as regular files is an error. With `sow.yml`, an existing repository directory named `sow.yaml` remains supported.
 - `init`, `repo new/rm`, and `dist new/rm` update the file as part of their operations.
 - Edit policy, signing, and target settings in the file. SOW applies defaults when reading
   the file and does not rewrite the source.
@@ -227,8 +226,8 @@ RPM signing creates `repodata/repomd.xml.asc`. DEB signing creates `InRelease` a
 Environment names use `[A-Za-z_][A-Za-z0-9_]*`. A GPG key identifier is a 16-digit key ID
 or a 40- or 64-digit fingerprint. Hexadecimal letters are case-insensitive.
 
-Key files accept ASCII-armored or binary OpenPGP data in a regular file of up to 16 MiB. Relative paths resolve from the workspace root. Inside the workspace, every path component must be free of symlinks. An external key or trusted keyring may use symlinks when every hop and the final regular file stay outside the workspace.
-Metadata signing uses the supplied private-key material inside SOW. A GPG key identifier
+Key files accept ASCII-armored (tolerating human-readable comment lines outside armor fences) or binary OpenPGP data in a regular file of up to 16 MiB. Relative paths resolve from the workspace root. Regular files and symlinks (including Kubernetes Secret mounts) are supported.
+Metadata signing accepts RSA, EdDSA (Ed25519/Ed448), ECDSA, and DSA keys and uses the supplied private-key material inside SOW. A GPG key identifier
 uses external `gpg`, whether supplied through `agent://` or an environment variable.
 
 A signing `key` reference must resolve to exactly one primary key.
@@ -279,13 +278,13 @@ sow build -r demo
 
 The file contains the password itself, with these exact rules:
 
-- One nonempty UTF-8 line, without a BOM, at most 64 KiB including an optional terminator.
+- One nonempty line, at most 64 KiB including an optional terminator; an optional UTF-8 BOM is removed.
 - No final newline is required. Exactly one final LF or CRLF is removed.
 - No trimming: leading/trailing spaces and tabs are password bytes. Quotes, `#`, and
   backslashes are literal; there are no comments, escapes, or `NAME=value` syntax.
 - Empty files, an empty line, NUL, embedded CR/LF, a bare final CR, and extra blank
   lines are rejected. A password consisting only of spaces is not empty.
-- Use a readable regular file. Inside the workspace (the repository directory for Plain `create`), every path component must be free of symlinks. External mounts such as Kubernetes Secrets may use symlinks when every hop stays outside that root. macOS system aliases `/tmp`, `/var`, and `/etc` resolve to their `/private` locations.
+- Regular files, symlinks (including Kubernetes Secret mounts), and named pipes (FIFOs) are supported. A FIFO writer has two seconds to supply the line and close its end. Keep credentials outside published paths.
 
 Keep the file outside the repository and public document root, normally with mode
 `0600` and a private parent directory. SOW does not require exactly `0600`, so a
@@ -310,9 +309,9 @@ again from the current invocation and configuration; SOW never journals password
 Changing only a `passfile` path does not change a signing identity or make a Dist dirty.
 Password values never enter logs, config output, repository state, or public files.
 External metadata signing passes the password through a private descriptor. RPM signing
-uses a temporary `0600` file in a private `/tmp/sow-gpg-pass-*` directory because RPM
+uses a temporary `0600` file in a private `sow-gpg-pass-*` directory under `$TMPDIR` (falling back to `/tmp`) because RPM
 may invoke GPG repeatedly. SOW zero-overwrites and removes it when the signing call returns; forced process
-termination can leave it behind.
+termination can leave it behind. On failure, SOW can surface a bounded diagnostic from up to 4 KiB of helper stderr.
 
 ### Passphrase references
 
@@ -363,25 +362,29 @@ targets:
 |---|---|---|
 | `repository` | Yes | Existing repository name |
 | `provider` | Yes | `filesystem` or `r2` |
-| `endpoint` | Yes | Canonical `file:///absolute/path` without a trailing slash, or `https://host` for R2 |
-| `region` | R2 only | Must be `auto`; forbidden for filesystem |
-| `bucket` | R2 only | Lowercase DNS-safe bucket label; forbidden for filesystem |
+| `endpoint` | Yes | `file:///absolute/path`, or `https://host` (or `http://localhost`) for R2; case and trailing slash are normalized |
+| `region` | No (R2 only) | Defaults to `auto`; lowercase `[a-z0-9-]{1,64}`; forbidden for filesystem |
+| `bucket` | R2 only | Lowercase DNS-safe bucket name (`a-z`, `0-9`, `-`, and `.` without `..`); forbidden for filesystem |
 | `prefix` | No | Relative storage prefix; empty uses the storage namespace root |
 | `credential` | R2 only | `env://NAME` or `file:///absolute/path`; forbidden for filesystem |
-| `public_endpoint` | Yes | Canonical verification URL ending in `/`; filesystem accepts HTTP(S) or `file://`, R2 accepts HTTP(S) |
-| `max_cache_ttl` | Yes | Canonical non-negative Go duration, including explicit `0s` |
-| `authoritative_workspace` | Yes | Must be `true` |
-| `single_writer` | Yes | Must be `true` |
-| `exclusive_write_authority` | Yes | Must be `true` |
+| `public_endpoint` | Yes | Verification URL (normalized to end in `/`); filesystem accepts HTTP(S) or `file://`, R2 accepts HTTP(S) |
+| `max_cache_ttl` | Yes | Non-negative Go duration (such as `0`, `0s`, `5m`, or `24h`), normalized to canonical form |
+| `authoritative_workspace` | No | Defaults to `true`; explicit `false` or `null` is rejected |
+| `single_writer` | No | Defaults to `true`; explicit `false` or `null` is rejected |
+| `exclusive_write_authority` | No | Defaults to `true`; explicit `false` or `null` is rejected |
 {.wide .expand}
 
 The last three fields state that this workspace owns publication and is the only writer
-for the target namespace. Targets on the same storage cannot have overlapping prefixes.
+for the target namespace; they default to `true` when omitted. Targets on the same storage
+cannot have overlapping prefixes—for R2, two targets on the same `(endpoint, bucket)` with
+overlapping prefixes are rejected regardless of region spelling (such as `auto` vs `us-east-1`).
 Filesystem targets cannot resolve to overlapping directories.
 
-Use canonical durations such as `0s`, `30m0s`, or `24h0m0s`; `24h` is rejected.
-Durations are bounded below Go's maximum duration to leave room for the cache-grace margin.
-Set this value to cover the longest cache lifetime used by the public service.
+Shorthand Go durations such as `0`, `5m`, or `24h` are accepted and normalized (for example,
+`24h0m0s`). Durations are bounded below Go's maximum duration to leave room for the cache-grace
+margin. Set `max_cache_ttl` to cover the longest cache lifetime used by the public service:
+starting in SOW 0.9.0, new target GC grace records use `max_cache_ttl` directly without a
+30-day floor, so `0s` gives superseded objects zero grace.
 
 Create the filesystem endpoint directory before publishing. It must be a real canonical
 directory, not a symlink. SOW creates the prefix beneath it.
